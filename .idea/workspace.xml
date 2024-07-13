@@ -9,11 +9,29 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f10422d2-1610-4df4-bf0f-9017c3bc5986" name="Changes" comment="small fixes">
+    <list default="true" id="f10422d2-1610-4df4-bf0f-9017c3bc5986" name="Changes" comment="Ready to try free form exercise">
+      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_edit/SimpleEditCreate.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_edit/SimpleEditExercise.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_edit/SimpleEditModel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_edit/SimpleEditView.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationExercise.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpExercise.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/ab_explain/ABcreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/ab_explain/ABcreate.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/ab_explain/ABexercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/ab_explain/ABexercise.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/ab_explain/ABmodel.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/ab_explain/ABmodel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/abefg_explain/ABEFGcreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/abefg_explain/ABEFGcreate.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/abefg_explain/ABEFGexercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/abefg_explain/ABEFGexercise.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/abefg_explain/ABEFGmodel.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/abefg_explain/ABEFGmodel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/ExerciseType.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/ExerciseType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/MainWindow.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/MainWindow.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/TextHelpPopup.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/TextHelpPopup.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/TypeSelectorFactories.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/TypeSelectorFactories.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_editor/PageContent.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/page_editor/PageContent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_editor/SimpleEditCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/page_editor/PageEditCreate.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_editor/SimpleEditExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/page_editor/PageEditExercise.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_editor/SimpleEditModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/page_editor/PageEditModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_editor/SimpleEditView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/page_editor/PageEditView.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -153,7 +171,7 @@
       <workItem from="1720695062843" duration="1201000" />
       <workItem from="1720781043848" duration="8895000" />
       <workItem from="1720824271195" duration="1526000" />
-      <workItem from="1720868065746" duration="1805000" />
+      <workItem from="1720868065746" duration="12989000" />
     </task>
     <task id="LOCAL-00001" summary="Update RTA to 1.1.4">
       <created>1719317606928</created>
@@ -218,7 +236,14 @@
       <option name="project" value="LOCAL" />
       <updated>1720611159416</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Ready to try free form exercise">
+      <created>1720887933736</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1720887933736</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -246,6 +271,7 @@
     <MESSAGE value="7/5 repairs to TT and HTree print size" />
     <MESSAGE value="mark 7/7/24" />
     <MESSAGE value="small fixes" />
-    <option name="LAST_COMMIT_MESSAGE" value="small fixes" />
+    <MESSAGE value="Ready to try free form exercise" />
+    <option name="LAST_COMMIT_MESSAGE" value="Ready to try free form exercise" />
   </component>
 </project>
