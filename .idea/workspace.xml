@@ -9,8 +9,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f10422d2-1610-4df4-bf0f-9017c3bc5986" name="Changes" comment="mac ok with menu bar -- 2nd copy of Intellij">
-      <change afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/tests/html_scratch" afterDir="false" />
+    <list default="true" id="f10422d2-1610-4df4-bf0f-9017c3bc5986" name="Changes" comment="Mac dragging fix">
       <change beforePath="$PROJECT_DIR$/.idea/artifacts/SLAPP_2_jar.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/artifacts/SLAPP_2_jar.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
@@ -120,6 +119,7 @@
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/tests/RoundingTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/tests/RoundingTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/tests/ScrollPaneTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/tests/ScrollPaneTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/tests/TextWidthTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/tests/TextWidthTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/tests/html_scratch" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/tests/html_scratch" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table/ParseDocForTTable.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table/ParseDocForTTable.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table/TableHeadItem.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table/TableHeadItem.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table/TruthTableCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table/TruthTableCreate.java" afterDir="false" />
@@ -654,6 +654,19 @@
       <workItem from="1723216562480" duration="188000" />
       <workItem from="1723216971619" duration="51000" />
       <workItem from="1723222897164" duration="161000" />
+      <workItem from="1723225807894" duration="72000" />
+      <workItem from="1723226172733" duration="62000" />
+      <workItem from="1723227538635" duration="78000" />
+      <workItem from="1723287794168" duration="645000" />
+      <workItem from="1723288565312" duration="260000" />
+      <workItem from="1723288909604" duration="1075000" />
+      <workItem from="1723290231185" duration="70000" />
+      <workItem from="1723291354945" duration="310000" />
+      <workItem from="1723292105929" duration="132000" />
+      <workItem from="1723292567673" duration="79000" />
+      <workItem from="1723293056298" duration="80000" />
+      <workItem from="1723293786943" duration="155000" />
+      <workItem from="1723294309919" duration="113000" />
     </task>
     <task id="LOCAL-00001" summary="Update RTA to 1.1.4">
       <created>1719317606928</created>
@@ -812,6 +825,17 @@
       </list>
     </option>
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Update RTA to 1.1.4" />
     <MESSAGE value="6/25/24 fix commit errors" />
@@ -835,6 +859,7 @@
     <MESSAGE value="8/4 further fixes" />
     <MESSAGE value="8/5 new base/script board" />
     <MESSAGE value="mac ok with menu bar -- 2nd copy of Intellij" />
-    <option name="LAST_COMMIT_MESSAGE" value="mac ok with menu bar -- 2nd copy of Intellij" />
+    <MESSAGE value="Mac dragging fix" />
+    <option name="LAST_COMMIT_MESSAGE" value="Mac dragging fix" />
   </component>
 </project>
