@@ -9,37 +9,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f10422d2-1610-4df4-bf0f-9017c3bc5986" name="Changes" comment="Derivation undo/redo ok">
+    <list default="true" id="f10422d2-1610-4df4-bf0f-9017c3bc5986" name="Changes" comment="Repair to clear on create windows.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/ab_explain/ABcreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/ab_explain/ABcreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/abefg_explain/ABEFGcreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/abefg_explain/ABEFGcreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/decorated_rta/BoxedDRTA.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/decorated_rta/BoxedDRTA.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationExercise.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpExercise.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/free_form/FreeFormCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/free_form/FreeFormCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/HorizontalTreeCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/HorizontalTreeCreate.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/PrintUtilities.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/PrintUtilities.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/MainWindow.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/MainWindow.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/MainWindowView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/MainWindowView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/page_editor/PageEditCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/page_editor/PageEditCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_edit/SimpleEditCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_edit/SimpleEditCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_edit/SimpleEditExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_edit/SimpleEditExercise.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_trans/SimpleTransCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_trans/SimpleTransCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table/TruthTableCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table/TruthTableCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_explain/TruthTableExpCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_explain/TruthTableExpCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_generate/TruthTableGenCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_generate/TruthTableGenCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/VerticalTreeABEFExpCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/VerticalTreeABEFExpCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/VerticalTreeABEFExpView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/VerticalTreeABEFExpView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abexplain/VerticalTreeABExpCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abexplain/VerticalTreeABExpCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_explain/VerticalTreeExpCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_explain/VerticalTreeExpCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/VerticalTreeCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/VerticalTreeCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/ParagraphTile.java" beforeDir="false" afterPath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/ParagraphTile.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/RichTextArea.java" beforeDir="false" afterPath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/RichTextArea.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/action/ActionFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/action/ActionFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/model/PieceTable.java" beforeDir="false" afterPath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/model/PieceTable.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/viewmodel/RichTextAreaViewModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/viewmodel/RichTextAreaViewModel.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -279,7 +252,10 @@
       <workItem from="1723807381143" duration="9561000" />
       <workItem from="1723890392472" duration="13981000" />
       <workItem from="1723945778473" duration="98000" />
-      <workItem from="1723977625371" duration="14760000" />
+      <workItem from="1723977625371" duration="16214000" />
+      <workItem from="1724064070642" duration="5423000" />
+      <workItem from="1724096185731" duration="3876000" />
+      <workItem from="1724150024976" duration="2916000" />
     </task>
     <task id="LOCAL-00001" summary="Update RTA to 1.1.4">
       <created>1719317606928</created>
@@ -428,7 +404,14 @@
       <option name="project" value="LOCAL" />
       <updated>1723581974910</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="Repair to clear on create windows.">
+      <created>1724019652687</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1724019652687</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -481,7 +464,8 @@
     <MESSAGE value="mac ok with menu bar -- 2nd copy of Intellij" />
     <MESSAGE value="Mac dragging fix" />
     <MESSAGE value="Derivation undo/redo ok" />
-    <option name="LAST_COMMIT_MESSAGE" value="Derivation undo/redo ok" />
+    <MESSAGE value="Repair to clear on create windows." />
+    <option name="LAST_COMMIT_MESSAGE" value="Repair to clear on create windows." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
