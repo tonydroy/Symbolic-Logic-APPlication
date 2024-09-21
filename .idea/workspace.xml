@@ -14,7 +14,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f10422d2-1610-4df4-bf0f-9017c3bc5986" name="Changes" comment="9/13 derivation and border fixes">
+    <list default="true" id="f10422d2-1610-4df4-bf0f-9017c3bc5986" name="Changes" comment="Big commit">
       <change beforePath="$PROJECT_DIR$/.idea/artifacts/SLAPP_2_jar.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/artifacts/SLAPP_2_jar.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
@@ -797,6 +797,18 @@
       <workItem from="1726399189476" duration="496000" />
       <workItem from="1726401893254" duration="304000" />
       <workItem from="1726413925708" duration="252000" />
+      <workItem from="1726497717289" duration="243000" />
+      <workItem from="1726519138680" duration="1237000" />
+      <workItem from="1726582029783" duration="2567000" />
+      <workItem from="1726656664264" duration="1200000" />
+      <workItem from="1726746050590" duration="652000" />
+      <workItem from="1726830927758" duration="599000" />
+      <workItem from="1726831791605" duration="445000" />
+      <workItem from="1726832450336" duration="196000" />
+      <workItem from="1726870070491" duration="599000" />
+      <workItem from="1726920039114" duration="1030000" />
+      <workItem from="1726921499891" duration="181000" />
+      <workItem from="1726928059520" duration="329000" />
     </task>
     <task id="LOCAL-00001" summary="Update RTA to 1.1.4">
       <created>1719317606928</created>
@@ -1086,7 +1098,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="7/24//24 update keyboards free form now ok" />
     <MESSAGE value="7/26 minor fixes" />
     <MESSAGE value="7/29/24 simple translation, new keyboard added" />
     <MESSAGE value="8/4/24 misc improvements" />
@@ -1111,7 +1122,8 @@
     <MESSAGE value="9/1/ AB/EFG edit comments" />
     <MESSAGE value="9/3 simple trans comments" />
     <MESSAGE value="9/13 derivation and border fixes" />
-    <option name="LAST_COMMIT_MESSAGE" value="9/13 derivation and border fixes" />
+    <MESSAGE value="Big commit" />
+    <option name="LAST_COMMIT_MESSAGE" value="Big commit" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
