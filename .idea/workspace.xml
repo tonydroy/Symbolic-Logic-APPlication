@@ -14,13 +14,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f10422d2-1610-4df4-bf0f-9017c3bc5986" name="Changes" comment="9/25 keyboard fixes in">
+    <list default="true" id="f10422d2-1610-4df4-bf0f-9017c3bc5986" name="Changes" comment="9/27 fixes to hotkeys">
+      <change afterPath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/viewmodel/ActionCmdSelectAndInsertText.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/front_page/FrontPageAnimation.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/front_page/FrontPageAnimation.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/TextHelpPopup.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/TextHelpPopup.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/resources/fonts/NotoSerifCombo-Regular.ttf" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/resources/fonts/NotoSerifCombo-Regular.ttf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/CharModMaps.java" beforeDir="false" afterPath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/CharModMaps.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/RichTextAreaSkin.java" beforeDir="false" afterPath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/RichTextAreaSkin.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationCreate.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/MainWindow.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/MainWindow.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/ParagraphTile.java" beforeDir="false" afterPath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/ParagraphTile.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/RichTextArea.java" beforeDir="false" afterPath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/RichTextArea.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/Tools.java" beforeDir="false" afterPath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/Tools.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/action/ActionFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/action/ActionFactory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/viewmodel/ActionCmdFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/viewmodel/ActionCmdFactory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/viewmodel/RichTextAreaViewModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/viewmodel/RichTextAreaViewModel.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,8 +35,8 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Enum" />
-        <option value="Class" />
         <option value="package-info" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -395,7 +399,13 @@
       <workItem from="1727349851545" duration="8920000" />
       <workItem from="1727438539219" duration="599000" />
       <workItem from="1727450001146" duration="219000" />
-      <workItem from="1727452741907" duration="7692000" />
+      <workItem from="1727452741907" duration="10568000" />
+      <workItem from="1727522360902" duration="612000" />
+      <workItem from="1727531294325" duration="382000" />
+      <workItem from="1727555811696" duration="1807000" />
+      <workItem from="1727608638288" duration="609000" />
+      <workItem from="1727615851446" duration="324000" />
+      <workItem from="1727705982142" duration="1762000" />
     </task>
     <task id="LOCAL-00001" summary="Update RTA to 1.1.4">
       <created>1719317606928</created>
@@ -677,7 +687,14 @@
       <option name="project" value="LOCAL" />
       <updated>1727281356119</updated>
     </task>
-    <option name="localTasksCounter" value="41" />
+    <task id="LOCAL-00041" summary="9/27 fixes to hotkeys">
+      <created>1727476540549</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1727476540549</updated>
+    </task>
+    <option name="localTasksCounter" value="42" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -706,7 +723,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="8/4 further fixes" />
     <MESSAGE value="8/5 new base/script board" />
     <MESSAGE value="mac ok with menu bar -- 2nd copy of Intellij" />
     <MESSAGE value="Mac dragging fix" />
@@ -731,7 +747,8 @@
     <MESSAGE value="9/21" />
     <MESSAGE value="9/22 before kbd dia changes" />
     <MESSAGE value="9/25 keyboard fixes in" />
-    <option name="LAST_COMMIT_MESSAGE" value="9/25 keyboard fixes in" />
+    <MESSAGE value="9/27 fixes to hotkeys" />
+    <option name="LAST_COMMIT_MESSAGE" value="9/27 fixes to hotkeys" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
