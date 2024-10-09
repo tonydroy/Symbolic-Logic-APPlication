@@ -15,39 +15,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f10422d2-1610-4df4-bf0f-9017c3bc5986" name="Changes" comment="10/8 Fix new windows opening off screen.">
-      <change afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/package-info.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/ab_explain/ABcreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/ab_explain/ABcreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/abefg_explain/ABEFGcreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/abefg_explain/ABEFGcreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/decorated_rta/KeyboardDiagram.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/decorated_rta/KeyboardDiagram.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationExercise.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/SetupLine.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/SetupLine.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpExercise.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpSetupLine.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpSetupLine.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/free_form/FreeFormCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/free_form/FreeFormCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/HorizontalTreeCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/HorizontalTreeCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/ExerciseTypePopup.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/ExerciseTypePopup.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/MainWindow.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/MainWindow.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/MainWindowView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/MainWindowView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/TextHelpPopup.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/TextHelpPopup.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/assignment/CreateAssignment.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/assignment/CreateAssignment.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/media_player/MediaViewer.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/media_player/MediaViewer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/page_editor/PageEditCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/page_editor/PageEditCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_edit/SimpleEditCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_edit/SimpleEditCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_trans/SimpleTransCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_trans/SimpleTransCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table/TruthTableCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table/TruthTableCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_explain/TruthTableExpCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_explain/TruthTableExpCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_generate/TruthTableGenCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_generate/TruthTableGenCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/VerticalTreeABEFExpCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/VerticalTreeABEFExpCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abexplain/VerticalTreeABExpCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abexplain/VerticalTreeABExpCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_explain/VerticalTreeExpCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_explain/VerticalTreeExpCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/VerticalTreeCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/VerticalTreeCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/CharModMaps.java" beforeDir="false" afterPath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/CharModMaps.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/EditorAlerts.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/EditorAlerts.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -438,7 +407,9 @@
       <workItem from="1728130859503" duration="1615000" />
       <workItem from="1728212936958" duration="1688000" />
       <workItem from="1728218136668" duration="2875000" />
-      <workItem from="1728397350759" duration="13496000" />
+      <workItem from="1728397350759" duration="14268000" />
+      <workItem from="1728475147116" duration="1048000" />
+      <workItem from="1728496600086" duration="1316000" />
     </task>
     <task id="LOCAL-00001" summary="Update RTA to 1.1.4">
       <created>1719317606928</created>
@@ -734,7 +705,14 @@
       <option name="project" value="LOCAL" />
       <updated>1727708038155</updated>
     </task>
-    <option name="localTasksCounter" value="43" />
+    <task id="LOCAL-00043" summary="10/8 Fix new windows opening off screen.">
+      <created>1728424668697</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1728424668697</updated>
+    </task>
+    <option name="localTasksCounter" value="44" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
