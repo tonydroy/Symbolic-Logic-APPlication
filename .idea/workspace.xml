@@ -19,8 +19,7 @@
       <change afterPath="$PROJECT_DIR$/SLAPP-RTA" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gitmodules" beforeDir="false" afterPath="$PROJECT_DIR$/.gitmodules" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emoji/emoji/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/emoji/emoji/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rich-text-area/rta/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/rich-text-area/rta/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SLAPP-Editor" beforeDir="false" afterPath="$PROJECT_DIR$/SLAPP-Editor" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -470,7 +469,7 @@
       <workItem from="1731277271918" duration="124000" />
       <workItem from="1731277584221" duration="3836000" />
       <workItem from="1731323942985" duration="3981000" />
-      <workItem from="1731337172570" duration="12676000" />
+      <workItem from="1731337172570" duration="13532000" />
     </task>
     <task id="LOCAL-00002" summary="6/25/24 fix commit errors">
       <created>1719319074226</created>
@@ -815,7 +814,7 @@
       <option name="project" value="LOCAL" />
       <updated>1729888447765</updated>
     </task>
-    <option name="localTasksCounter" value="54" />
+    <option name="localTasksCounter" value="55" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
