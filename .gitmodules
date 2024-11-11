@@ -1,0 +1,3 @@
+[submodule "SLAPP-Editor"]
+	path = SLAPP-Editor
+	url = https://www.github.com/tonydroy/SLAPP-Editor.git

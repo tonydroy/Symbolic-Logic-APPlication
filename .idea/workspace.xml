@@ -15,41 +15,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f10422d2-1610-4df4-bf0f-9017c3bc5986" name="Changes" comment="upload to github">
+      <change afterPath="$PROJECT_DIR$/.gitmodules" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SLAPP-Editor" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/EditorAlerts.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/EditorAlerts.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/BranchNode.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/BranchNode.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/MainWindow.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/MainWindow.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table/TruthTableView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table/TruthTableView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_explain/TruthTableExpView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_explain/TruthTableExpView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_generate/TruthTableGenView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_generate/TruthTableGenView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/ABEFExpMapFormulaBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/ABEFExpMapFormulaBox.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/ABEFExpTreeFormulaBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/ABEFExpTreeFormulaBox.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abexplain/ABExpMapFormulaBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abexplain/ABExpMapFormulaBox.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abexplain/ABExpTreeFormulaBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abexplain/ABExpTreeFormulaBox.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_explain/ExpMapFormulaBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_explain/ExpMapFormulaBox.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_explain/ExpTreeFormulaBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_explain/ExpTreeFormulaBox.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/drag_drop/BottomDragResizer.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/drag_drop/BottomDragResizer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/drag_drop/DashedLine.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/drag_drop/DashedLine.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/drag_drop/DragIconType.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/drag_drop/DragIconType.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/drag_drop/MapFormulaBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/drag_drop/MapFormulaBox.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/drag_drop/Point2dSerial.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/drag_drop/Point2dSerial.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/drag_drop/RightDragResizer.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/drag_drop/RightDragResizer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/drag_drop/TreeFormulaBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/drag_drop/TreeFormulaBox.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/drag_drop/VerticalBracket.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/drag_drop/VerticalBracket.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/resources/RichTextField.css" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/resources/RichTextField.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/resources/RichTextFieldWide.css" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/resources/RichTextFieldWide.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/resources/blueFormulaBox.css" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/resources/blueFormulaBox.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/resources/boldFormulaBox.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/resources/greenFormulaBox.css" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/resources/greenFormulaBox.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/resources/richTextAreaPrinter.css" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/resources/richTextAreaPrinter.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/resources/slappDerivation.css" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/resources/slappDerivation.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/resources/slappTextArea.css" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/resources/slappTextArea.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/emoji/emoji/src/main/java/com/gluonhq/emoji/util/TextUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/emoji/emoji/src/main/java/com/gluonhq/emoji/util/TextUtils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/emoji/emoji/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/emoji/emoji/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rich-text-area/rta/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/rich-text-area/rta/pom.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager">
+    <option name="groupingKeys">
+      <option value="directory" />
+      <option value="repository" />
+    </option>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -64,9 +46,27 @@
     <option name="NEW_BASE" value="master" />
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/editor" />
+    <option name="PUSH_TAGS">
+      <GitPushTagMode>
+        <option name="argument" value="--tags" />
+        <option name="title" value="All" />
+      </GitPushTagMode>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="ROOT_SYNC" value="DONT_SYNC" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "tonydroy"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/tonydroy/Symbolic-Logic-APPlication.git",
+    "accountId": "1f466fce-fc5a-4b33-905c-6fe7834821d7"
+  }
+}]]></component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
@@ -81,28 +81,28 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Application.EditorMain.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/tonyd/Dropbox/MyFiles(DB)/JavaProgs/net.tonyroyphilosophy/SLAPP-2/editor/src/main/resources&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Libraries&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.45747125&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.editor&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.EditorMain.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "master",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/tonyd/Dropbox/MyFiles(DB)/JavaProgs/net.tonyroyphilosophy/SLAPP-2/editor/src/main/resources",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Libraries",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.45747125",
+    "settings.editor.selected.configurable": "vcs.log",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\tonyd\Dropbox\MyFiles(DB)\JavaProgs\net.tonyroyphilosophy\SLAPP-2\editor\src\main\resources" />
@@ -140,6 +140,7 @@
       </set>
     </attachedChunks>
   </component>
+  <component name="ShelveChangesManager" show_recycled="true" />
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -467,6 +468,9 @@
       <workItem from="1730115063790" duration="20905000" />
       <workItem from="1730201460529" duration="3769000" />
       <workItem from="1731277271918" duration="124000" />
+      <workItem from="1731277584221" duration="3836000" />
+      <workItem from="1731323942985" duration="3981000" />
+      <workItem from="1731337172570" duration="11932000" />
     </task>
     <task id="LOCAL-00002" summary="6/25/24 fix commit errors">
       <created>1719319074226</created>
@@ -811,7 +815,7 @@
       <option name="project" value="LOCAL" />
       <updated>1729888447765</updated>
     </task>
-    <option name="localTasksCounter" value="51" />
+    <option name="localTasksCounter" value="53" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -833,14 +837,25 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="origin/master" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
           </value>
         </entry>
       </map>
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="JavaDoc additions" />
     <MESSAGE value="8/14/24 cleanup of vestigal items" />
     <MESSAGE value="8/25 prior to work on mac" />
     <MESSAGE value="8/25 changes to zoom spinner width" />
@@ -865,6 +880,7 @@
     <MESSAGE value="10/24 video fixes and TTable comments" />
     <MESSAGE value="10/25 truth table explain comments" />
     <MESSAGE value="10/25 truth table generate comments" />
-    <option name="LAST_COMMIT_MESSAGE" value="10/25 truth table generate comments" />
+    <MESSAGE value="upload to github" />
+    <option name="LAST_COMMIT_MESSAGE" value="upload to github" />
   </component>
 </project>
