@@ -12,5 +12,5 @@ The Rich Text Area makes possible the extended editing features of SLAPP.
 At the same time the RTA is itself a work in progress and certain instabilities of it make their way into SLAPP.  Ideally SLAPP and the Rich Text Area will grow together to result in a stable project. \
 \
 The Symbolic Logic APPlication code is submitted as-is.  It is a "retirement project" by an author professionally trained as a philosopher -- not as a programmer.
-It is likely that some featuress (especially repeated code) will set a software engineer's hair on fire.
+It is likely that some features (especially repeated code) will set a software engineer's hair on fire.
 All the same, it may be a basis for continued contribution and improvement.
