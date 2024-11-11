@@ -1,4 +1,4 @@
-# Symbolic Logic APPlication (SLAPP) *
+# Symbolic Logic APPlication (SLAPP) #
 \
 ![SLAPP Icon](https://tonyroyphilosophy.net/wp-content/uploads/2024/11/icon128x128-2.png) \
 \
