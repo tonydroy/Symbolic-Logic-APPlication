@@ -2,6 +2,9 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/SLAPP-Editor" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/SLAPP-Emoji" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/SLAPP-RTA" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/editor" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/emoji" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/rich-text-area" vcs="Git" />
