@@ -14,19 +14,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f10422d2-1610-4df4-bf0f-9017c3bc5986" name="Changes" comment="1.01a build 2.  Resolves #13">
+    <list default="true" id="f10422d2-1610-4df4-bf0f-9017c3bc5986" name="Changes" comment="1.01a (build 4)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SLAPP-Editor" beforeDir="false" afterPath="$PROJECT_DIR$/SLAPP-Editor" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SLAPP-Emoji" beforeDir="false" afterPath="$PROJECT_DIR$/SLAPP-Emoji" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SLAPP-RTA" beforeDir="false" afterPath="$PROJECT_DIR$/SLAPP-RTA" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/decorated_rta/DecoratedRTA.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/decorated_rta/DecoratedRTA.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationExercise.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpExercise.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/BranchNode.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/BranchNode.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/MainWindow.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/MainWindow.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/MainWindowView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/MainWindowView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/TextHelpPopup.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/TextHelpPopup.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/RichTextAreaSkin.java" beforeDir="false" afterPath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/RichTextAreaSkin.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -488,7 +477,7 @@
       <workItem from="1731759913588" duration="5928000" />
       <workItem from="1731842524162" duration="3482000" />
       <workItem from="1731944306732" duration="2506000" />
-      <workItem from="1732017098079" duration="1584000" />
+      <workItem from="1732017098079" duration="2323000" />
     </task>
     <task id="LOCAL-00002" summary="6/25/24 fix commit errors">
       <created>1719319074226</created>
@@ -833,7 +822,7 @@
       <option name="project" value="LOCAL" />
       <updated>1729888447765</updated>
     </task>
-    <option name="localTasksCounter" value="58" />
+    <option name="localTasksCounter" value="59" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -874,7 +863,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="8/25 changes to zoom spinner width" />
     <MESSAGE value="8/27 comments + create window cleanup" />
     <MESSAGE value="8/28/24 serialversionuid + access changes in models" />
     <MESSAGE value="8/31 page edit comments done" />
@@ -899,7 +887,8 @@
     <MESSAGE value="upload to github" />
     <MESSAGE value="1.01a build 2." />
     <MESSAGE value="1.01a build 2.  Resolves #13" />
-    <option name="LAST_COMMIT_MESSAGE" value="1.01a build 2.  Resolves #13" />
+    <MESSAGE value="1.01a (build 4)" />
+    <option name="LAST_COMMIT_MESSAGE" value="1.01a (build 4)" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
