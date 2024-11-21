@@ -14,15 +14,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f10422d2-1610-4df4-bf0f-9017c3bc5986" name="Changes" comment="1.01a (build 4)">
-      <change afterPath="$PROJECT_DIR$/editor/src/main/resources/slappAnnotation.css" afterDir="false" />
+    <list default="true" id="f10422d2-1610-4df4-bf0f-9017c3bc5986" name="Changes" comment="annotation fields converted to RTA">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SLAPP-Editor" beforeDir="false" afterPath="$PROJECT_DIR$/SLAPP-Editor" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/decorated_rta/DecoratedRTA.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/decorated_rta/DecoratedRTA.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/DiskUtilities.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/DiskUtilities.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/front_page/FrontPageAnimation.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/front_page/FrontPageAnimation.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/BranchModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/BranchModel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/BranchNode.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/BranchNode.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/HorizontalTreeExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/HorizontalTreeExercise.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/HorizontalTreeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/HorizontalTreeView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/TextHelpPopup.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/TextHelpPopup.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/assignment/CreateAssignment.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/main_window/assignment/CreateAssignment.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/ABEFExpTreeFormulaBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/ABEFExpTreeFormulaBox.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/VerticalTreeABEFExpExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/VerticalTreeABEFExpExercise.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abexplain/ABExpTreeFormulaBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abexplain/ABExpTreeFormulaBox.java" afterDir="false" />
@@ -31,7 +31,7 @@
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_explain/VerticalTreeExpExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_explain/VerticalTreeExpExercise.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/VerticalTreeExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/VerticalTreeExercise.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/drag_drop/TreeFormulaBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/drag_drop/TreeFormulaBox.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/model/TextDecoration.java" beforeDir="false" afterPath="$PROJECT_DIR$/rich-text-area/rta/src/main/java/com/gluonhq/richtextarea/model/TextDecoration.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/object_models/TreeFormulaBoxMod.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/object_models/TreeFormulaBoxMod.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -495,7 +495,9 @@
       <workItem from="1731842524162" duration="3482000" />
       <workItem from="1731944306732" duration="2506000" />
       <workItem from="1732017098079" duration="30554000" />
-      <workItem from="1732103911728" duration="14780000" />
+      <workItem from="1732103911728" duration="32811000" />
+      <workItem from="1732189670641" duration="6733000" />
+      <workItem from="1732205896614" duration="2211000" />
     </task>
     <task id="LOCAL-00002" summary="6/25/24 fix commit errors">
       <created>1719319074226</created>
@@ -840,7 +842,7 @@
       <option name="project" value="LOCAL" />
       <updated>1729888447765</updated>
     </task>
-    <option name="localTasksCounter" value="61" />
+    <option name="localTasksCounter" value="62" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -881,7 +883,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="8/27 comments + create window cleanup" />
     <MESSAGE value="8/28/24 serialversionuid + access changes in models" />
     <MESSAGE value="8/31 page edit comments done" />
     <MESSAGE value="9/1/ AB edit comments" />
@@ -906,7 +907,8 @@
     <MESSAGE value="1.01a build 2." />
     <MESSAGE value="1.01a build 2.  Resolves #13" />
     <MESSAGE value="1.01a (build 4)" />
-    <option name="LAST_COMMIT_MESSAGE" value="1.01a (build 4)" />
+    <MESSAGE value="annotation fields converted to RTA" />
+    <option name="LAST_COMMIT_MESSAGE" value="annotation fields converted to RTA" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
