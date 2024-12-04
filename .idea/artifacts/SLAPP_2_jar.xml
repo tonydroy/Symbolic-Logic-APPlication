@@ -17,6 +17,9 @@
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/openjfx/javafx-controls/22/javafx-controls-22.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/openjfx/javafx-graphics/22/javafx-graphics-22-win.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/openjfx/javafx-base/22/javafx-base-22-win.jar" path-in-jar="/" />
+      <element id="artifact" artifact-name="log4j-api-2_24_2" />
+      <element id="artifact" artifact-name="log4j-core-2_24_2" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/log4j-api-2.24.2.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>
