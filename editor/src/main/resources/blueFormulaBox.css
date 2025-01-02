@@ -1,0 +1,41 @@
+
+
+.rich-text-area:focused .paragraph-tile {
+    -fx-background-color: aliceblue;
+    -fx-padding: 3 0 0 2;
+
+}
+
+
+
+.rich-text-area .paragraph-tile {
+    -fx-background-color: white;
+    -fx-padding: 3 0 0 2;
+}
+
+
+
+.rich-text-area {
+    -fx-border-color: #d0d0d0;
+    -fx-border-width: 1 2 1 1;
+    -fx-padding: 0 0 0 0;
+
+}
+
+
+.rich-text-area:focused {
+    -fx-border-width: 0;
+    -fx-border-color: aliceblue;
+    -fx-border-width: 1 2 1 1;
+}
+
+
+
+
+
+
+
+
+
+
+

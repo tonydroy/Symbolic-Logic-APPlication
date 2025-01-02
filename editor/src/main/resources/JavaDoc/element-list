@@ -1,0 +1,6 @@
+module:com.gluonhq.richtextarea
+com.gluonhq.richtextarea
+com.gluonhq.richtextarea.action
+com.gluonhq.richtextarea.model
+com.gluonhq.richtextarea.undo
+com.gluonhq.richtextarea.viewmodel

@@ -1,0 +1,9 @@
+[submodule "SLAPP-Editor"]
+	path = SLAPP-Editor
+	url = https://www.github.com/tonydroy/SLAPP-Editor.git	
+[submodule "SLAPP-RTA"]
+	path = SLAPP-RTA
+	url = https://www.github.com/tonydroy/SLAPP-rich-text-area.git
+[submodule "SLAPP-Emoji"]
+	path = SLAPP-Emoji
+	url = https://www.github.com/tonydroy/SLAPP-Emoji.git
