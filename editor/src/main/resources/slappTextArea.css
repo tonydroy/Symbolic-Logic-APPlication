@@ -1,0 +1,24 @@
+
+.rich-text-area {
+    -fx-padding: 5;
+    -fx-background-color: WHITE;
+    -fx-border-width: 2;
+    -fx-border-color: LIGHTGREY;
+}
+
+.rich-text-area:focused {
+    -fx-border-width: 2;
+    -fx-border-color: LIGHTBLUE;
+}
+
+.rich-text-area .paragraph-tile {
+    -fx-background-color: white;
+    -fx-padding: 0 0 0 2;
+}
+
+
+.rich-text-area > .paragraph-list-view {
+    -fx-padding: 5;
+    -fx-background-color: white;
+    /*    -fx-border-color: black;      /* - taking this out removes the border on the RTA itself*/
+}
