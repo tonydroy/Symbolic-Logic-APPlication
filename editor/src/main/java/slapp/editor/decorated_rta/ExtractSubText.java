@@ -77,7 +77,7 @@ public class ExtractSubText {
     }
 
     /*
-     * Get the decoration with application to the index position in Do0cument
+     * Get the decoration with application to the index position in Document
      * @param index position in document
      * @param decorations the document decorations
      * @return the applicable DecorationModel

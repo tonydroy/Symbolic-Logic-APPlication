@@ -759,6 +759,8 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
         exerciseModified = true;
     }
 
+    public Exercise getActiveExercise() { return activeExercise;}
+
     /**
      * The free form exercise does not contribute any node to a free form exercise
      * @return null

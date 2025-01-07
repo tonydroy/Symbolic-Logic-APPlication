@@ -20,7 +20,7 @@ public class ParserMain {
         rta.setPrefHeight(400);
         rta.setPrefWidth(400);
 
-        Document doc = new Document("Hello \ud835\udd04 \ud835\udd04  World");
+        Document doc = new Document("Hello \ud835\udd04 \ud835\udd04 World");
         rta.getActionFactory().open(doc).execute(new ActionEvent());
         rta.setPadding(new Insets(20));
 
@@ -29,12 +29,18 @@ public class ParserMain {
         button.setOnAction(e -> {
             rta.getActionFactory().saveNow().execute(new ActionEvent());
             Document doc1 = rta.getDocument();
-            System.out.println(doc1);
+
+
+            for (int i = 0; i < ParseUtilities.getElements(doc1).size(); i ++) {
+                System.out.println(i + ": " + ParseUtilities.getElements(doc1).get(i));
+            }
+
+
+
+  //          System.out.println(doc1);
         });
 
         VBox box = new VBox(10, button, rta);
-
-
         Scene scene = new Scene(box);
         stage.setScene(scene);
         stage.show();

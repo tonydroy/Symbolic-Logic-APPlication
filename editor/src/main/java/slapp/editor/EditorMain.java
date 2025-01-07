@@ -124,9 +124,9 @@ public class EditorMain extends Application {
         }
 
         Platform.runLater(() -> {
- //           mainWindow = new MainWindow(fileToOpen);
 
-            new ParserMain(mainStage);
+//            mainWindow = new MainWindow(fileToOpen);
+           new ParserMain(mainStage);
 
         });
 

@@ -45,6 +45,7 @@ import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import slapp.editor.*;
+import slapp.editor.free_form.FreeFormExercise;
 import slapp.editor.front_page.FrontPageExercise;
 import slapp.editor.main_window.assignment.*;
 import slapp.editor.main_window.media_player.MediaViewer;
@@ -979,7 +980,12 @@ public class MainWindow {
      * Depending on current exercise, open contextual help
      */
     private void contextualTextHelp() {
-        TextHelpPopup.helpContextual(((ExerciseModel) (currentExercise.getExerciseModel())).getExerciseType());
+        ExerciseModel model = ((ExerciseModel) currentExercise.getExerciseModel());
+        if (model.getExerciseType() == ExerciseType.FREE_FORM) {
+            Exercise activeExer = ((FreeFormExercise) currentExercise).getActiveExercise();
+            model = ((ExerciseModel) activeExer.getExerciseModel());
+        }
+        TextHelpPopup.helpContextual(model.getExerciseType());
     }
 
 
