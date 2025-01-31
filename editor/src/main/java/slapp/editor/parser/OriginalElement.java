@@ -1,17 +1,19 @@
 package slapp.editor.parser;
 
 import com.gluonhq.richtextarea.model.TextDecoration;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 
-import static slapp.editor.parser.ExpressionType.ELEMENT;
+import static slapp.editor.parser.ExpressionType.ORIGINAL_ELEMENT;
 
-public class Element implements Expression {
+public class OriginalElement implements Expression {
 
-    ExpressionType type = ELEMENT;
+    ExpressionType type = ORIGINAL_ELEMENT;
     TextDecoration decoration;
     int code;
 
 
-    Element(int code, TextDecoration decoration) {
+    OriginalElement(int code, TextDecoration decoration) {
         this.code = code;
         this.decoration = decoration;
     }
@@ -24,4 +26,7 @@ public class Element implements Expression {
     public String toString() {
         return "code: " + code + " Dec: " + decoration.toString();
     }
+
+    @Override
+    public TextFlow toTextFlow() {return null;}
 }

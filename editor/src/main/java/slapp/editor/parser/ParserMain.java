@@ -9,6 +9,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
+import slapp.editor.decorated_rta.DecoratedRTA;
+
+import java.util.List;
 
 import static javafx.application.Application.launch;
 
@@ -16,11 +19,13 @@ public class ParserMain {
 
     public ParserMain(Stage stage) {
 
-        RichTextArea rta = new RichTextArea(stage);
+        DecoratedRTA drta = new DecoratedRTA();
+
+        RichTextArea rta = drta.getEditor();
         rta.setPrefHeight(400);
         rta.setPrefWidth(400);
 
-        Document doc = new Document("Hello \ud835\udd04 \ud835\udd04 World");
+        Document doc = new Document("");
         rta.getActionFactory().open(doc).execute(new ActionEvent());
         rta.setPadding(new Insets(20));
 
@@ -46,5 +51,8 @@ public class ParserMain {
         stage.show();
 
     }
+
+    void runTest() {    }
+
 
 }
