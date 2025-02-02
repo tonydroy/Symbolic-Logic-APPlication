@@ -98,16 +98,16 @@ public class ParseUtilities {
     private Language testLanguage() {
         Language lang = new Language("Lq");
 
-        lang.setOpenBracket1(40); lang.setCloseBracket1(41);
-        lang.setNegation(8764);
-        lang.setConditional(8594);
-        lang.setUniversal(8704);
+        lang.setOpenBracket1("("); lang.setCloseBracket1(")");
+        lang.setNegation("\u223c");
+        lang.setConditional("\u2192");
+        lang.setUniversalQuant("\u2200");
         lang.setVariables(Alphabets.getCharacterRange("\ud835\udc56", "\ud835\udc67"));
-        lang.setIntVariableSubs(true);
+        lang.setVariableSubs(true);
         lang.setConstants(Alphabets.getCharacterRange("\ud835\udc4e", "\u210e"));
-        lang.setIntConstantSubs(true);
+        lang.setConstantSubs(true);
         lang.setSentenceLetters(Alphabets.getCharacterRange("\ud835\udc34", "\ud835\udc4d"));
-        lang.setIntSentenceLetterSubs(true);
+        lang.setSentenceLetterSubs(true);
         lang.setXrelationSymbols(Alphabets.getCharacterRange("\ud835\udc34", "\ud835\udc4d"));
         lang.setXrelationSymbolSubs(true);
         lang.setXrelationSymbolsRequireSuper(true);

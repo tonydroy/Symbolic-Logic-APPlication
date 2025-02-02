@@ -21,6 +21,7 @@ public enum ExpressionType {
     EXISTENTIAL_QUANTIFIER,
 
     VARIABLE,
+    CONSTANT,
 
     SYMBOL,
     TERM,

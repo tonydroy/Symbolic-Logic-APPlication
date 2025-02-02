@@ -63,7 +63,7 @@ public class Alphabets {
         alphabets = new List[] {normalL, normalU, normalN, italL, italU, sansL, sansU, sansN,scriptL,scriptU,bbL,bbU,bbN,frakL,frakU,greekL,greekU};
     }
 
-    public static List<Integer> getCharacterRange(String start, String end) {
+    public static List<String> getCharacterRange(String start, String end) {
 
         String message = "Please select from a single uppercase, lowercase, or numeral alphabet.";
         for (int i = 0; i < alphabets.length; i++) {

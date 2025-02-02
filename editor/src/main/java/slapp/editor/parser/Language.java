@@ -8,31 +8,33 @@ public class Language implements Serializable {
     private static final long serialVersionUID = 100L;
 
     private String name;
-    private Integer openBracket1, closeBracket1;
-    private Integer openBracket2, closeBracket2;
-    private Integer openBracket3, closeBracket3;
-    private Integer negation;
-    private Integer conditional;
-    private Integer biconditional;
-    private Integer conjunction;
-    private Integer disjunction;
-    private Integer nand; //up arrow
-    private Integer nor; // down arrow
-    private Integer universal;
-    private Integer existential;
-    private List<Integer> variables;
-    private boolean intVariableSubs;
-    private List<Integer> constants;
-    private boolean intConstantSubs;
-    private List<Integer> sentenceLetters;
-    private boolean intSentenceLetterSubs;
-    private List<Integer> xrelationSymbols;
+    private String openBracket1, closeBracket1;
+    private String openBracket2, closeBracket2;
+    private String openBracket3, closeBracket3;
+    private String negation;
+    private String conditional;
+    private String biconditional;
+    private String conjunction;
+    private String disjunction;
+    private String nand; //up arrow
+    private String nor; // down arrow
+    private String universalQuant;
+    private String existentialQuant;
+    private List<String> variables;
+    private boolean variableSubs;
+    private List<String> constants;
+    private boolean constantSubs;
+    private List<String> sentenceLetters;
+    private boolean sentenceLetterSubs;
+    private List<String> xrelationSymbols;
     private boolean xrelationSymbolSubs;
     private boolean xrelationSymbolsRequireSuper;
-    private List<Integer> onePlaceRelSymbols, twoPlaceRelSymbols;
-    private List<Integer> xfunctionSymbols;
+    private List<String> onePlaceRelSymbols, twoPlaceRelSymbols;
+    private boolean allowBinaryInfixRelations;
+    private List<String> xfunctionSymbols;
     private boolean xfunctionSymbolSubs;
-    private List<Integer> onePlaceFunctionSymbols, twoPlaceFunctionSymbols;
+    private List<String> onePlaceFunctionSymbols, twoPlaceFunctionSymbols;
+    private boolean allowBinaryInfixFunctions;
 
     Language(String name) {
         this.name = name;
@@ -42,179 +44,179 @@ public class Language implements Serializable {
         return name;
     }
 
-    public int getOpenBracket1() {
+    public String getOpenBracket1() {
         return openBracket1;
     }
 
-    public void setOpenBracket1(int openBracket1) {
+    public void setOpenBracket1(String openBracket1) {
         this.openBracket1 = openBracket1;
     }
 
-    public int getCloseBracket1() {
+    public String getCloseBracket1() {
         return closeBracket1;
     }
 
-    public void setCloseBracket1(int closeBracket1) {
+    public void setCloseBracket1(String closeBracket1) {
         this.closeBracket1 = closeBracket1;
     }
 
-    public int getOpenBracket2() {
+    public String getOpenBracket2() {
         return openBracket2;
     }
 
-    public void setOpenBracket2(int openBracket2) {
+    public void setOpenBracket2(String openBracket2) {
         this.openBracket2 = openBracket2;
     }
 
-    public int getCloseBracket2() {
+    public String getCloseBracket2() {
         return closeBracket2;
     }
 
-    public void setCloseBracket2(int closeBracket2) {
+    public void setCloseBracket2(String closeBracket2) {
         this.closeBracket2 = closeBracket2;
     }
 
-    public int getOpenBracket3() {
+    public String getOpenBracket3() {
         return openBracket3;
     }
 
-    public void setOpenBracket3(int openBracket3) {
+    public void setOpenBracket3(String openBracket3) {
         this.openBracket3 = openBracket3;
     }
 
-    public int getCloseBracket3() {
+    public String getCloseBracket3() {
         return closeBracket3;
     }
 
-    public void setCloseBracket3(int closeBracket3) {
+    public void setCloseBracket3(String closeBracket3) {
         this.closeBracket3 = closeBracket3;
     }
 
-    public int getNegation() {
+    public String getNegation() {
         return negation;
     }
 
-    public void setNegation(int negation) {
+    public void setNegation(String negation) {
         this.negation = negation;
     }
 
-    public int getConditional() {
+    public String getConditional() {
         return conditional;
     }
 
-    public void setConditional(int conditional) {
+    public void setConditional(String conditional) {
         this.conditional = conditional;
     }
 
-    public int getBiconditional() {
+    public String getBiconditional() {
         return biconditional;
     }
 
-    public void setBiconditional(int biconditional) {
+    public void setBiconditional(String biconditional) {
         this.biconditional = biconditional;
     }
 
-    public int getConjunction() {
+    public String getConjunction() {
         return conjunction;
     }
 
-    public void setConjunction(int conjunction) {
+    public void setConjunction(String conjunction) {
         this.conjunction = conjunction;
     }
 
-    public int getDisjunction() {
+    public String getDisjunction() {
         return disjunction;
     }
 
-    public void setDisjunction(int disjunction) {
+    public void setDisjunction(String disjunction) {
         this.disjunction = disjunction;
     }
 
-    public int getNand() {
+    public String getNand() {
         return nand;
     }
 
-    public void setNand(int nand) {
+    public void setNand(String nand) {
         this.nand = nand;
     }
 
-    public int getNor() {
+    public String getNor() {
         return nor;
     }
 
-    public void setNor(int nor) {
+    public void setNor(String nor) {
         this.nor = nor;
     }
 
-    public int getUniversal() {
-        return universal;
+    public String getUniversalQuant() {
+        return universalQuant;
     }
 
-    public void setUniversal(int universal) {
-        this.universal = universal;
+    public void setUniversalQuant(String universalQuant) {
+        this.universalQuant = universalQuant;
     }
 
-    public int getExistential() {
-        return existential;
+    public String getExistentialQuant() {
+        return existentialQuant;
     }
 
-    public void setExistential(int existential) {
-        this.existential = existential;
+    public void setExistentialQuant(String existentialQuant) {
+        this.existentialQuant = existentialQuant;
     }
 
-    public List<Integer> getVariables() {
+    public List<String> getVariables() {
         return variables;
     }
 
-    public void setVariables(List<Integer> variables) {
+    public void setVariables(List<String> variables) {
         this.variables = variables;
     }
 
-    public boolean isIntVariableSubs() {
-        return intVariableSubs;
+    public boolean isVariableSubs() {
+        return variableSubs;
     }
 
-    public void setIntVariableSubs(boolean intVariableSubs) {
-        this.intVariableSubs = intVariableSubs;
+    public void setVariableSubs(boolean variableSubs) {
+        this.variableSubs = variableSubs;
     }
 
-    public List<Integer> getConstants() {
+    public List<String> getConstants() {
         return constants;
     }
 
-    public void setConstants(List<Integer> constants) {
+    public void setConstants(List<String> constants) {
         this.constants = constants;
     }
 
-    public boolean isIntConstantSubs() {
-        return intConstantSubs;
+    public boolean isConstantSubs() {
+        return constantSubs;
     }
 
-    public void setIntConstantSubs(boolean intConstantSubs) {
-        this.intConstantSubs = intConstantSubs;
+    public void setConstantSubs(boolean constantSubs) {
+        this.constantSubs = constantSubs;
     }
 
-    public List<Integer> getSentenceLetters() {
+    public List<String> getSentenceLetters() {
         return sentenceLetters;
     }
 
-    public void setSentenceLetters(List<Integer> sentenceLetters) {
+    public void setSentenceLetters(List<String> sentenceLetters) {
         this.sentenceLetters = sentenceLetters;
     }
 
-    public boolean isIntSentenceLetterSubs() {
-        return intSentenceLetterSubs;
+    public boolean isSentenceLetterSubs() {
+        return sentenceLetterSubs;
     }
 
-    public void setIntSentenceLetterSubs(boolean intSentenceLetterSubs) {
-        this.intSentenceLetterSubs = intSentenceLetterSubs;
+    public void setSentenceLetterSubs(boolean sentenceLetterSubs) {
+        this.sentenceLetterSubs = sentenceLetterSubs;
     }
 
-    public List<Integer> getXrelationSymbols() {
+    public List<String> getXrelationSymbols() {
         return xrelationSymbols;
     }
 
-    public void setXrelationSymbols(List<Integer> xrelationSymbols) {
+    public void setXrelationSymbols(List<String> xrelationSymbols) {
         this.xrelationSymbols = xrelationSymbols;
     }
 
@@ -234,27 +236,35 @@ public class Language implements Serializable {
         this.xrelationSymbolsRequireSuper = xrelationSymbolsRequireSuper;
     }
 
-    public List<Integer> getOnePlaceRelSymbols() {
+    public List<String> getOnePlaceRelSymbols() {
         return onePlaceRelSymbols;
     }
 
-    public void setOnePlaceRelSymbols(List<Integer> onePlaceRelSymbols) {
+    public void setOnePlaceRelSymbols(List<String> onePlaceRelSymbols) {
         this.onePlaceRelSymbols = onePlaceRelSymbols;
     }
 
-    public List<Integer> getTwoPlaceRelSymbols() {
+    public List<String> getTwoPlaceRelSymbols() {
         return twoPlaceRelSymbols;
     }
 
-    public void setTwoPlaceRelSymbols(List<Integer> twoPlaceRelSymbols) {
+    public void setTwoPlaceRelSymbols(List<String> twoPlaceRelSymbols) {
         this.twoPlaceRelSymbols = twoPlaceRelSymbols;
     }
 
-    public List<Integer> getXfunctionSymbols() {
+    public boolean isAllowBinaryInfixRelations() {
+        return allowBinaryInfixRelations;
+    }
+
+    public void setAllowBinaryInfixRelations(boolean allowBinaryInfixRelations) {
+        this.allowBinaryInfixRelations = allowBinaryInfixRelations;
+    }
+
+    public List<String> getXfunctionSymbols() {
         return xfunctionSymbols;
     }
 
-    public void setXfunctionSymbols(List<Integer> xfunctionSymbols) {
+    public void setXfunctionSymbols(List<String> xfunctionSymbols) {
         this.xfunctionSymbols = xfunctionSymbols;
     }
 
@@ -266,19 +276,27 @@ public class Language implements Serializable {
         this.xfunctionSymbolSubs = xfunctionSymbolSubs;
     }
 
-    public List<Integer> getOnePlaceFunctionSymbols() {
+    public List<String> getOnePlaceFunctionSymbols() {
         return onePlaceFunctionSymbols;
     }
 
-    public void setOnePlaceFunctionSymbols(List<Integer> onePlaceFunctionSymbols) {
+    public void setOnePlaceFunctionSymbols(List<String> onePlaceFunctionSymbols) {
         this.onePlaceFunctionSymbols = onePlaceFunctionSymbols;
     }
 
-    public List<Integer> getTwoPlaceFunctionSymbols() {
+    public List<String> getTwoPlaceFunctionSymbols() {
         return twoPlaceFunctionSymbols;
     }
 
-    public void setTwoPlaceFunctionSymbols(List<Integer> twoPlaceFunctionSymbols) {
+    public void setTwoPlaceFunctionSymbols(List<String> twoPlaceFunctionSymbols) {
         this.twoPlaceFunctionSymbols = twoPlaceFunctionSymbols;
+    }
+
+    public boolean isAllowBinaryInfixFunctions() {
+        return allowBinaryInfixFunctions;
+    }
+
+    public void setAllowBinaryInfixFunctions(boolean allowBinaryInfixFunctions) {
+        this.allowBinaryInfixFunctions = allowBinaryInfixFunctions;
     }
 }
