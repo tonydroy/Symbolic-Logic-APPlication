@@ -20,9 +20,7 @@ public class Biconditional implements Expression {
     }
 
     @Override
-    public String toString() {
-        return textString;
-    }
+    public ExpressionType getType() {return type;}
 
     @Override
     public TextFlow toTextFlow() {
@@ -31,6 +29,23 @@ public class Biconditional implements Expression {
     }
 
     @Override
-    public ExpressionType getType() {return type;}
+    public String toString() {
+        return textString;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o instanceof Biconditional) {
+            Biconditional other = (Biconditional) o;
+            return textString.equals(other.textString);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return textString.hashCode();
+    }
 
 }

@@ -20,9 +20,7 @@ public class Nor implements Expression {
     }
 
     @Override
-    public String toString() {
-        return textString;
-    }
+    public ExpressionType getType() {return type;}
 
     @Override
     public TextFlow toTextFlow() {
@@ -31,6 +29,25 @@ public class Nor implements Expression {
     }
 
     @Override
-    public ExpressionType getType() {return type;}
+    public String toString() {
+        return textString;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o instanceof Nor) {
+            Nor other = (Nor) o;
+            return textString.equals(other.textString);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return textString.hashCode();
+    }
+
+
 
 }

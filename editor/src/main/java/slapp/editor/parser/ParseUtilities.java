@@ -16,16 +16,25 @@ public class ParseUtilities {
     public static List<OriginalElement> getElements(Document doc) {
         List<OriginalElement> elements = new ArrayList<OriginalElement>();
         String text = doc.getText();
-        for (int i = 0; i < text.length(); ) {
-            int codePoint = text.codePointAt(i);
-            TextDecoration dec = (TextDecoration) (getDecorationAtIndex(i, doc.getDecorations()).getDecoration());
-            OriginalElement element = new OriginalElement(codePoint, dec);
-            elements.add(element);
-            i += Character.charCount(codePoint);
-        }
+        String s;
         int i = 0;
+        while (i < text.length()) {
+            int len = 1;
+            if (i + 2 <= text.length() && text.codePointCount(i, i + 2) == 1) {
+                len = 2;
+            }
+            s = text.substring(i, i + len);
+            TextDecoration dec = (TextDecoration) (getDecorationAtIndex(i, doc.getDecorations()).getDecoration());
+            OriginalElement element = new OriginalElement(s, dec);
+            elements.add(element);
+            i = i + len;
+        }
+        i = 0;
         while (i < elements.size()) {
-            if (Character.isWhitespace((char) (elements.get(i).code))) {
+            String elementStr = elements.get(i).getElementStr();
+            char ch = elementStr.charAt(0);
+            boolean bad = elementStr.length() == 1 && 0xD800 <= (int) ch && (int) ch <= 0xDFFF;
+            if (Character.isWhitespace(ch) || bad) {
                 elements.remove(i);
                 continue;
             }
@@ -72,12 +81,17 @@ public class ParseUtilities {
         return t;
     }
 
-    public static Text newShiftedSubscriptText(String text) {
-        Text t = new Text(text);
-        t.setFont(new Font("Noto Serif Combo", 11 * .72));
-        t.setTranslateY(11 * .17);
-        t.setTranslateX(11 * -.3);
-        return t;
+    public static Text[] newSupSubText(String supText, String subText) {
+        Text t1 = new Text(supText);
+        Text t2 = new Text(subText);
+        t1.setFont(new Font("Noto Serif Combo", 11 * .72));
+        t2.setFont(new Font("Noto Serif Combo", 11 * .72));
+        t1.setTranslateY(11 * -.4);
+        t2.setTranslateY(11 * .17);
+        t1.applyCss();
+        double offset = t1.getLayoutBounds().getWidth();
+        t2.setTranslateX(-offset);
+        return new Text[]{t1, t2};
     }
 
     //delete once have create window
@@ -88,16 +102,16 @@ public class ParseUtilities {
         lang.setNegation(8764);
         lang.setConditional(8594);
         lang.setUniversal(8704);
-        lang.setVariables(Alphabets.getCharacterRange(11984, 119911));
+        lang.setVariables(Alphabets.getCharacterRange("\ud835\udc56", "\ud835\udc67"));
         lang.setIntVariableSubs(true);
-        lang.setConstants(Alphabets.getCharacterRange(119886, 8462));
+        lang.setConstants(Alphabets.getCharacterRange("\ud835\udc4e", "\u210e"));
         lang.setIntConstantSubs(true);
-        lang.setSentenceLetters(Alphabets.getCharacterRange(119860, 119885));
+        lang.setSentenceLetters(Alphabets.getCharacterRange("\ud835\udc34", "\ud835\udc4d"));
         lang.setIntSentenceLetterSubs(true);
-        lang.setXrelationSymbols(Alphabets.getCharacterRange(119860, 119885));
+        lang.setXrelationSymbols(Alphabets.getCharacterRange("\ud835\udc34", "\ud835\udc4d"));
         lang.setXrelationSymbolSubs(true);
         lang.setXrelationSymbolsRequireSuper(true);
-        lang.setXfunctionSymbols(Alphabets.getCharacterRange(119886, 1219911));
+        lang.setXfunctionSymbols(Alphabets.getCharacterRange("\ud835\udc4e", "\ud835\udc67"));
         lang.setXfunctionSymbolSubs(true);
         return lang;
     }

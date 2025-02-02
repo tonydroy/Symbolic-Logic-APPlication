@@ -20,17 +20,37 @@ public class UniversalQuantifier implements Expression {
     }
 
     @Override
+    public ExpressionType getType() {return type;}
+
+    @Override
+    public TextFlow toTextFlow() {
+        Text text = ParseUtilities.newRegularText(textString);
+        return new TextFlow(text);
+    }
+
+    @Override
     public String toString() {
         return textString;
     }
 
     @Override
-    public TextFlow toTextFlow() {
-        Text text = ParseUtilities.newRegularText(" " + textString + " ");
-        return new TextFlow(text);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o instanceof UniversalQuantifier) {
+            UniversalQuantifier other = (UniversalQuantifier) o;
+            return textString.equals(other.textString);
+        }
+        return false;
     }
 
     @Override
-    public ExpressionType getType() {return type;}
+    public int hashCode() {
+        return textString.hashCode();
+    }
+
+
+
+
+
 
 }

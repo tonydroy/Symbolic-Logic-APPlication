@@ -21,9 +21,7 @@ public class CloseBracket1 implements Expression {
     }
 
     @Override
-    public String toString() {
-        return textString;
-    }
+    public ExpressionType getType() {return type;}
 
     @Override
     public TextFlow toTextFlow() {
@@ -32,5 +30,24 @@ public class CloseBracket1 implements Expression {
     }
 
     @Override
-    public ExpressionType getType() {return type;}
+    public String toString() {
+        return textString;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o instanceof Biconditional) {
+            CloseBracket1 other = (CloseBracket1) o;
+            return textString.equals(other.textString);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return textString.hashCode();
+    }
+
+
 }

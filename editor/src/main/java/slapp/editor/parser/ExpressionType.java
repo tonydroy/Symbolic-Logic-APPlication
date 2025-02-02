@@ -20,7 +20,7 @@ public enum ExpressionType {
     UNIVERSAL_QUANTIFIER,
     EXISTENTIAL_QUANTIFIER,
 
-
+    VARIABLE,
 
     SYMBOL,
     TERM,
