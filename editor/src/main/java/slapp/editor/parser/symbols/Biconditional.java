@@ -15,7 +15,7 @@ public class Biconditional implements Expression {
     private ExpressionType type = BICONDITIONAL;
     private String textString;
 
-    Biconditional(String textString) {
+    public Biconditional(String textString) {
         this.textString = textString;
     }
 

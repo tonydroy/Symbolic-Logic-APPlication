@@ -15,7 +15,7 @@ public class Disjunction implements Expression {
     private ExpressionType type = DISJUNCTION;
     private String textString;
 
-    Disjunction(String textString) {
+    public Disjunction(String textString) {
         this.textString = textString;
     }
 

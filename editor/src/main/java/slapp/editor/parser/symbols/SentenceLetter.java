@@ -6,15 +6,14 @@ import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.ParseUtilities;
 
+public class SentenceLetter implements Expression {
 
-public class Variable implements Expression {
-
-    private ExpressionType type = ExpressionType.VARIABLE;
+    private ExpressionType type = ExpressionType.SENTENCE_LETTER;
     private String baseStr;
     private String subscriptStr = "";
 
 
-    public Variable(String baseSymbol, String subscriptSymbol) {
+    public SentenceLetter(String baseSymbol, String subscriptSymbol) {
         this.baseStr = baseSymbol;
         this.subscriptStr = subscriptSymbol;
     }
@@ -40,8 +39,8 @@ public class Variable implements Expression {
     @Override
     public boolean equals(Object o) {
         if (o == this) return true;
-        if ((o instanceof Variable)) {
-            Variable other = (Variable) o;
+        if ((o instanceof SentenceLetter)) {
+            SentenceLetter other = (SentenceLetter) o;
             return baseStr.equals(other.baseStr) && subscriptStr.equals(other.subscriptStr);
         }
         return false;
@@ -51,5 +50,4 @@ public class Variable implements Expression {
     public int hashCode() {
         return baseStr.hashCode() + subscriptStr.hashCode();
     }
-
 }

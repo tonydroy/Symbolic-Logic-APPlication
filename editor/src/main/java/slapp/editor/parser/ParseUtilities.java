@@ -5,11 +5,176 @@ import com.gluonhq.richtextarea.model.Document;
 import com.gluonhq.richtextarea.model.TextDecoration;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import slapp.editor.parser.symbols.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ParseUtilities {
+    private static Language language;
+
+    public ParseUtilities() {
+        //for now
+        this.language = Languages.getLanguage("Lq");
+    }
+
+    public static List<Expression> parseDoc(Document doc) {
+        List<OriginalElement> elements = getElements(doc);
+        List<Expression> expressions = getSymbols(elements);
+
+        return expressions;
+    }
+
+    public static List<Expression> getSymbols(List<OriginalElement> elements) {
+        List<Expression> expressions = new ArrayList<>();
+        for (OriginalElement element : elements) {
+            expressions.add(element);
+        }
+        for (int i = 0; i < elements.size(); i++) {
+            String elementStr = elements.get(i).getElementStr();
+            if (elementStr.equals(language.getOpenBracket1())) {expressions.set(i, new OpenBracket1(elementStr)); continue;}
+            if (elementStr.equals(language.getOpenBracket2())) {expressions.set(i, new OpenBracket2(elementStr)); continue;}
+            if (elementStr.equals(language.getOpenBracket3())) {expressions.set(i, new OpenBracket3(elementStr)); continue;}
+            if (elementStr.equals(language.getCloseBracket1())) {expressions.set(i, new CloseBracket1(elementStr)); continue;}
+            if (elementStr.equals(language.getCloseBracket2())) {expressions.set(i, new CloseBracket2(elementStr)); continue;}
+            if (elementStr.equals(language.getCloseBracket3())) {expressions.set(i, new CloseBracket3(elementStr)); continue;}
+            if (elementStr.equals(language.getNegation())) {expressions.set(i, new Negation(elementStr)); continue;}
+            if (elementStr.equals(language.getConditional())) {expressions.set(i, new Conditional(elementStr)); continue;}
+            if (elementStr.equals(language.getBiconditional())) {expressions.set(i, new Biconditional(elementStr)); continue;}
+            if (elementStr.equals(language.getConjunction())) {expressions.set(i, new Conjunction(elementStr)); continue;}
+            if (elementStr.equals(language.getDisjunction())) {expressions.set(i, new Disjunction(elementStr)); continue;}
+            if (elementStr.equals(language.getNand())) {expressions.set(i, new Nand(elementStr)); continue;}
+            if (elementStr.equals(language.getNor())) {expressions.set(i, new Nor(elementStr)); continue;}
+            if (elementStr.equals(language.getUniversalQuant())) {expressions.set(i, new UniversalQuantifier(elementStr)); continue;}
+            if (elementStr.equals(language.getExistentialQuant())) {expressions.set(i, new ExistentialQuantifier(elementStr));}
+        }
+
+        for (int i = 0; i < elements.size(); i++) {
+            String elementStr = null;
+            String subString = null;
+            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
+            if (language.getVariables().contains(elementStr)) {
+                if (language.isVariableSubs()) subString = getSubString(i, expressions);
+                Variable variable = new Variable(elementStr, subString);
+                expressions.set(i, variable);
+            }
+        }
+
+        for (int i = 0; i < elements.size(); i++) {
+            String elementStr = null;
+            String subString = null;
+            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
+            if (language.getConstants().contains(elementStr)) {
+                if (language.isConstantSubs()) subString = getSubString(i, expressions);
+                Constant constant = new Constant(elementStr, subString);
+                expressions.set(i, constant);
+            }
+        }
+
+        for (int i = 0; i < elements.size(); i++) {
+            String elementStr = null;
+            String subString = null;
+            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) { elementStr = ((OriginalElement) expressions.get(i)).getElementStr(); }
+            if (language.getSentenceLetters().contains(elementStr)) {
+                int j = i + 1;
+                if  (language.isSentenceLetterSubs() && j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                        ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) { subString = getSubString(j, expressions); }
+                SentenceLetter sentenceLetter = new SentenceLetter(elementStr, subString);
+                expressions.set(i, sentenceLetter);
+            }
+        }
+
+        for (int i = 0; i < elements.size(); i++) {
+            String elementStr = null;
+            String subString = null;
+            String supString = null;
+            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) { elementStr = ((OriginalElement) expressions.get(i)).getElementStr(); }
+            if (language.getOnePlaceRelSymbols().contains(elementStr)) {expressions.set(i, new RelationSymbol(elementStr, null, null, 1)); continue;}
+            if (language.getTwoPlaceRelSymbols().contains(elementStr)) {expressions.set(i, new RelationSymbol(elementStr, null, null, 2) ); continue;}
+            if (language.getXrelationSymbols().contains(elementStr)) {
+                int j = i + 1;
+                if  (language.isXrelationSymbolSubs() && j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                        ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
+                    subString = getSubString(j, expressions);
+                    if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                            ((OriginalElement) expressions.get(j)).isSuperscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]"))
+                        supString = getSupString(j, expressions);
+                }
+                else if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                        ((OriginalElement) expressions.get(j)).isSuperscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
+                    supString = getSupString(j, expressions);
+                    if (language.isXrelationSymbolSubs() && j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                            ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]"))
+                        subString = getSubString(j, expressions);
+                }
+                if (!(language.isXrelationSymbolsRequireSuper() && supString == null)) {
+                    RelationSymbol relationSymbol = new RelationSymbol(elementStr, subString, supString, Integer.parseInt(supString));
+                    expressions.set(i, relationSymbol);
+                }
+                else {
+                    System.out.println("ERROR: Relation symbol " + elementStr + " requires positive integer superscript");
+                    break;
+                }
+            }
+        }
+
+        for (int i = 0; i < elements.size(); i++) {
+            String elementStr = null;
+            String subString = null;
+            String supString = null;
+            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) { elementStr = ((OriginalElement) expressions.get(i)).getElementStr(); }
+            if (language.getOnePlaceFunctionSymbols().contains(elementStr)) {expressions.set(i, new FunctionSymbol(elementStr, null, null, 1)); continue;}
+            if (language.getTwoPlaceFunctionSymbols().contains(elementStr)) {expressions.set(i, new FunctionSymbol(elementStr, null, null, 2) ); continue;}
+            if (language.getXfunctionSymbols().contains(elementStr)) {
+                int j = i + 1;
+                if  (language.isXfunctionSymbolSubs() && j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                        ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
+                    subString = getSubString(j, expressions);
+                    if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                            ((OriginalElement) expressions.get(j)).isSuperscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]"))
+                        supString = getSupString(j, expressions);
+                }
+                else if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                        ((OriginalElement) expressions.get(j)).isSuperscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
+                    supString = getSupString(j, expressions);
+                    if (language.isXfunctionSymbolSubs() && j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                            ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]"))
+                        subString = getSubString(j, expressions);
+                }
+                if (supString != null) {
+                    FunctionSymbol functionSymbol = new FunctionSymbol(elementStr, subString, supString, Integer.parseInt(supString));
+                    expressions.set(i, functionSymbol);
+                }
+                else {
+                    System.out.println("ERROR: Function symbol " + elementStr + " requires positive integer superscript");
+                    break;
+                }
+            }
+        }
+
+
+
+
+        return expressions;
+    }
+
+    private static String getSubString(int j, List<Expression> expressions) {
+        StringBuilder sb = new StringBuilder();
+        while (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[0-9]")) {
+            sb.append(((OriginalElement) expressions.get(j)).getElementStr());
+            expressions.remove(j);
+        }
+        return sb.toString();
+    }
+
+    private static String getSupString(int j, List<Expression> expressions) {
+        StringBuilder sb = new StringBuilder();
+        while (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(j)).isSuperscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[0-9]")) {
+            sb.append(((OriginalElement) expressions.get(j)).getElementStr());
+            expressions.remove(j);
+        }
+        return sb.toString();
+    }
 
 
     //strip space characters and return list of remaining elements
@@ -61,6 +226,15 @@ public class ParseUtilities {
         return decorationAtIndex;
     }
 
+
+
+
+
+
+
+
+
+
     public static Text newRegularText(String text) {
         Text t = new Text(text);
         t.setFont(new Font("Noto Serif Combo", 11));
@@ -94,26 +268,7 @@ public class ParseUtilities {
         return new Text[]{t1, t2};
     }
 
-    //delete once have create window
-    private Language testLanguage() {
-        Language lang = new Language("Lq");
 
-        lang.setOpenBracket1("("); lang.setCloseBracket1(")");
-        lang.setNegation("\u223c");
-        lang.setConditional("\u2192");
-        lang.setUniversalQuant("\u2200");
-        lang.setVariables(Alphabets.getCharacterRange("\ud835\udc56", "\ud835\udc67"));
-        lang.setVariableSubs(true);
-        lang.setConstants(Alphabets.getCharacterRange("\ud835\udc4e", "\u210e"));
-        lang.setConstantSubs(true);
-        lang.setSentenceLetters(Alphabets.getCharacterRange("\ud835\udc34", "\ud835\udc4d"));
-        lang.setSentenceLetterSubs(true);
-        lang.setXrelationSymbols(Alphabets.getCharacterRange("\ud835\udc34", "\ud835\udc4d"));
-        lang.setXrelationSymbolSubs(true);
-        lang.setXrelationSymbolsRequireSuper(true);
-        lang.setXfunctionSymbols(Alphabets.getCharacterRange("\ud835\udc4e", "\ud835\udc67"));
-        lang.setXfunctionSymbolSubs(true);
-        return lang;
-    }
+
 
 }

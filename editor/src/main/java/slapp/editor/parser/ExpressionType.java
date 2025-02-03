@@ -22,6 +22,9 @@ public enum ExpressionType {
 
     VARIABLE,
     CONSTANT,
+    SENTENCE_LETTER,
+    RELATION_SYMBOL,
+    FUNCTION_SYMBOL,
 
     SYMBOL,
     TERM,

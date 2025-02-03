@@ -14,7 +14,7 @@ public class Negation implements Expression {
     private ExpressionType type = NEGATION;
     private String textString;
 
-    Negation(String textString) {
+    public Negation(String textString) {
         this.textString = textString;
     }
 

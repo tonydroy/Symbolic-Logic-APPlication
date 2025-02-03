@@ -15,7 +15,7 @@ public class Conditional implements Expression {
     private ExpressionType type = CONDITIONAL;
     private String textString;
 
-    Conditional(String textString) {
+    public Conditional(String textString) {
         this.textString = textString;
     }
 

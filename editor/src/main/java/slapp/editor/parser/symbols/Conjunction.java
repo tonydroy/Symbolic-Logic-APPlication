@@ -15,7 +15,7 @@ public class Conjunction implements Expression {
     private ExpressionType type = CONJUNCTION;
     private String textString;
 
-    Conjunction(String textString) {
+    public Conjunction(String textString) {
         this.textString = textString;
     }
 

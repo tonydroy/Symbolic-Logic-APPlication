@@ -16,7 +16,7 @@ public class OpenBracket2 implements Expression {
     private String textString;
 
 
-    OpenBracket2(String textString) {
+    public OpenBracket2(String textString) {
         this.textString = textString;
     }
 

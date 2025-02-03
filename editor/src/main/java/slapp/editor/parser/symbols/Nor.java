@@ -15,7 +15,7 @@ public class Nor implements Expression {
     private ExpressionType type = NOR;
     private String textString;
 
-    Nor(String textString) {
+    public Nor(String textString) {
         this.textString = textString;
     }
 

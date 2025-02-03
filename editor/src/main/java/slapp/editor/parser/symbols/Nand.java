@@ -15,7 +15,7 @@ public class Nand implements Expression {
     private ExpressionType type = NAND;
     private String textString;
 
-    Nand(String textString) {
+    public Nand(String textString) {
         this.textString = textString;
     }
 

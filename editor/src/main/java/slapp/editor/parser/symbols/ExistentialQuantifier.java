@@ -15,7 +15,7 @@ public class ExistentialQuantifier implements Expression {
     private ExpressionType type = EXISTENTIAL_QUANTIFIER;
     private String textString;
 
-    ExistentialQuantifier(String textString) {
+    public ExistentialQuantifier(String textString) {
         this.textString = textString;
     }
 

@@ -13,7 +13,7 @@ public class Constant implements Expression {
     private String subscriptStr = "";
 
 
-    Constant(String baseSymbol, String subscriptSymbol) {
+    public Constant(String baseSymbol, String subscriptSymbol) {
         this.baseStr = baseSymbol;
         this.subscriptStr = subscriptSymbol;
     }

@@ -15,7 +15,7 @@ public class UniversalQuantifier implements Expression {
     private ExpressionType type = UNIVERSAL_QUANTIFIER;
     private String textString;
 
-    UniversalQuantifier(String textString) {
+    public UniversalQuantifier(String textString) {
         this.textString = textString;
     }
 

@@ -19,6 +19,14 @@ public class OriginalElement implements Expression {
 
     public String getElementStr() {     return elementStr;  }
 
+    public boolean isSuperscript() {
+        return decoration.isSuperscript() || decoration.isTransSuperscript();
+    }
+
+    public boolean isSubscript() {
+        return decoration.isSubscript() || decoration.isTransSubscript();
+    }
+
     @Override
     public ExpressionType getType() { return type; }
 

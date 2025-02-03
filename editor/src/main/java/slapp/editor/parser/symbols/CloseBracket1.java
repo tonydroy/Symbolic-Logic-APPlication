@@ -16,7 +16,7 @@ public class CloseBracket1 implements Expression {
     private String textString;
 
 
-    CloseBracket1(String textString) {
+    public CloseBracket1(String textString) {
         this.textString = textString;
     }
 
