@@ -49,38 +49,52 @@ public class ParseUtilities {
             if (elementStr.equals(language.getExistentialQuant())) {expressions.set(i, new ExistentialQuantifier(elementStr));}
         }
 
+
         for (int i = 0; i < elements.size(); i++) {
             String elementStr = null;
             String subString = null;
-            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
-            if (language.getVariables().contains(elementStr)) {
-                if (language.isVariableSubs()) subString = getSubString(i, expressions);
-                Variable variable = new Variable(elementStr, subString);
-                expressions.set(i, variable);
+            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) {
+                elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
+                if (language.getVariables().contains(elementStr)) {
+                    int j = i + 1;
+                    if (language.isVariableSubs() && j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                            ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) subString = getSubString(i, expressions);
+                    Variable variable = new Variable(elementStr, subString);
+                    expressions.set(i, variable);
+                }
             }
         }
 
         for (int i = 0; i < elements.size(); i++) {
             String elementStr = null;
             String subString = null;
-            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
-            if (language.getConstants().contains(elementStr)) {
-                if (language.isConstantSubs()) subString = getSubString(i, expressions);
-                Constant constant = new Constant(elementStr, subString);
-                expressions.set(i, constant);
+            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) {
+                elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
+                if (language.getConstants().contains(elementStr)) {
+                    int j = i + 1;
+                    if (language.isConstantSubs() && j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                            ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]"))
+                        subString = getSubString(i, expressions);
+                    Constant constant = new Constant(elementStr, subString);
+                    expressions.set(i, constant);
+                }
             }
         }
 
-        for (int i = 0; i < elements.size(); i++) {
+       for (int i = 0; i < elements.size(); i++) {
             String elementStr = null;
             String subString = null;
-            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) { elementStr = ((OriginalElement) expressions.get(i)).getElementStr(); }
-            if (language.getSentenceLetters().contains(elementStr)) {
-                int j = i + 1;
-                if  (language.isSentenceLetterSubs() && j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
-                        ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) { subString = getSubString(j, expressions); }
-                SentenceLetter sentenceLetter = new SentenceLetter(elementStr, subString);
-                expressions.set(i, sentenceLetter);
+            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) {
+                elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
+                if (language.getSentenceLetters().contains(elementStr)) {
+                    int j = i + 1;
+                    if (language.isSentenceLetterSubs() && j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                            ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
+                        subString = getSubString(j, expressions);
+                    }
+                    SentenceLetter sentenceLetter = new SentenceLetter(elementStr, subString);
+                    expressions.set(i, sentenceLetter);
+                }
             }
         }
 
@@ -88,32 +102,38 @@ public class ParseUtilities {
             String elementStr = null;
             String subString = null;
             String supString = null;
-            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) { elementStr = ((OriginalElement) expressions.get(i)).getElementStr(); }
-            if (language.getOnePlaceRelSymbols().contains(elementStr)) {expressions.set(i, new RelationSymbol(elementStr, null, null, 1)); continue;}
-            if (language.getTwoPlaceRelSymbols().contains(elementStr)) {expressions.set(i, new RelationSymbol(elementStr, null, null, 2) ); continue;}
-            if (language.getXrelationSymbols().contains(elementStr)) {
-                int j = i + 1;
-                if  (language.isXrelationSymbolSubs() && j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
-                        ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
-                    subString = getSubString(j, expressions);
-                    if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
-                            ((OriginalElement) expressions.get(j)).isSuperscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]"))
-                        supString = getSupString(j, expressions);
+            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) {
+                elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
+                if (language.getOnePlaceRelSymbols().contains(elementStr)) {
+                    expressions.set(i, new RelationSymbol(elementStr, null, null, 1));
+                    continue;
                 }
-                else if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
-                        ((OriginalElement) expressions.get(j)).isSuperscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
-                    supString = getSupString(j, expressions);
+                if (language.getTwoPlaceRelSymbols().contains(elementStr)) {
+                    expressions.set(i, new RelationSymbol(elementStr, null, null, 2));
+                    continue;
+                }
+                if (language.getXrelationSymbols().contains(elementStr)) {
+                    int j = i + 1;
                     if (language.isXrelationSymbolSubs() && j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
-                            ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]"))
+                            ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
                         subString = getSubString(j, expressions);
-                }
-                if (!(language.isXrelationSymbolsRequireSuper() && supString == null)) {
-                    RelationSymbol relationSymbol = new RelationSymbol(elementStr, subString, supString, Integer.parseInt(supString));
-                    expressions.set(i, relationSymbol);
-                }
-                else {
-                    System.out.println("ERROR: Relation symbol " + elementStr + " requires positive integer superscript");
-                    break;
+                        if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                                ((OriginalElement) expressions.get(j)).isSuperscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]"))
+                            supString = getSupString(j, expressions);
+                    } else if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                            ((OriginalElement) expressions.get(j)).isSuperscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
+                        supString = getSupString(j, expressions);
+                        if (language.isXrelationSymbolSubs() && j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                                ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]"))
+                            subString = getSubString(j, expressions);
+                    }
+                    if (!(language.isXrelationSymbolsRequireSuper() && supString == null)) {
+                        RelationSymbol relationSymbol = new RelationSymbol(elementStr, subString, supString, Integer.parseInt(supString));
+                        expressions.set(i, relationSymbol);
+                    } else {
+                        System.out.println("ERROR: Relation symbol " + elementStr + " requires positive integer superscript");
+                        break;
+                    }
                 }
             }
         }
@@ -122,38 +142,41 @@ public class ParseUtilities {
             String elementStr = null;
             String subString = null;
             String supString = null;
-            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) { elementStr = ((OriginalElement) expressions.get(i)).getElementStr(); }
-            if (language.getOnePlaceFunctionSymbols().contains(elementStr)) {expressions.set(i, new FunctionSymbol(elementStr, null, null, 1)); continue;}
-            if (language.getTwoPlaceFunctionSymbols().contains(elementStr)) {expressions.set(i, new FunctionSymbol(elementStr, null, null, 2) ); continue;}
-            if (language.getXfunctionSymbols().contains(elementStr)) {
-                int j = i + 1;
-                if  (language.isXfunctionSymbolSubs() && j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
-                        ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
-                    subString = getSubString(j, expressions);
-                    if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
-                            ((OriginalElement) expressions.get(j)).isSuperscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]"))
-                        supString = getSupString(j, expressions);
+            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) {
+                elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
+                if (language.getOnePlaceFunctionSymbols().contains(elementStr)) {
+                    expressions.set(i, new FunctionSymbol(elementStr, null, null, 1));
+                    continue;
                 }
-                else if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
-                        ((OriginalElement) expressions.get(j)).isSuperscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
-                    supString = getSupString(j, expressions);
+                if (language.getTwoPlaceFunctionSymbols().contains(elementStr)) {
+                    expressions.set(i, new FunctionSymbol(elementStr, null, null, 2));
+                    continue;
+                }
+                if (language.getXfunctionSymbols().contains(elementStr)) {
+                    int j = i + 1;
                     if (language.isXfunctionSymbolSubs() && j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
-                            ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]"))
+                            ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
                         subString = getSubString(j, expressions);
-                }
-                if (supString != null) {
-                    FunctionSymbol functionSymbol = new FunctionSymbol(elementStr, subString, supString, Integer.parseInt(supString));
-                    expressions.set(i, functionSymbol);
-                }
-                else {
-                    System.out.println("ERROR: Function symbol " + elementStr + " requires positive integer superscript");
-                    break;
+                        if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                                ((OriginalElement) expressions.get(j)).isSuperscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]"))
+                            supString = getSupString(j, expressions);
+                    } else if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                            ((OriginalElement) expressions.get(j)).isSuperscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
+                        supString = getSupString(j, expressions);
+                        if (language.isXfunctionSymbolSubs() && j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                                ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]"))
+                            subString = getSubString(j, expressions);
+                    }
+                    if (supString != null) {
+                        FunctionSymbol functionSymbol = new FunctionSymbol(elementStr, subString, supString, Integer.parseInt(supString));
+                        expressions.set(i, functionSymbol);
+                    } else {
+                        System.out.println("ERROR: Function symbol " + elementStr + " requires positive integer superscript");
+                        break;
+                    }
                 }
             }
         }
-
-
-
 
         return expressions;
     }
