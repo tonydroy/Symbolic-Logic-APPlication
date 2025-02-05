@@ -26,7 +26,7 @@ public enum ExpressionType {
     RELATION_SYMBOL,
     FUNCTION_SYMBOL,
 
-    SYMBOL,
+
     TERM,
     FORMULA
 }

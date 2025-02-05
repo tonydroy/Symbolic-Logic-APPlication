@@ -50,7 +50,7 @@ public RelationSymbol(String baseStr, String subscriptStr, String superscriptStr
     @Override
     public boolean equals(Object o) {
         if (o == this) return true;
-        if ((o instanceof RelationSymbol)) {
+        if (o instanceof RelationSymbol) {
             RelationSymbol other = (RelationSymbol) o;
             return baseStr.equals(other.baseStr) && places == other.places && subscriptStr.equals(other.subscriptStr) && superscriptStr.equals(other.superscriptStr);
         }

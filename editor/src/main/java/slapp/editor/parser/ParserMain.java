@@ -35,14 +35,26 @@ public class ParserMain {
             rta.getActionFactory().saveNow().execute(new ActionEvent());
             Document doc1 = rta.getDocument();
 
+            ParseUtilities parse = new ParseUtilities();
+            List<Expression> symbols = ParseUtilities.parseDoc(doc1);
 
-            for (int i = 0; i < ParseUtilities.getElements(doc1).size(); i ++) {
-                System.out.println(i + ": " + ParseUtilities.getElements(doc1).get(i));
+            for (Expression expr : symbols) {
+                System.out.println(expr.getType() + ": " + expr);
             }
 
 
 
-  //          System.out.println(doc1);
+
+
+            /*
+            for (int i = 0; i < ParseUtilities.getElements(doc1).size(); i ++) {
+                System.out.println(i + ": " + ParseUtilities.getElements(doc1).get(i));
+            }
+             */
+
+
+
+
         });
 
         VBox box = new VBox(10, button, rta);
@@ -52,7 +64,7 @@ public class ParserMain {
 
     }
 
-    void runTest() {    }
+
 
 
 }

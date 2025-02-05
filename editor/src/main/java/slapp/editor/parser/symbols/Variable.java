@@ -14,9 +14,9 @@ public class Variable implements Expression {
     private String subscriptStr = "";
 
 
-    public Variable(String baseSymbol, String subscriptSymbol) {
+    public Variable(String baseSymbol, String subscriptStr) {
         this.baseStr = baseSymbol;
-        this.subscriptStr = subscriptSymbol;
+        this.subscriptStr = subscriptStr;
     }
 
     @Override

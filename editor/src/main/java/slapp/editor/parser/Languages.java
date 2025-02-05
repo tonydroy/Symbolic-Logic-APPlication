@@ -5,24 +5,23 @@ import java.util.List;
 
 public class Languages {
 
-    private static Languages instance = null;
+
 
     private static List<Language> fixedLanguages = new ArrayList<Language>();
     private static List<Language> optionalLanguages = new ArrayList<Language>();
 
-    private Languages(){
+
+    static {
         loadFixedLanguages();
     }
 
-    public static Languages getInstance(){
-        if (instance == null){
-            instance = new Languages();
-        }
-        return instance;
-    }
+    public Languages() {  }
+
+
 
     private static void loadFixedLanguages(){
-        fixedLanguages.add(Lq());
+        Language lq = Lq();
+        fixedLanguages.add(lq);
     }
 
     static Language getLanguage(String name) {
@@ -51,7 +50,7 @@ public class Languages {
         lang.setSentenceLetterSubs(true);
         lang.setXrelationSymbols(Alphabets.getCharacterRange("\ud835\udc34", "\ud835\udc4d"));
         lang.setXrelationSymbolSubs(true);
-        lang.setXrelationSymbolsRequireSuper(true);
+        lang.setXrelationSymbolsRequireSuper(false);
         lang.setXfunctionSymbols(Alphabets.getCharacterRange("\ud835\udc4e", "\ud835\udc67"));
         lang.setXfunctionSymbolSubs(true);
         return lang;

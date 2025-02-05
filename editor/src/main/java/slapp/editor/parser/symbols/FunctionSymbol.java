@@ -21,6 +21,10 @@ public class FunctionSymbol implements Expression {
         this.places = places;
     }
 
+    public int getPlaces() {
+        return places;
+    }
+
     @Override
     public ExpressionType getType() { return type; }
 
