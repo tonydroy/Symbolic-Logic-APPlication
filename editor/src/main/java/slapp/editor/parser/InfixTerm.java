@@ -1,0 +1,93 @@
+package slapp.editor.parser;
+
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+import slapp.editor.parser.symbols.CloseBracket;
+import slapp.editor.parser.symbols.FunctionSymbol;
+import slapp.editor.parser.symbols.OpenBracket;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class InfixTerm extends Term implements Expression {
+
+    private OpenBracket openBracket;
+    private CloseBracket closeBracket;
+
+
+
+
+    @Override
+    public TextFlow toTextFlow() {
+        List texts = new ArrayList();
+
+        texts.addAll(openBracket.toTextFlow().getChildren());
+        texts.addAll(getChildren().get(0).toTextFlow().getChildren());
+        texts.add(new Text(" "));
+        texts.addAll(getMainFnSymbol().toTextFlow().getChildren());
+        texts.add(new Text(" "));
+        texts.addAll(getChildren().get(1).toTextFlow().getChildren());
+        texts.addAll(closeBracket.toTextFlow().getChildren());
+
+        Text[] txtArray = new Text[texts.size()];
+        TextFlow textFlow = new TextFlow(txtArray);
+        return textFlow;
+    }
+
+    public OpenBracket getOpenBracket() {
+        return openBracket;
+    }
+
+    public void setOpenBracket(OpenBracket openBracket) {
+        this.openBracket = openBracket;
+    }
+
+    public CloseBracket getCloseBracket() {
+        return closeBracket;
+    }
+
+    public void setCloseBracket(CloseBracket closeBracket) {
+        this.closeBracket = closeBracket;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(openBracket.toString());
+        sb.append(getChildren().get(0).toString());
+        sb.append(" ");
+        sb.append(getMainFnSymbol().toString());
+        sb.append(" ");
+        sb.append(getChildren().get(1).toString());
+        sb.append(closeBracket.toString());
+
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) return true;
+        if (o instanceof InfixTerm) {
+            InfixTerm other = (InfixTerm) o;
+            boolean equals = true;
+            if (!getMainFnSymbol().equals(other.getMainFnSymbol())) { equals = false;}
+            if (getChildren().size() != other.getChildren().size()) { equals = false; }
+            for (int i = 0; i < getChildren().size(); i++) {
+                if (!getChildren().get(i).equals(other.getChildren().get(i))) { equals = false; }
+            }
+            return equals;
+        }
+        return false;
+    }
+
+    @Override public int hashCode() {
+        int code = getMainFnSymbol().hashCode();
+        for (Expression child : getChildren()) {code = code + child.hashCode();}
+        return code;
+    }
+
+
+
+
+
+}

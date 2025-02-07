@@ -13,16 +13,26 @@ public class FunctionSymbol implements Expression {
     private String subscriptStr;
     private String superscriptStr;
     private int places;
+    private boolean permitInfix = false;
 
-    public FunctionSymbol(String baseStr, String subscriptStr, String superscriptStr, int places) {
+    public FunctionSymbol(String baseStr, String subscriptStr, String superscriptStr, int places, boolean permitInfix) {
         this.baseStr = baseStr;
         this.subscriptStr = subscriptStr;
         this.superscriptStr = superscriptStr;
         this.places = places;
+        this.permitInfix = permitInfix;
     }
 
     public int getPlaces() {
         return places;
+    }
+
+    public boolean isPermitInfix() {
+        return permitInfix;
+    }
+
+    public void setPermitInfix(boolean permitInfix) {
+        this.permitInfix = permitInfix;
     }
 
     @Override

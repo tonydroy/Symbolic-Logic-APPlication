@@ -10,45 +10,12 @@ import static slapp.editor.parser.ExpressionType.CLOSE_BRACKET1;
 import static slapp.editor.parser.ExpressionType.CLOSE_BRACKET2;
 
 
-public class CloseBracket2 implements Expression {
-
-    private ExpressionType type = CLOSE_BRACKET2;
-    private String textString;
-
+public class CloseBracket2 extends CloseBracket implements Expression {
 
     public CloseBracket2(String textString) {
-        this.textString = textString;
+        super(textString);
+        setType(CLOSE_BRACKET2);
     }
-
-    @Override
-    public ExpressionType getType() {return type;}
-
-    @Override
-    public TextFlow toTextFlow() {
-        Text text = ParseUtilities.newRegularText(textString);
-        return new TextFlow(text);
-    }
-
-    @Override
-    public String toString() {
-        return textString;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o instanceof CloseBracket2) {
-            CloseBracket2 other = (CloseBracket2)  o;
-            return textString.equals(other.textString);
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return textString.hashCode();
-    }
-
 
 
 

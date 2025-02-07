@@ -1,6 +1,8 @@
 package slapp.editor.parser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class Languages {
@@ -51,8 +53,12 @@ public class Languages {
         lang.setXrelationSymbols(Alphabets.getCharacterRange("\ud835\udc34", "\ud835\udc4d"));
         lang.setXrelationSymbolSubs(true);
         lang.setXrelationSymbolsRequireSuper(false);
+        lang.setTwoPlaceRelSymbols(Collections.singletonList("\ue8ac"));
         lang.setXfunctionSymbols(Alphabets.getCharacterRange("\ud835\udc4e", "\ud835\udc67"));
         lang.setXfunctionSymbolSubs(true);
+        lang.setOnePlaceFunctionSymbols(Collections.singletonList("\ud835\udc46"));
+        lang.setTwoPlaceFunctionSymbols(Arrays.asList("\ue8b8", "\ue8ba"));
+        lang.setAllowBinaryInfixFunctions(true);
         return lang;
     }
 

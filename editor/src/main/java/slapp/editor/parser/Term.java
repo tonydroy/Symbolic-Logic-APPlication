@@ -11,8 +11,9 @@ public class Term implements Expression {
 
     private ExpressionType type = ExpressionType.TERM;
     private List<Expression> children = new ArrayList<>();
-    private FunctionSymbol mainFnSymbol = new FunctionSymbol("","","",0);
-    int level = 0;
+    private FunctionSymbol mainFnSymbol = new FunctionSymbol("","","",0, false);
+    private int level = 0;
+    private boolean combines = true;
 
 
 
@@ -38,6 +39,14 @@ public class Term implements Expression {
 
     public void setLevel(int level) {
         this.level = level;
+    }
+
+    public boolean isCombines() {
+        return combines;
+    }
+
+    public void setCombines(boolean combines) {
+        this.combines = combines;
     }
 
     @Override

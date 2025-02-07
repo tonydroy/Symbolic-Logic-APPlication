@@ -162,6 +162,7 @@ public class ParseUtilities {
 
     public static List<Expression> getTerms(List<Expression> expressions) {
 
+        //variables and constants
         for (int i = 0; i < expressions.size(); i++) {
             if (expressions.get(i).getType() == ExpressionType.VARIABLE) {
                 Term term = new Term();
@@ -169,6 +170,7 @@ public class ParseUtilities {
                 ArrayList children = new ArrayList();
                 children.add(expressions.get(i));
                 term.setChildren(children);
+                term.setCombines(true);
                 expressions.set(i, term);
                 continue;
             }
@@ -178,33 +180,84 @@ public class ParseUtilities {
                 ArrayList children = new ArrayList();
                 children.add(expressions.get(i));
                 term.setChildren(children);
+                term.setCombines(true);
                 expressions.set(i, term);
             }
         }
 
         boolean changes = true;
-        while (changes) {
+        while(changes) {
             changes = false;
+
+            //regular "polish" terms
+            boolean polishChanges = true;
+            while (polishChanges) {
+                polishChanges = false;
+                for (int i = 0; i < expressions.size(); i++) {
+                    if (expressions.get(i).getType() == ExpressionType.FUNCTION_SYMBOL) {
+                        FunctionSymbol functionSymbol = (FunctionSymbol) expressions.get(i);
+                        int j = i + 1;
+                        if (areImmediateFollowingTerms(j, functionSymbol.getPlaces(), expressions)) {
+                            List<Expression> children = new ArrayList();
+                            int level = 0;
+                            for (int k = 0; k < functionSymbol.getPlaces(); k++) {
+                                Term term = (Term) expressions.get(j);
+                                expressions.remove(j);
+                                children.add(term);
+                                level = Math.max(level, term.getLevel()) + 1;
+                            }
+                            Term term = new Term();
+                            term.setLevel(level);
+                            term.setChildren(children);
+                            term.setMainFnSymbol(functionSymbol);
+                            term.setCombines(true);
+                            expressions.set(i, term);
+                            polishChanges = true;
+                            changes = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            //infix terms
             for (int i = 0; i < expressions.size(); i++) {
                 if (expressions.get(i).getType() == ExpressionType.FUNCTION_SYMBOL) {
                     FunctionSymbol functionSymbol = (FunctionSymbol) expressions.get(i);
-                    int j = i + 1;
-                    if (areImmediateFollowingTerms(j, functionSymbol.getPlaces(), expressions)) {
-                        List<Expression> children = new ArrayList();
-                        int level = 0;
-                        for (int k = 0; k < functionSymbol.getPlaces(); k++) {
-                            Term term = (Term) expressions.get(j);
-                            expressions.remove(j);
-                            children.add(term);
-                            level = Math.max(level, term.getLevel()) + 1;
+                    if (functionSymbol.isPermitInfix()) {
+                        if (i - 1 >=0 && expressions.get(i - 1).getType() == ExpressionType.TERM && ((Term) expressions.get(i - 1)).isCombines()) {
+                            if (i + 1 < expressions.size() && expressions.get(i + 1).getType() == ExpressionType.TERM && ((Term) expressions.get(i + 1)).isCombines()) {
+                                Term term1 = (Term) expressions.get(i - 1);
+                                Term term2 = (Term) expressions.get(i + 1);
+                                InfixTerm newTerm;
+                                if (i - 2 >=0 && i + 2 < expressions.size() &&
+                                        ((expressions.get(i - 2).getType() == ExpressionType.OPEN_BRACKET1 && expressions.get(i + 2).getType() == ExpressionType.CLOSE_BRACKET1) ||
+                                        (expressions.get(i - 2).getType() == ExpressionType.OPEN_BRACKET2 && expressions.get(i + 2).getType() == ExpressionType.CLOSE_BRACKET2) ||
+                                        (expressions.get(i - 2).getType() == ExpressionType.OPEN_BRACKET3 && expressions.get(i + 2).getType() == ExpressionType.CLOSE_BRACKET3))
+                                ) {
+                                    newTerm = newInfixTerm(((OpenBracket) expressions.get(i - 2)), term1, functionSymbol, term2, ((CloseBracket) expressions.get(i + 2)));
+                                    newTerm.setCombines(true);
+                                    expressions.set(i, newTerm);
+
+                                    //remove takes account of indexes shifted after previous move.
+                                    expressions.remove(i - 1);
+                                    expressions.remove(i - 2);
+                                    expressions.remove(i - 1);
+                                    expressions.remove(i - 1);
+                                    changes = true;
+                                    break;
+                                }
+                                else {
+                                    newTerm = newInfixTerm(new OpenBracket(""), term1, functionSymbol, term2, new CloseBracket(""));
+                                    newTerm.setCombines(false);
+                                    expressions.set(i, newTerm);
+                                    expressions.remove(i - 1);
+                                    expressions.remove(i);
+                                    changes = true;
+                                    break;
+                                }
+                            }
                         }
-                        Term term = new Term();
-                        term.setLevel(level);
-                        term.setChildren(children);
-                        term.setMainFnSymbol(functionSymbol);
-                        expressions.set(i, term);
-                        changes = true;
-                        break;
                     }
                 }
             }
@@ -212,8 +265,34 @@ public class ParseUtilities {
         return expressions;
     }
 
+    //temp
+    private static void dumpExpressions(List<Expression> expressions) {
+        for (Expression expr : expressions) {
+            System.out.print(expr.getType() + ": " + expr + "; ");
+        }
+        System.out.println("done");
+    }
+
+    private static InfixTerm newInfixTerm(OpenBracket openBracket, Term term1, FunctionSymbol fnSymbol, Term term2, CloseBracket closeBracket) {
+        InfixTerm term = new InfixTerm();
+        term.setOpenBracket(openBracket);
+
+        term.setMainFnSymbol(fnSymbol);
+        term.setCloseBracket(closeBracket);
+
+        List<Expression> children = new ArrayList();
+        children.add(term1); children.add(term2);
+
+        term.setChildren(children);
+        term.setLevel(Math.max(term1.getLevel(), term2.getLevel()) + 1);
+
+        return term;
+    }
+
     public static List<Expression> getTermSymbols(List<Expression> expressions) {
 
+
+        //function symbols
         for (int i = 0; i < expressions.size(); i++) {
             String elementStr = "";
             String subString = "";
@@ -221,11 +300,11 @@ public class ParseUtilities {
             if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) {
                 elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
                 if (language.getOnePlaceFunctionSymbols() != null && language.getOnePlaceFunctionSymbols().contains(elementStr)) {
-                    expressions.set(i, new FunctionSymbol(elementStr, "", "", 1));
+                    expressions.set(i, new FunctionSymbol(elementStr, "", "", 1, false));
                     continue;
                 }
                 if (language.getTwoPlaceFunctionSymbols() != null && language.getTwoPlaceFunctionSymbols().contains(elementStr)) {
-                    expressions.set(i, new FunctionSymbol(elementStr, "", "", 2));
+                    expressions.set(i, new FunctionSymbol(elementStr, "", "", 2, language.isAllowBinaryInfixFunctions()));
                     continue;
                 }
                 if (language.getXfunctionSymbols() != null && language.getXfunctionSymbols().contains(elementStr) ) {
@@ -244,13 +323,14 @@ public class ParseUtilities {
                                     ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]"))
                                 subString = getSubString(j, expressions);
                         }
-                        FunctionSymbol functionSymbol = new FunctionSymbol(elementStr, subString, supString, Integer.parseInt(supString));
+                        FunctionSymbol functionSymbol = new FunctionSymbol(elementStr, subString, supString, Integer.parseInt(supString), false);
                         expressions.set(i, functionSymbol);
                     }
                 }
             }
         }
 
+        //variables
         for (int i = 0; i < expressions.size(); i++) {
             String elementStr = "";
             String subString = "";
@@ -267,6 +347,7 @@ public class ParseUtilities {
             }
         }
 
+        //constants
         for (int i = 0; i < expressions.size(); i++) {
             String elementStr = "";
             String subString = "";
@@ -285,11 +366,13 @@ public class ParseUtilities {
     }
 
 
+    //are places following terms (possibly after superscript/subscript)
     private static int areFollowingTerms(int j, List<Expression> expressions) {
         int places = 0;
         while (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT ) {
             OriginalElement element = (OriginalElement) expressions.get(j);
             if (element.isSuperscript() || element.isSubscript())   j = j + 1;
+            else break;
         }
         while (j < expressions.size() && expressions.get(j).getType() == ExpressionType.TERM ) {
             places++;
@@ -298,14 +381,16 @@ public class ParseUtilities {
         return places;
     }
 
+    //are places immediately following terms
     private static boolean areImmediateFollowingTerms(int index, int places, List<Expression> expressions) {
         boolean areFollowingTerms = true;
         for (int i = 0; i < places; i++) {
-            if (index + i >= expressions.size() || expressions.get(index + i).getType() != ExpressionType.TERM) areFollowingTerms = false;
+            if (index + i >= expressions.size() || expressions.get(index + i).getType() != ExpressionType.TERM || !((Term) expressions.get(index + i)).isCombines()) areFollowingTerms = false;
         }
         return areFollowingTerms;
     }
 
+    //is following superscript > 0, possibly after subscript
     private static boolean isFollowingSuperscript(int j, List<Expression> expressions) {
         boolean isFollowingSuperscript = false;
         while (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT) {
@@ -317,6 +402,7 @@ public class ParseUtilities {
         return isFollowingSuperscript;
     }
 
+    //get string of subscripts, deleting members from expressions
     private static String getSubString(int j, List<Expression> expressions) {
         StringBuilder sb = new StringBuilder();
         while (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[0-9]")) {
@@ -326,6 +412,7 @@ public class ParseUtilities {
         return sb.toString();
     }
 
+    //get string of superscripts, deleting members from expressions
     private static String getSupString(int j, List<Expression> expressions) {
         StringBuilder sb = new StringBuilder();
         while (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(j)).isSuperscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[0-9]")) {
@@ -336,7 +423,7 @@ public class ParseUtilities {
     }
 
 
-    //strip space characters and return list of remaining elements
+    //get elements from document, strip space characters, and return list of remaining elements
     public static List<OriginalElement> getElements(Document doc) {
         List<OriginalElement> elements = new ArrayList<OriginalElement>();
         String text = doc.getText();
