@@ -5,13 +5,17 @@ import com.gluonhq.richtextarea.model.Document;
 import com.gluonhq.richtextarea.model.TextDecoration;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import slapp.editor.parser.grammatical_parts.*;
 import slapp.editor.parser.symbols.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class ParseUtilities {
     private static Language language;
+    private static int maxTermLevel;
 
     public ParseUtilities() {
         //for now
@@ -20,80 +24,197 @@ public class ParseUtilities {
     }
 
     public static List<Expression> parseDoc(Document doc) {
+        maxTermLevel = 0;
         List<OriginalElement> elements = getElements(doc);
         List<Expression> expressions = new ArrayList<>();
         for (OriginalElement element : elements) {
             expressions.add(element);
         }
         List<Expression> simpleSymbols = getSimpleSymbols(expressions);
-        List<Expression> termSymbols = getTermSymbols(expressions);
+        List<Expression> termSymbols = getTermSymbols(simpleSymbols);
         List<Expression> terms = getTerms(termSymbols);
         List<Expression> relSentSymbols = getRelSentSymbols(terms);
+        List<Expression> operators = getOperators(relSentSymbols);
+        List<Expression> atomics = getAtomics(operators);
 
         return expressions;
     }
 
-    public static List<Expression> getSimpleSymbols(List<Expression> expressions) {
+    public static List<Expression> getAtomics(List<Expression> expressions) {
+
         for (int i = 0; i < expressions.size(); i++) {
-            String elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
-            if (elementStr.equals(language.getOpenBracket1())) {
-                expressions.set(i, new OpenBracket1(elementStr));
+
+            //sentence letter
+            if (expressions.get(i).getType() == ExpressionType.SENTENCE_LETTER) {
+                SentenceAtomc sentAtomic = new SentenceAtomc((SentenceLetter) expressions.get(i));
+                sentAtomic.setLevel(maxTermLevel + 1);
+                sentAtomic.setAtomic(true);
+                sentAtomic.setCombines(true);
+                expressions.set(i, sentAtomic);
                 continue;
             }
-            if (elementStr.equals(language.getOpenBracket2())) {
-                expressions.set(i, new OpenBracket2(elementStr));
+
+            //prefix atomic
+            if (expressions.get(i).getType() == ExpressionType.RELATION_SYMBOL) {
+                RelationSymbol relationSymbol = (RelationSymbol) expressions.get(i);
+                int j = i + 1;
+                if (areImmediateFollowingAtomicTerms(j, relationSymbol.getPlaces(), expressions)) {
+                    List<Expression> children = new ArrayList<>();
+                    for (int k = 0; k < relationSymbol.getPlaces(); k++) {
+                        Term term = (Term) expressions.get(j);
+                        expressions.remove(j);
+                        children.add(term);
+                    }
+                    PrefixAtomic prefixAtomic = new PrefixAtomic(relationSymbol);
+                    prefixAtomic.setChildren(children);
+                    prefixAtomic.setLevel(maxTermLevel + 1);
+                    prefixAtomic.setAtomic(true);
+                    prefixAtomic.setCombines(true);
+                    expressions.set(i, prefixAtomic);
+                    continue;
+                }
+            }
+
+            //infix atomic
+            if (expressions.get(i).getType() == ExpressionType.RELATION_SYMBOL) {
+                RelationSymbol relationSymbol = (RelationSymbol) expressions.get(i);
+                if (relationSymbol.isPermitInfix()) {
+                    if (i - 1 >= 0 && expressions.get(i - 1).getType() == ExpressionType.TERM) {
+                        if (i + 1 < expressions.size() && expressions.get(i + 1).getType() == ExpressionType.TERM) {
+                            Term term1 = (Term) expressions.get(i - 1);
+                            Term term2 = (Term) expressions.get(i + 1);
+                            InfixAtomic infixAtomic;
+                            boolean negating = false;
+                            if (relationSymbol.getComplementSymbol() != null) negating = true;
+                            infixAtomic = new InfixAtomic(relationSymbol, relationSymbol.getComplementSymbol(), negating);
+                            infixAtomic.setLevel(maxTermLevel + 1);
+                            infixAtomic.setAtomic(true);
+                            infixAtomic.setCombines(true);
+                            List<Expression> children = Arrays.asList(term1, term2);
+                            infixAtomic.setChildren(children);
+                            if (i - 2 >= 0 && i + 2 < expressions.size() &&
+                                    ((expressions.get(i - 2).getType() == ExpressionType.OPEN_BRACKET1 && expressions.get(i + 2).getType() == ExpressionType.CLOSE_BRACKET1) ||
+                                    (expressions.get(i - 2).getType() == ExpressionType.OPEN_BRACKET2 && expressions.get(i + 2).getType() == ExpressionType.CLOSE_BRACKET2) ||
+                                    (expressions.get(i - 2).getType() == ExpressionType.OPEN_BRACKET3 && expressions.get(i + 2).getType() == ExpressionType.CLOSE_BRACKET3))
+
+                            ) {
+                                infixAtomic.setOpenBracket((OpenBracket) expressions.get(i - 2));
+                                infixAtomic.setCloseBracket((CloseBracket) expressions.get(i + 2));
+                                expressions.set(i, infixAtomic);
+                                expressions.remove(i - 1);
+                                expressions.remove(i - 2);
+                                expressions.remove(i - 1);
+                                expressions.remove(i - 1);
+                                continue;
+                            }
+                            else {
+                                expressions.set(i, infixAtomic);
+                                expressions.remove(i - 1);
+                                expressions.remove(i);
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (expressions.get(i).getType() == ExpressionType.COMPLEMENT_REL_SYM) {
+                RelationSymbol relationSymbol = (RelationSymbol) expressions.get(i);
+                if (i - 1 >= 0 && expressions.get(i - 1).getType() == ExpressionType.TERM) {
+                    if (i + 1 < expressions.size() && expressions.get(i + 1).getType() == ExpressionType.TERM) {
+                        Term term1 = (Term) expressions.get(i - 1);
+                        Term term2 = (Term) expressions.get(i + 1);
+                        InfixAtomic infixAtomic;
+                        infixAtomic = new InfixAtomic(relationSymbol, relationSymbol.getComplementSymbol(), true);
+                        infixAtomic.setLevel(maxTermLevel + 1);
+                        infixAtomic.setAtomic(true);
+                        infixAtomic.setCombines(true);
+                        List<Expression> children = Arrays.asList(term1, term2);
+                        infixAtomic.setChildren(children);
+                        if (i - 2 >= 0 && i + 2 < expressions.size() &&
+                                ((expressions.get(i - 2).getType() == ExpressionType.OPEN_BRACKET1 && expressions.get(i + 2).getType() == ExpressionType.CLOSE_BRACKET1) ||
+                                        (expressions.get(i - 2).getType() == ExpressionType.OPEN_BRACKET2 && expressions.get(i + 2).getType() == ExpressionType.CLOSE_BRACKET2) ||
+                                        (expressions.get(i - 2).getType() == ExpressionType.OPEN_BRACKET3 && expressions.get(i + 2).getType() == ExpressionType.CLOSE_BRACKET3))
+
+                        ) {
+                            infixAtomic.setOpenBracket((OpenBracket) expressions.get(i - 2));
+                            infixAtomic.setCloseBracket((CloseBracket) expressions.get(i + 2));
+                            Formula negForm = new Formula();
+                            negForm.setMainOperator(new NegationOp(new NegationSym(language.getNegation())));
+                            negForm.setLevel(infixAtomic.getLevel() + 1);
+                            negForm.setChildren(Collections.singletonList(infixAtomic));
+                            expressions.set(i, negForm);
+                            expressions.remove(i - 1);
+                            expressions.remove(i - 2);
+                            expressions.remove(i - 1);
+                            expressions.remove(i - 1);
+                        }
+                        else {
+                            Formula negForm = new Formula();
+                            negForm.setMainOperator(new NegationOp(new NegationSym(language.getNegation())));
+                            negForm.setLevel(infixAtomic.getLevel() + 1);
+                            negForm.setChildren(Collections.singletonList(infixAtomic));
+                            expressions.set(i, negForm);
+                            expressions.remove(i - 1);
+                            expressions.remove(i);
+                        }
+                    }
+                }
+            }
+        }
+
+    return expressions;
+    }
+
+
+    public static List<Expression> getOperators(List<Expression> expressions) {
+
+        for (int i = 0; i < expressions.size(); i++) {
+            if (expressions.get(i).getType() == ExpressionType.NEG_SYM) {
+                NegationOp neg = new NegationOp((NegationSym) expressions.get(i));
+                expressions.set(i, neg);
                 continue;
             }
-            if (elementStr.equals(language.getOpenBracket3())) {
-                expressions.set(i, new OpenBracket3(elementStr));
+            if (expressions.get(i).getType() == ExpressionType.COND_SYM) {
+                ConditionalOp cnd = new ConditionalOp((ConditionalSym) expressions.get(i));
+                expressions.set(i, cnd);
                 continue;
             }
-            if (elementStr.equals(language.getCloseBracket1())) {
-                expressions.set(i, new CloseBracket1(elementStr));
+            if (expressions.get(i).getType() == ExpressionType.BICOND_SYM) {
+                BiconditionalOp bcnd = new BiconditionalOp((BiconditionalSym) expressions.get(i));
+                expressions.set(i, bcnd);
                 continue;
             }
-            if (elementStr.equals(language.getCloseBracket2())) {
-                expressions.set(i, new CloseBracket2(elementStr));
+            if (expressions.get(i).getType() == ExpressionType.CONJ_SYM) {
+                ConjunctionOp op = new ConjunctionOp((ConjunctionSym) expressions.get(i));
+                expressions.set(i, op);
                 continue;
             }
-            if (elementStr.equals(language.getCloseBracket3())) {
-                expressions.set(i, new CloseBracket3(elementStr));
+            if (expressions.get(i).getType() == ExpressionType.DISJ_SYM) {
+                DisjunctionOp op = new DisjunctionOp((DisjunctionSym) expressions.get(i));
+                expressions.set(i, op);
                 continue;
             }
-            if (elementStr.equals(language.getNegation())) {
-                expressions.set(i, new Negation(elementStr));
+            if (expressions.get(i).getType() == ExpressionType.NAND_SYM) {
+                NandOp nand = new NandOp((NandSym) expressions.get(i));
+                expressions.set(i, nand);
                 continue;
             }
-            if (elementStr.equals(language.getConditional())) {
-                expressions.set(i, new Conditional(elementStr));
+            if (expressions.get(i).getType() == ExpressionType.NOR_SYM) {
+                NorOp nor = new NorOp((NorSym) expressions.get(i));
+                expressions.set(i, nor);
                 continue;
             }
-            if (elementStr.equals(language.getBiconditional())) {
-                expressions.set(i, new Biconditional(elementStr));
+            if (expressions.get(i).getType() == ExpressionType.UNIVERSAL_SYM && i + 1 < expressions.size() && expressions.get(i + 1).getType() == ExpressionType.TERM && ((Term) expressions.get(i + 1)).getTermType() == TermType.VARIABLE) {
+                UniversalOp univ = new UniversalOp((UniversalQuantifierSym) expressions.get(i), (Term) expressions.get(i + 1));
+                expressions.set(i, univ);
+                expressions.remove(i + 1);
                 continue;
             }
-            if (elementStr.equals(language.getConjunction())) {
-                expressions.set(i, new Conjunction(elementStr));
-                continue;
-            }
-            if (elementStr.equals(language.getDisjunction())) {
-                expressions.set(i, new Disjunction(elementStr));
-                continue;
-            }
-            if (elementStr.equals(language.getNand())) {
-                expressions.set(i, new Nand(elementStr));
-                continue;
-            }
-            if (elementStr.equals(language.getNor())) {
-                expressions.set(i, new Nor(elementStr));
-                continue;
-            }
-            if (elementStr.equals(language.getUniversalQuant())) {
-                expressions.set(i, new UniversalQuantifier(elementStr));
-                continue;
-            }
-            if (elementStr.equals(language.getExistentialQuant())) {
-                expressions.set(i, new ExistentialQuantifier(elementStr));
+            if (expressions.get(i).getType() == ExpressionType.EXISTENTIAL_SYM && i + 1 < expressions.size() && expressions.get(i + 1).getType() == ExpressionType.TERM && ((Term) expressions.get(i + 1)).getTermType() == TermType.VARIABLE) {
+                ExistentialOp exis = new ExistentialOp((ExistentialQuantifierSym) expressions.get(i), (Term) expressions.get(i + 1));
+                expressions.set(i, exis);
+                expressions.remove(i + 1);
             }
         }
         return expressions;
@@ -111,8 +232,30 @@ public class ParseUtilities {
                     expressions.set(i, new RelationSymbol(elementStr, "", "", 1));
                     continue;
                 }
-                if (language.getTwoPlaceRelSymbols() != null && language.getTwoPlaceRelSymbols().contains(elementStr)) {
-                    expressions.set(i, new RelationSymbol(elementStr, "", "", 2));
+                if (language.getInfixRelations().containsKey(elementStr)) {
+                    RelationSymbol relationSymbol = new RelationSymbol(elementStr, "", "", 2);
+                    relationSymbol.setPermitInfix(language.isAllowBinaryInfixRelations());
+
+                    String complementStr = language.getInfixRelations().get(elementStr);
+                    RelationSymbol complementSymbol = null;
+                    if (complementStr != null) {
+                        complementSymbol = new RelationSymbol(complementStr, "", "", 2);
+                        complementSymbol.setPermitInfix(language.isAllowBinaryInfixRelations());
+                        relationSymbol.setComplementSymbol(complementSymbol);
+                    }
+                    expressions.set(i, relationSymbol);
+                    continue;
+                }
+                if (language.getInfixRelations().containsValue(elementStr)) {
+                    String relationString = language.getInfixRelationString(language.getInfixRelations(), elementStr);
+                    RelationSymbol relationSymbol = new RelationSymbol(relationString, "", "", 2);
+                    relationSymbol.setPermitInfix(language.isAllowBinaryInfixRelations());
+                    relationSymbol.setType(ExpressionType.COMPLEMENT_REL_SYM);
+
+                    RelationSymbol complementSymbol = new RelationSymbol(elementStr, "", "", 2);
+                    complementSymbol.setPermitInfix(language.isAllowBinaryInfixRelations());
+                    relationSymbol.setComplementSymbol(complementSymbol);
+                    expressions.set(i, relationSymbol);
                     continue;
                 }
                 if (language.getXrelationSymbols() != null && language.getXrelationSymbols().contains(elementStr) ) {
@@ -171,6 +314,7 @@ public class ParseUtilities {
                 children.add(expressions.get(i));
                 term.setChildren(children);
                 term.setCombines(true);
+                term.setTermType(TermType.VARIABLE);
                 expressions.set(i, term);
                 continue;
             }
@@ -181,6 +325,7 @@ public class ParseUtilities {
                 children.add(expressions.get(i));
                 term.setChildren(children);
                 term.setCombines(true);
+                term.setTermType(TermType.CONSTANT);
                 expressions.set(i, term);
             }
         }
@@ -189,10 +334,10 @@ public class ParseUtilities {
         while(changes) {
             changes = false;
 
-            //regular "polish" terms
-            boolean polishChanges = true;
-            while (polishChanges) {
-                polishChanges = false;
+            //regular "prefix" terms
+            boolean prefixChanges = true;
+            while (prefixChanges) {
+                prefixChanges = false;
                 for (int i = 0; i < expressions.size(); i++) {
                     if (expressions.get(i).getType() == ExpressionType.FUNCTION_SYMBOL) {
                         FunctionSymbol functionSymbol = (FunctionSymbol) expressions.get(i);
@@ -205,6 +350,7 @@ public class ParseUtilities {
                                 expressions.remove(j);
                                 children.add(term);
                                 level = Math.max(level, term.getLevel()) + 1;
+                                maxTermLevel = Math.max(maxTermLevel, level);
                             }
                             Term term = new Term();
                             term.setLevel(level);
@@ -212,7 +358,7 @@ public class ParseUtilities {
                             term.setMainFnSymbol(functionSymbol);
                             term.setCombines(true);
                             expressions.set(i, term);
-                            polishChanges = true;
+                            prefixChanges = true;
                             changes = true;
                             break;
                         }
@@ -236,10 +382,12 @@ public class ParseUtilities {
                                         (expressions.get(i - 2).getType() == ExpressionType.OPEN_BRACKET3 && expressions.get(i + 2).getType() == ExpressionType.CLOSE_BRACKET3))
                                 ) {
                                     newTerm = newInfixTerm(((OpenBracket) expressions.get(i - 2)), term1, functionSymbol, term2, ((CloseBracket) expressions.get(i + 2)));
+                                    newTerm.setLevel(Math.max(term1.getLevel(), term2.getLevel()) + 1);
+                                    maxTermLevel = Math.max(maxTermLevel, term1.getLevel() + term2.getLevel());
                                     newTerm.setCombines(true);
                                     expressions.set(i, newTerm);
 
-                                    //remove takes account of indexes shifted after previous move.
+                                    //remove takes account of indexes shifted after previous remove.
                                     expressions.remove(i - 1);
                                     expressions.remove(i - 2);
                                     expressions.remove(i - 1);
@@ -249,6 +397,8 @@ public class ParseUtilities {
                                 }
                                 else {
                                     newTerm = newInfixTerm(new OpenBracket(""), term1, functionSymbol, term2, new CloseBracket(""));
+                                    newTerm.setLevel(Math.max(term1.getLevel(), term2.getLevel()) + 1);
+                                    maxTermLevel = Math.max(maxTermLevel, term1.getLevel() + term2.getLevel());
                                     newTerm.setCombines(false);
                                     expressions.set(i, newTerm);
                                     expressions.remove(i - 1);
@@ -365,6 +515,72 @@ public class ParseUtilities {
         return expressions;
     }
 
+    public static List<Expression> getSimpleSymbols(List<Expression> expressions) {
+        for (int i = 0; i < expressions.size(); i++) {
+            String elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
+            if (elementStr.equals(language.getOpenBracket1())) {
+                expressions.set(i, new OpenBracket1(elementStr));
+                continue;
+            }
+            if (elementStr.equals(language.getOpenBracket2())) {
+                expressions.set(i, new OpenBracket2(elementStr));
+                continue;
+            }
+            if (elementStr.equals(language.getOpenBracket3())) {
+                expressions.set(i, new OpenBracket3(elementStr));
+                continue;
+            }
+            if (elementStr.equals(language.getCloseBracket1())) {
+                expressions.set(i, new CloseBracket1(elementStr));
+                continue;
+            }
+            if (elementStr.equals(language.getCloseBracket2())) {
+                expressions.set(i, new CloseBracket2(elementStr));
+                continue;
+            }
+            if (elementStr.equals(language.getCloseBracket3())) {
+                expressions.set(i, new CloseBracket3(elementStr));
+                continue;
+            }
+            if (elementStr.equals(language.getNegation())) {
+                expressions.set(i, new NegationSym(elementStr));
+                continue;
+            }
+            if (elementStr.equals(language.getConditional())) {
+                expressions.set(i, new ConditionalSym(elementStr));
+                continue;
+            }
+            if (elementStr.equals(language.getBiconditional())) {
+                expressions.set(i, new BiconditionalSym(elementStr));
+                continue;
+            }
+            if (elementStr.equals(language.getConjunction())) {
+                expressions.set(i, new ConjunctionSym(elementStr));
+                continue;
+            }
+            if (elementStr.equals(language.getDisjunction())) {
+                expressions.set(i, new DisjunctionSym(elementStr));
+                continue;
+            }
+            if (elementStr.equals(language.getNand())) {
+                expressions.set(i, new NandSym(elementStr));
+                continue;
+            }
+            if (elementStr.equals(language.getNor())) {
+                expressions.set(i, new NorSym(elementStr));
+                continue;
+            }
+            if (elementStr.equals(language.getUniversalQuant())) {
+                expressions.set(i, new UniversalQuantifierSym(elementStr));
+                continue;
+            }
+            if (elementStr.equals(language.getExistentialQuant())) {
+                expressions.set(i, new ExistentialQuantifierSym(elementStr));
+            }
+        }
+        return expressions;
+    }
+
 
     //are places following terms (possibly after superscript/subscript)
     private static int areFollowingTerms(int j, List<Expression> expressions) {
@@ -381,6 +597,14 @@ public class ParseUtilities {
         return places;
     }
 
+
+    private static boolean areImmediateFollowingAtomicTerms(int index, int places, List<Expression> expressions) {
+        boolean areFollowingTerms = true;
+        for (int i = 0; i < places; i++) {
+            if (index + i >= expressions.size() || expressions.get(index + i).getType() != ExpressionType.TERM ) areFollowingTerms = false;
+        }
+        return areFollowingTerms;
+    }
     //are places immediately following terms
     private static boolean areImmediateFollowingTerms(int index, int places, List<Expression> expressions) {
         boolean areFollowingTerms = true;

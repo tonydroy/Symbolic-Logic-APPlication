@@ -13,12 +13,38 @@ public class RelationSymbol implements Expression {
     private String subscriptStr;
     private String superscriptStr;
     private int places;
+    private boolean permitInfix = false;
+    private RelationSymbol complementSymbol = null;
 
 public RelationSymbol(String baseStr, String subscriptStr, String superscriptStr, int places) {
         this.baseStr = baseStr;
         this.subscriptStr = subscriptStr;
         this.superscriptStr = superscriptStr;
         this.places = places;
+    }
+
+    public RelationSymbol getComplementSymbol() {
+        return complementSymbol;
+    }
+
+    public void setComplementSymbol(RelationSymbol complementSymbol) {
+        this.complementSymbol = complementSymbol;
+    }
+
+    public void setType(ExpressionType type) {
+        this.type = type;
+    }
+
+    public int getPlaces() {
+        return places;
+    }
+
+    public boolean isPermitInfix() {
+        return permitInfix;
+    }
+
+    public void setPermitInfix(boolean permitInfix) {
+        this.permitInfix = permitInfix;
     }
 
     @Override

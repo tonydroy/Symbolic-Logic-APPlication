@@ -1,7 +1,9 @@
-package slapp.editor.parser;
+package slapp.editor.parser.grammatical_parts;
 
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import slapp.editor.parser.Expression;
+import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.symbols.FunctionSymbol;
 
 import java.util.ArrayList;
@@ -14,8 +16,16 @@ public class Term implements Expression {
     private FunctionSymbol mainFnSymbol = new FunctionSymbol("","","",0, false);
     private int level = 0;
     private boolean combines = true;
+    private TermType termType = TermType.COMPLEX;
 
 
+    public TermType getTermType() {
+        return termType;
+    }
+
+    public void setTermType(TermType termType) {
+        this.termType = termType;
+    }
 
     public List<Expression> getChildren() {
         return children;

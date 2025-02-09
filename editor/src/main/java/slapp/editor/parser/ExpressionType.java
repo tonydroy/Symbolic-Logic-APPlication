@@ -2,6 +2,8 @@ package slapp.editor.parser;
 
 public enum ExpressionType {
 
+    NULL,
+
     ORIGINAL_ELEMENT,
     OPEN_BRACKET1,
     CLOSE_BRACKET1,
@@ -10,20 +12,34 @@ public enum ExpressionType {
     OPEN_BRACKET3,
     CLOSE_BRACKET3,
 
-    NEGATION,
-    CONDITIONAL,
-    BICONDITIONAL,
-    CONJUNCTION,
-    DISJUNCTION,
-    NAND,
-    NOR,
-    UNIVERSAL_QUANTIFIER,
-    EXISTENTIAL_QUANTIFIER,
+    NEG_SYM,
+    COND_SYM,
+    BICOND_SYM,
+    CONJ_SYM,
+    DISJ_SYM,
+    NAND_SYM,
+    NOR_SYM,
+    UNIVERSAL_SYM,
+    EXISTENTIAL_SYM,
+
+    OPERATOR,
+    NEG_OP,
+    COND_OP,
+    BICOND_OP,
+    CONJ_OP,
+    DISJ_OP,
+    NAND_OP,
+    NOR_OP,
+    UNIVERSAL_OP,
+    EXISTENTIAL_OP,
+
+
 
     VARIABLE,
     CONSTANT,
     SENTENCE_LETTER,
     RELATION_SYMBOL,
+    COMPLEMENT_REL_SYM,
     FUNCTION_SYMBOL,
 
 

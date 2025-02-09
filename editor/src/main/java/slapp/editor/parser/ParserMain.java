@@ -6,11 +6,15 @@ import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
+import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.DecoratedRTA;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static javafx.application.Application.launch;
@@ -38,9 +42,17 @@ public class ParserMain {
             ParseUtilities parse = new ParseUtilities();
             List<Expression> symbols = ParseUtilities.parseDoc(doc1);
 
+            TextFlow flow = new TextFlow();
+            List<Object> texts = new ArrayList<>();
             for (Expression expr : symbols) {
                 System.out.println(expr.getType() + ": " + expr);
+                texts.add(expr.toTextFlow().getChildren());
             }
+            Text[] txt = new Text[texts.size()];
+            flow.getChildren().addAll(txt);
+            EditorAlerts.showSimpleTFAlert("content", flow);
+
+
 
 
 

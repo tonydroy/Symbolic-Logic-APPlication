@@ -5,17 +5,17 @@ import javafx.scene.text.TextFlow;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.ParseUtilities;
+import slapp.editor.parser.grammatical_parts.Operator;
 
-import static slapp.editor.parser.ExpressionType.BICONDITIONAL;
-import static slapp.editor.parser.ExpressionType.CONDITIONAL;
+import static slapp.editor.parser.ExpressionType.EXISTENTIAL_SYM;
 
 
-public class Biconditional implements Expression {
+public class ExistentialQuantifierSym extends OperatorSym implements Expression {
 
-    private ExpressionType type = BICONDITIONAL;
+    private ExpressionType type = EXISTENTIAL_SYM;
     private String textString;
 
-    public Biconditional(String textString) {
+    public ExistentialQuantifierSym(String textString) {
         this.textString = textString;
     }
 
@@ -24,7 +24,7 @@ public class Biconditional implements Expression {
 
     @Override
     public TextFlow toTextFlow() {
-        Text text = ParseUtilities.newRegularText(" " + textString + " ");
+        Text text = ParseUtilities.newRegularText(textString);
         return new TextFlow(text);
     }
 
@@ -36,8 +36,8 @@ public class Biconditional implements Expression {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o instanceof Biconditional) {
-            Biconditional other = (Biconditional) o;
+        if (o instanceof ExistentialQuantifierSym) {
+            ExistentialQuantifierSym other = (ExistentialQuantifierSym) o;
             return textString.equals(other.textString);
         }
         return false;
@@ -47,5 +47,7 @@ public class Biconditional implements Expression {
     public int hashCode() {
         return textString.hashCode();
     }
+
+
 
 }

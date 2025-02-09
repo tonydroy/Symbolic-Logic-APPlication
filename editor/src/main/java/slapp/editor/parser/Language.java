@@ -2,6 +2,7 @@ package slapp.editor.parser;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 public class Language implements Serializable {
 
@@ -11,6 +12,7 @@ public class Language implements Serializable {
     private String openBracket1, closeBracket1;
     private String openBracket2, closeBracket2;
     private String openBracket3, closeBracket3;
+
     private String negation;
     private String conditional;
     private String biconditional;
@@ -20,17 +22,25 @@ public class Language implements Serializable {
     private String nor; // down arrow
     private String universalQuant;
     private String existentialQuant;
+
     private List<String> variables;
     private boolean variableSubs;
     private List<String> constants;
     private boolean constantSubs;
+
     private List<String> sentenceLetters;
     private boolean sentenceLetterSubs;
+
     private List<String> xrelationSymbols;
     private boolean xrelationSymbolSubs;
     private boolean xrelationSymbolsRequireSuper;
-    private List<String> onePlaceRelSymbols, twoPlaceRelSymbols;
+    private List<String> onePlaceRelSymbols;
+
     private boolean allowBinaryInfixRelations;
+
+    private Map<String, String> infixRelations;
+
+
     private List<String> xfunctionSymbols;
     private boolean xfunctionSymbolSubs;
     private List<String> onePlaceFunctionSymbols, twoPlaceFunctionSymbols;
@@ -38,6 +48,17 @@ public class Language implements Serializable {
 
     Language(String name) {
         this.name = name;
+    }
+
+    public String getInfixRelationString(Map<String, String> map, String negation) {
+        String relation = "";
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            if(entry.getValue().equals(negation)) {
+                negation = entry.getKey();
+                break;
+            }
+        }
+        return negation;
     }
 
     public String getName() {
@@ -244,12 +265,12 @@ public class Language implements Serializable {
         this.onePlaceRelSymbols = onePlaceRelSymbols;
     }
 
-    public List<String> getTwoPlaceRelSymbols() {
-        return twoPlaceRelSymbols;
+    public Map<String, String> getInfixRelations() {
+        return infixRelations;
     }
 
-    public void setTwoPlaceRelSymbols(List<String> twoPlaceRelSymbols) {
-        this.twoPlaceRelSymbols = twoPlaceRelSymbols;
+    public void setInfixRelations(Map<String, String> infixRelations) {
+        this.infixRelations = infixRelations;
     }
 
     public boolean isAllowBinaryInfixRelations() {

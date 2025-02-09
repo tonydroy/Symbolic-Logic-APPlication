@@ -5,16 +5,17 @@ import javafx.scene.text.TextFlow;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.ParseUtilities;
+import slapp.editor.parser.grammatical_parts.Operator;
 
-import static slapp.editor.parser.ExpressionType.NEGATION;
+import static slapp.editor.parser.ExpressionType.NOR_SYM;
 
 
-public class Negation implements Expression {
+public class NorSym extends OperatorSym implements Expression {
 
-    private ExpressionType type = NEGATION;
+    private ExpressionType type = NOR_SYM;
     private String textString;
 
-    public Negation(String textString) {
+    public NorSym(String textString) {
         this.textString = textString;
     }
 
@@ -23,7 +24,7 @@ public class Negation implements Expression {
 
     @Override
     public TextFlow toTextFlow() {
-        Text text = ParseUtilities.newRegularText(textString);
+        Text text = ParseUtilities.newRegularText(" " + textString + " ");
         return new TextFlow(text);
     }
 
@@ -35,8 +36,8 @@ public class Negation implements Expression {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o instanceof Negation) {
-            Negation other = (Negation) o;
+        if (o instanceof NorSym) {
+            NorSym other = (NorSym) o;
             return textString.equals(other.textString);
         }
         return false;
@@ -46,11 +47,6 @@ public class Negation implements Expression {
     public int hashCode() {
         return textString.hashCode();
     }
-
-
-
-
-
 
 
 

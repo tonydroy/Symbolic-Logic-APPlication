@@ -1,9 +1,9 @@
-package slapp.editor.parser;
+package slapp.editor.parser.grammatical_parts;
 
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import slapp.editor.parser.Expression;
 import slapp.editor.parser.symbols.CloseBracket;
-import slapp.editor.parser.symbols.FunctionSymbol;
 import slapp.editor.parser.symbols.OpenBracket;
 
 import java.util.ArrayList;

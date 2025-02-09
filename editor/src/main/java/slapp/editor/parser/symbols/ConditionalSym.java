@@ -5,17 +5,17 @@ import javafx.scene.text.TextFlow;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.ParseUtilities;
+import slapp.editor.parser.grammatical_parts.Operator;
 
-import static slapp.editor.parser.ExpressionType.CONDITIONAL;
-import static slapp.editor.parser.ExpressionType.UNIVERSAL_QUANTIFIER;
+import static slapp.editor.parser.ExpressionType.COND_SYM;
 
 
-public class UniversalQuantifier implements Expression {
+public class ConditionalSym extends OperatorSym implements Expression {
 
-    private ExpressionType type = UNIVERSAL_QUANTIFIER;
+    private ExpressionType type = COND_SYM;
     private String textString;
 
-    public UniversalQuantifier(String textString) {
+    public ConditionalSym(String textString) {
         this.textString = textString;
     }
 
@@ -24,7 +24,7 @@ public class UniversalQuantifier implements Expression {
 
     @Override
     public TextFlow toTextFlow() {
-        Text text = ParseUtilities.newRegularText(textString);
+        Text text = ParseUtilities.newRegularText(" " + textString + " ");
         return new TextFlow(text);
     }
 
@@ -36,8 +36,8 @@ public class UniversalQuantifier implements Expression {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o instanceof UniversalQuantifier) {
-            UniversalQuantifier other = (UniversalQuantifier) o;
+        if (o instanceof ConditionalSym) {
+            ConditionalSym other = (ConditionalSym) o;
             return textString.equals(other.textString);
         }
         return false;
@@ -47,9 +47,6 @@ public class UniversalQuantifier implements Expression {
     public int hashCode() {
         return textString.hashCode();
     }
-
-
-
 
 
 

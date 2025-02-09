@@ -56,6 +56,26 @@ public class EditorAlerts {
     }
 
     /**
+     * Information alert with 'OK' to close
+     * @param header alert header string
+     * @param message alert message
+     */
+    public static void showSimpleTFAlert(String header, TextFlow message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(header);
+        alert.setHeaderText(null);
+        alert.getDialogPane().setContent(message);
+        alert.initModality(Modality.APPLICATION_MODAL);
+        Stage mainStage = EditorMain.mainStage;
+        alert.setX(mainStage.getX() + mainStage.getWidth()/3);
+        alert.setY(mainStage.getY() + mainStage.getHeight()/3);
+
+//        alert.initOwner(EditorMain.mainStage);
+        alert.showAndWait();
+
+    }
+
+    /**
      * Self-closing information alert
      * @param header alert header string
      * @param message alert message

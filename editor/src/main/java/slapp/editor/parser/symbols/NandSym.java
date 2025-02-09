@@ -5,17 +5,17 @@ import javafx.scene.text.TextFlow;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.ParseUtilities;
+import slapp.editor.parser.grammatical_parts.Operator;
 
-import static slapp.editor.parser.ExpressionType.CONDITIONAL;
-import static slapp.editor.parser.ExpressionType.NEGATION;
+import static slapp.editor.parser.ExpressionType.NAND_SYM;
 
 
-public class Conditional implements Expression {
+public class NandSym extends OperatorSym implements Expression {
 
-    private ExpressionType type = CONDITIONAL;
+    private ExpressionType type = NAND_SYM;
     private String textString;
 
-    public Conditional(String textString) {
+    public NandSym(String textString) {
         this.textString = textString;
     }
 
@@ -36,8 +36,8 @@ public class Conditional implements Expression {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o instanceof Conditional) {
-            Conditional other = (Conditional) o;
+        if (o instanceof NandSym) {
+            NandSym other = (NandSym) o;
             return textString.equals(other.textString);
         }
         return false;
@@ -47,7 +47,5 @@ public class Conditional implements Expression {
     public int hashCode() {
         return textString.hashCode();
     }
-
-
 
 }
