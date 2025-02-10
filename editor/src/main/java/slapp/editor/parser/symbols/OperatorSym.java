@@ -1,8 +1,11 @@
 package slapp.editor.parser.symbols;
 
+import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
+
+import java.util.List;
 
 public class OperatorSym implements Expression {
 
@@ -16,7 +19,7 @@ public class OperatorSym implements Expression {
     }
 
     @Override
-    public TextFlow toTextFlow() {
+    public List<Text> toTextList() {
         return null;
     }
 }

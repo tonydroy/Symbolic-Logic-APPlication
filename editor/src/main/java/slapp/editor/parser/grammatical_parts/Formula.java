@@ -6,13 +6,9 @@ import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.symbols.CloseBracket;
 import slapp.editor.parser.symbols.OpenBracket;
-import slapp.editor.parser.symbols.OperatorSym;
-import slapp.editor.parser.symbols.RelationSymbol;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static slapp.editor.parser.ExpressionType.NULL;
 
 public class Formula implements Expression {
 
@@ -32,33 +28,30 @@ public class Formula implements Expression {
     }
 
     @Override
-    public TextFlow toTextFlow() {
-        List texts = new ArrayList();
+    public List<Text> toTextList() {
+        List<Text> texts = new ArrayList();
         if (mainOperator == null) {
-            return children.get(0).toTextFlow();
+            return children.get(0).toTextList();
         }
         else if (mainOperator.isUnary()) {
             if (mainOperator.getType() == ExpressionType.NEG_OP && ((Formula) children.get(0)).isNegatingInfix()) {
-                return ((InfixAtomic) children.get(0)).negatedTextFlow();
+                return ((InfixAtomic) children.get(0)).negatedTextList();
             }
             else {
-                texts.addAll(mainOperator.toTextFlow().getChildren());
-                texts.addAll(children.get(0).toTextFlow().getChildren());
+                texts.addAll(mainOperator.toTextList());
+                texts.addAll(children.get(0).toTextList());
             }
         }
         else {
-            texts.addAll(openBracket.toTextFlow().getChildren());
-            texts.addAll(children.get(0).toTextFlow().getChildren());
+            texts.addAll(openBracket.toTextList());
+            texts.addAll(children.get(0).toTextList());
             texts.add(new Text(" "));
-            texts.addAll(mainOperator.toTextFlow().getChildren());
+            texts.addAll(mainOperator.toTextList());
             texts.add(new Text(" "));
-            texts.addAll(children.get(1).toTextFlow().getChildren());
-            texts.addAll(closeBracket.toTextFlow().getChildren());
-
+            texts.addAll(children.get(1).toTextList());
+            texts.addAll(closeBracket.toTextList());
         }
-        Text[] txtArray = new Text[texts.size()];
-        TextFlow textFlow = new TextFlow(txtArray);
-        return textFlow;
+        return texts;
     }
 
     @Override

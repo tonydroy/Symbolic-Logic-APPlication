@@ -16,6 +16,7 @@ import java.util.List;
 public class ParseUtilities {
     private static Language language;
     private static int maxTermLevel;
+    private static double baseFontSize = 14;
 
     public ParseUtilities() {
         //for now
@@ -37,7 +38,7 @@ public class ParseUtilities {
         List<Expression> operators = getOperators(relSentSymbols);
         List<Expression> atomics = getAtomics(operators);
 
-        return expressions;
+        return atomics;
     }
 
     public static List<Expression> getAtomics(List<Expression> expressions) {
@@ -321,8 +322,7 @@ public class ParseUtilities {
             if (expressions.get(i).getType() == ExpressionType.CONSTANT) {
                 Term term = new Term();
                 term.setLevel(0);
-                ArrayList children = new ArrayList();
-                children.add(expressions.get(i));
+                List<Expression> children = Collections.singletonList((Expression) expressions.get(i));
                 term.setChildren(children);
                 term.setCombines(true);
                 term.setTermType(TermType.CONSTANT);
@@ -420,7 +420,6 @@ public class ParseUtilities {
         for (Expression expr : expressions) {
             System.out.print(expr.getType() + ": " + expr + "; ");
         }
-        System.out.println("done");
     }
 
     private static InfixTerm newInfixTerm(OpenBracket openBracket, Term term1, FunctionSymbol fnSymbol, Term term2, CloseBracket closeBracket) {
@@ -705,33 +704,36 @@ public class ParseUtilities {
 
 
 
-    public static Text newRegularText(String text) {
-        Text t = new Text(text);
-        t.setFont(new Font("Noto Serif Combo", 11));
+    public static Text newRegularText(String string) {
+        Text t = new Text();
+        if (!string.isEmpty()) {
+            t = new Text(string);
+            t.setFont(new Font("Noto Serif Combo", baseFontSize));
+        }
         return t;
     }
 
     public static Text newSuperscriptText(String text) {
         Text t = new Text(text);
-        t.setFont(new Font("Noto Serif Combo", 11 * .72));
-        t.setTranslateY(11 * -.4);
+        t.setFont(new Font("Noto Serif Combo", baseFontSize * .72));
+        t.setTranslateY(baseFontSize * -.4);
         return t;
     }
 
     public static Text newSubscriptText(String text) {
         Text t = new Text(text);
-        t.setFont(new Font("Noto Serif Combo", 11 * .72));
-        t.setTranslateY(11 * .17);
+        t.setFont(new Font("Noto Serif Combo", baseFontSize * .72));
+        t.setTranslateY(baseFontSize * .17);
         return t;
     }
 
     public static Text[] newSupSubText(String supText, String subText) {
         Text t1 = new Text(supText);
         Text t2 = new Text(subText);
-        t1.setFont(new Font("Noto Serif Combo", 11 * .72));
-        t2.setFont(new Font("Noto Serif Combo", 11 * .72));
-        t1.setTranslateY(11 * -.4);
-        t2.setTranslateY(11 * .17);
+        t1.setFont(new Font("Noto Serif Combo", baseFontSize * .72));
+        t2.setFont(new Font("Noto Serif Combo", baseFontSize * .72));
+        t1.setTranslateY(baseFontSize * -.4);
+        t2.setTranslateY(baseFontSize * .17);
         t1.applyCss();
         double offset = t1.getLayoutBounds().getWidth();
         t2.setTranslateX(-offset);

@@ -18,20 +18,16 @@ public class InfixTerm extends Term implements Expression {
 
 
     @Override
-    public TextFlow toTextFlow() {
-        List texts = new ArrayList();
-
-        texts.addAll(openBracket.toTextFlow().getChildren());
-        texts.addAll(getChildren().get(0).toTextFlow().getChildren());
+    public List<Text> toTextList() {
+        List<Text> texts = new ArrayList();
+        texts.addAll(openBracket.toTextList());
+        texts.addAll(getChildren().get(0).toTextList());
         texts.add(new Text(" "));
-        texts.addAll(getMainFnSymbol().toTextFlow().getChildren());
+        texts.addAll(getMainFnSymbol().toTextList());
         texts.add(new Text(" "));
-        texts.addAll(getChildren().get(1).toTextFlow().getChildren());
-        texts.addAll(closeBracket.toTextFlow().getChildren());
-
-        Text[] txtArray = new Text[texts.size()];
-        TextFlow textFlow = new TextFlow(txtArray);
-        return textFlow;
+        texts.addAll(getChildren().get(1).toTextList());
+        texts.addAll(closeBracket.toTextList());
+        return texts;
     }
 
     public OpenBracket getOpenBracket() {

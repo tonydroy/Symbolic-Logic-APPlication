@@ -18,15 +18,13 @@ public class PrefixAtomic extends Formula implements Expression {
     }
 
     @Override
-    public TextFlow toTextFlow() {
-        List texts = new ArrayList();
-        texts.addAll(mainRelation.toTextFlow().getChildren());
+    public List<Text> toTextList() {
+        List<Text> texts = new ArrayList();
+        texts.addAll(mainRelation.toTextList());
         for (Expression child : getChildren()) {
-            texts.addAll(child.toTextFlow().getChildren());
+            texts.addAll(child.toTextList());
         }
-        Text[] txtArray = new Text[texts.size()];
-        TextFlow textFlow = new TextFlow(txtArray);
-        return textFlow;
+        return texts;
     }
 
     @Override

@@ -7,6 +7,10 @@ import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.ParseUtilities;
 import slapp.editor.parser.grammatical_parts.Operator;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import static slapp.editor.parser.ExpressionType.NEG_SYM;
 
 
@@ -23,9 +27,10 @@ public class NegationSym extends OperatorSym implements Expression {
     public ExpressionType getType() {return type;}
 
     @Override
-    public TextFlow toTextFlow() {
-        Text text = ParseUtilities.newRegularText(textString);
-        return new TextFlow(text);
+    public List<Text> toTextList() {
+        List<Text> textList = new ArrayList<Text>();
+        if (!textString.isEmpty()) textList.add(ParseUtilities.newRegularText(textString));
+        return textList;
     }
 
     @Override

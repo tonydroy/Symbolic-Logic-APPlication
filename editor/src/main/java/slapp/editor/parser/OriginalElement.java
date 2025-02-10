@@ -1,7 +1,12 @@
 package slapp.editor.parser;
 
 import com.gluonhq.richtextarea.model.TextDecoration;
+import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static slapp.editor.parser.ExpressionType.ORIGINAL_ELEMENT;
 
@@ -45,5 +50,9 @@ public class OriginalElement implements Expression {
     }
 
     @Override
-    public TextFlow toTextFlow() {return null;}
+    public List<Text> toTextList() {
+        List<Text> textList = Collections.singletonList(new Text(elementStr));
+        return textList;
+    }
+
 }

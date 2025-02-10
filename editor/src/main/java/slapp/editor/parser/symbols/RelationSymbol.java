@@ -6,6 +6,10 @@ import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.ParseUtilities;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class RelationSymbol implements Expression {
 
     private ExpressionType type = ExpressionType.RELATION_SYMBOL;
@@ -51,17 +55,13 @@ public RelationSymbol(String baseStr, String subscriptStr, String superscriptStr
     public ExpressionType getType() { return type; }
 
     @Override
-    public TextFlow toTextFlow() {
-        Text baseText = ParseUtilities.newRegularText(baseStr);
-        Text supText = new Text(); Text subText = new Text();
-        if (!superscriptStr.isEmpty() && subscriptStr.isEmpty()) {supText = ParseUtilities.newSuperscriptText(superscriptStr);}
-        if (superscriptStr.isEmpty() && !subscriptStr.isEmpty()) {subText = ParseUtilities.newSubscriptText(subscriptStr);}
-        if (!superscriptStr.isEmpty() && !subscriptStr.isEmpty()) {
-            Text[] supSub = ParseUtilities.newSupSubText(superscriptStr, subscriptStr);
-            supText = supSub[0];
-            subText = supSub[1];
-        }
-        return new TextFlow(baseText, supText, subText);
+    public List<Text> toTextList() {
+        List<Text> textList = new ArrayList<>();
+        if (!baseStr.isEmpty()) textList.add(ParseUtilities.newRegularText(baseStr));
+        if (!superscriptStr.isEmpty() && subscriptStr.isEmpty()) textList.add(ParseUtilities.newSuperscriptText(superscriptStr));
+        if (superscriptStr.isEmpty() && !subscriptStr.isEmpty()) textList.add(ParseUtilities.newSubscriptText(subscriptStr));
+        if (!superscriptStr.isEmpty() && !subscriptStr.isEmpty()) textList.addAll(Arrays.asList(ParseUtilities.newSupSubText(superscriptStr, subscriptStr)));
+        return textList;
     }
 
     @Override

@@ -3,10 +3,8 @@ package slapp.editor.parser.grammatical_parts;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import slapp.editor.parser.Expression;
-import slapp.editor.parser.symbols.RelationSymbol;
 import slapp.editor.parser.symbols.SentenceLetter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SentenceAtomc extends Formula implements Expression {
@@ -19,8 +17,8 @@ public class SentenceAtomc extends Formula implements Expression {
     }
 
     @Override
-    public TextFlow toTextFlow() {
-        return mainLetter.toTextFlow();
+    public List<Text> toTextList() {
+        return mainLetter.toTextList();
     }
 
     @Override

@@ -1,10 +1,12 @@
 package slapp.editor.parser.grammatical_parts;
 
+import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.symbols.OperatorSym;
-import slapp.editor.parser.symbols.Variable;
+
+import java.util.List;
 
 public class Operator implements Expression {
 
@@ -51,8 +53,8 @@ public class Operator implements Expression {
     }
 
     @Override
-    public TextFlow toTextFlow() {
-        return mainSymbol.toTextFlow();
+    public List<Text> toTextList() {
+        return mainSymbol.toTextList();
     }
 
 

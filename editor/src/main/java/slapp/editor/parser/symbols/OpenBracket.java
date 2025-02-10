@@ -6,6 +6,10 @@ import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.ParseUtilities;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class OpenBracket implements Expression {
 
     private ExpressionType type;
@@ -26,9 +30,10 @@ public class OpenBracket implements Expression {
     }
 
     @Override
-    public TextFlow toTextFlow() {
-        Text text = ParseUtilities.newRegularText(textString);
-        return new TextFlow(text);
+    public List<Text> toTextList() {
+        List<Text> textList = new ArrayList<Text>();
+        if (!textString.isEmpty()) textList.add(ParseUtilities.newRegularText(textString));
+        return textList;
     }
 
     @Override

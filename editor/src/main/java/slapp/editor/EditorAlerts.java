@@ -18,11 +18,9 @@ package slapp.editor;
 import javafx.animation.PauseTransition;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
-import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
@@ -60,14 +58,15 @@ public class EditorAlerts {
      * @param header alert header string
      * @param message alert message
      */
-    public static void showSimpleTFAlert(String header, TextFlow message) {
+    public static void showSimpleTxtFlowAlert(String header, TextFlow message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(header);
         alert.setHeaderText(null);
         alert.getDialogPane().setContent(message);
+        alert.getDialogPane().setGraphic(null);
         alert.initModality(Modality.APPLICATION_MODAL);
         Stage mainStage = EditorMain.mainStage;
-        alert.setX(mainStage.getX() + mainStage.getWidth()/3);
+        alert.setX(mainStage.getX() + mainStage.getWidth() + 5);
         alert.setY(mainStage.getY() + mainStage.getHeight()/3);
 
 //        alert.initOwner(EditorMain.mainStage);

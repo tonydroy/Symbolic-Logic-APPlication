@@ -4,9 +4,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
-import slapp.editor.parser.symbols.ExistentialQuantifierSym;
 import slapp.editor.parser.symbols.UniversalQuantifierSym;
-import slapp.editor.parser.symbols.Variable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,13 +23,11 @@ public class UniversalOp extends Operator implements Expression {
     }
 
     @Override
-    public TextFlow toTextFlow() {
-        List texts = new ArrayList();
-        texts.addAll(getMainSymbol().toTextFlow().getChildren());
-        texts.add(variableTerm.toTextFlow().getChildren());
-        Text[] txtArray = new Text[texts.size()];
-        TextFlow textFlow = new TextFlow(txtArray);
-        return textFlow;
+    public List<Text> toTextList() {
+        List<Text> texts = new ArrayList();
+        texts.addAll(getMainSymbol().toTextList());
+        texts.addAll(variableTerm.toTextList());
+        return texts;
     }
 
 

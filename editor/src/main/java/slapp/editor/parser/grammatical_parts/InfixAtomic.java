@@ -3,7 +3,6 @@ package slapp.editor.parser.grammatical_parts;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import slapp.editor.parser.Expression;
-import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.symbols.CloseBracket;
 import slapp.editor.parser.symbols.OpenBracket;
 import slapp.editor.parser.symbols.RelationSymbol;
@@ -42,34 +41,28 @@ public class InfixAtomic extends Formula implements Expression {
     }
 
     @Override
-    public TextFlow toTextFlow() {
-        List texts = new ArrayList();
-        texts.addAll(openBracket.toTextFlow().getChildren());
-        texts.addAll(getChildren().get(0).toTextFlow().getChildren());
+    public List<Text> toTextList() {
+        List<Text> texts = new ArrayList();
+        texts.addAll(openBracket.toTextList());
+        texts.addAll(getChildren().get(0).toTextList());
         texts.add(new Text(" "));
-        texts.addAll(mainRelation.toTextFlow().getChildren());
+        texts.addAll(mainRelation.toTextList());
         texts.add(new Text(" "));
-        texts.addAll(getChildren().get(1).toTextFlow().getChildren());
-        texts.addAll(closeBracket.toTextFlow().getChildren());
-
-        Text[] txtArray = new Text[texts.size()];
-        TextFlow textFlow = new TextFlow(txtArray);
-        return textFlow;
+        texts.addAll(getChildren().get(1).toTextList());
+        texts.addAll(closeBracket.toTextList());
+        return texts;
     }
 
-    public TextFlow negatedTextFlow() {
-        List texts = new ArrayList();
-        texts.addAll(openBracket.toTextFlow().getChildren());
-        texts.addAll(getChildren().get(0).toTextFlow().getChildren());
+    public List<Text> negatedTextList() {
+        List<Text> texts = new ArrayList();
+        texts.addAll(openBracket.toTextList());
+        texts.addAll(getChildren().get(0).toTextList());
         texts.add(new Text(" "));
-        texts.addAll(complementRelation.toTextFlow().getChildren());
+        texts.addAll(complementRelation.toTextList());
         texts.add(new Text(" "));
-        texts.addAll(getChildren().get(1).toTextFlow().getChildren());
-        texts.addAll(closeBracket.toTextFlow().getChildren());
-
-        Text[] txtArray = new Text[texts.size()];
-        TextFlow textFlow = new TextFlow(txtArray);
-        return textFlow;
+        texts.addAll(getChildren().get(1).toTextList());
+        texts.addAll(closeBracket.toTextList());
+        return texts;
     }
 
     @Override

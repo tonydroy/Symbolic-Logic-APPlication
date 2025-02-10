@@ -2,10 +2,11 @@ package slapp.editor.parser;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
-import javafx.application.Application;
 import javafx.event.ActionEvent;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
@@ -42,30 +43,16 @@ public class ParserMain {
             ParseUtilities parse = new ParseUtilities();
             List<Expression> symbols = ParseUtilities.parseDoc(doc1);
 
-            TextFlow flow = new TextFlow();
-            List<Object> texts = new ArrayList<>();
+
+            List<Text> texts = new ArrayList<>();
             for (Expression expr : symbols) {
                 System.out.println(expr.getType() + ": " + expr);
-                texts.add(expr.toTextFlow().getChildren());
+                texts.addAll(expr.toTextList());
             }
             Text[] txt = new Text[texts.size()];
-            flow.getChildren().addAll(txt);
-            EditorAlerts.showSimpleTFAlert("content", flow);
-
-
-
-
-
-
-
-            /*
-            for (int i = 0; i < ParseUtilities.getElements(doc1).size(); i ++) {
-                System.out.println(i + ": " + ParseUtilities.getElements(doc1).get(i));
-            }
-             */
-
-
-
+            texts.toArray(txt);
+            TextFlow textFlow = new TextFlow(txt);
+            EditorAlerts.showSimpleTxtFlowAlert("content", textFlow);
 
         });
 

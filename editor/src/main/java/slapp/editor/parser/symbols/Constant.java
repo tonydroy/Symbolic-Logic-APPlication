@@ -6,6 +6,10 @@ import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.ParseUtilities;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class Constant implements Expression {
 
     private ExpressionType type = ExpressionType.CONSTANT;
@@ -22,11 +26,11 @@ public class Constant implements Expression {
     public ExpressionType getType() { return type; }
 
     @Override
-    public TextFlow toTextFlow() {
-        Text baseText = ParseUtilities.newRegularText(baseStr);
-        Text subText = null;
-        if (!subscriptStr.isEmpty()) subText = ParseUtilities.newSubscriptText(subscriptStr);
-        return new TextFlow(baseText, subText);
+    public List<Text> toTextList() {
+        List<Text> textList = new ArrayList<>();
+        if (!baseStr.isEmpty()) textList.add(ParseUtilities.newRegularText(baseStr));
+        if (!subscriptStr.isEmpty()) textList.add(ParseUtilities.newSubscriptText(subscriptStr));
+        return textList;
     }
 
     @Override

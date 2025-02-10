@@ -1,5 +1,6 @@
 package slapp.editor.parser.grammatical_parts;
 
+import javafx.scene.Node;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import slapp.editor.parser.Expression;
@@ -63,16 +64,13 @@ public class Term implements Expression {
     public ExpressionType getType() { return type; }
 
     @Override
-    public TextFlow toTextFlow() {
-        List texts = new ArrayList();
-        texts.addAll(mainFnSymbol.toTextFlow().getChildren());
-        for (Expression childExp : children) {
-
-            texts.addAll(childExp.toTextFlow().getChildren());
+    public List<Text> toTextList() {
+        List<Text> texts = new ArrayList();
+        texts.addAll(mainFnSymbol.toTextList());
+        for (Expression expression : children) {
+           texts.addAll(expression.toTextList());
         }
-        Text[] txtArray = new Text[texts.size()];
-        TextFlow textFlow = new TextFlow(txtArray);
-        return textFlow;
+        return texts;
     }
 
     @Override

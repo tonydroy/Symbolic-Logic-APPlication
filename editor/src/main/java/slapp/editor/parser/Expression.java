@@ -1,12 +1,14 @@
 package slapp.editor.parser;
 
-import javafx.scene.text.TextFlow;
+import javafx.scene.text.Text;
+
+import java.util.List;
 
 public interface Expression {
 
 
     ExpressionType getType();
 
-    TextFlow toTextFlow();
+    List<Text> toTextList();
 
 }
