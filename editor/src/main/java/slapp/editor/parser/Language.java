@@ -46,6 +46,9 @@ public class Language implements Serializable {
     private List<String> onePlaceFunctionSymbols, twoPlaceFunctionSymbols;
     private boolean allowBinaryInfixFunctions;
 
+    private boolean allowBoundedQuantifiers;
+    private String dividerSymbol; //for bounded quantifiers
+
     Language(String name) {
         this.name = name;
     }
@@ -63,6 +66,22 @@ public class Language implements Serializable {
 
     public String getName() {
         return name;
+    }
+
+    public boolean isAllowBoundedQuantifiers() {
+        return allowBoundedQuantifiers;
+    }
+
+    public void setAllowBoundedQuantifiers(boolean allowBoundedQuantifiers) {
+        this.allowBoundedQuantifiers = allowBoundedQuantifiers;
+    }
+
+    public String getDividerSymbol() {
+        return dividerSymbol;
+    }
+
+    public void setDividerSymbol(String dividerSymbol) {
+        this.dividerSymbol = dividerSymbol;
     }
 
     public String getOpenBracket1() {

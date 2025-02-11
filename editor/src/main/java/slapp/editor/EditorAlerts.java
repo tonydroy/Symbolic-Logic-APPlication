@@ -17,6 +17,7 @@ package slapp.editor;
 
 import javafx.animation.PauseTransition;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -27,6 +28,7 @@ import javafx.stage.Modality;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import slapp.editor.main_window.MainWindowView;
 
 /**
  * Utility class to show pop-up alerts
@@ -66,10 +68,12 @@ public class EditorAlerts {
         alert.getDialogPane().setGraphic(null);
         alert.initModality(Modality.APPLICATION_MODAL);
         Stage mainStage = EditorMain.mainStage;
-        alert.setX(mainStage.getX() + mainStage.getWidth() + 5);
-        alert.setY(mainStage.getY() + mainStage.getHeight()/3);
 
-//        alert.initOwner(EditorMain.mainStage);
+        message.setPrefWidth(250);
+        Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
+        alert.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 250));
+        alert.setY(mainStage.getY() + mainStage.getHeight()/4);
+        alert.initOwner(mainStage);
         alert.showAndWait();
 
     }

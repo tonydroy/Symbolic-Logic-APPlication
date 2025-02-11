@@ -2,47 +2,59 @@ package slapp.editor.parser;
 
 public enum ExpressionType {
 
-    NULL,
+    ORIGINAL_ELEMENT("Not in vocab"),
+    OPEN_BRACKET1("Bracket"),
+    CLOSE_BRACKET1("Bracket"),
+    OPEN_BRACKET2("Bracket"),
+    CLOSE_BRACKET2("Bracket"),
+    OPEN_BRACKET3("Bracket"),
+    CLOSE_BRACKET3("Bracket"),
 
-    ORIGINAL_ELEMENT,
-    OPEN_BRACKET1,
-    CLOSE_BRACKET1,
-    OPEN_BRACKET2,
-    CLOSE_BRACKET2,
-    OPEN_BRACKET3,
-    CLOSE_BRACKET3,
+    NEG_SYM("Neg Sym"),
+    COND_SYM("Cond Sym"),
+    BICOND_SYM("Bicond Sym"),
+    CONJ_SYM("Conj Sym"),
+    DISJ_SYM("Disj Sym"),
+    NAND_SYM("Nand Sym"),
+    NOR_SYM("Nor Sym"),
+    UNIVERSAL_SYM("Univ Sym"),
+    EXISTENTIAL_SYM("Exis Sym"),
+    DIVIDER_SYM("Divider Sym"),
 
-    NEG_SYM,
-    COND_SYM,
-    BICOND_SYM,
-    CONJ_SYM,
-    DISJ_SYM,
-    NAND_SYM,
-    NOR_SYM,
-    UNIVERSAL_SYM,
-    EXISTENTIAL_SYM,
+    OPERATOR(""),
+    NEG_OP("Neg Op"),
+    COND_OP("Cond Op"),
+    BICOND_OP("Bicond Op"),
+    CONJ_OP("Conj Op"),
+    DISJ_OP("Disj Op"),
+    NAND_OP("Nand Op"),
+    NOR_OP("Nor Op"),
+    UNIVERSAL_OP("Univ Op"),
+    EXISTENTIAL_OP("Exis Op"),
+    UNIV_RESTRICTED_OP("Univ Restricted Op"),
+    EXIS_RESTRICTED_OP("Exis Restricted Op"),
+    UNIV_BOUNDED_OP("Univ Bounded Op"),
+    EXIS_BOUNDED_OP("Exis Bounded Op"),
 
-    OPERATOR,
-    NEG_OP,
-    COND_OP,
-    BICOND_OP,
-    CONJ_OP,
-    DISJ_OP,
-    NAND_OP,
-    NOR_OP,
-    UNIVERSAL_OP,
-    EXISTENTIAL_OP,
-
-
-
-    VARIABLE,
-    CONSTANT,
-    SENTENCE_LETTER,
-    RELATION_SYMBOL,
-    COMPLEMENT_REL_SYM,
-    FUNCTION_SYMBOL,
+    VARIABLE("Var"),
+    CONSTANT("Const"),
+    SENTENCE_LETTER("Sent Let"),
+    RELATION_SYMBOL("Rel Sym"),
+    COMPLEMENT_REL_SYM("Neg Rel Sym"),
+    FUNCTION_SYMBOL("Fn Sym"),
 
 
-    TERM,
-    FORMULA
+    TERM("Term"),
+    FORMULA("Formula");
+
+    public final String label;
+
+    private ExpressionType(String label) {
+        this.label = label;
+    }
+
+    public String toString() {
+        return label;
+    }
+
 }

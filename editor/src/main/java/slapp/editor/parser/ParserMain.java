@@ -13,6 +13,7 @@ import javafx.stage.Stage;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import slapp.editor.EditorAlerts;
+import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 
 import java.util.ArrayList;
@@ -24,7 +25,8 @@ public class ParserMain {
 
     public ParserMain(Stage stage) {
 
-        DecoratedRTA drta = new DecoratedRTA();
+        BoxedDRTA bdrta = new BoxedDRTA();
+        DecoratedRTA drta = bdrta.getDRTA();
 
         RichTextArea rta = drta.getEditor();
         rta.setPrefHeight(400);
@@ -46,17 +48,18 @@ public class ParserMain {
 
             List<Text> texts = new ArrayList<>();
             for (Expression expr : symbols) {
-                System.out.println(expr.getType() + ": " + expr);
+ //               System.out.println(expr.getType() + ": " + expr);
+                texts.add(new Text(expr.getType() + ": "));
                 texts.addAll(expr.toTextList());
+                texts.add(new Text("\n"));
             }
             Text[] txt = new Text[texts.size()];
             texts.toArray(txt);
             TextFlow textFlow = new TextFlow(txt);
-            EditorAlerts.showSimpleTxtFlowAlert("content", textFlow);
-
+            EditorAlerts.showSimpleTxtFlowAlert("Parser Content", textFlow);
         });
 
-        VBox box = new VBox(10, button, rta);
+        VBox box = new VBox(10, button, bdrta.getBoxedRTA());
         Scene scene = new Scene(box);
         stage.setScene(scene);
         stage.show();

@@ -1,25 +1,23 @@
 package slapp.editor.parser.symbols;
 
 import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.ParseUtilities;
-import slapp.editor.parser.grammatical_parts.Operator;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import static slapp.editor.parser.ExpressionType.DISJ_SYM;
+import static slapp.editor.parser.ExpressionType.COND_SYM;
+import static slapp.editor.parser.ExpressionType.DIVIDER_SYM;
 
 
-public class DisjunctionSym extends OperatorSym implements Expression {
+public class DividerSym implements Expression {
 
-    private ExpressionType type = DISJ_SYM;
+    private ExpressionType type = DIVIDER_SYM;
     private String textString;
 
-    public DisjunctionSym(String textString) {
+    public DividerSym(String textString) {
         this.textString = textString;
     }
 
@@ -41,8 +39,8 @@ public class DisjunctionSym extends OperatorSym implements Expression {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o instanceof DisjunctionSym) {
-            DisjunctionSym other = (DisjunctionSym) o;
+        if (o instanceof DividerSym) {
+            DividerSym other = (DividerSym) o;
             return textString.equals(other.textString);
         }
         return false;
@@ -52,6 +50,7 @@ public class DisjunctionSym extends OperatorSym implements Expression {
     public int hashCode() {
         return textString.hashCode();
     }
+
 
 
 }

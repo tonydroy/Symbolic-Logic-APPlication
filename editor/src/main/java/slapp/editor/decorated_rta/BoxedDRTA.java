@@ -20,7 +20,8 @@ import javafx.event.EventHandler;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 
 /**
  * DecoratedRTA and HBox with editor as member.  The RTA is very hard to focus by mouse when it is formatted like
@@ -48,6 +49,14 @@ public class BoxedDRTA {
         boxedRTA.addEventFilter(MouseEvent.MOUSE_CLICKED, mouseEventHandler);
     }
 
+    public void setBorderColor(Color color) {
+        Border border = new Border(new BorderStroke(color, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT));
+        boxedRTA.setBorder(border);
+    }
+
+    public void resetColor() {
+        boxedRTA.setStyle("-fx-border-color: transparent");
+    }
 
     /**
      * The decorated RTA created the constructor

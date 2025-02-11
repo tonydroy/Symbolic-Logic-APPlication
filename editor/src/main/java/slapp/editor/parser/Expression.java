@@ -9,6 +9,12 @@ public interface Expression {
 
     ExpressionType getType();
 
+    default List<Expression> getChildren() {return null;}
+
+    default int getLevel() {return -1;}
+
     List<Text> toTextList();
+
+
 
 }

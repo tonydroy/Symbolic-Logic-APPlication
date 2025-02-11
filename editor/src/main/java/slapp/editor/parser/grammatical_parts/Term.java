@@ -1,8 +1,6 @@
 package slapp.editor.parser.grammatical_parts;
 
-import javafx.scene.Node;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.symbols.FunctionSymbol;
@@ -19,6 +17,15 @@ public class Term implements Expression {
     private boolean combines = true;
     private TermType termType = TermType.COMPLEX;
 
+    @Override
+    public int getLevel() {
+        return level;
+    }
+
+    @Override
+    public List<Expression> getChildren() {
+        return children;
+    }
 
     public TermType getTermType() {
         return termType;
@@ -28,9 +35,7 @@ public class Term implements Expression {
         this.termType = termType;
     }
 
-    public List<Expression> getChildren() {
-        return children;
-    }
+
 
     public void setChildren(List<Expression> children) {
         this.children = children;
@@ -44,9 +49,7 @@ public class Term implements Expression {
         this.mainFnSymbol = mainFnSymbol;
     }
 
-    public int getLevel() {
-        return level;
-    }
+
 
     public void setLevel(int level) {
         this.level = level;
@@ -91,7 +94,7 @@ public class Term implements Expression {
             boolean equals = true;
             if (!mainFnSymbol.equals(other.mainFnSymbol)) { equals = false;}
             if (children.size() != other.children.size()) { equals = false; }
-            for (int i = 0; i < children.size(); i++) {
+            else for (int i = 0; i < children.size(); i++) {
                 if (!children.get(i).equals(other.children.get(i))) { equals = false; }
             }
             return equals;

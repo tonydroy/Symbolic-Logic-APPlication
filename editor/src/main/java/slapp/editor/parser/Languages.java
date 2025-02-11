@@ -42,7 +42,9 @@ public class Languages {
         lang.setOpenBracket1("("); lang.setCloseBracket1(")");
         lang.setNegation("\u223c");
         lang.setConditional("\u2192");
+        lang.setConjunction("\u2227");
         lang.setUniversalQuant("\u2200");
+        lang.setExistentialQuant("\u2203");
 
         lang.setVariables(Alphabets.getCharacterRange("\ud835\udc56", "\ud835\udc67"));
         lang.setVariableSubs(true);
@@ -69,6 +71,9 @@ public class Languages {
         lang.setOnePlaceFunctionSymbols(Collections.singletonList("\ud835\udc46"));
         lang.setTwoPlaceFunctionSymbols(Arrays.asList("\ue8b8", "\ue8ba"));
         lang.setAllowBinaryInfixFunctions(true);
+
+        lang.setAllowBoundedQuantifiers(true);
+        lang.setDividerSymbol(":");
 
         return lang;
     }

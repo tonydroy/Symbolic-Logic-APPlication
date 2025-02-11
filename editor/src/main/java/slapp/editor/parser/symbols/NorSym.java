@@ -29,7 +29,7 @@ public class NorSym extends OperatorSym implements Expression {
     @Override
     public List<Text> toTextList() {
         List<Text> textList = new ArrayList<Text>();
-        if (!textString.isEmpty()) textList.add(ParseUtilities.newRegularText(" " + textString + " "));
+        if (!textString.isEmpty()) textList.add(ParseUtilities.newRegularText(textString));
         return textList;
     }
 

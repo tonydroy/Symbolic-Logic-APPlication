@@ -1,7 +1,6 @@
 package slapp.editor.parser.grammatical_parts;
 
 import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.symbols.CloseBracket;
@@ -74,6 +73,7 @@ public class Formula implements Expression {
             sb.append(children.get(0).toString());
             sb.append(" ");
             sb.append(mainOperator.toString());
+            sb.append(" ");
             sb.append(children.get(1).toString());
             sb.append(closeBracket.toString());
         }
@@ -81,15 +81,47 @@ public class Formula implements Expression {
     }
 
     @Override
-    public boolean equals(Object obj) {return false;}
+    public boolean equals(Object o) {
+        if (o ==this) return true;
+        if (o instanceof Formula) {
+            Formula other = (Formula) o;
+            boolean equals = true;
+            if (!mainOperator.equals(other.mainOperator)) { equals = false;}
+            if (children.size() != other.children.size()) { equals = false; }
+            else for (int i = 0; i < children.size(); i++) {
+                if (!children.get(i).equals(other.children.get(i))) { equals = false; }
+            }
+            return equals;
+        }
+        return false;
+        }
 
-    @Override public int hashCode() {return 0;}
+    @Override public int hashCode() {
+        int code = mainOperator.hashCode();
+        for (Expression child : children) {code = code + child.hashCode();}
+        return code;
+    }
 
+    @Override
+    public int getLevel() {
+        return level;
+    }
 
-
+    @Override
     public List<Expression> getChildren() {
         return children;
     }
+
+
+    public void setOpenBracket(OpenBracket openBracket) {
+        this.openBracket = openBracket;
+    }
+
+    public void setCloseBracket(CloseBracket closeBracket) {
+        this.closeBracket = closeBracket;
+    }
+
+
 
     public void setChildren(List<Expression> children) {
         this.children = children;
@@ -119,9 +151,7 @@ public class Formula implements Expression {
         this.combines = combines;
     }
 
-    public int getLevel() {
-        return level;
-    }
+
 
     public void setLevel(int level) {
         this.level = level;
