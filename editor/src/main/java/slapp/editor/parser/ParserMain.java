@@ -43,12 +43,13 @@ public class ParserMain {
             Document doc1 = rta.getDocument();
 
             ParseUtilities parse = new ParseUtilities();
+            parse.setLanguage(Languages.getLanguage("Lnt"));
             List<Expression> symbols = ParseUtilities.parseDoc(doc1);
 
 
             List<Text> texts = new ArrayList<>();
             for (Expression expr : symbols) {
- //               System.out.println(expr.getType() + ": " + expr);
+    //            System.out.println(expr.getType() + ": " + expr);
                 texts.add(new Text(expr.getType() + ": "));
                 texts.addAll(expr.toTextList());
                 texts.add(new Text("\n"));

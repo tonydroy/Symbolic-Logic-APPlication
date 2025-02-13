@@ -32,26 +32,25 @@ public class OriginalElement implements Expression {
         return decoration.isSubscript() || decoration.isTransSubscript();
     }
 
+    public boolean isNormal() {
+        return !isSubscript() && !isSuperscript();
+    }
+
     @Override
     public ExpressionType getType() { return type; }
 
     @Override
     public String toString() {
-        return "element string: " + elementStr + " Dec: " + decoration.toString();
+        return "element string: " + elementStr + "(" + elementStr.codePointAt(0) +")" + " Dec: " + decoration.toString();
 
-        /*
-        String s = "";
-        for (char c : elementStr.toCharArray()) {
-            s = s + String.format("\\u%04x", (int) c);
-        }
-        return "char: " + elementStr + " code: " + s;
-
-         */
     }
 
     @Override
     public List<Text> toTextList() {
-        List<Text> textList = Collections.singletonList(new Text(elementStr));
+        List<Text> textList = new ArrayList<>();
+        if (isSubscript()) textList = Collections.singletonList(ParseUtilities.newSubscriptText(elementStr));
+        if (isSuperscript()) textList = Collections.singletonList(ParseUtilities.newSuperscriptText(elementStr));
+        if (isNormal()) textList = Collections.singletonList(ParseUtilities.newRegularText(elementStr));
         return textList;
     }
 

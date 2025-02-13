@@ -1,6 +1,10 @@
 package slapp.editor.parser;
 
+import javafx.scene.text.Text;
+
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -8,10 +12,13 @@ public class Language implements Serializable {
 
     private static final long serialVersionUID = 100L;
 
-    private String name;
+    private String nameString;
+    private List<Text> nameTextList = new ArrayList();
+
     private String openBracket1, closeBracket1;
     private String openBracket2, closeBracket2;
     private String openBracket3, closeBracket3;
+    private boolean allowDroppedBrackets = false;
 
     private String negation;
     private String conditional;
@@ -24,64 +31,54 @@ public class Language implements Serializable {
     private String existentialQuant;
 
     private List<String> variables;
-    private boolean variableSubs;
+    private boolean variableSubs = false;
     private List<String> constants;
-    private boolean constantSubs;
+    private boolean constantSubs = false;
 
     private List<String> sentenceLetters;
-    private boolean sentenceLetterSubs;
-
-    private List<String> xrelationSymbols;
-    private boolean xrelationSymbolSubs;
-    private boolean xrelationSymbolsRequireSuper;
-    private List<String> onePlaceRelSymbols;
-
-    private boolean allowBinaryInfixRelations;
-
-    private Map<String, String> infixRelations;
-
+    private boolean sentenceLetterSubs = false;
 
     private List<String> xfunctionSymbols;
-    private boolean xfunctionSymbolSubs;
+    private boolean xfunctionSymbolSubs = false;
     private List<String> onePlaceFunctionSymbols, twoPlaceFunctionSymbols;
-    private boolean allowBinaryInfixFunctions;
+    private boolean allowBinaryInfixFunctions = false;
 
-    private boolean allowBoundedQuantifiers;
+    private List<String> xrelationSymbols;
+    private boolean xrelationSymbolSubs = false;
+    private boolean xrelationSymbolsRequireSuper = false;
+    private List<String> onePlaceRelSymbols;
+    private boolean allowBinaryInfixRelations = false;
+    private boolean allowBinaryInfixNegations = false;
+    private Map<String, String> infixRelations;
+
+    private boolean allowBoundedQuantifiers = false;
     private String dividerSymbol; //for bounded quantifiers
 
-    Language(String name) {
-        this.name = name;
+    Language(String nameString) {
+        this.nameString = nameString;
     }
 
-    public String getInfixRelationString(Map<String, String> map, String negation) {
+
+    void setNameTexts(String baseStr, String supscriptStr, String subscriptStr ) {
+        if (!baseStr.isEmpty()) nameTextList.add(ParseUtilities.newRegularText(baseStr));
+        if (!supscriptStr.isEmpty() && subscriptStr.isEmpty()) nameTextList.add(ParseUtilities.newSuperscriptText(supscriptStr));
+        if (supscriptStr.isEmpty() && !subscriptStr.isEmpty()) nameTextList.add(ParseUtilities.newSubscriptText(subscriptStr));
+        if (!supscriptStr.isEmpty() && !subscriptStr.isEmpty()) nameTextList.addAll(Arrays.asList(ParseUtilities.newSupSubText(supscriptStr, subscriptStr)));
+    }
+
+    public String getInfixRelationKey(String value) {
         String relation = "";
-        for (Map.Entry<String, String> entry : map.entrySet()) {
-            if(entry.getValue().equals(negation)) {
-                negation = entry.getKey();
+        for (Map.Entry<String, String> entry : infixRelations.entrySet()) {
+            if(entry.getValue().equals(value)) {
+                value = entry.getKey();
                 break;
             }
         }
-        return negation;
+        return value;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public boolean isAllowBoundedQuantifiers() {
-        return allowBoundedQuantifiers;
-    }
-
-    public void setAllowBoundedQuantifiers(boolean allowBoundedQuantifiers) {
-        this.allowBoundedQuantifiers = allowBoundedQuantifiers;
-    }
-
-    public String getDividerSymbol() {
-        return dividerSymbol;
-    }
-
-    public void setDividerSymbol(String dividerSymbol) {
-        this.dividerSymbol = dividerSymbol;
+    public String getNameString() {
+        return nameString;
     }
 
     public String getOpenBracket1() {
@@ -130,6 +127,14 @@ public class Language implements Serializable {
 
     public void setCloseBracket3(String closeBracket3) {
         this.closeBracket3 = closeBracket3;
+    }
+
+    public boolean isAllowDroppedBrackets() {
+        return allowDroppedBrackets;
+    }
+
+    public void setAllowDroppedBrackets(boolean allowDroppedBrackets) {
+        this.allowDroppedBrackets = allowDroppedBrackets;
     }
 
     public String getNegation() {
@@ -300,6 +305,14 @@ public class Language implements Serializable {
         this.allowBinaryInfixRelations = allowBinaryInfixRelations;
     }
 
+    public boolean isAllowBinaryInfixNegations() {
+        return allowBinaryInfixNegations;
+    }
+
+    public void setAllowBinaryInfixNegations(boolean allowBinaryInfixNegations) {
+        this.allowBinaryInfixNegations = allowBinaryInfixNegations;
+    }
+
     public List<String> getXfunctionSymbols() {
         return xfunctionSymbols;
     }
@@ -338,5 +351,21 @@ public class Language implements Serializable {
 
     public void setAllowBinaryInfixFunctions(boolean allowBinaryInfixFunctions) {
         this.allowBinaryInfixFunctions = allowBinaryInfixFunctions;
+    }
+
+    public boolean isAllowBoundedQuantifiers() {
+        return allowBoundedQuantifiers;
+    }
+
+    public void setAllowBoundedQuantifiers(boolean allowBoundedQuantifiers) {
+        this.allowBoundedQuantifiers = allowBoundedQuantifiers;
+    }
+
+    public String getDividerSymbol() {
+        return dividerSymbol;
+    }
+
+    public void setDividerSymbol(String dividerSymbol) {
+        this.dividerSymbol = dividerSymbol;
     }
 }

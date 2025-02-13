@@ -19,11 +19,7 @@ public class ParseUtilities {
     private static double baseFontSize = 14;
     private static boolean matchVal = false;
 
-    public ParseUtilities() {
-        //for now
-
-        this.language = Languages.getLanguage("Lq");
-    }
+    public ParseUtilities() {}
 
     public static List<Expression> parseDoc(Document doc) {
         maxTermLevel = 0;
@@ -99,12 +95,14 @@ public class ParseUtilities {
                                 changes = true;
                                 break;
                             } else {
-                                newFormula.setCombines(false);
-                                expressions.set(i, newFormula);
-                                expressions.remove(i - 1);
-                                expressions.remove(i);
-                                changes = true;
-                                break;
+                                if (language.isAllowDroppedBrackets()) {
+                                    newFormula.setCombines(false);
+                                    expressions.set(i, newFormula);
+                                    expressions.remove(i - 1);
+                                    expressions.remove(i);
+                                    changes = true;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -389,38 +387,48 @@ public class ParseUtilities {
             String elementStr = "";
             String subString = "";
             String supString = "";
-            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) {
+            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(i)).isNormal()) {
                 elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
                 if (language.getOnePlaceRelSymbols() != null && language.getOnePlaceRelSymbols().contains(elementStr)) {
                     expressions.set(i, new RelationSymbol(elementStr, "", "", 1));
                     continue;
                 }
-                if (language.getInfixRelations().containsKey(elementStr)) {
-                    RelationSymbol relationSymbol = new RelationSymbol(elementStr, "", "", 2);
-                    relationSymbol.setPermitInfix(language.isAllowBinaryInfixRelations());
+                if (language.getInfixRelations() != null) {
 
-                    String complementStr = language.getInfixRelations().get(elementStr);
-                    RelationSymbol complementSymbol = null;
-                    if (complementStr != null) {
-                        complementSymbol = new RelationSymbol(complementStr, "", "", 2);
-                        complementSymbol.setPermitInfix(language.isAllowBinaryInfixRelations());
-                        relationSymbol.setComplementSymbol(complementSymbol);
+                    if (language.getInfixRelations().containsKey(elementStr)) {
+                        RelationSymbol relationSymbol = new RelationSymbol(elementStr, "", "", 2);
+                        relationSymbol.setPermitInfix(language.isAllowBinaryInfixRelations());
+
+                        if (language.isAllowBinaryInfixNegations()) {
+                            String complementStr = language.getInfixRelations().get(elementStr);
+                            RelationSymbol complementSymbol = null;
+                            if (!complementStr.isEmpty()) {
+                                complementSymbol = new RelationSymbol(complementStr, "", "", 2);
+                                complementSymbol.setPermitInfix(language.isAllowBinaryInfixRelations());
+                                relationSymbol.setComplementSymbol(complementSymbol);
+                            }
+                        }
+                        expressions.set(i, relationSymbol);
+                        continue;
                     }
-                    expressions.set(i, relationSymbol);
-                    continue;
-                }
-                if (language.getInfixRelations().containsValue(elementStr)) {
-                    String relationString = language.getInfixRelationString(language.getInfixRelations(), elementStr);
-                    RelationSymbol relationSymbol = new RelationSymbol(relationString, "", "", 2);
-                    relationSymbol.setPermitInfix(language.isAllowBinaryInfixRelations());
-                    relationSymbol.setType(ExpressionType.COMPLEMENT_REL_SYM);
 
-                    RelationSymbol complementSymbol = new RelationSymbol(elementStr, "", "", 2);
-                    complementSymbol.setPermitInfix(language.isAllowBinaryInfixRelations());
-                    relationSymbol.setComplementSymbol(complementSymbol);
-                    expressions.set(i, relationSymbol);
-                    continue;
+
+                    if (language.isAllowBinaryInfixNegations()) {
+                        if (language.getInfixRelations().containsValue(elementStr)) {
+                            String relationString = language.getInfixRelationKey(elementStr);
+                            RelationSymbol relationSymbol = new RelationSymbol(relationString, "", "", 2);
+                            relationSymbol.setPermitInfix(language.isAllowBinaryInfixRelations());
+                            relationSymbol.setType(ExpressionType.COMPLEMENT_REL_SYM);
+
+                            RelationSymbol complementSymbol = new RelationSymbol(elementStr, "", "", 2);
+                            complementSymbol.setPermitInfix(language.isAllowBinaryInfixRelations());
+                            relationSymbol.setComplementSymbol(complementSymbol);
+                            expressions.set(i, relationSymbol);
+                            continue;
+                        }
+                    }
                 }
+
                 if (language.getXrelationSymbols() != null && language.getXrelationSymbols().contains(elementStr) ) {
                     int j = i + 1;
                     int places = areFollowingTerms(j, expressions);
@@ -449,7 +457,7 @@ public class ParseUtilities {
         for (int i = 0; i < expressions.size(); i++) {
             String elementStr = "";
             String subString = "";
-            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) {
+            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(i)).isNormal()) {
                 elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
                 if (language.getSentenceLetters() != null && language.getSentenceLetters().contains(elementStr)) {
                     int j = i + 1;
@@ -612,7 +620,7 @@ public class ParseUtilities {
             String elementStr = "";
             String subString = "";
             String supString = "";
-            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) {
+            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(i)).isNormal()) {
                 elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
                 if (language.getOnePlaceFunctionSymbols() != null && language.getOnePlaceFunctionSymbols().contains(elementStr)) {
                     expressions.set(i, new FunctionSymbol(elementStr, "", "", 1, false));
@@ -649,7 +657,7 @@ public class ParseUtilities {
         for (int i = 0; i < expressions.size(); i++) {
             String elementStr = "";
             String subString = "";
-            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) {
+            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(i)).isNormal()) {
                 elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
                 if (language.getVariables() != null && language.getVariables().contains(elementStr)) {
                     int j = i + 1;
@@ -666,7 +674,7 @@ public class ParseUtilities {
         for (int i = 0; i < expressions.size(); i++) {
             String elementStr = "";
             String subString = "";
-            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT) {
+            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(i)).isNormal()) {
                 elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
                 if (language.getConstants() != null && language.getConstants().contains(elementStr)) {
                     int j = i + 1;
@@ -683,67 +691,67 @@ public class ParseUtilities {
     public static List<Expression> getSimpleSymbols(List<Expression> expressions) {
         for (int i = 0; i < expressions.size(); i++) {
             String elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
-            if (elementStr.equals(language.getOpenBracket1())) {
+            if (elementStr.equals(language.getOpenBracket1()) && ((OriginalElement) expressions.get(i)).isNormal()) {
                 expressions.set(i, new OpenBracket1(elementStr));
                 continue;
             }
-            if (elementStr.equals(language.getOpenBracket2())) {
+            if (elementStr.equals(language.getOpenBracket2()) && ((OriginalElement) expressions.get(i)).isNormal()) {
                 expressions.set(i, new OpenBracket2(elementStr));
                 continue;
             }
-            if (elementStr.equals(language.getOpenBracket3())) {
+            if (elementStr.equals(language.getOpenBracket3()) && ((OriginalElement) expressions.get(i)).isNormal()) {
                 expressions.set(i, new OpenBracket3(elementStr));
                 continue;
             }
-            if (elementStr.equals(language.getCloseBracket1())) {
+            if (elementStr.equals(language.getCloseBracket1()) && ((OriginalElement) expressions.get(i)).isNormal()) {
                 expressions.set(i, new CloseBracket1(elementStr));
                 continue;
             }
-            if (elementStr.equals(language.getCloseBracket2())) {
+            if (elementStr.equals(language.getCloseBracket2()) && ((OriginalElement) expressions.get(i)).isNormal()) {
                 expressions.set(i, new CloseBracket2(elementStr));
                 continue;
             }
-            if (elementStr.equals(language.getCloseBracket3())) {
+            if (elementStr.equals(language.getCloseBracket3()) && ((OriginalElement) expressions.get(i)).isNormal()) {
                 expressions.set(i, new CloseBracket3(elementStr));
                 continue;
             }
-            if (elementStr.equals(language.getNegation())) {
+            if (elementStr.equals(language.getNegation()) && ((OriginalElement) expressions.get(i)).isNormal()) {
                 expressions.set(i, new NegationSym(elementStr));
                 continue;
             }
-            if (elementStr.equals(language.getConditional())) {
-                expressions.set(i, new ConditionalSym(elementStr));
+            if (elementStr.equals(language.getConditional()) && ((OriginalElement) expressions.get(i)).isNormal()) {
+                expressions.set(i, new ConditionalSym(elementStr) );
                 continue;
             }
-            if (elementStr.equals(language.getBiconditional())) {
+            if (elementStr.equals(language.getBiconditional()) && ((OriginalElement) expressions.get(i)).isNormal()) {
                 expressions.set(i, new BiconditionalSym(elementStr));
                 continue;
             }
-            if (elementStr.equals(language.getConjunction())) {
+            if (elementStr.equals(language.getConjunction()) && ((OriginalElement) expressions.get(i)).isNormal()) {
                 expressions.set(i, new ConjunctionSym(elementStr));
                 continue;
             }
-            if (elementStr.equals(language.getDisjunction())) {
+            if (elementStr.equals(language.getDisjunction()) && ((OriginalElement) expressions.get(i)).isNormal()) {
                 expressions.set(i, new DisjunctionSym(elementStr));
                 continue;
             }
-            if (elementStr.equals(language.getNand())) {
+            if (elementStr.equals(language.getNand()) && ((OriginalElement) expressions.get(i)).isNormal()) {
                 expressions.set(i, new NandSym(elementStr));
                 continue;
             }
-            if (elementStr.equals(language.getNor())) {
+            if (elementStr.equals(language.getNor()) && ((OriginalElement) expressions.get(i)).isNormal()) {
                 expressions.set(i, new NorSym(elementStr));
                 continue;
             }
-            if (elementStr.equals(language.getUniversalQuant())) {
+            if (elementStr.equals(language.getUniversalQuant()) && ((OriginalElement) expressions.get(i)).isNormal()) {
                 expressions.set(i, new UniversalQuantifierSym(elementStr));
                 continue;
             }
-            if (elementStr.equals(language.getExistentialQuant())) {
+            if (elementStr.equals(language.getExistentialQuant()) && ((OriginalElement) expressions.get(i)).isNormal()) {
                 expressions.set(i, new ExistentialQuantifierSym(elementStr));
                 continue;
             }
-            if (elementStr.equals(language.getDividerSymbol())) {
+            if (elementStr.equals(language.getDividerSymbol()) && ((OriginalElement) expressions.get(i)).isNormal()) {
                 expressions.set(i, new DividerSym(elementStr));
             }
         }
@@ -910,7 +918,7 @@ public class ParseUtilities {
         return new Text[]{t1, t2};
     }
 
-
-
-
+    public static void setLanguage(Language language) {
+        ParseUtilities.language = language;
+    }
 }
