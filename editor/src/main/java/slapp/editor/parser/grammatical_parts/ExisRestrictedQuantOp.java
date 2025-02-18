@@ -37,6 +37,9 @@ public class ExisRestrictedQuantOp extends Operator implements Expression {
     }
 
     @Override
+    public Term getVariableTerm() {return getExistentialOp().getVariableTerm();}
+
+    @Override
     public List<Text> toTextList() {
         List<Text> texts = new ArrayList();
         texts.addAll(openBracket.toTextList());

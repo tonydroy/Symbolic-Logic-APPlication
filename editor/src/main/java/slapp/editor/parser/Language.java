@@ -1,5 +1,6 @@
 package slapp.editor.parser;
 
+import com.gluonhq.richtextarea.model.Document;
 import javafx.scene.text.Text;
 
 import java.io.Serializable;
@@ -53,6 +54,9 @@ public class Language implements Serializable {
 
     private boolean allowBoundedQuantifiers = false;
     private String dividerSymbol; //for bounded quantifiers
+
+    private Map<UnabbType, Document> unabbForms;
+
 
     Language(String nameString) {
         this.nameString = nameString;
@@ -367,5 +371,13 @@ public class Language implements Serializable {
 
     public void setDividerSymbol(String dividerSymbol) {
         this.dividerSymbol = dividerSymbol;
+    }
+
+    public Map<UnabbType, Document> getUnabbForms() {
+        return unabbForms;
+    }
+
+    public void setUnabbForms(Map<UnabbType, Document> unabbForms) {
+        this.unabbForms = unabbForms;
     }
 }

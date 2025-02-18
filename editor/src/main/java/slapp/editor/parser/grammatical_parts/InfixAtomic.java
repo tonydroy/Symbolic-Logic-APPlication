@@ -24,6 +24,7 @@ public class InfixAtomic extends Formula implements Expression {
         this.complementRelation = complementRelation;
     }
 
+    public RelationSymbol getMainRelation() { return mainRelation;   }
     public void setCloseBracket(CloseBracket closeBracket) {
         this.closeBracket = closeBracket;
     }
@@ -99,10 +100,16 @@ public class InfixAtomic extends Formula implements Expression {
         if (o == this) return true;
         if (o instanceof InfixAtomic) {
             InfixAtomic other = (InfixAtomic) o;
+
             boolean equals = true;
+
             if (!mainRelation.equals(other.mainRelation)) { equals = false;}
+            if (mainOperator == null) {
+                if (other.mainOperator != null) { equals = false;}
+            }
+            else if (!mainOperator.equals(other.mainOperator)) { equals = false;}
             if (getChildren().size() != other.getChildren().size()) { equals = false; }
-            for (int i = 0; i < getChildren().size(); i++) {
+            else for (int i = 0; i < getChildren().size(); i++) {
                 if (!getChildren().get(i).equals(other.getChildren().get(i))) { equals = false; }
             }
             return equals;

@@ -36,6 +36,9 @@ public class ExisBoundedQuantOp extends Operator implements Expression {
         return boundingTerm;
     }
 
+    @Override
+    public Term getVariableTerm() {return getExistentialOp().getVariableTerm();}
+
     public RelationSymbol getInfixRelation() {
         return infixRelation;
     }

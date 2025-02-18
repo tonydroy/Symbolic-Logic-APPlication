@@ -1,5 +1,7 @@
 package slapp.editor.parser;
 
+import com.gluonhq.richtextarea.model.Document;
+
 import java.util.*;
 
 import static java.util.Map.entry;
@@ -45,6 +47,12 @@ public class Languages {
         lang.setSentenceLetters(Alphabets.getCharacterRange("\ud835\udc34", "\ud835\udc4d"));
         lang.setSentenceLetterSubs(true);
 
+        lang.setUnabbForms( Map.ofEntries(
+                entry(UnabbType.NEGATION, new Document("\u223c |0|")),
+                entry(UnabbType.CONDITIONAL, new Document("(|0| \u2192 |1|)")),
+                entry(UnabbType.SENTENCE_LET, new Document("\u2039s\u203a"))
+        ));
+
         return lang;
     }
 
@@ -64,6 +72,15 @@ public class Languages {
 
         lang.setSentenceLetters(Alphabets.getCharacterRange("\ud835\udc34", "\ud835\udc4d"));
         lang.setSentenceLetterSubs(true);
+
+        lang.setUnabbForms( Map.ofEntries(
+                entry(UnabbType.NEGATION, new Document("\u223c |0|")),
+                entry(UnabbType.CONDITIONAL, new Document("(|0| \u2192 |1|)")),
+                entry(UnabbType.BICONDITIONAL, new Document("\u223c((|0| \u2192 |1|) \u2192 \u223c(|1| \u2192 |0|))")),
+                entry(UnabbType.CONJUNCTION, new Document("\u223c(|0| \u2192 \u223c|1|)")),
+                entry(UnabbType.DISJUNCTION, new Document("(\u223c|0| \u2192 |1|)")),
+                entry(UnabbType.SENTENCE_LET, new Document("\u2039s\u203a"))
+        ));
 
         return lang;
     }
@@ -95,6 +112,18 @@ public class Languages {
 
         lang.setInfixRelations( Map.ofEntries(entry("\ue8ac", "")));
         lang.setAllowBinaryInfixNegations(false);
+
+        lang.setUnabbForms( Map.ofEntries(
+                entry(UnabbType.NEGATION, new Document("\u223c |0|")),
+                entry(UnabbType.CONDITIONAL, new Document("(|0| \u2192 |1|)")),
+                entry(UnabbType.UNIVERSAL, new Document("\u2200\u2039v\u203a|0|")),
+                entry(UnabbType.VARIABLE, new Document("\u2039s\u203a")),
+                entry(UnabbType.CONSTANT, new Document("\u2039s\u203a")),
+                entry(UnabbType.COMPLEX_TERM, new Document("\u2039f\u203a|n|")),
+                entry(UnabbType.SENTENCE_LET, new Document("\u2039s\u203a")),
+                entry(UnabbType.RELATION_ATOMIC, new Document("\u2039r\u203a|n|"))
+
+        ));
 
         return lang;
     }
@@ -137,6 +166,25 @@ public class Languages {
         lang.setAllowBoundedQuantifiers(true);
         lang.setDividerSymbol(":");
 
+        lang.setUnabbForms( Map.ofEntries(
+                entry(UnabbType.NEGATION, new Document("\u223c |0|")),
+                entry(UnabbType.CONDITIONAL, new Document("(|0| \u2192 |1|)")),
+                entry(UnabbType.BICONDITIONAL, new Document("\u223c((|0| \u2192 |1|) \u2192 \u223c(|1| \u2192 |0|))")),
+                entry(UnabbType.CONJUNCTION, new Document("\u223c(|0| \u2192 \u223c|1|)")),
+                entry(UnabbType.DISJUNCTION, new Document("(\u223c|0| \u2192 |1|)")),
+                entry(UnabbType.UNIVERSAL, new Document("\u2200\u2039v\u203a|0|")),
+                entry(UnabbType.EXISTENTIAL, new Document("\u223c\u2200\u2039v\u203a\u223c|0|")),
+                entry(UnabbType.VARIABLE, new Document("\u2039s\u203a")),
+                entry(UnabbType.CONSTANT, new Document("\u2039s\u203a")),
+                entry(UnabbType.COMPLEX_TERM, new Document("\u2039f\u203a|n|")),
+                entry(UnabbType.SENTENCE_LET, new Document("\u2039s\u203a")),
+                entry(UnabbType.RELATION_ATOMIC, new Document("\u2039r\u203a|n|")),
+                entry(UnabbType.BOUNDED_QUANTIFIER, new Document("\u2039b\u203a|0|"))
+        ));
+
+
+
+
         return lang;
     }
 
@@ -167,6 +215,22 @@ public class Languages {
         lang.setAllowBinaryInfixRelations(true);
         lang.setAllowBinaryInfixNegations(false);
         lang.setInfixRelations( Map.ofEntries(entry("\ue8ac", ""), entry("\ue8a4", "")) );
+        lang.setXrelationSymbols(new ArrayList<>());
+
+        lang.setUnabbForms( Map.ofEntries(
+                entry(UnabbType.NEGATION, new Document("\u223c|0|")),
+                entry(UnabbType.CONDITIONAL, new Document("(|0| \u2192 |1|)")),
+                entry(UnabbType.BICONDITIONAL, new Document("\u223c((|0| \u2192 |1|) \u2192 \u223c(|1| \u2192 |0|))")),
+                entry(UnabbType.CONJUNCTION, new Document("\u223c(|0| \u2192 \u223c|1|)")),
+                entry(UnabbType.DISJUNCTION, new Document("(\u223c|0| \u2192 |1|)")),
+                entry(UnabbType.UNIVERSAL, new Document("\u2200\u2039v\u203a|0|")),
+                entry(UnabbType.EXISTENTIAL, new Document("\u223c\u2200\u2039v\u203a\u223c|0|")),
+                entry(UnabbType.VARIABLE, new Document("\u2039s\u203a")),
+                entry(UnabbType.CONSTANT, new Document("\u2039s\u203a")),
+                entry(UnabbType.COMPLEX_TERM, new Document("\u2039f\u203a|n|")),
+                entry(UnabbType.RELATION_ATOMIC, new Document("\u2039r\u203a|n|"))
+
+        ));
 
         return lang;
     }
@@ -194,6 +258,7 @@ public class Languages {
         lang.setOnePlaceFunctionSymbols(Collections.singletonList("\ud835\udc46"));
         lang.setTwoPlaceFunctionSymbols(Arrays.asList("\ue8b8", "\ue8ba"));
         lang.setAllowBinaryInfixFunctions(true);
+        lang.setXrelationSymbols(new ArrayList<>());
 
         lang.setAllowBinaryInfixRelations(true);
         lang.setAllowBinaryInfixNegations(true);
@@ -205,6 +270,21 @@ public class Languages {
 
         lang.setAllowBoundedQuantifiers(true);
         lang.setDividerSymbol(":");
+
+        lang.setUnabbForms( Map.ofEntries(
+                entry(UnabbType.NEGATION, new Document("\u223c|0|")),
+                entry(UnabbType.CONDITIONAL, new Document("(|0| \u2192 |1|)")),
+                entry(UnabbType.BICONDITIONAL, new Document("\u223c((|0| \u2192 |1|) \u2192 \u223c(|1| \u2192 |0|))")),
+                entry(UnabbType.CONJUNCTION, new Document("\u223c(|0| \u2192 \u223c|1|)")),
+                entry(UnabbType.DISJUNCTION, new Document("(\u223c|0| \u2192 |1|)")),
+                entry(UnabbType.UNIVERSAL, new Document("\u2200\u2039v\u203a|0|")),
+                entry(UnabbType.EXISTENTIAL, new Document("\u223c\u2200\u2039v\u203a\u223c|0|")),
+                entry(UnabbType.VARIABLE, new Document("\u2039s\u203a")),
+                entry(UnabbType.CONSTANT, new Document("\u2039s\u203a")),
+                entry(UnabbType.COMPLEX_TERM, new Document("\u2039f\u203a|n|")),
+                entry(UnabbType.RELATION_ATOMIC, new Document("\u2039r\u203a|n|")),
+                entry(UnabbType.BOUNDED_QUANTIFIER, new Document("\u2039b\u203a|0|"))
+        ));
 
         return lang;
     }

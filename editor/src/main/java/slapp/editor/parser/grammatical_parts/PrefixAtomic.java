@@ -17,6 +17,9 @@ public class PrefixAtomic extends Formula implements Expression {
         this.mainRelation = mainRelation;
     }
 
+
+    public RelationSymbol getMainRelation() {return mainRelation;}
+
     @Override
     public List<Text> toTextList() {
         List<Text> texts = new ArrayList();
@@ -44,7 +47,7 @@ public class PrefixAtomic extends Formula implements Expression {
             boolean equals = true;
             if (!mainRelation.equals(other.mainRelation)) { equals = false;}
             if (getChildren().size() != other.getChildren().size()) { equals = false; }
-            for (int i = 0; i < getChildren().size(); i++) {
+            else for (int i = 0; i < getChildren().size(); i++) {
                 if (!getChildren().get(i).equals(other.getChildren().get(i))) { equals = false; }
             }
             return equals;

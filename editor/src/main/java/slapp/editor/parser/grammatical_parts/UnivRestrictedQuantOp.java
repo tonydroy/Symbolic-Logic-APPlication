@@ -37,6 +37,11 @@ public class UnivRestrictedQuantOp extends Operator implements Expression {
     }
 
     @Override
+    public Term getVariableTerm() {
+        return getUniversalOp().getVariableTerm();
+    }
+
+    @Override
     public List<Text> toTextList() {
         List<Text> texts = new ArrayList();
         texts.addAll(openBracket.toTextList());

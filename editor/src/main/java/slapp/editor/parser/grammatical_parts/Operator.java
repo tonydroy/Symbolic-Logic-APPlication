@@ -22,6 +22,7 @@ public class Operator implements Expression {
         this.mainSymbol = mainSymbol;
     }
 
+    public Term getVariableTerm() { return null; }
 
     public boolean isUnary() {
         return unary;

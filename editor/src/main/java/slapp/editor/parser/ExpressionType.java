@@ -36,8 +36,8 @@ public enum ExpressionType {
     UNIV_BOUNDED_OP("Univ Bounded Op"),
     EXIS_BOUNDED_OP("Exis Bounded Op"),
 
-    VARIABLE("Var"),
-    CONSTANT("Const"),
+    VARIABLE_SYM("Var"),
+    CONSTANT_SYM("Const"),
     SENTENCE_LETTER("Sent Let"),
     RELATION_SYMBOL("Rel Sym"),
     COMPLEMENT_REL_SYM("Neg Rel Sym"),

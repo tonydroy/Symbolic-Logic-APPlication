@@ -5,6 +5,7 @@ import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.symbols.CloseBracket;
 import slapp.editor.parser.symbols.OpenBracket;
+import slapp.editor.parser.symbols.RelationSymbol;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,8 @@ public class Formula implements Expression {
     Operator mainOperator = null;
     OpenBracket openBracket = new OpenBracket("");
     CloseBracket closeBracket = new CloseBracket("");
+
+    public RelationSymbol getMainRelation() { return null; }
 
     @Override
     public ExpressionType getType() {

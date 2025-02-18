@@ -30,6 +30,7 @@ module slapp.editor {
     //requires com.
     requires java.logging;
     requires java.desktop;
+    requires java.compiler;
 
     opens slapp.editor to javafx.fxml;
     exports slapp.editor;

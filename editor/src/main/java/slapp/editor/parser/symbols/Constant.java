@@ -1,18 +1,16 @@
 package slapp.editor.parser.symbols;
 
 import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.ParseUtilities;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Constant implements Expression {
 
-    private ExpressionType type = ExpressionType.CONSTANT;
+    private ExpressionType type = ExpressionType.CONSTANT_SYM;
     private String baseStr;
     private String subscriptStr = "";
 

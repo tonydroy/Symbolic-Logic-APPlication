@@ -1,19 +1,17 @@
 package slapp.editor.parser.symbols;
 
 import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.ParseUtilities;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 
 public class Variable implements Expression {
 
-    private ExpressionType type = ExpressionType.VARIABLE;
+    private ExpressionType type = ExpressionType.VARIABLE_SYM;
     private String baseStr;
     private String subscriptStr = "";
 

@@ -31,6 +31,18 @@ public RelationSymbol(String baseStr, String subscriptStr, String superscriptStr
         return complementSymbol;
     }
 
+    public String getSuperscriptStr() {
+        return superscriptStr;
+    }
+
+    public void setSuperscriptStr(String superscriptStr) {
+        this.superscriptStr = superscriptStr;
+    }
+
+    public String getBaseStr() {
+        return baseStr;
+    }
+
     public void setComplementSymbol(RelationSymbol complementSymbol) {
         this.complementSymbol = complementSymbol;
     }
@@ -50,6 +62,8 @@ public RelationSymbol(String baseStr, String subscriptStr, String superscriptStr
     public void setPermitInfix(boolean permitInfix) {
         this.permitInfix = permitInfix;
     }
+
+
 
     @Override
     public ExpressionType getType() { return type; }

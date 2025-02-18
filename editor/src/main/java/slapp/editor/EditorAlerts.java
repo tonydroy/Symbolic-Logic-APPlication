@@ -69,9 +69,9 @@ public class EditorAlerts {
         alert.initModality(Modality.APPLICATION_MODAL);
         Stage mainStage = EditorMain.mainStage;
 
-        message.setPrefWidth(250);
+        message.setPrefWidth(400);
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        alert.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 250));
+        alert.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 350));
         alert.setY(mainStage.getY() + mainStage.getHeight()/4);
         alert.initOwner(mainStage);
         alert.showAndWait();

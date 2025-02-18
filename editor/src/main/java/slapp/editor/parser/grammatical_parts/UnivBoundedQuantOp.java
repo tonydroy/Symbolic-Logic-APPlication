@@ -33,6 +33,11 @@ public class UnivBoundedQuantOp extends Operator implements Expression {
         return boundingTerm;
     }
 
+    @Override
+    public Term getVariableTerm() {
+        return getUniversalOp().getVariableTerm();
+    }
+
     public RelationSymbol getInfixRelation() {
         return infixRelation;
     }

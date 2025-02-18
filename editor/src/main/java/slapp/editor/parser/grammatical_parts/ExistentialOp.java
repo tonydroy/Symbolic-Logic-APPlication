@@ -18,6 +18,7 @@ public class ExistentialOp extends Operator implements Expression {
         this.variableTerm = variableTerm;
     }
 
+    @Override
     public Term getVariableTerm() {
         return variableTerm;
     }
