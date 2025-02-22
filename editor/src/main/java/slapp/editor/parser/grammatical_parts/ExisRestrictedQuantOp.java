@@ -18,6 +18,7 @@ public class ExisRestrictedQuantOp extends Operator implements Expression {
     private DividerSym divider;
     private ExistentialOp existentialOp;
     private Formula restrictingFormula;
+    private List<Expression> restrictorList = null;
 
     public ExisRestrictedQuantOp(OpenBracket openBracket, CloseBracket closeBracket, ExistentialOp existentialOp, DividerSym divider, Formula restrictingFormula) {
         super(ExpressionType.UNIV_RESTRICTED_OP, new UniversalQuantifierSym(""), true);
@@ -26,6 +27,15 @@ public class ExisRestrictedQuantOp extends Operator implements Expression {
         this.divider = divider;
         this.existentialOp = existentialOp;
         this.restrictingFormula = restrictingFormula;
+
+    }
+
+    public List<Expression> getRestrictorList() {
+        return restrictorList;
+    }
+
+    public void setRestrictorList(List<Expression> restrictorList) {
+        this.restrictorList = restrictorList;
     }
 
     public ExistentialOp getExistentialOp() {

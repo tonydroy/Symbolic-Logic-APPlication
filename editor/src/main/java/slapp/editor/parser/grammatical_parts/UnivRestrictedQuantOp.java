@@ -18,6 +18,7 @@ public class UnivRestrictedQuantOp extends Operator implements Expression {
     private DividerSym divider;
     private UniversalOp universalOp;
     private Formula restrictingFormula;
+    private List<Expression> restrictorList = null;
 
     public UnivRestrictedQuantOp(OpenBracket openBracket, CloseBracket closeBracket, UniversalOp universalOp, DividerSym divider, Formula restrictingFormula) {
         super(ExpressionType.UNIV_RESTRICTED_OP, new UniversalQuantifierSym(""), true);
@@ -27,6 +28,10 @@ public class UnivRestrictedQuantOp extends Operator implements Expression {
         this.universalOp = universalOp;
         this.restrictingFormula = restrictingFormula;
 
+    }
+
+    public void setRestrictingFormula(Formula restrictingFormula) {
+        this.restrictingFormula = restrictingFormula;
     }
 
     public UniversalOp getUniversalOp() {
@@ -47,6 +52,14 @@ public class UnivRestrictedQuantOp extends Operator implements Expression {
 
     public DividerSym getDivider() {
         return divider;
+    }
+
+    public List<Expression> getRestrictorList() {
+        return restrictorList;
+    }
+
+    public void setRestrictorList(List<Expression> restrictorList) {
+        this.restrictorList = restrictorList;
     }
 
     @Override

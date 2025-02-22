@@ -39,6 +39,7 @@ public class ParseUtilities {
         List<Expression> termSymbols = getTermSymbols(simpleSymbols);
         List<Expression> terms = getTerms(termSymbols);
         List<Expression> relSentSymbols = getRelSentSymbols(terms);
+
         List<Expression> operators = getOperators(relSentSymbols);
         List<Expression> atomics = getAtomics(operators);
         List<Expression> complexFormulas = getComplexFormulas(atomics);
@@ -115,79 +116,44 @@ public class ParseUtilities {
                 }
             }
 
-            if (language.isAllowBoundedQuantifiers()) {
-                //restricted quant
-                for (int i = 0; i < expressions.size(); i++) {
-                    if (i + 4 < expressions.size() &&
-                            ((expressions.get(i).getType() == ExpressionType.OPEN_BRACKET1 && expressions.get(i + 4).getType() == ExpressionType.CLOSE_BRACKET1) ||
-                                    (expressions.get(i).getType() == ExpressionType.OPEN_BRACKET2 && expressions.get(i + 4).getType() == ExpressionType.CLOSE_BRACKET2) ||
-                                    (expressions.get(i).getType() == ExpressionType.OPEN_BRACKET3 && expressions.get(i + 4).getType() == ExpressionType.CLOSE_BRACKET3))
-                    ) {
-                        if (expressions.get(i + 1).getType() == ExpressionType.UNIVERSAL_OP && expressions.get(i + 2).getType() == ExpressionType.DIVIDER_SYM && expressions.get(i + 3).getType() == ExpressionType.FORMULA) {
-                            UnivRestrictedQuantOp op = new UnivRestrictedQuantOp((OpenBracket) expressions.get(i), (CloseBracket) expressions.get(i + 4), (UniversalOp) expressions.get(i + 1),
-                                    (DividerSym) expressions.get(i + 2), (Formula) expressions.get(i + 3));
-                            expressions.set(i, op);
-                            expressions.remove(i + 1);
-                            expressions.remove(i + 1);
-                            expressions.remove(i + 1);
-                            expressions.remove(i + 1);
-                            changes = true;
-                            break;
-                        } else if (expressions.get(i + 1).getType() == ExpressionType.EXISTENTIAL_OP && expressions.get(i + 2).getType() == ExpressionType.DIVIDER_SYM && expressions.get(i + 3).getType() == ExpressionType.FORMULA) {
-                            ExisRestrictedQuantOp op = new ExisRestrictedQuantOp((OpenBracket) expressions.get(i), (CloseBracket) expressions.get(i + 4), (ExistentialOp) expressions.get(i + 1),
-                                    (DividerSym) expressions.get(i + 2), (Formula) expressions.get(i + 3));
-                            expressions.set(i, op);
-                            expressions.remove(i + 1);
-                            expressions.remove(i + 1);
-                            expressions.remove(i + 1);
-                            expressions.remove(i + 1);
-                            changes = true;
-                            break;
-                        }
-                    }
-                }
+        }
 
-                //bounded quant
-                matchVal = false;
-                for (int i = 0; i < expressions.size(); i++) {
-                    if (i + 4 < expressions.size() &&
-                            ((expressions.get(i).getType() == ExpressionType.OPEN_BRACKET1 && expressions.get(i + 4).getType() == ExpressionType.CLOSE_BRACKET1) ||
-                                    (expressions.get(i).getType() == ExpressionType.OPEN_BRACKET2 && expressions.get(i + 4).getType() == ExpressionType.CLOSE_BRACKET2) ||
-                                    (expressions.get(i).getType() == ExpressionType.OPEN_BRACKET3 && expressions.get(i + 4).getType() == ExpressionType.CLOSE_BRACKET3))
-                    ) {
-                        if (expressions.get(i + 1).getType() == ExpressionType.UNIVERSAL_OP && expressions.get(i + 2).getType() == ExpressionType.RELATION_SYMBOL && ((RelationSymbol) expressions.get(i + 2)).isPermitInfix()
-                                && expressions.get(i + 3).getType() == ExpressionType.TERM) {
-                            isTreeNode(expressions.get(i + 3), ((UniversalOp) expressions.get(i + 1)).getVariableTerm());
-                            if (!matchVal) {
-                                UnivBoundedQuantOp op = new UnivBoundedQuantOp((OpenBracket) expressions.get(i), (CloseBracket) expressions.get(i + 4), (UniversalOp) expressions.get(i + 1),
-                                        (RelationSymbol) expressions.get(i + 2), (Term) expressions.get(i + 3));
-                                expressions.set(i, op);
-                                expressions.remove(i + 1);
-                                expressions.remove(i + 1);
-                                expressions.remove(i + 1);
-                                expressions.remove(i + 1);
-                                changes = true;
-                                break;
-                            }
-                        } else if (expressions.get(i + 1).getType() == ExpressionType.EXISTENTIAL_OP && expressions.get(i + 2).getType() == ExpressionType.RELATION_SYMBOL && ((RelationSymbol) expressions.get(i + 2)).isPermitInfix()
-                                && expressions.get(i + 3).getType() == ExpressionType.TERM) {
-                            isTreeNode(expressions.get(i + 3), ((ExistentialOp) expressions.get(i + 1)).getVariableTerm());
-                            if (!matchVal) {
-                                ExisBoundedQuantOp op = new ExisBoundedQuantOp((OpenBracket) expressions.get(i), (CloseBracket) expressions.get(i + 4), (ExistentialOp) expressions.get(i + 1),
-                                        (RelationSymbol) expressions.get(i + 2), (Term) expressions.get(i + 3));
-                                expressions.set(i, op);
-                                expressions.remove(i + 1);
-                                expressions.remove(i + 1);
-                                expressions.remove(i + 1);
-                                expressions.remove(i + 1);
-                                changes = true;
-                                break;
-                            }
-                        }
+
+        /*
+
+        //restricting formulas in bounded quantifiers
+
+        if (language.isAllowBoundedQuantifiers()) {
+
+            for (int i = expressions.size() - 1; i >= 0; i--) {
+                if (expressions.get(i).getType() == ExpressionType.UNIV_RESTRICTED_OP) {
+
+                    System.out.println("here");
+
+                    UnivRestrictedQuantOp op = (UnivRestrictedQuantOp) expressions.get(i);
+                    List<Expression> opAtomics = getAtomics(op.getRestrictorList());
+                    List<Expression> opComplexFormulas = getComplexFormulas(opAtomics);
+                    if (opComplexFormulas != null && opComplexFormulas.size() == 1 && opComplexFormulas.get(0).getType() == ExpressionType.FORMULA) {
+                        op.setRestrictingFormula((Formula) opComplexFormulas.get(0));
+                    }
+                    else {
+                        List<Expression> expressionList = new ArrayList<>();
+                        expressionList.add(op.getOpenBracket());
+                        expressionList.add(op.getUniversalOp());
+                        expressionList.add(op.getDivider());
+                        expressionList.addAll(opComplexFormulas);
+                        expressionList.add(op.getCloseBracket());
+                        expressions.remove(i);
+                        expressions.addAll(i, expressionList);
                     }
                 }
             }
         }
+
+         */
+
+
+
         return expressions;
     }
 
@@ -438,6 +404,94 @@ public class ParseUtilities {
                 expressions.remove(i + 1);
             }
         }
+
+        //bounded quantifiers on separate sweep (after regular quantifiers identified)
+
+        if (language.isAllowBoundedQuantifiers()) {
+            matchVal = false;
+            for (int i = 0; i < expressions.size(); i++) {
+                if (i + 4 < expressions.size() &&
+                        ((expressions.get(i).getType() == ExpressionType.OPEN_BRACKET1 && expressions.get(i + 4).getType() == ExpressionType.CLOSE_BRACKET1) ||
+                                (expressions.get(i).getType() == ExpressionType.OPEN_BRACKET2 && expressions.get(i + 4).getType() == ExpressionType.CLOSE_BRACKET2) ||
+                                (expressions.get(i).getType() == ExpressionType.OPEN_BRACKET3 && expressions.get(i + 4).getType() == ExpressionType.CLOSE_BRACKET3))
+                ) {
+                    if (expressions.get(i + 1).getType() == ExpressionType.UNIVERSAL_OP && expressions.get(i + 2).getType() == ExpressionType.RELATION_SYMBOL && ((RelationSymbol) expressions.get(i + 2)).isPermitInfix()
+                            && expressions.get(i + 3).getType() == ExpressionType.TERM) {
+                        isTreeNode(expressions.get(i + 3), ((UniversalOp) expressions.get(i + 1)).getVariableTerm());
+                        if (!matchVal) {
+                            UnivBoundedQuantOp op = new UnivBoundedQuantOp((OpenBracket) expressions.get(i), (CloseBracket) expressions.get(i + 4), (UniversalOp) expressions.get(i + 1),
+                                    (RelationSymbol) expressions.get(i + 2), (Term) expressions.get(i + 3));
+                            expressions.set(i, op);
+                            expressions.remove(i + 1);
+                            expressions.remove(i + 1);
+                            expressions.remove(i + 1);
+                            expressions.remove(i + 1);
+                        }
+                    } else if (expressions.get(i + 1).getType() == ExpressionType.EXISTENTIAL_OP && expressions.get(i + 2).getType() == ExpressionType.RELATION_SYMBOL && ((RelationSymbol) expressions.get(i + 2)).isPermitInfix()
+                            && expressions.get(i + 3).getType() == ExpressionType.TERM) {
+                        isTreeNode(expressions.get(i + 3), ((ExistentialOp) expressions.get(i + 1)).getVariableTerm());
+                        if (!matchVal) {
+                            ExisBoundedQuantOp op = new ExisBoundedQuantOp((OpenBracket) expressions.get(i), (CloseBracket) expressions.get(i + 4), (ExistentialOp) expressions.get(i + 1),
+                                    (RelationSymbol) expressions.get(i + 2), (Term) expressions.get(i + 3));
+                            expressions.set(i, op);
+                            expressions.remove(i + 1);
+                            expressions.remove(i + 1);
+                            expressions.remove(i + 1);
+                            expressions.remove(i + 1);
+                        }
+                    }
+                }
+            }
+
+            //restricted quantifiers
+            //come from end to process narrow scope first
+            for (int i = expressions.size() - 1; i >= 0; i--) {
+                if (expressions.get(i) instanceof OpenBracket && i + 2 < expressions.size() && (expressions.get(i+1).getType() == ExpressionType.UNIVERSAL_OP || expressions.get(i+1).getType() == ExpressionType.EXISTENTIAL_OP) &&
+                        expressions.get(i+2).getType() == ExpressionType.DIVIDER_SYM) {
+                    ExpressionType openBracketType = ExpressionType.OPEN_BRACKET1;
+                    ExpressionType closeBracketType = ExpressionType.CLOSE_BRACKET1;
+                    if (expressions.get(i).getType() == ExpressionType.OPEN_BRACKET2) {openBracketType = ExpressionType.OPEN_BRACKET2; closeBracketType = ExpressionType.CLOSE_BRACKET2;}
+                    else if (expressions.get(i).getType() == ExpressionType.OPEN_BRACKET3) {openBracketType = ExpressionType.OPEN_BRACKET3; closeBracketType = ExpressionType.CLOSE_BRACKET3;}
+                    int j = 3;
+                    int bracketCount = 1;
+                    while ( i + j < expressions.size() && bracketCount > 0) {
+                        if (expressions.get( i + j).getType() == openBracketType) {bracketCount++;}
+                        else if (expressions.get(i + j).getType() == closeBracketType) {bracketCount--;}
+                        j = j + 1;
+                    }
+                    j--;
+                    if (expressions.get(i + j).getType() == closeBracketType) {
+
+                        List<Expression> restrictorList = expressions.subList(i + 3, i + j);
+
+                        List<Expression> opAtomics = getAtomics(restrictorList);
+                        List<Expression> opComplexFormulas = getComplexFormulas(opAtomics);
+                        if (opComplexFormulas != null && opComplexFormulas.size() == 1 && opComplexFormulas.get(0).getType() == ExpressionType.FORMULA) {
+                            Formula restrictingFormula = (Formula) opComplexFormulas.get(0);
+
+                            if (expressions.get(i + 1).getType() == ExpressionType.UNIVERSAL_OP) {
+                                UnivRestrictedQuantOp op = new UnivRestrictedQuantOp((OpenBracket) expressions.get(i), (CloseBracket) expressions.get(i + 4), (UniversalOp) expressions.get(i + 1),
+                                        (DividerSym) expressions.get(i + 2), restrictingFormula);
+                                expressions.set(i, op);
+                            } else {
+                                ExisRestrictedQuantOp op = new ExisRestrictedQuantOp((OpenBracket) expressions.get(i), (CloseBracket) expressions.get(i + 4), (ExistentialOp) expressions.get(i + 1),
+                                        (DividerSym) expressions.get(i + 2), restrictingFormula);
+                                expressions.set(i, op);
+                            }
+                            expressions.remove(i + 1);
+                            expressions.remove(i + 1);
+                            expressions.remove(i + 1);
+                            expressions.remove(i + 1);
+                        }
+                    }
+
+
+
+
+                }
+            }
+        }
+
         return expressions;
     }
 

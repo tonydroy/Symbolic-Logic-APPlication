@@ -23,7 +23,7 @@ import static javafx.application.Application.launch;
 public class ParserMain {
 
     //for now
-    String langName = "Lnt";
+    String langName = "Lq_abv";
 
     public ParserMain(Stage stage) {
 
