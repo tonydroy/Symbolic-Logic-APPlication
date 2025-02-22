@@ -33,6 +33,14 @@ public class UnivBoundedQuantOp extends Operator implements Expression {
         return boundingTerm;
     }
 
+    public OpenBracket getOpenBracket() {
+        return openBracket;
+    }
+
+    public CloseBracket getCloseBracket() {
+        return closeBracket;
+    }
+
     @Override
     public Term getVariableTerm() {
         return getUniversalOp().getVariableTerm();

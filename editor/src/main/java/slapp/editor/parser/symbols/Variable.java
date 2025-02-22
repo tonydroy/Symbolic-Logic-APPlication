@@ -21,6 +21,14 @@ public class Variable implements Expression {
         this.subscriptStr = subscriptStr;
     }
 
+    public String getBaseStr() {
+        return baseStr;
+    }
+
+    public String getSubscriptStr() {
+        return subscriptStr;
+    }
+
     @Override
     public ExpressionType getType() { return type; }
 

@@ -214,11 +214,18 @@ public class Language implements Serializable {
     }
 
     public List<String> getVariables() {
-        return variables;
+        List<String> newVars = new ArrayList<>();
+        newVars.addAll(variables);
+        newVars.add("\u1d76");
+        return newVars;
     }
 
     public void setVariables(List<String> variables) {
         this.variables = variables;
+    }
+
+    public static String getDummyVariableSym() {
+        return "\u1d76";
     }
 
     public boolean isVariableSubs() {

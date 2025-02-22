@@ -32,8 +32,14 @@ public class ExisBoundedQuantOp extends Operator implements Expression {
         return existentialOp;
     }
 
-    public Term getBoundingTerm() {
-        return boundingTerm;
+    public Term getBoundingTerm() { return boundingTerm;   }
+
+    public OpenBracket getOpenBracket() {
+        return openBracket;
+    }
+
+    public CloseBracket getCloseBracket() {
+        return closeBracket;
     }
 
     @Override
@@ -42,6 +48,8 @@ public class ExisBoundedQuantOp extends Operator implements Expression {
     public RelationSymbol getInfixRelation() {
         return infixRelation;
     }
+
+
 
     @Override
     public List<Text> toTextList() {

@@ -96,6 +96,7 @@ public class Languages {
         lang.setUniversalQuant("\u2200");
 
         lang.setVariables(Alphabets.getCharacterRange("\ud835\udc56", "\ud835\udc67"));
+
         lang.setVariableSubs(true);
         lang.setConstants(Alphabets.getCharacterRange("\ud835\udc4e", "\u210e"));
         lang.setConstantSubs(true);

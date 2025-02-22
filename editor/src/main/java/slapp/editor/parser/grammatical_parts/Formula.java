@@ -24,6 +24,15 @@ public class Formula implements Expression {
 
     public RelationSymbol getMainRelation() { return null; }
 
+
+    public OpenBracket getOpenBracket() {
+        return openBracket;
+    }
+
+    public CloseBracket getCloseBracket() {
+        return closeBracket;
+    }
+
     @Override
     public ExpressionType getType() {
         return type;

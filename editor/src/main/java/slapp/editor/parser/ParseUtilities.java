@@ -51,7 +51,6 @@ public class ParseUtilities {
         while (changes) {
             changes = false;
 
-
             //unary
             boolean unaryChanges = true;
             while (unaryChanges) {
@@ -93,18 +92,19 @@ public class ParseUtilities {
                             ) {
                                 newFormula.setOpenBracket((OpenBracket) expressions.get(i - 2));
                                 newFormula.setCloseBracket((CloseBracket) expressions.get(i + 2));
-                                expressions.set(i, newFormula);
-                                expressions.remove(i - 1);
-                                expressions.remove(i - 2);
+                                expressions.set(i - 2, newFormula);
                                 expressions.remove(i - 1);
                                 expressions.remove(i - 1);
+                                expressions.remove(i - 1);
+                                expressions.remove(i - 1);
+                                i = i - 1;
                                 changes = true;
                                 break;
                             } else {
                                 if (language.isAllowDroppedBrackets()) {
                                     newFormula.setCombines(false);
-                                    expressions.set(i, newFormula);
-                                    expressions.remove(i - 1);
+                                    expressions.set(i - 1, newFormula);
+                                    expressions.remove(i);
                                     expressions.remove(i);
                                     changes = true;
                                     break;
@@ -209,23 +209,33 @@ public class ParseUtilities {
 
     public static List<Expression> getAtomics(List<Expression> expressions) {
 
-        for (int i = 0; i < expressions.size(); i++) {
+        int i = 0;
+        while (i < expressions.size()) {
+
+
 
             //sentence letter
             if (expressions.get(i).getType() == ExpressionType.SENTENCE_LETTER) {
+
+
                 SentenceAtomc sentAtomic = new SentenceAtomc((SentenceLetter) expressions.get(i));
                 sentAtomic.setLevel(maxTermLevel + 1);
                 sentAtomic.setAtomic(true);
                 sentAtomic.setCombines(true);
                 expressions.set(i, sentAtomic);
+                i = i + 1;
                 continue;
             }
 
             //prefix atomic
             if (expressions.get(i).getType() == ExpressionType.RELATION_SYMBOL) {
                 RelationSymbol relationSymbol = (RelationSymbol) expressions.get(i);
+
                 int j = i + 1;
                 if (areImmediateFollowingAtomicTerms(j, relationSymbol.getPlaces(), expressions)) {
+
+
+
                     List<Expression> children = new ArrayList<>();
                     for (int k = 0; k < relationSymbol.getPlaces(); k++) {
                         Term term = (Term) expressions.get(j);
@@ -238,6 +248,7 @@ public class ParseUtilities {
                     prefixAtomic.setAtomic(true);
                     prefixAtomic.setCombines(true);
                     expressions.set(i, prefixAtomic);
+                    i = i + 1;
                     continue;
                 }
             }
@@ -247,6 +258,9 @@ public class ParseUtilities {
 
                 int j = i + 1;
                 if (areImmediateFollowingAtomicTerms(j, relationSymbol.getPlaces(), expressions)) {
+
+
+
                     List<Expression> children = new ArrayList<>();
                     for (int k = 0; k < relationSymbol.getPlaces(); k++) {
                         Term term = (Term) expressions.get(j);
@@ -265,6 +279,7 @@ public class ParseUtilities {
                     negForm.setChildren(Collections.singletonList(prefixAtomic));
 
                     expressions.set(i, negForm);
+                    i = i + 1;
                     continue;
                 }
             }
@@ -275,6 +290,7 @@ public class ParseUtilities {
                 if (relationSymbol.isPermitInfix()) {
                     if (i - 1 >= 0 && expressions.get(i - 1).getType() == ExpressionType.TERM) {
                         if (i + 1 < expressions.size() && expressions.get(i + 1).getType() == ExpressionType.TERM) {
+
                             Term term1 = (Term) expressions.get(i - 1);
                             Term term2 = (Term) expressions.get(i + 1);
                             InfixAtomic infixAtomic;
@@ -295,17 +311,21 @@ public class ParseUtilities {
                             ) {
                                 infixAtomic.setOpenBracket((OpenBracket) expressions.get(i - 2));
                                 infixAtomic.setCloseBracket((CloseBracket) expressions.get(i + 2));
-                                expressions.set(i, infixAtomic);
+
+                                expressions.set(i - 2, infixAtomic);
                                 expressions.remove(i - 1);
-                                expressions.remove(i - 2);
                                 expressions.remove(i - 1);
                                 expressions.remove(i - 1);
+                                expressions.remove(i - 1);
+
+                                i = i - 1;
                                 continue;
                             }
                             else {
-                                expressions.set(i, infixAtomic);
-                                expressions.remove(i - 1);
+                                expressions.set(i - 1, infixAtomic);
                                 expressions.remove(i);
+                                expressions.remove(i);
+
                                 continue;
                             }
                         }
@@ -317,6 +337,9 @@ public class ParseUtilities {
                 RelationSymbol relationSymbol = (RelationSymbol) expressions.get(i);
                 if (i - 1 >= 0 && expressions.get(i - 1).getType() == ExpressionType.TERM) {
                     if (i + 1 < expressions.size() && expressions.get(i + 1).getType() == ExpressionType.TERM) {
+
+
+
                         Term term1 = (Term) expressions.get(i - 1);
                         Term term2 = (Term) expressions.get(i + 1);
                         InfixAtomic infixAtomic = new InfixAtomic(relationSymbol, relationSymbol.getComplementSymbol(), true);
@@ -337,24 +360,28 @@ public class ParseUtilities {
                             negForm.setMainOperator(new NegationOp(new NegationSym(language.getNegation())));
                             negForm.setLevel(infixAtomic.getLevel() + 1);
                             negForm.setChildren(Collections.singletonList(infixAtomic));
-                            expressions.set(i, negForm);
-                            expressions.remove(i - 1);
-                            expressions.remove(i - 2);
+                            expressions.set(i - 2, negForm);
                             expressions.remove(i - 1);
                             expressions.remove(i - 1);
+                            expressions.remove(i - 1);
+                            expressions.remove(i - 1);
+                            i = i - 1;
+                            continue;
                         }
                         else {
                             Formula negForm = new Formula();
                             negForm.setMainOperator(new NegationOp(new NegationSym(language.getNegation())));
                             negForm.setLevel(infixAtomic.getLevel() + 1);
                             negForm.setChildren(Collections.singletonList(infixAtomic));
-                            expressions.set(i, negForm);
-                            expressions.remove(i - 1);
+                            expressions.set(i - 1, negForm);
                             expressions.remove(i);
+                            expressions.remove(i);
+                            continue;
                         }
                     }
                 }
             }
+            i = i + 1;
         }
 
     return expressions;
@@ -593,11 +620,11 @@ public class ParseUtilities {
 
                                     maxTermLevel = Math.max(maxTermLevel, newTerm.getLevel());
                                     newTerm.setCombines(true);
-                                    expressions.set(i, newTerm);
+                                    expressions.set(i - 2, newTerm);
 
                                     //remove takes account of indexes shifted after previous remove.
                                     expressions.remove(i - 1);
-                                    expressions.remove(i - 2);
+                                    expressions.remove(i - 1);
                                     expressions.remove(i - 1);
                                     expressions.remove(i - 1);
                                     changes = true;
@@ -608,8 +635,8 @@ public class ParseUtilities {
                                     newTerm.setLevel(Math.max(term1.getLevel(), term2.getLevel()) + 1);
                                     maxTermLevel = Math.max(maxTermLevel, newTerm.getLevel());
                                     newTerm.setCombines(false);
-                                    expressions.set(i, newTerm);
-                                    expressions.remove(i - 1);
+                                    expressions.set(i - 1, newTerm);
+                                    expressions.remove(i);
                                     expressions.remove(i);
                                     changes = true;
                                     break;

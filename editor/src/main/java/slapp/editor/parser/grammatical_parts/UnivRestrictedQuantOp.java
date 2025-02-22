@@ -26,6 +26,7 @@ public class UnivRestrictedQuantOp extends Operator implements Expression {
         this.divider = divider;
         this.universalOp = universalOp;
         this.restrictingFormula = restrictingFormula;
+
     }
 
     public UniversalOp getUniversalOp() {
@@ -34,6 +35,18 @@ public class UnivRestrictedQuantOp extends Operator implements Expression {
 
     public Formula getRestrictingFormula() {
         return restrictingFormula;
+    }
+
+    public OpenBracket getOpenBracket() {
+        return openBracket;
+    }
+
+    public CloseBracket getCloseBracket() {
+        return closeBracket;
+    }
+
+    public DividerSym getDivider() {
+        return divider;
     }
 
     @Override
@@ -72,7 +85,7 @@ public class UnivRestrictedQuantOp extends Operator implements Expression {
         if (o == this) return true;
         if ((o instanceof UnivRestrictedQuantOp)) {
             UnivRestrictedQuantOp other = (UnivRestrictedQuantOp) o;
-            return universalOp == other.universalOp && restrictingFormula == other.restrictingFormula;
+            return universalOp.equals(other.universalOp) && restrictingFormula.equals(other.restrictingFormula);
         }
         return false;
     }

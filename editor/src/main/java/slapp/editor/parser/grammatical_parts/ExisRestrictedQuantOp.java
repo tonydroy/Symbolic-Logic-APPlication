@@ -36,6 +36,18 @@ public class ExisRestrictedQuantOp extends Operator implements Expression {
         return restrictingFormula;
     }
 
+    public OpenBracket getOpenBracket() {
+        return openBracket;
+    }
+
+    public CloseBracket getCloseBracket() {
+        return closeBracket;
+    }
+
+    public DividerSym getDivider() {
+        return divider;
+    }
+
     @Override
     public Term getVariableTerm() {return getExistentialOp().getVariableTerm();}
 

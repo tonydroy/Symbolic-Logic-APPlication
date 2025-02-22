@@ -29,6 +29,10 @@ public class InfixAtomic extends Formula implements Expression {
         this.closeBracket = closeBracket;
     }
 
+    public RelationSymbol getComplementRelation() {
+        return complementRelation;
+    }
+
     public CloseBracket getCloseBracket() {
         return closeBracket;
     }
