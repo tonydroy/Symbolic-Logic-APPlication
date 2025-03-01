@@ -216,7 +216,6 @@ public class Languages {
         lang.setAllowBinaryInfixRelations(true);
         lang.setAllowBinaryInfixNegations(false);
         lang.setInfixRelations( Map.ofEntries(entry("\ue8ac", ""), entry("\ue8a4", "")) );
-        lang.setXrelationSymbols(new ArrayList<>());
 
         lang.setUnabbForms( Map.ofEntries(
                 entry(UnabbType.NEGATION, new Document("\u223c|0|")),
@@ -259,7 +258,6 @@ public class Languages {
         lang.setOnePlaceFunctionSymbols(Collections.singletonList("\ud835\udc46"));
         lang.setTwoPlaceFunctionSymbols(Arrays.asList("\ue8b8", "\ue8ba"));
         lang.setAllowBinaryInfixFunctions(true);
-        lang.setXrelationSymbols(new ArrayList<>());
 
         lang.setAllowBinaryInfixRelations(true);
         lang.setAllowBinaryInfixNegations(true);
@@ -286,13 +284,59 @@ public class Languages {
                 entry(UnabbType.RELATION_ATOMIC, new Document("\u2039r\u203a|n|")),
                 entry(UnabbType.BOUNDED_QUANTIFIER, new Document("\u2039b\u203a|0|"))
         ));
-
         return lang;
     }
 
+    private static Language Meta() {
+        Language lang = new Language("Meta");
+        lang.setNameTexts("\u2112", "","meta");
 
+        lang.setOpenBracket1("("); lang.setCloseBracket1(")");
+        lang.setOpenBracket2("["); lang.setCloseBracket2("]");
+        lang.setAllowDroppedBrackets(true);
 
+        lang.setNegation("\u223c");
+        lang.setConditional("\u2192");
+        lang.setBiconditional("\u2194");
+        lang.setConjunction("\u2227");
+        lang.setDisjunction("\u2228");
+        lang.setUniversalQuant("\u2200");
+        lang.setExistentialQuant("\u2203");
+        lang.setNand("\u2191");
+        lang.setNor("\u2193");
+        lang.setDividerSymbol(":");
 
+        lang.setVariables(Alphabets.getCharacterRange("\ud835\udcca", "\ud835\udccf"));
+        lang.setVariableSubs(true);
+        lang.setConstants(Alphabets.getCharacterRange("\ud835\udcb6", "\u212f"));
+        lang.setConstantSubs(true);
+
+        lang.setOnePlaceFunctionSymbols(Collections.singletonList("\ud835\udc46"));
+        lang.setTwoPlaceFunctionSymbols(Arrays.asList("\ue8b8", "\ue8ba"));
+        lang.setAllowBinaryInfixFunctions(true);
+        lang.setXfunctionSymbols(Arrays.asList("\ud835\udcbb", "\u210a", "\ud835\udcbd"));
+        lang.setXfunctionSymbolSubs(true);
+        lang.setTermSymbols(Arrays.asList("\ud835\udcc2", "\ud835\udcc9"));
+
+        lang.setSentenceLetters(Collections.singletonList("\ud835\udcae"));
+        lang.setSentenceLetterSubs(true);
+        lang.setXrelationSymbols(Collections.singletonList("\u211b"));
+        lang.setXrelationSymbolSubs(true);
+        lang.setXrelationSymbolsRequireSuper(false);
+
+        lang.setAllowBinaryInfixRelations(true);
+        lang.setAllowBinaryInfixNegations(true);
+        lang.setInfixRelations( Map.ofEntries(
+                entry("\ue8ac", "\ue8ad"),  //equal
+                entry("\ue8a4", "\ue8a5"),  //less than
+                entry("\ue8a6", "\ue8a7")   //leq
+        ));
+
+        lang.setFormulaSymbols(Alphabets.getCharacterRange("\ud835\udc9c", "\ud835\udcac"));
+        lang.setArbitraryExpressionSymbols(Collections.singletonList("\ud835\udcb3"));
+
+        return lang;
+    }
 
 
 }

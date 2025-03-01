@@ -39,6 +39,10 @@ public RelationSymbol(String baseStr, String subscriptStr, String superscriptStr
         this.superscriptStr = superscriptStr;
     }
 
+    public String getSubscriptStr() {
+        return subscriptStr;
+    }
+
     public String getBaseStr() {
         return baseStr;
     }
@@ -67,6 +71,9 @@ public RelationSymbol(String baseStr, String subscriptStr, String superscriptStr
 
     @Override
     public ExpressionType getType() { return type; }
+
+    @Override
+    public Expression getMatch() {return this;}
 
     @Override
     public List<Text> toTextList() {

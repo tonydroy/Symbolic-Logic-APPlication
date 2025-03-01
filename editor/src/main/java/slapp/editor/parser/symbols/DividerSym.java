@@ -25,6 +25,9 @@ public class DividerSym implements Expression {
     public ExpressionType getType() {return type;}
 
     @Override
+    public Expression getMatch() {return this;}
+
+    @Override
     public List<Text> toTextList() {
         List<Text> textList = new ArrayList<Text>();
         if (!textString.isEmpty()) textList.add(ParseUtilities.newRegularText(textString));

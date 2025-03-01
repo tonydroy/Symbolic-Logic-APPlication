@@ -1,0 +1,39 @@
+package slapp.editor.parser.symbols;
+
+import java.util.ArrayList;
+import java.util.List;
+
+
+//just one instance for each base/subscript combination
+
+public class MVariable extends Variable {
+
+    private static List<MVariable> variables = new ArrayList<MVariable>();
+    private Variable matchVar;
+
+    private MVariable(String baseSymbol, String subscriptStr) {
+        super(baseSymbol, subscriptStr);
+        variables.add(this);
+    }
+
+    public static MVariable getInstance(String baseSymbol, String subscriptStr) {
+        MVariable mVar = null;
+        for (MVariable var : variables) {
+            if (var.getBaseStr().equals(baseSymbol) && var.getSubscriptStr().equals(subscriptStr)) {
+                mVar = var;
+                break;
+            }
+        }
+        if (mVar == null) { mVar = new MVariable(baseSymbol, subscriptStr);}
+        return mVar;
+    }
+
+    @Override
+    public Variable getMatch() {
+        return matchVar;
+    }
+
+    public void setMatch(Variable matchVar) {
+        this.matchVar = matchVar;
+    }
+}

@@ -15,6 +15,8 @@ public interface Expression {
 
     List<Text> toTextList();
 
+    Expression getMatch();
+
 
 
 }

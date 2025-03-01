@@ -15,6 +15,22 @@ public class InfixTerm extends Term implements Expression {
     private CloseBracket closeBracket;
 
 
+    @Override
+    public InfixTerm getMatch() {
+        InfixTerm newTerm = new InfixTerm();
+        newTerm.setOpenBracket(openBracket.getMatch());
+        newTerm.setCloseBracket(closeBracket.getMatch());
+        newTerm.setMainFnSymbol(getMainFnSymbol().getMatch());
+        newTerm.setLevel(getLevel());
+        newTerm.setCombines(isCombines());
+        List<Expression> newChildren = new ArrayList<>();
+        for (Expression child : getChildren()) {
+            newChildren.add(child.getMatch());
+        }
+        newTerm.setChildren(newChildren);
+        return newTerm;
+    }
+
 
 
     @Override

@@ -80,16 +80,11 @@ public class SyntacticalFns {
         List<Expression> sortedSubformulas = sortSubformulas(formulaExp, term1Exp);
 
 
-        System.out.println("subs: " + sortedSubformulas);
-
         boolean freeFor = true;
         int index = 0;
         while (freeFor == true && index < sortedSubformulas.size()) {
 
-            System.out.println("subs2: " + sortedSubformulas);
-
             Formula formula = (Formula) sortedSubformulas.get(index);
-
 
             if (formula.isAtomic()) {
                 index++;

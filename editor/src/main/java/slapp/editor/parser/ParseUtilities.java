@@ -118,42 +118,6 @@ public class ParseUtilities {
 
         }
 
-
-        /*
-
-        //restricting formulas in bounded quantifiers
-
-        if (language.isAllowBoundedQuantifiers()) {
-
-            for (int i = expressions.size() - 1; i >= 0; i--) {
-                if (expressions.get(i).getType() == ExpressionType.UNIV_RESTRICTED_OP) {
-
-                    System.out.println("here");
-
-                    UnivRestrictedQuantOp op = (UnivRestrictedQuantOp) expressions.get(i);
-                    List<Expression> opAtomics = getAtomics(op.getRestrictorList());
-                    List<Expression> opComplexFormulas = getComplexFormulas(opAtomics);
-                    if (opComplexFormulas != null && opComplexFormulas.size() == 1 && opComplexFormulas.get(0).getType() == ExpressionType.FORMULA) {
-                        op.setRestrictingFormula((Formula) opComplexFormulas.get(0));
-                    }
-                    else {
-                        List<Expression> expressionList = new ArrayList<>();
-                        expressionList.add(op.getOpenBracket());
-                        expressionList.add(op.getUniversalOp());
-                        expressionList.add(op.getDivider());
-                        expressionList.addAll(opComplexFormulas);
-                        expressionList.add(op.getCloseBracket());
-                        expressions.remove(i);
-                        expressions.addAll(i, expressionList);
-                    }
-                }
-            }
-        }
-
-         */
-
-
-
         return expressions;
     }
 

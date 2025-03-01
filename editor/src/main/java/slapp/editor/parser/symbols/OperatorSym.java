@@ -22,4 +22,7 @@ public class OperatorSym implements Expression {
     public List<Text> toTextList() {
         return null;
     }
+
+    @Override
+    public Expression getMatch() {return null;}
 }

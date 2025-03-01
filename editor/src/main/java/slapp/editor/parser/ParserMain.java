@@ -23,7 +23,7 @@ import static javafx.application.Application.launch;
 public class ParserMain {
 
     //for now
-    String langName = "Lq_abv";
+    String langName = "Lnt";
 
     public ParserMain(Stage stage) {
 
@@ -198,7 +198,7 @@ public class ParserMain {
             rta3.getActionFactory().saveNow().execute(new ActionEvent());
             Document newDoc3 = rta3.getDocument();
 
-           System.out.println("freefor: " + SyntacticalFns.freeForDoc(newDoc, newDoc2, newDoc3, langName));
+           System.out.println("term " + newDoc3.getText() + " is free for term " + newDoc2.getText() + " in formula " + newDoc.getText() + ": " + SyntacticalFns.freeForDoc(newDoc, newDoc2, newDoc3, langName));
 
 
         });
@@ -210,11 +210,5 @@ public class ParserMain {
             stage.setScene(scene);
             stage.show();
 
-
-
-
-
     }
-
-
 }

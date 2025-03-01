@@ -67,6 +67,20 @@ public class Term implements Expression {
     public ExpressionType getType() { return type; }
 
     @Override
+    public Term getMatch() {
+        Term matchTerm = new Term();
+        matchTerm.setMainFnSymbol(mainFnSymbol.getMatch());
+        matchTerm.setLevel(level);
+        List<Expression> newChildren = new ArrayList<>();
+        for (Expression child : children) {
+            newChildren.add(child.getMatch());
+        }
+        matchTerm.setChildren(newChildren);
+        return matchTerm;
+    }
+
+
+    @Override
     public List<Text> toTextList() {
         List<Text> texts = new ArrayList();
         texts.addAll(mainFnSymbol.toTextList());

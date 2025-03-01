@@ -8,16 +8,14 @@ import slapp.editor.parser.ParseUtilities;
 import java.util.ArrayList;
 import java.util.List;
 
+public class MTermSym implements Expression {
 
-public class Variable implements Expression {
-
-    private ExpressionType type = ExpressionType.VARIABLE_SYM;
+    private ExpressionType type = ExpressionType.MTERM_SYM;
     private String baseStr;
-    private String subscriptStr = "";
+    private String subscriptStr;
 
-
-    public Variable(String baseSymbol, String subscriptStr) {
-        this.baseStr = baseSymbol;
+    public MTermSym(String baseStr, String subscriptStr) {
+        this.baseStr = baseStr;
         this.subscriptStr = subscriptStr;
     }
 
@@ -30,15 +28,15 @@ public class Variable implements Expression {
     }
 
     @Override
-    public ExpressionType getType() { return type; }
+    public ExpressionType getType() {return type;}
 
-    @Override 
-    public Expression getMatch() { return this; }
+    @Override
+    public Expression getMatch() {return this;}
 
     @Override
     public List<Text> toTextList() {
-        List<Text> textList = new ArrayList<>();
-        if (!baseStr.isEmpty()) textList.add(ParseUtilities.newRegularText(baseStr));
+        List<Text> textList = new ArrayList<Text>();
+        if (!baseStr.isEmpty()) textList.add(new ParseUtilities(baseStr));
         if (!subscriptStr.isEmpty()) textList.add(ParseUtilities.newSubscriptText(subscriptStr));
         return textList;
     }
@@ -46,15 +44,15 @@ public class Variable implements Expression {
     @Override
     public String toString() {
         String endString = "";
-        if (!subscriptStr.isEmpty()) {endString = "_" + subscriptStr;}
+        if (!subscriptStr.isEmpty()) endString = "_" + subscriptStr;
         return baseStr + endString;
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == this) return true;
-        if ((o instanceof Variable)) {
-            Variable other = (Variable) o;
+        if ((o instanceof MTermSym)) {
+            MTermSym other = (MTermSym) o;
             return baseStr.equals(other.baseStr) && subscriptStr.equals(other.subscriptStr);
         }
         return false;
@@ -64,6 +62,5 @@ public class Variable implements Expression {
     public int hashCode() {
         return baseStr.hashCode() + subscriptStr.hashCode();
     }
-
 
 }

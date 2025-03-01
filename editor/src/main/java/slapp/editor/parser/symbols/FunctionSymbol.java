@@ -39,8 +39,23 @@ public class FunctionSymbol implements Expression {
         this.permitInfix = permitInfix;
     }
 
+    public String getBaseStr() {
+        return baseStr;
+    }
+
+    public String getSubscriptStr() {
+        return subscriptStr;
+    }
+
+    public String getSuperscriptStr() {
+        return superscriptStr;
+    }
+
     @Override
     public ExpressionType getType() { return type; }
+
+    @Override
+    public Expression getMatch() {return this;}
 
     @Override
     public List<Text> toTextList() {

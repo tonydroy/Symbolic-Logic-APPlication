@@ -21,6 +21,10 @@ public enum ExpressionType {
     EXISTENTIAL_SYM("Exis Sym"),
     DIVIDER_SYM("Divider Sym"),
 
+    MTERM_SYM("Mterm Sym"),
+    MFORMULA_SYM("Mformula Sym"),
+    MEXPRESSION_SYM("Mexpression Sym"),
+
     OPERATOR(""),
     NEG_OP("Neg Op"),
     COND_OP("Cond Op"),
@@ -42,6 +46,10 @@ public enum ExpressionType {
     RELATION_SYMBOL("Rel Sym"),
     COMPLEMENT_REL_SYM("Neg Rel Sym"),
     FUNCTION_SYMBOL("Fn Sym"),
+
+    MTERM("Mterm"),
+    MFORMULA("Mformula"),
+    MEXPRESSION("Expression"),
 
 
     TERM("Term"),

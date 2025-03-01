@@ -23,8 +23,21 @@ public class SentenceLetter implements Expression {
         this.subscriptStr = subscriptSymbol;
     }
 
+    public String getBaseStr() {
+        return baseStr;
+    }
+
+    public String getSubscriptStr() {
+        return subscriptStr;
+    }
+
+
+
     @Override
     public ExpressionType getType() { return type; }
+
+    @Override
+    public Expression getMatch() {return this;}
 
     @Override
     public List<Text> toTextList() {

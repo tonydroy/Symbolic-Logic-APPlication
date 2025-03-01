@@ -31,23 +31,24 @@ public class Language implements Serializable {
     private String universalQuant;
     private String existentialQuant;
 
-    private List<String> variables;
+    private List<String> variables = new ArrayList();
     private boolean variableSubs = false;
-    private List<String> constants;
+    private List<String> constants = new ArrayList();
     private boolean constantSubs = false;
 
-    private List<String> sentenceLetters;
+    private List<String> sentenceLetters = new ArrayList();
     private boolean sentenceLetterSubs = false;
 
-    private List<String> xfunctionSymbols;
+    private List<String> xfunctionSymbols = new ArrayList();
     private boolean xfunctionSymbolSubs = false;
-    private List<String> onePlaceFunctionSymbols, twoPlaceFunctionSymbols;
+    private List<String> onePlaceFunctionSymbols = new ArrayList();
+    private List<String> twoPlaceFunctionSymbols = new ArrayList();
     private boolean allowBinaryInfixFunctions = false;
 
-    private List<String> xrelationSymbols;
+    private List<String> xrelationSymbols = new ArrayList();
     private boolean xrelationSymbolSubs = false;
     private boolean xrelationSymbolsRequireSuper = false;
-    private List<String> onePlaceRelSymbols;
+    private List<String> onePlaceRelSymbols = new ArrayList();
     private boolean allowBinaryInfixRelations = false;
     private boolean allowBinaryInfixNegations = false;
     private Map<String, String> infixRelations;
@@ -56,6 +57,12 @@ public class Language implements Serializable {
     private String dividerSymbol; //for bounded quantifiers
 
     private Map<UnabbType, Document> unabbForms;
+
+    //for metalanguage
+
+    private List<String> termSymbols = new ArrayList();
+    private List<String> formulaSymbols = new ArrayList();
+    private List<String> arbitraryExpressionSymbols = new ArrayList();
 
 
     Language(String nameString) {
@@ -386,5 +393,29 @@ public class Language implements Serializable {
 
     public void setUnabbForms(Map<UnabbType, Document> unabbForms) {
         this.unabbForms = unabbForms;
+    }
+
+    public List<String> getTermSymbols() {
+        return termSymbols;
+    }
+
+    public void setTermSymbols(List<String> termSymbols) {
+        this.termSymbols = termSymbols;
+    }
+
+    public List<String> getFormulaSymbols() {
+        return formulaSymbols;
+    }
+
+    public void setFormulaSymbols(List<String> formulaSymbols) {
+        this.formulaSymbols = formulaSymbols;
+    }
+
+    public List<String> getArbitraryExpressionSymbols() {
+        return arbitraryExpressionSymbols;
+    }
+
+    public void setArbitraryExpressionSymbols(List<String> arbitraryExpressionSymbols) {
+        this.arbitraryExpressionSymbols = arbitraryExpressionSymbols;
     }
 }

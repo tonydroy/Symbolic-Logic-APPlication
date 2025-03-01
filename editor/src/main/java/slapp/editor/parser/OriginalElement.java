@@ -37,6 +37,9 @@ public class OriginalElement implements Expression {
     }
 
     @Override
+    public Expression getMatch() {return this;}
+
+    @Override
     public ExpressionType getType() { return type; }
 
     @Override
