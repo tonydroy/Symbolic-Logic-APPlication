@@ -30,6 +30,8 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import slapp.editor.main_window.MainWindowView;
 
+import java.util.List;
+
 /**
  * Utility class to show pop-up alerts
  */
@@ -53,6 +55,19 @@ public class EditorAlerts {
 //        alert.initOwner(EditorMain.mainStage);
         alert.showAndWait();
 
+    }
+
+    /**
+     * Information alert with 'OK' to close
+     * @param header alert header string
+     * @param messageTxts list of texts for message
+     */
+    //collects list of texts into text flow for showSimpleTxtFlowAlert
+    public static void showSimpleTxtListAlert(String header, List<Text> messageTxts) {
+        Text[] resultArray = new Text[messageTxts.size()];
+        messageTxts.toArray(resultArray);
+        TextFlow textFlow = new TextFlow(resultArray);
+        EditorAlerts.showSimpleTxtFlowAlert(header, textFlow);
     }
 
     /**

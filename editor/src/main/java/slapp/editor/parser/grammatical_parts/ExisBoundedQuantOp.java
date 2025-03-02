@@ -49,6 +49,11 @@ public class ExisBoundedQuantOp extends Operator implements Expression {
         return infixRelation;
     }
 
+    @Override
+    public ExisBoundedQuantOp getMatch() {
+        return new ExisBoundedQuantOp(openBracket.getMatch(), closeBracket.getMatch(), existentialOp.getMatch(), infixRelation.getMatch(), boundingTerm.getMatch());
+    }
+
 
 
     @Override

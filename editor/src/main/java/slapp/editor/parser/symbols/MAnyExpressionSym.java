@@ -8,13 +8,13 @@ import slapp.editor.parser.ParseUtilities;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MTermSym implements Expression {
+public class MAnyExpressionSym implements Expression {
 
-    private ExpressionType type = ExpressionType.MTERM_SYM;
+    private ExpressionType type = ExpressionType.MEXPRESSION_SYM;
     private String baseStr;
     private String subscriptStr;
 
-    public MTermSym(String baseStr, String subscriptStr) {
+    public MAnyExpressionSym(String baseStr, String subscriptStr) {
         this.baseStr = baseStr;
         this.subscriptStr = subscriptStr;
     }
@@ -28,31 +28,31 @@ public class MTermSym implements Expression {
     }
 
     @Override
-    public ExpressionType getType() {return type;}
+    public ExpressionType getType() { return type; }
 
     @Override
-    public MTermSym getMatch() {return this;}
+    public MAnyExpressionSym getMatch() { return this; }
 
     @Override
     public List<Text> toTextList() {
-        List<Text> textList = new ArrayList<Text>();
-        if (!baseStr.isEmpty()) textList.add(ParseUtilities.newRegularText(baseStr));
-        if (!subscriptStr.isEmpty()) textList.add(ParseUtilities.newSubscriptText(subscriptStr));
+        List<Text> textList = new ArrayList<>();
+        if(!baseStr.isEmpty()) textList.add(ParseUtilities.newRegularText(baseStr));
+        if(!subscriptStr.isEmpty()) textList.add(ParseUtilities.newSubscriptText(subscriptStr));
         return textList;
     }
 
     @Override
     public String toString() {
-        String endString = "";
-        if (!subscriptStr.isEmpty()) endString = "_" + subscriptStr;
-        return baseStr + endString;
+        String endstring = "";
+        if (!subscriptStr.isEmpty()) { endstring = "_" + subscriptStr; }
+        return baseStr + endstring;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (o == this) return true;
-        if ((o instanceof MTermSym)) {
-            MTermSym other = (MTermSym) o;
+        if (this == o) return true;
+        if ((o instanceof MAnyExpressionSym)) {
+            MAnyExpressionSym other = (MAnyExpressionSym) o;
             return baseStr.equals(other.baseStr) && subscriptStr.equals(other.subscriptStr);
         }
         return false;
@@ -62,5 +62,4 @@ public class MTermSym implements Expression {
     public int hashCode() {
         return baseStr.hashCode() + subscriptStr.hashCode();
     }
-
 }

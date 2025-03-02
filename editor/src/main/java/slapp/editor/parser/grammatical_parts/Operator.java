@@ -54,6 +54,9 @@ public class Operator implements Expression {
     }
 
     @Override
+    public Operator getMatch() {return this;}
+
+    @Override
     public List<Text> toTextList() {
         return mainSymbol.toTextList();
     }

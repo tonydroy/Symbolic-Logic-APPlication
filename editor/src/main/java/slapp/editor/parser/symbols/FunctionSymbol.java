@@ -9,6 +9,7 @@ import slapp.editor.parser.ParseUtilities;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 
 public class FunctionSymbol implements Expression {
 
@@ -55,7 +56,7 @@ public class FunctionSymbol implements Expression {
     public ExpressionType getType() { return type; }
 
     @Override
-    public Expression getMatch() {return this;}
+    public FunctionSymbol getMatch() {return this;}
 
     @Override
     public List<Text> toTextList() {

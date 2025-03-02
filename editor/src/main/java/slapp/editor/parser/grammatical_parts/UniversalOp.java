@@ -24,6 +24,11 @@ public class UniversalOp extends Operator implements Expression {
     }
 
     @Override
+    public UniversalOp getMatch() {
+        return new UniversalOp((UniversalQuantifierSym) getMainSymbol(), variableTerm.getMatch());
+    }
+
+    @Override
     public List<Text> toTextList() {
         List<Text> texts = new ArrayList();
         texts.addAll(getMainSymbol().toTextList());

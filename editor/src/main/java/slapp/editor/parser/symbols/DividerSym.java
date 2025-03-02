@@ -25,7 +25,7 @@ public class DividerSym implements Expression {
     public ExpressionType getType() {return type;}
 
     @Override
-    public Expression getMatch() {return this;}
+    public DividerSym getMatch() {return this;}
 
     @Override
     public List<Text> toTextList() {

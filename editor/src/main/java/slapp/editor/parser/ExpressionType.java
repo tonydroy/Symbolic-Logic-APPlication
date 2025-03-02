@@ -47,8 +47,7 @@ public enum ExpressionType {
     COMPLEMENT_REL_SYM("Neg Rel Sym"),
     FUNCTION_SYMBOL("Fn Sym"),
 
-    MTERM("Mterm"),
-    MFORMULA("Mformula"),
+
     MEXPRESSION("Expression"),
 
 

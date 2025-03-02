@@ -50,6 +50,10 @@ public class UnivBoundedQuantOp extends Operator implements Expression {
         return infixRelation;
     }
 
+    public UnivBoundedQuantOp getMatch() {
+        return new UnivBoundedQuantOp(openBracket.getMatch(), closeBracket.getMatch(), universalOp.getMatch(), infixRelation.getMatch(), boundingTerm.getMatch());
+    }
+
     @Override
     public List<Text> toTextList() {
         List<Text> texts = new ArrayList();

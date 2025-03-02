@@ -4,5 +4,6 @@ public enum TermType {
 
     VARIABLE,
     CONSTANT,
-    COMPLEX
+    COMPLEX,
+    MTERM;
 }

@@ -1,5 +1,8 @@
 package slapp.editor.parser.symbols;
 
+import javafx.scene.text.Text;
+import slapp.editor.parser.TextMessageException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +31,22 @@ public class MSentenceLetter extends SentenceLetter {
     @Override
     public SentenceLetter getMatch() { return matchLetter; }
 
-    public void setMatch(SentenceLetter match) { this.matchLetter = match; }
+    public void setMatch(SentenceLetter match) throws TextMessageException {
+        if (matchLetter == null) { matchLetter = match; }
+        else if (!matchLetter.equals(match)) {
+            List<Text> messageTxts = new ArrayList<>();
+            messageTxts.add(new Text("Variable "));
+            messageTxts.addAll(this.toTextList());
+            messageTxts.add(new Text(" cannot match to both "));
+            messageTxts.addAll(match.toTextList());
+            messageTxts.add(new Text(" and "));
+            messageTxts.addAll(matchLetter.toTextList());
+            messageTxts.add(new Text("."));
+            throw new TextMessageException(messageTxts);
+        }
+
+
+
+    }
 
 }

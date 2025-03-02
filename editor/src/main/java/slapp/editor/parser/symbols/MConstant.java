@@ -1,12 +1,15 @@
 package slapp.editor.parser.symbols;
 
+import javafx.scene.text.Text;
+import slapp.editor.parser.TextMessageException;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class MConstant extends Constant {
 
     private static List<MConstant> constantSyms = new ArrayList<MConstant>();
-    private Constant matchConstantSymbol;
+    private Constant matchConstant;
 
     private MConstant(String baseSymbol, String subscriptSymbol) {
         super(baseSymbol, subscriptSymbol);
@@ -26,8 +29,23 @@ public class MConstant extends Constant {
     }
 
     @Override
-    public Constant getMatch() {return matchConstantSymbol;}
+    public Constant getMatch() {return matchConstant;}
 
-    public void setMatch(Constant match) {this.matchConstantSymbol = match;}
+    public void setMatch(Constant match) throws TextMessageException {
+        if (matchConstant == null) { matchConstant = match; }
+        else if (!matchConstant.equals(match)) {
+            List<Text> messageTxts = new ArrayList<>();
+            messageTxts.add(new Text("Variable "));
+            messageTxts.addAll(this.toTextList());
+            messageTxts.add(new Text(" cannot match to both "));
+            messageTxts.addAll(match.toTextList());
+            messageTxts.add(new Text(" and "));
+            messageTxts.addAll(matchConstant.toTextList());
+            messageTxts.add(new Text("."));
+            throw new TextMessageException(messageTxts);
+        }
+
+
+    }
 
 }

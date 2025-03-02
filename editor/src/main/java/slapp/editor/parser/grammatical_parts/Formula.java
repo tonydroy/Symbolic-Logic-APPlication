@@ -33,9 +33,30 @@ public class Formula implements Expression {
         return closeBracket;
     }
 
+
+
     @Override
     public ExpressionType getType() {
         return type;
+    }
+
+    @Override
+    public Formula getMatch() {
+        Formula newFormula = new Formula();
+        List<Expression> newChildren = new ArrayList<>();
+        for (Expression child : children) {
+            newChildren.add(child.getMatch());
+        }
+        newFormula.setChildren(newChildren);
+        newFormula.setAtomic(atomic);
+        newFormula.setCombines(combines);
+        newFormula.setNegatingInfix(negatingInfix);
+        newFormula.setLevel(level);
+        newFormula.setMainOperator(mainOperator.getMatch());
+        newFormula.setOpenBracket(openBracket.getMatch());
+        newFormula.setCloseBracket(closeBracket.getMatch());
+
+        return newFormula;
     }
 
     @Override

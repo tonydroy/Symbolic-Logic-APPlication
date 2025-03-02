@@ -71,6 +71,8 @@ public class Term implements Expression {
         Term matchTerm = new Term();
         matchTerm.setMainFnSymbol(mainFnSymbol.getMatch());
         matchTerm.setLevel(level);
+        matchTerm.setCombines(combines);
+        matchTerm.setTermType(termType);
         List<Expression> newChildren = new ArrayList<>();
         for (Expression child : children) {
             newChildren.add(child.getMatch());

@@ -30,7 +30,7 @@ public class CloseBracket implements Expression {
     public ExpressionType getType() {return type;}
 
     @Override
-    public Expression getMatch() {return this;}
+    public CloseBracket getMatch() {return this;}
 
     @Override
     public List<Text> toTextList() {

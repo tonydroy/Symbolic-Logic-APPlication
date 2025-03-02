@@ -1,5 +1,8 @@
 package slapp.editor.parser.symbols;
 
+import javafx.scene.text.Text;
+import slapp.editor.parser.TextMessageException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +31,21 @@ public class MRelationSymbol extends RelationSymbol {
     @Override
     public RelationSymbol getMatch() {return matchRelSymbol;}
 
-    public void setMatch(RelationSymbol matchRelSymbol) {this.matchRelSymbol = matchRelSymbol;}
+    public void setMatch(RelationSymbol match) throws TextMessageException {
+        if (matchRelSymbol == null) { matchRelSymbol = match; }
+        else if (!matchRelSymbol.equals(match)) {
+            List<Text> messageTxts = new ArrayList<>();
+            messageTxts.add(new Text("Variable "));
+            messageTxts.addAll(this.toTextList());
+            messageTxts.add(new Text(" cannot match to both "));
+            messageTxts.addAll(match.toTextList());
+            messageTxts.add(new Text(" and "));
+            messageTxts.addAll(matchRelSymbol.toTextList());
+            messageTxts.add(new Text("."));
+            throw new TextMessageException(messageTxts);
+        }
+
+
+    }
 
 }

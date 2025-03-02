@@ -50,6 +50,10 @@ public class ExisRestrictedQuantOp extends Operator implements Expression {
         return divider;
     }
 
+    public ExisRestrictedQuantOp getMatch() {
+        return new ExisRestrictedQuantOp(openBracket.getMatch(), closeBracket.getMatch(), existentialOp.getMatch(), divider.getMatch(), restrictingFormula.getMatch());
+    }
+
     @Override
     public Term getVariableTerm() {return getExistentialOp().getVariableTerm();}
 

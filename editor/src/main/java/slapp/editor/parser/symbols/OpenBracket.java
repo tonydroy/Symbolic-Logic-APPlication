@@ -30,7 +30,7 @@ public class OpenBracket implements Expression {
     }
 
     @Override
-    public Expression getMatch() {return this;}
+    public OpenBracket getMatch() {return this;}
 
     @Override
     public List<Text> toTextList() {

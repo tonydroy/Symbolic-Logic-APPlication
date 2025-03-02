@@ -24,6 +24,11 @@ public class ExistentialOp extends Operator implements Expression {
     }
 
     @Override
+    public ExistentialOp getMatch() {
+        return new ExistentialOp((ExistentialQuantifierSym) getMainSymbol(), variableTerm.getMatch());
+    }
+
+    @Override
     public List<Text> toTextList() {
         List<Text> texts = new ArrayList();
         texts.addAll(getMainSymbol().toTextList());

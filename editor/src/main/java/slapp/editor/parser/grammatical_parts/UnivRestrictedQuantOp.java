@@ -61,6 +61,11 @@ public class UnivRestrictedQuantOp extends Operator implements Expression {
     }
 
     @Override
+    public UnivRestrictedQuantOp getMatch() {
+        return new UnivRestrictedQuantOp(openBracket.getMatch(), closeBracket.getMatch(), universalOp.getMatch(), divider.getMatch(), restrictingFormula.getMatch());
+    }
+
+    @Override
     public List<Text> toTextList() {
         List<Text> texts = new ArrayList();
         texts.addAll(openBracket.toTextList());

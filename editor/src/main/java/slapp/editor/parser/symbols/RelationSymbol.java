@@ -73,7 +73,7 @@ public RelationSymbol(String baseStr, String subscriptStr, String superscriptStr
     public ExpressionType getType() { return type; }
 
     @Override
-    public Expression getMatch() {return this;}
+    public RelationSymbol getMatch() {return this;}
 
     @Override
     public List<Text> toTextList() {
