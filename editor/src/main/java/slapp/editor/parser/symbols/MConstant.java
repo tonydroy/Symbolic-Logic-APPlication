@@ -44,8 +44,8 @@ public class MConstant extends Constant {
             messageTxts.add(new Text("."));
             throw new TextMessageException(messageTxts);
         }
-
-
     }
+
+    public static void clear() { constantSyms.clear();  }
 
 }

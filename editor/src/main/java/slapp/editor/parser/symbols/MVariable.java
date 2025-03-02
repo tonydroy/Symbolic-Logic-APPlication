@@ -50,4 +50,7 @@ public class MVariable extends Variable {
             throw new TextMessageException(messageTxts);
         }
     }
+
+    public static void clear() { variables.clear(); }
+
 }

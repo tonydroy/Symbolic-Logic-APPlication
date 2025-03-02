@@ -44,10 +44,9 @@ public class MFunctionSymbol extends FunctionSymbol {
             messageTxts.add(new Text("."));
             throw new TextMessageException(messageTxts);
         }
-
-
-
     }
+
+    public static void clear() { ;fnSymbols.clear(); }
 
 
 

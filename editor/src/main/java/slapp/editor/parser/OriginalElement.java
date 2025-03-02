@@ -28,8 +28,16 @@ public class OriginalElement implements Expression {
         return decoration.isSuperscript() || decoration.isTransSuperscript();
     }
 
+    public boolean isShiftedSuperscript() {
+        return decoration.isTransSuperscript();
+    }
+
     public boolean isSubscript() {
         return decoration.isSubscript() || decoration.isTransSubscript();
+    }
+
+    public boolean isShiftedSubscript() {
+        return decoration.isTransSubscript();
     }
 
     public boolean isNormal() {
@@ -44,17 +52,40 @@ public class OriginalElement implements Expression {
 
     @Override
     public String toString() {
-        return "element string: " + elementStr + "(" + elementStr.codePointAt(0) +")" + " Dec: " + decoration.toString();
-
+        return elementStr;
     }
 
     @Override
     public List<Text> toTextList() {
         List<Text> textList = new ArrayList<>();
-        if (isSubscript()) textList = Collections.singletonList(ParseUtilities.newSubscriptText(elementStr));
-        if (isSuperscript()) textList = Collections.singletonList(ParseUtilities.newSuperscriptText(elementStr));
-        if (isNormal()) textList = Collections.singletonList(ParseUtilities.newRegularText(elementStr));
+
+        if (isSubscript()) {
+            if (isShiftedSubscript()) textList = Collections.singletonList(ParseUtilities.newShiftedSubscriptText(elementStr));
+            else  textList = Collections.singletonList(ParseUtilities.newSubscriptText(elementStr));
+        }
+        else if (isSuperscript()) {
+            if (isShiftedSuperscript())textList = Collections.singletonList(ParseUtilities.newShiftedSubscriptText(elementStr));
+            else textList = Collections.singletonList(ParseUtilities.newSuperscriptText(elementStr));
+        }
+        else if (isNormal()) textList = Collections.singletonList(ParseUtilities.newRegularText(elementStr));
+
         return textList;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o instanceof OriginalElement) {
+            OriginalElement other = (OriginalElement) o;
+            return elementStr.equals(other.elementStr) && decoration.equals(other.decoration);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return elementStr.hashCode() + decoration.hashCode();
+    }
+
 
 }

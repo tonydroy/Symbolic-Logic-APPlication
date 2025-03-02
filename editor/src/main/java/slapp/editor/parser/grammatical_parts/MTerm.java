@@ -3,6 +3,7 @@ package slapp.editor.parser.grammatical_parts;
 import javafx.scene.text.Text;
 import slapp.editor.parser.TextMessageException;
 import slapp.editor.parser.symbols.MTermSym;
+import slapp.editor.parser.symbols.MVariable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,7 +43,7 @@ public class MTerm extends Term {
         else if (!matchTerm.equals(match)) {
             List<Text> messageTxts = new ArrayList<>();
             messageTxts.add(new Text("Variable "));
-            messageTxts.addAll(this.toTextList());
+            messageTxts.addAll(this.getChildren().get(0).toTextList());
             messageTxts.add(new Text(" cannot match to both "));
             messageTxts.addAll(match.toTextList());
             messageTxts.add(new Text(" and "));
@@ -50,9 +51,9 @@ public class MTerm extends Term {
             messageTxts.add(new Text("."));
             throw new TextMessageException(messageTxts);
         }
-
-
     }
+
+    public static void clear() { mTerms.clear(); }
 
 
 

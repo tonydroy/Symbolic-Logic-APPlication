@@ -44,9 +44,8 @@ public class MSentenceLetter extends SentenceLetter {
             messageTxts.add(new Text("."));
             throw new TextMessageException(messageTxts);
         }
-
-
-
     }
+
+    public static void clear() { sentenceLetters.clear(); }
 
 }

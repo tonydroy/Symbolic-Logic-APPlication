@@ -48,7 +48,7 @@ public enum ExpressionType {
     FUNCTION_SYMBOL("Fn Sym"),
 
 
-    MEXPRESSION("Expression"),
+    ANY_EXPRESSION("Any Expression"),
 
 
     TERM("Term"),

@@ -4,6 +4,7 @@ import javafx.scene.text.Text;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.TextMessageException;
 import slapp.editor.parser.symbols.MFormulaSym;
+import slapp.editor.parser.symbols.MVariable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,6 +21,8 @@ public class MFormula extends Formula{
         mFormulas.add(this);
     }
 
+
+
     public static MFormula getInstance(MFormulaSym formulaSym) {
         MFormula newFormula = null;
         for (MFormula formula : mFormulas) {
@@ -32,6 +35,8 @@ public class MFormula extends Formula{
         return newFormula;
     }
 
+
+
     @Override
     public Formula getMatch() { return matchFormula; }
 
@@ -40,7 +45,7 @@ public class MFormula extends Formula{
         else if (!matchFormula.equals(match)) {
             List<Text> messageTxts = new ArrayList<>();
             messageTxts.add(new Text("Variable "));
-            messageTxts.addAll(this.toTextList());
+            messageTxts.addAll(this.getChildren().get(0).toTextList());
             messageTxts.add(new Text(" cannot match to both "));
             messageTxts.addAll(match.toTextList());
             messageTxts.add(new Text(" and "));
@@ -49,6 +54,8 @@ public class MFormula extends Formula{
             throw new TextMessageException(messageTxts);
         }
     }
+
+    public static void clear() { mFormulas.clear(); }
 
 
 }

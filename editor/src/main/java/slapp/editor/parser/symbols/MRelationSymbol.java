@@ -44,8 +44,8 @@ public class MRelationSymbol extends RelationSymbol {
             messageTxts.add(new Text("."));
             throw new TextMessageException(messageTxts);
         }
-
-
     }
+
+    public static void clear() { relSymbols.clear(); }
 
 }

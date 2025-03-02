@@ -979,10 +979,26 @@ public class ParseUtilities {
         return t;
     }
 
+    public static Text newShiftedSuperscriptText(String text) {
+        Text t = new Text(text);
+        t.setFont(new Font("Noto Serif Combo", baseFontSize * .72));
+        t.setTranslateY(baseFontSize * -.4);
+        t.setTranslateX(baseFontSize * -.3);
+        return t;
+    }
+
     public static Text newSubscriptText(String text) {
         Text t = new Text(text);
         t.setFont(new Font("Noto Serif Combo", baseFontSize * .72));
         t.setTranslateY(baseFontSize * .17);
+        return t;
+    }
+
+    public static Text newShiftedSubscriptText(String text) {
+        Text t = new Text(text);
+        t.setFont(new Font("Noto Serif Combo", baseFontSize * .72));
+        t.setTranslateY(baseFontSize * .17);
+        t.setTranslateX(baseFontSize * -.3);
         return t;
     }
 

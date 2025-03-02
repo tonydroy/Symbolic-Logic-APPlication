@@ -1,14 +1,60 @@
 package slapp.editor.parser.grammatical_parts;
 
+import javafx.scene.text.Text;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
+import slapp.editor.parser.TextMessageException;
+import slapp.editor.parser.symbols.MAnyExpressionSym;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MAnyExpression {
-    private ExpressionType type = ExpressionType.MEXPRESSION;
-    private List<Expression> chilldren = new ArrayList<Expression>();
+public class MAnyExpression extends AnyExpression {
 
+
+    private static List<MAnyExpression> mAnyExpressions = new ArrayList<MAnyExpression>();
+    private AnyExpression matchAnyExp;
+    private MAnyExpressionSym expressionSym;
+
+    private MAnyExpression(MAnyExpressionSym sym) {
+        super();
+        expressionSym = sym;
+        mAnyExpressions.add(this);
+    }
+
+    public static MAnyExpression getInstance(MAnyExpressionSym sym) {
+        MAnyExpression newInstance = null;
+        for (MAnyExpression e : mAnyExpressions) {
+            if (e.getExpressionSym().equals(sym)) {
+                newInstance = e;
+                break;
+            }
+        }
+        if(newInstance == null) { newInstance = new MAnyExpression(sym); }
+        return newInstance;
+    }
+
+
+    public MAnyExpressionSym getExpressionSym() {
+        return expressionSym;
+    }
+
+    @Override
+    public AnyExpression getMatch() { return matchAnyExp; }
+
+    public void setMatch(AnyExpression match) throws TextMessageException {
+        if (matchAnyExp == null) { matchAnyExp = match; }
+        else if (!matchAnyExp.equals(match)) {
+            List<Text> messageTxts = new ArrayList<>();
+            messageTxts.add(new Text("Variable "));
+            messageTxts.addAll(getExpressionSym().toTextList());
+            messageTxts.add(new Text(" cannot match to both "));
+            messageTxts.addAll(match.toTextList());
+            messageTxts.add(new Text(" and "));
+            messageTxts.addAll(matchAnyExp.toTextList());
+            messageTxts.add(new Text("."));
+            throw new TextMessageException(messageTxts);
+        }
+    }
 
 }
