@@ -57,4 +57,6 @@ public class MAnyExpression extends AnyExpression {
         }
     }
 
+    public static void clear() { mAnyExpressions.clear(); }
+
 }

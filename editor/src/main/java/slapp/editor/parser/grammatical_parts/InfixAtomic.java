@@ -9,6 +9,7 @@ import slapp.editor.parser.symbols.RelationSymbol;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class InfixAtomic extends Formula implements Expression {
     private OpenBracket openBracket = new OpenBracket("");
@@ -55,6 +56,7 @@ public class InfixAtomic extends Formula implements Expression {
         texts.add(new Text(" "));
         texts.addAll(getChildren().get(1).toTextList());
         texts.addAll(closeBracket.toTextList());
+        if (getSubTransform() != null && isCombines()) {texts.addAll(getSubTransform().toTextList());}
         return texts;
     }
 
@@ -67,6 +69,7 @@ public class InfixAtomic extends Formula implements Expression {
         texts.add(new Text(" "));
         texts.addAll(getChildren().get(1).toTextList());
         texts.addAll(closeBracket.toTextList());
+        if (getSubTransform() != null && isCombines()) {texts.addAll(getSubTransform().toTextList());}
         return texts;
     }
 
@@ -80,7 +83,7 @@ public class InfixAtomic extends Formula implements Expression {
         sb.append(" ");
         sb.append(getChildren().get(1).toString());
         sb.append(closeBracket.toString());
-
+        if (getSubTransform() != null && isCombines()) {sb.append(getSubTransform().toString());}
         return sb.toString();
     }
 
@@ -93,6 +96,7 @@ public class InfixAtomic extends Formula implements Expression {
         sb.append(" ");
         sb.append(getChildren().get(1).toString());
         sb.append(closeBracket.toString());
+        if (getSubTransform() != null && isCombines()) {sb.append(getSubTransform().toString());}
 
         return sb.toString();
     }
@@ -106,12 +110,13 @@ public class InfixAtomic extends Formula implements Expression {
             InfixAtomic other = (InfixAtomic) o;
 
             boolean equals = true;
-
             if (!mainRelation.equals(other.mainRelation)) { equals = false;}
-            if (mainOperator == null) {
-                if (other.mainOperator != null) { equals = false;}
+            if (getSubTransform() == null) {
+                if (other.getSubTransform() != null) equals = false;
             }
-            else if (!mainOperator.equals(other.mainOperator)) { equals = false;}
+            else if (!getSubTransform().equals(other.getSubTransform())) {
+                equals = false;
+            }
             if (getChildren().size() != other.getChildren().size()) { equals = false; }
             else for (int i = 0; i < getChildren().size(); i++) {
                 if (!getChildren().get(i).equals(other.getChildren().get(i))) { equals = false; }
@@ -122,7 +127,7 @@ public class InfixAtomic extends Formula implements Expression {
     }
 
     @Override public int hashCode() {
-        int code = mainRelation.hashCode();
+        int code = mainRelation.hashCode() + Objects.hashCode(getSubTransform());
         for (Expression child : getChildren()) {code = code + child.hashCode();}
         return code;
     }

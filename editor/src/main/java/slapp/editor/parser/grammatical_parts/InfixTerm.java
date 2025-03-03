@@ -8,6 +8,7 @@ import slapp.editor.parser.symbols.OpenBracket;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class InfixTerm extends Term implements Expression {
 
@@ -21,6 +22,7 @@ public class InfixTerm extends Term implements Expression {
         newTerm.setOpenBracket(openBracket.getMatch());
         newTerm.setCloseBracket(closeBracket.getMatch());
         newTerm.setMainFnSymbol(getMainFnSymbol().getMatch());
+        if (getSubTransform() != null) {setSubTransform(getSubTransform().getMatch());}
         newTerm.setLevel(getLevel());
         newTerm.setCombines(isCombines());
         List<Expression> newChildren = new ArrayList<>();
@@ -43,6 +45,7 @@ public class InfixTerm extends Term implements Expression {
         texts.add(new Text(" "));
         texts.addAll(getChildren().get(1).toTextList());
         texts.addAll(closeBracket.toTextList());
+        if (getSubTransform() != null) texts.addAll(getSubTransform().toTextList());
         return texts;
     }
 
@@ -72,6 +75,7 @@ public class InfixTerm extends Term implements Expression {
         sb.append(" ");
         sb.append(getChildren().get(1).toString());
         sb.append(closeBracket.toString());
+        if (getSubTransform() != null) sb.append(getSubTransform().toString());
 
         return sb.toString();
     }
@@ -83,6 +87,12 @@ public class InfixTerm extends Term implements Expression {
             InfixTerm other = (InfixTerm) o;
             boolean equals = true;
             if (!getMainFnSymbol().equals(other.getMainFnSymbol())) { equals = false;}
+            if (getSubTransform() == null) {
+                if (other.getSubTransform() != null) equals = false;
+            }
+            else if (!getSubTransform().equals(other.getSubTransform())) {
+                equals = false;
+            }
             if (getChildren().size() != other.getChildren().size()) { equals = false; }
             for (int i = 0; i < getChildren().size(); i++) {
                 if (!getChildren().get(i).equals(other.getChildren().get(i))) { equals = false; }
@@ -93,7 +103,7 @@ public class InfixTerm extends Term implements Expression {
     }
 
     @Override public int hashCode() {
-        int code = getMainFnSymbol().hashCode();
+        int code = getMainFnSymbol().hashCode() + Objects.hashCode(getSubTransform());
         for (Expression child : getChildren()) {code = code + child.hashCode();}
         return code;
     }

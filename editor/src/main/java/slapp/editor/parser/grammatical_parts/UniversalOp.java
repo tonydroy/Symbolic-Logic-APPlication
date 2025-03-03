@@ -48,7 +48,7 @@ public class UniversalOp extends Operator implements Expression {
     @Override
     public boolean equals(Object o) {
         if (o == this) return true;
-        if ((o instanceof UniversalOp)) {
+        if (o instanceof UniversalOp) {
             UniversalOp other = (UniversalOp) o;
             return getMainSymbol().equals(other.getMainSymbol()) && variableTerm.equals(other.variableTerm);
         }

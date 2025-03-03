@@ -9,6 +9,7 @@ import slapp.editor.parser.symbols.RelationSymbol;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Formula implements Expression {
 
@@ -21,6 +22,7 @@ public class Formula implements Expression {
     Operator mainOperator = null;
     OpenBracket openBracket = new OpenBracket("");
     CloseBracket closeBracket = new CloseBracket("");
+    private SubstitutionTransform subTransform = null;
 
     public RelationSymbol getMainRelation() { return null; }
 
@@ -33,7 +35,13 @@ public class Formula implements Expression {
         return closeBracket;
     }
 
+    public SubstitutionTransform getSubTransform() {
+        return subTransform;
+    }
 
+    public void setSubTransform(SubstitutionTransform subTransform) {
+        this.subTransform = subTransform;
+    }
 
     @Override
     public ExpressionType getType() {
@@ -53,6 +61,7 @@ public class Formula implements Expression {
         newFormula.setNegatingInfix(negatingInfix);
         newFormula.setLevel(level);
         newFormula.setMainOperator(mainOperator.getMatch());
+        if (subTransform != null) { setSubTransform(subTransform.getMatch()); }
         newFormula.setOpenBracket(openBracket.getMatch());
         newFormula.setCloseBracket(closeBracket.getMatch());
 
@@ -63,11 +72,11 @@ public class Formula implements Expression {
     public List<Text> toTextList() {
         List<Text> texts = new ArrayList();
         if (mainOperator == null) {
-            return children.get(0).toTextList();
+            texts = children.get(0).toTextList();
         }
         else if (mainOperator.isUnary()) {
             if (mainOperator.getType() == ExpressionType.NEG_OP && ((Formula) children.get(0)).isNegatingInfix()) {
-                return ((InfixAtomic) children.get(0)).negatedTextList();
+                texts = ((InfixAtomic) children.get(0)).negatedTextList();
             }
             else {
                 texts.addAll(mainOperator.toTextList());
@@ -83,6 +92,7 @@ public class Formula implements Expression {
             texts.addAll(children.get(1).toTextList());
             texts.addAll(closeBracket.toTextList());
         }
+        if (subTransform != null && isCombines()) { texts.addAll(subTransform.toTextList()); }
         return texts;
     }
 
@@ -90,11 +100,11 @@ public class Formula implements Expression {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         if (mainOperator == null) {
-            return children.get(0).toString();
+            sb.append(children.get(0).toString());
         }
         else if (mainOperator.isUnary()) {
             if (mainOperator.getType() == ExpressionType.NEG_OP && ((Formula) children.get(0)).isNegatingInfix()) {
-                return ((InfixAtomic) children.get(0)).negatedString();
+                sb.append(((InfixAtomic) children.get(0)).negatedString());
             }
             else {
                 sb.append(mainOperator.toString());
@@ -110,6 +120,7 @@ public class Formula implements Expression {
             sb.append(children.get(1).toString());
             sb.append(closeBracket.toString());
         }
+        if (subTransform != null && isCombines()) { sb.append(subTransform.toString()); }
         return sb.toString();
     }
 
@@ -120,6 +131,12 @@ public class Formula implements Expression {
             Formula other = (Formula) o;
             boolean equals = true;
             if (!mainOperator.equals(other.mainOperator)) { equals = false;}
+            if (getSubTransform() == null) {
+                if (other.getSubTransform() != null) equals = false;
+            }
+            else if (!getSubTransform().equals(other.getSubTransform())) {
+                equals = false;
+            }
             if (children.size() != other.children.size()) { equals = false; }
             else for (int i = 0; i < children.size(); i++) {
                 if (!children.get(i).equals(other.children.get(i))) { equals = false; }
@@ -130,7 +147,7 @@ public class Formula implements Expression {
         }
 
     @Override public int hashCode() {
-        int code = mainOperator.hashCode();
+        int code = mainOperator.hashCode() + Objects.hashCode(subTransform);
         for (Expression child : children) {code = code + child.hashCode();}
         return code;
     }

@@ -13,9 +13,9 @@ public interface Expression {
 
     default int getLevel() {return -1;}
 
-    List<Text> toTextList();
+    default List<Text> toTextList() {return null;};
 
-    Expression getMatch();
+    default Expression getMatch() {return null;};
 
 
 

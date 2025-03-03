@@ -1906,7 +1906,9 @@ public class CharModMaps {
                 entry("\uf8d2", "\ue883"),      //elementary submodel
                 entry("\u227e", "\ue884"),      //elementary embedding
                 entry("\u227c", "\ue885"),      //set less than or equal
-                entry("\u00a0", "\u00a0")            //unbreakable space
+                entry("\u00a0", "\u00a0"),            //unbreakable space
+                entry("\u27e9", "\u2afb"),          // tripple slash
+                entry("\u22a4", "\u2afd")           // double slash
         );
     }
 
@@ -1984,7 +1986,9 @@ public class CharModMaps {
                 entry("\uf8d2", "\ue883"),      //elementary submodel
                 entry("\u227e", "\ue884"),      //elementary embedding
                 entry("\u227c", "\ue885"),      //set less than or equal
-                entry("\u00a0", "\u00a0")            //unbreakable space
+                entry("\u00a0", "\u00a0"),            //unbreakable space
+                entry("\u27e9", "\u2afb"),          // tripple slash
+                entry("\u22a4", "\u2afd")           // double slash
 
         );
     }
@@ -2061,7 +2065,9 @@ public class CharModMaps {
                 entry("\uf8d2", "\ue883"),      //elementary submodel
                 entry("\u227e", "\ue884"),      //elementary embedding
                 entry("\u227c", "\ue885"),      //set less than or equal
-                entry("\u00a0", "\u00a0")            //unbreakable space
+                entry("\u00a0", "\u00a0"),            //unbreakable space
+                entry("\u27e9", "\u2afb"),          // tripple slash
+                entry("\u22a4", "\u2afd")           // double slash
         );
     }
 
@@ -2138,7 +2144,9 @@ public class CharModMaps {
                 entry("\uf8d2", "\ue883"),      //elementary submodel
                 entry("\u227e", "\ue884"),      //elementary embedding
                 entry("\u227c", "\ue885"),      //set less than or equal
-                entry("\u00a0", "\u00a0")            //unbreakable space
+                entry("\u00a0", "\u00a0"),            //unbreakable space
+                entry("\u27e9", "\u2afb"),          // tripple slash
+                entry("\u22a4", "\u2afd")           // double slash
 
         );
     }
@@ -2215,7 +2223,9 @@ public class CharModMaps {
                 entry("\uf8d2", "\ue883"),      //elementary submodel
                 entry("\u227e", "\ue884"),      //elementary embedding
                 entry("\u227c", "\ue885"),      //set less than or equal
-                entry("\u00a0", "\u00a0")            //unbreakable space
+                entry("\u00a0", "\u00a0"),           //unbreakable space
+                entry("\u27e9", "\u2afb"),          // tripple slash
+                entry("\u22a4", "\u2afd")           // double slash
 
         );
     }
@@ -2292,7 +2302,9 @@ public class CharModMaps {
                 entry("\uf8d2", "\ue883"),      //elementary submodel
                 entry("\u227e", "\ue884"),      //elementary embedding
                 entry("\u227c", "\ue885"),     //set less than or equal
-                entry("\u00a0", "\u00a0")            //unbreakable space
+                entry("\u00a0", "\u00a0"),            //unbreakable space
+                entry("\u27e9", "\u2afb"),          // tripple slash
+                entry("\u22a4", "\u2afd")           // double slash
 
         );
     }
@@ -2369,7 +2381,9 @@ public class CharModMaps {
                 entry("\uf8d2", "\ue883"),      //elementary submodel
                 entry("\u227e", "\ue884"),      //elementary embedding
                 entry("\u227c", "\ue885"),      //set less than or equal
-                entry("\u00a0", "\u00a0")            //unbreakable space
+                entry("\u00a0", "\u00a0"),            //unbreakable space
+                entry("\u27e9", "\u2afb"),          // tripple slash
+                entry("\u22a4", "\u2afd")           // double slash
 
         );
     }
@@ -2445,7 +2459,9 @@ public class CharModMaps {
                 entry("\uf8d2", "\ue883"),      //elementary submodel
                 entry("\u227e", "\ue884"),      //elementary embedding
                 entry("\u227c", "\ue885"),      //set less than or equal
-                entry("\u00a0", "\u00a0")            //unbreakable space
+                entry("\u00a0", "\u00a0"),            //unbreakable space
+                entry("\u27e9", "\u2afb"),          // triple slash
+                entry("\u22a4", "\u2afd")           // double slash
 
         );
     }

@@ -46,7 +46,7 @@ public class MFunctionSymbol extends FunctionSymbol {
         }
     }
 
-    public static void clear() { ;fnSymbols.clear(); }
+    public static void clear() { fnSymbols.clear(); }
 
 
 

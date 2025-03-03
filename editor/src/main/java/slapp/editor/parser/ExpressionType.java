@@ -40,6 +40,11 @@ public enum ExpressionType {
     UNIV_BOUNDED_OP("Univ Bounded Op"),
     EXIS_BOUNDED_OP("Exis Bounded Op"),
 
+    TERM_COMMA_SUB("Term Comma Sub"),
+    TERM_SLASH_SUB("Term Slash Sub"),
+    TERM_DSLASH_SUB("Term Dslash Sub"),
+    FORMULA_DSLASH_SUB("Formula Dslash Sub"),
+
     VARIABLE_SYM("Var"),
     CONSTANT_SYM("Const"),
     SENTENCE_LETTER("Sent Let"),
