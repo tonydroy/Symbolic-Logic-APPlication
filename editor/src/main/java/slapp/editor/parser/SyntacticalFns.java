@@ -47,7 +47,8 @@ public class SyntacticalFns {
 
     }
 
-    public static List<Expression> sortSubformulas(Expression formulaExp, Expression term1Exp) {
+    //remove from subformula list ones whose quantifier binds a variable in the term
+    public static List<Expression> subsWithTermFree(Expression formulaExp, Expression term1Exp) {
         List<Expression> sortedSubformulas = subformulasExp(formulaExp);
 
         //get variables in term1
@@ -77,7 +78,7 @@ public class SyntacticalFns {
     //formula P has term term2 free for term1  (so term1 is the replaced term)
     public static boolean freeForExp(Expression formulaExp, Expression term1Exp, Expression term2Exp, String langName) {
 
-        List<Expression> sortedSubformulas = sortSubformulas(formulaExp, term1Exp);
+        List<Expression> sortedSubformulas = subsWithTermFree(formulaExp, term1Exp);
 
 
         boolean freeFor = true;
@@ -155,7 +156,7 @@ public class SyntacticalFns {
                 newFormula.setChildren(Collections.singletonList(restrictingFormula));
 
                 boolean freeForResting = freeForExp(newFormula, term1Exp, term2Exp, langName);
-                sortedSubformulas = sortSubformulas(formulaExp, term1Exp);   //reset sorted formulas
+                sortedSubformulas = subsWithTermFree(formulaExp, term1Exp);   //reset sorted formulas
                 if (!freeForResting) {
                     freeFor = false;
                     index++;
@@ -659,6 +660,7 @@ public class SyntacticalFns {
         return unAbbList;
     }
 
+    //from nodeList generate list with unabbrevationf form for each element.
     private static List<List<OriginalElement>> listForms() {
         List<List<OriginalElement>> forms = new ArrayList<>();
         for (int i = 0; i < nodeList.size(); i++) {

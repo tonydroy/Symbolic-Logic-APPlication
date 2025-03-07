@@ -14,10 +14,13 @@ public class MFormulaSym implements Expression {
     private String baseStr;
     private String subscriptStr;
 
+
     public MFormulaSym(String baseStr, String subscriptStr) {
         this.baseStr = baseStr;
         this.subscriptStr = subscriptStr;
     }
+
+
 
     public String getBaseStr() {
         return baseStr;
@@ -26,6 +29,8 @@ public class MFormulaSym implements Expression {
     public String getSubscriptStr() {
         return subscriptStr;
     }
+
+
 
     @Override
     public ExpressionType getType() {
