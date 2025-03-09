@@ -59,10 +59,17 @@ public class Language implements Serializable {
     private Map<UnabbType, Document> unabbForms;
 
     //for metalanguage
+    private boolean metalanguage = false;
 
-    private List<String> termSymbols = new ArrayList();
-    private List<String> formulaSymbols = new ArrayList();
+    private List<String> mTermSymbols = new ArrayList();
+    private List<String> mFormulaSymbols = new ArrayList();
     private List<String> arbitraryExpressionSymbols = new ArrayList();
+
+    private String angleOpenBracket = "\u2039";
+    private String angleCloseBracket = "\u203a";
+    private String commaDivider = ",";
+    private String slashDivider = "/";
+    private String dSlashDivider = "\u2afd";
 
 
     Language(String nameString) {
@@ -395,20 +402,20 @@ public class Language implements Serializable {
         this.unabbForms = unabbForms;
     }
 
-    public List<String> getTermSymbols() {
-        return termSymbols;
+    public List<String> getmTermSymbols() {
+        return mTermSymbols;
     }
 
-    public void setTermSymbols(List<String> termSymbols) {
-        this.termSymbols = termSymbols;
+    public void setmTermSymbols(List<String> mTermSymbols) {
+        this.mTermSymbols = mTermSymbols;
     }
 
-    public List<String> getFormulaSymbols() {
-        return formulaSymbols;
+    public List<String> getmFormulaSymbols() {
+        return mFormulaSymbols;
     }
 
-    public void setFormulaSymbols(List<String> formulaSymbols) {
-        this.formulaSymbols = formulaSymbols;
+    public void setmFormulaSymbols(List<String> mFormulaSymbols) {
+        this.mFormulaSymbols = mFormulaSymbols;
     }
 
     public List<String> getArbitraryExpressionSymbols() {
@@ -417,5 +424,33 @@ public class Language implements Serializable {
 
     public void setArbitraryExpressionSymbols(List<String> arbitraryExpressionSymbols) {
         this.arbitraryExpressionSymbols = arbitraryExpressionSymbols;
+    }
+
+    public String getAngleOpenBracket() {
+        return angleOpenBracket;
+    }
+
+    public String getAngleCloseBracket() {
+        return angleCloseBracket;
+    }
+
+    public String getCommaDivider() {
+        return commaDivider;
+    }
+
+    public String getSlashDivider() {
+        return slashDivider;
+    }
+
+    public String getdSlashDivider() {
+        return dSlashDivider;
+    }
+
+    public boolean isMetalanguage() {
+        return metalanguage;
+    }
+
+    public void setMetalanguage(boolean metalanguage) {
+        this.metalanguage = metalanguage;
     }
 }

@@ -19,7 +19,7 @@ public enum ExpressionType {
     NOR_SYM("Nor Sym"),
     UNIVERSAL_SYM("Univ Sym"),
     EXISTENTIAL_SYM("Exis Sym"),
-    DIVIDER_SYM("Divider Sym"),
+    COLON_DIVIDER_SYM("Colon Divider Sym"),
 
     MTERM_SYM("Mterm Sym"),
     MFORMULA_SYM("Mformula Sym"),
@@ -40,10 +40,10 @@ public enum ExpressionType {
     UNIV_BOUNDED_OP("Univ Bounded Op"),
     EXIS_BOUNDED_OP("Exis Bounded Op"),
 
-    TERM_COMMA_SUB("Term Comma Sub"),
-    TERM_SLASH_SUB("Term Slash Sub"),
-    TERM_DSLASH_SUB("Term Dslash Sub"),
-    FORMULA_DSLASH_SUB("Formula Dslash Sub"),
+    ALL_TERM_SUB("All Term Sub"),
+    SOME_TERM_SUB("Some Term Sub"),
+    ONE_TERM_SUB("One Term Sub"),
+    ONE_FORMULA_SUB("One Formula Sub"),
 
     VARIABLE_SYM("Var"),
     CONSTANT_SYM("Const"),
@@ -54,6 +54,11 @@ public enum ExpressionType {
 
 
     ANY_EXPRESSION("Any Expression"),
+    ANGLE_OPEN_BRACKET("Angle Op Open Bracket"),
+    ANGLE_CLOSE_BRACKET("Angle Close Bracket"),
+    COMMA_DIVIDER("Comma Divider"),
+    SLASH_DIVIDER("Slash Divider"),
+    DOUBLE_SLASH_DIVIDER("Double Slash Divider"),
 
 
     TERM("Term"),

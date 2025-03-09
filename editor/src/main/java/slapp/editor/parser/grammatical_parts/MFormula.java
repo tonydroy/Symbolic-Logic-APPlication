@@ -82,14 +82,13 @@ public class MFormula extends Formula{
         List<Text> texts = new ArrayList<>();
         texts.addAll(formulaSym.toTextList());
         if (!getChildren().isEmpty()) {
-            texts.add(new Text("("));
+            texts.addAll(getOpenBracket().toTextList());
             for (int i = 0; i < getChildren().size(); i++) {
                 texts.addAll(getChildren().get(i).toTextList());
                 if (i < getChildren().size() - 1) {texts.add(new Text(","));}
             }
-            texts.add(new Text(")"));
+            texts.addAll(getCloseBracket().toTextList());
         }
-        if (getSubTransform() != null) {texts.addAll(getSubTransform().toTextList());}
         return texts;
     }
 
@@ -98,14 +97,13 @@ public class MFormula extends Formula{
         StringBuilder sb = new StringBuilder();
         sb.append(formulaSym.toString());
         if (!getChildren().isEmpty()) {
-            sb.append("(");
+            sb.append(getOpenBracket().toString());
             for (int i = 0; i < getChildren().size(); i++) {
                 sb.append(getChildren().get(i).toString());
                 if (i < getChildren().size() - 1) {sb.append(",");}
             }
-            sb.append(")");
+            sb.append(getCloseBracket().toString());
         }
-        if (getSubTransform() != null) {sb.append(getSubTransform().toString());}
         return sb.toString();
     }
 

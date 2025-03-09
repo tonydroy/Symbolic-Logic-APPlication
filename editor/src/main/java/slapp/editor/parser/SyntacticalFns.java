@@ -58,7 +58,7 @@ public class SyntacticalFns {
         int i = sortedSubformulas.size() - 1;
         while (i >= 0) {
             Formula formula = (Formula) sortedSubformulas.get(i);
-            if (!formula.isAtomic()) {
+            if (!formula.isAtomic() && formula.getChildren() != null) {
                 ExpressionType type = formula.getMainOperator().getType();
                 if (type == ExpressionType.UNIVERSAL_OP || type == ExpressionType.UNIV_BOUNDED_OP || type == ExpressionType.UNIV_RESTRICTED_OP ||
                         type == ExpressionType.EXISTENTIAL_OP || type == ExpressionType.EXIS_BOUNDED_OP || type == ExpressionType.EXIS_RESTRICTED_OP

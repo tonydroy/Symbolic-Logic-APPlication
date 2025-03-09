@@ -11,13 +11,13 @@ import java.util.List;
 
 public class TermCommaSub extends SubstitutionTransform {
 
-    public TermCommaSub(Term term1, Term term2) {
-        super (term1, term2, ",", ExpressionType.TERM_COMMA_SUB);
+    public TermCommaSub(Term term1, Term term2, String dividerSymbol) {
+        super (term1, term2, ExpressionType.ALL_TERM_SUB, dividerSymbol);
     }
 
     @Override
     public TermCommaSub getMatch() {
-        return new TermCommaSub(((Term) getExp1()).getMatch(), ((Term) getExp2()).getMatch());
+        return new TermCommaSub(((Term) getExp1()).getMatch(), ((Term) getExp2()).getMatch(), getDividerSymbol());
     }
 
     @Override
@@ -32,7 +32,7 @@ public class TermCommaSub extends SubstitutionTransform {
         StringBuilder sb = new StringBuilder();
         sb.append("\u2039");
         sb.append(getExp1().toString());
-        sb.append(", ");
+        sb.append(",");
         sb.append(getExp2().toString());
         sb.append("\u203a");
         return sb.toString();

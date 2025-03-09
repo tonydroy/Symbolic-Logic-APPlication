@@ -2,7 +2,6 @@ package slapp.editor.parser.symbols;
 
 import javafx.scene.text.Text;
 import slapp.editor.parser.TextMessageException;
-
 import java.util.ArrayList;
 import java.util.List;
 

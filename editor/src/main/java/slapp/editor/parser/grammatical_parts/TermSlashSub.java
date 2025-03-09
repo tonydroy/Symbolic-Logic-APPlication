@@ -5,18 +5,17 @@ import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.ParseUtilities;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class TermSlashSub extends SubstitutionTransform {
 
-    public TermSlashSub(Term term1, Term term2) {
-        super (term1, term2, "/", ExpressionType.TERM_SLASH_SUB);
+    public TermSlashSub(Term term1, Term term2, String dividerSymbol) {
+        super (term1, term2, ExpressionType.SOME_TERM_SUB, dividerSymbol);
     }
 
     @Override
     public TermSlashSub getMatch() {
-        return new TermSlashSub(((Term) getExp1()).getMatch(), ((Term) getExp2()).getMatch());
+        return new TermSlashSub(((Term) getExp1()).getMatch(), ((Term) getExp2()).getMatch(), getDividerSymbol());
     }
 
     @Override

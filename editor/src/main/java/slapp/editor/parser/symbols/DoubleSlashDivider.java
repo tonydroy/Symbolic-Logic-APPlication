@@ -8,23 +8,22 @@ import slapp.editor.parser.ParseUtilities;
 import java.util.ArrayList;
 import java.util.List;
 
-import static slapp.editor.parser.ExpressionType.COLON_DIVIDER_SYM;
 
-
-public class DividerSym implements Expression {
-
-    private ExpressionType type = COLON_DIVIDER_SYM;
+public class DoubleSlashDivider implements Expression {
+    private ExpressionType type = ExpressionType.DOUBLE_SLASH_DIVIDER;
     private String textString;
 
-    public DividerSym(String textString) {
+
+    public DoubleSlashDivider(String textString) {
         this.textString = textString;
     }
+
 
     @Override
     public ExpressionType getType() {return type;}
 
     @Override
-    public DividerSym getMatch() {return this;}
+    public DoubleSlashDivider getMatch() {return this;}
 
     @Override
     public List<Text> toTextList() {
@@ -41,8 +40,8 @@ public class DividerSym implements Expression {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o instanceof DividerSym) {
-            DividerSym other = (DividerSym) o;
+        if (o instanceof DoubleSlashDivider) {
+            DoubleSlashDivider other = (DoubleSlashDivider) o;
             return textString.equals(other.textString);
         }
         return false;

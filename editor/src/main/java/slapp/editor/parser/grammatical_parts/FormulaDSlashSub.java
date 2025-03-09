@@ -9,13 +9,13 @@ import java.util.List;
 
 public class FormulaDSlashSub extends SubstitutionTransform {
 
-    public FormulaDSlashSub(Formula formula1, Formula formula2) {
-        super (formula1, formula2, "\u2afd", ExpressionType.FORMULA_DSLASH_SUB);
+    public FormulaDSlashSub(Formula formula1, Formula formula2, String dividerSymbol) {
+        super (formula1, formula2, ExpressionType.ONE_FORMULA_SUB, dividerSymbol);
     }
 
     @Override
     public FormulaDSlashSub getMatch() {
-        return new FormulaDSlashSub(((Formula) getExp1()).getMatch(), ((Formula) getExp2()).getMatch());
+        return new FormulaDSlashSub(((Formula) getExp1()).getMatch(), ((Formula) getExp2()).getMatch(), getDividerSymbol());
     }
 
     @Override

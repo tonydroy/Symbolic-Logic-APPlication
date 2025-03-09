@@ -24,6 +24,7 @@ public class Languages {
         fixedLanguages.add(Lq_abv());
         fixedLanguages.add(Lnt_lessthan());
         fixedLanguages.add(Lnt());
+        fixedLanguages.add(Meta());
     }
 
     static Language getLanguage(String name) {
@@ -290,6 +291,7 @@ public class Languages {
     private static Language Meta() {
         Language lang = new Language("Meta");
         lang.setNameTexts("\u2112", "","meta");
+        lang.setMetalanguage(true);
 
         lang.setOpenBracket1("("); lang.setCloseBracket1(")");
         lang.setOpenBracket2("["); lang.setCloseBracket2("]");
@@ -316,7 +318,7 @@ public class Languages {
         lang.setAllowBinaryInfixFunctions(true);
         lang.setXfunctionSymbols(Arrays.asList("\ud835\udcbb", "\u210a", "\ud835\udcbd"));
         lang.setXfunctionSymbolSubs(true);
-        lang.setTermSymbols(Arrays.asList("\ud835\udcc2", "\ud835\udcc9"));
+        lang.setmTermSymbols(Arrays.asList("\ud835\udcc2", "\ud835\udcc9"));
 
         lang.setSentenceLetters(Collections.singletonList("\ud835\udcae"));
         lang.setSentenceLetterSubs(true);
@@ -332,7 +334,7 @@ public class Languages {
                 entry("\ue8a6", "\ue8a7")   //leq
         ));
 
-        lang.setFormulaSymbols(Alphabets.getCharacterRange("\ud835\udc9c", "\ud835\udcac"));
+        lang.setmFormulaSymbols(Alphabets.getCharacterRange("\ud835\udc9c", "\ud835\udcac"));
         lang.setArbitraryExpressionSymbols(Collections.singletonList("\ud835\udcb3"));
 
         return lang;

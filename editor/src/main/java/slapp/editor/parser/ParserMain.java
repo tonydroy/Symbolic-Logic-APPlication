@@ -23,7 +23,7 @@ import static javafx.application.Application.launch;
 public class ParserMain {
 
     //for now
-    String langName = "Lnt";
+    String langName = "Meta";
 
     public ParserMain(Stage stage) {
 
@@ -79,6 +79,8 @@ public class ParserMain {
                 }
             }
 
+
+
             //to show subformulas
             List<Expression> subs = SyntacticalFns.subFormulasDoc(doc0, langName);
             texts.add(new Text("Subformulas: "));
@@ -90,6 +92,8 @@ public class ParserMain {
                 }
             }
             texts.add(new Text("\n"));
+
+            /*
 
             //to show atomic subformulas
             List<Expression> atomics = SyntacticalFns.atomicSubformulas(doc0, langName);
@@ -139,6 +143,8 @@ public class ParserMain {
                 texts.addAll(unabb.toTextList());
             }
             texts.add(new Text("\n"));
+
+             */
 
 
             //to text flow and show

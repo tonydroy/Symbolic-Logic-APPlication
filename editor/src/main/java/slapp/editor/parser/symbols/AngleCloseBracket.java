@@ -8,23 +8,22 @@ import slapp.editor.parser.ParseUtilities;
 import java.util.ArrayList;
 import java.util.List;
 
-import static slapp.editor.parser.ExpressionType.COLON_DIVIDER_SYM;
 
-
-public class DividerSym implements Expression {
-
-    private ExpressionType type = COLON_DIVIDER_SYM;
+public class AngleCloseBracket implements Expression {
+    private ExpressionType type = ExpressionType.ANGLE_CLOSE_BRACKET;
     private String textString;
 
-    public DividerSym(String textString) {
+
+    public AngleCloseBracket(String textString) {
         this.textString = textString;
     }
+
 
     @Override
     public ExpressionType getType() {return type;}
 
     @Override
-    public DividerSym getMatch() {return this;}
+    public AngleCloseBracket getMatch() {return this;}
 
     @Override
     public List<Text> toTextList() {
@@ -41,8 +40,8 @@ public class DividerSym implements Expression {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o instanceof DividerSym) {
-            DividerSym other = (DividerSym) o;
+        if (o instanceof AngleCloseBracket) {
+            AngleCloseBracket other = (AngleCloseBracket) o;
             return textString.equals(other.textString);
         }
         return false;

@@ -9,13 +9,13 @@ import java.util.List;
 
 public class TermDSlashSub extends SubstitutionTransform {
 
-    public TermDSlashSub(Term term1, Term term2) {
-        super (term1, term2, "\u2afd", ExpressionType.TERM_DSLASH_SUB);
+    public TermDSlashSub(Term term1, Term term2, String dividerSymbol) {
+        super (term1, term2, ExpressionType.ONE_TERM_SUB, dividerSymbol);
     }
 
     @Override
     public TermDSlashSub getMatch() {
-        return new TermDSlashSub(((Term) getExp1()).getMatch(), ((Term) getExp2()).getMatch());
+        return new TermDSlashSub(((Term) getExp1()).getMatch(), ((Term) getExp2()).getMatch(), getDividerSymbol());
     }
 
     @Override
