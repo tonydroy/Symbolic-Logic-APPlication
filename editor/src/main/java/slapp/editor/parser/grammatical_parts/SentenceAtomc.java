@@ -23,7 +23,6 @@ public class SentenceAtomc extends Formula implements Expression {
 
         List<Text> list = new ArrayList<Text>();
         list.addAll(mainLetter.toTextList());
-        if (getSubTransform() != null) {list.addAll(getSubTransform().toTextList());}
         return list;
     }
 
@@ -31,7 +30,6 @@ public class SentenceAtomc extends Formula implements Expression {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(mainLetter.toString());
-        if (getSubTransform() != null) {sb.append(getSubTransform().toString());}
         return sb.toString();
     }
 

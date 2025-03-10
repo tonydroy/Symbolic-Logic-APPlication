@@ -40,10 +40,10 @@ public enum ExpressionType {
     UNIV_BOUNDED_OP("Univ Bounded Op"),
     EXIS_BOUNDED_OP("Exis Bounded Op"),
 
-    ALL_TERM_SUB("All Term Sub"),
-    SOME_TERM_SUB("Some Term Sub"),
-    ONE_TERM_SUB("One Term Sub"),
-    ONE_FORMULA_SUB("One Formula Sub"),
+    ALL_TERM_SUB("Term Sub"),
+    SOME_TERM_SUB("Term Sub"),
+    ONE_TERM_SUB("Term Sub"),
+    ONE_FORMULA_SUB("Formula Sub"),
 
     VARIABLE_SYM("Var"),
     CONSTANT_SYM("Const"),

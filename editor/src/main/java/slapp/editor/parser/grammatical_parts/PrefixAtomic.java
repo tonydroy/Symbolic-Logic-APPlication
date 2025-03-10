@@ -28,7 +28,6 @@ public class PrefixAtomic extends Formula implements Expression {
         for (Expression child : getChildren()) {
             texts.addAll(child.toTextList());
         }
-        if (getSubTransform() != null && isCombines()) texts.addAll(getSubTransform().toTextList());
         return texts;
     }
 
@@ -38,7 +37,6 @@ public class PrefixAtomic extends Formula implements Expression {
         for (Expression child : getChildren()) {
             sb.append(child.toString());
         }
-        if (getSubTransform() != null) sb.append(getSubTransform().toString());
         return sb.toString();
     }
 

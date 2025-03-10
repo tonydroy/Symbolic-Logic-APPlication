@@ -35,7 +35,9 @@ public class MFormula extends Formula{
         return f;
     }
 
-    public static void clear() { mFormulas.clear(); }
+    public static void clear() {
+        mFormulas.clear();
+    }
 
     public MFormulaSym getFormulaSym() {
         return formulaSym;
@@ -85,7 +87,7 @@ public class MFormula extends Formula{
             texts.addAll(getOpenBracket().toTextList());
             for (int i = 0; i < getChildren().size(); i++) {
                 texts.addAll(getChildren().get(i).toTextList());
-                if (i < getChildren().size() - 1) {texts.add(new Text(","));}
+                if (i < getChildren().size() - 1) {texts.add(new Text(", "));}
             }
             texts.addAll(getCloseBracket().toTextList());
         }
@@ -100,7 +102,7 @@ public class MFormula extends Formula{
             sb.append(getOpenBracket().toString());
             for (int i = 0; i < getChildren().size(); i++) {
                 sb.append(getChildren().get(i).toString());
-                if (i < getChildren().size() - 1) {sb.append(",");}
+                if (i < getChildren().size() - 1) {sb.append(", ");}
             }
             sb.append(getCloseBracket().toString());
         }

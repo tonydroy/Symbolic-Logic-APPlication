@@ -80,7 +80,7 @@ public class ParseUtilities {
                     Formula f = new Formula();
                     f.getChildren().add((Formula) expressions.get(i));
                     f.setSubTransform((SubstitutionTransform) expressions.get(i+1));
-                    f.setLevel(expressions.get(i+1).getLevel() + 1);
+                    f.setLevel(expressions.get(i).getLevel() + 1);
                     expressions.set(i, f);
                     expressions.remove(i+1);
                     changes = true;
@@ -175,7 +175,7 @@ public class ParseUtilities {
                 RelationSymbol relationSymbol = (RelationSymbol) expressions.get(i);
 
                 int j = i + 1;
-                if (areImmediateFollowingAtomicTerms(j, relationSymbol.getPlaces(), expressions)) {
+                if (relationSymbol.getPlaces() > 0 && areImmediateFollowingAtomicTerms(j, relationSymbol.getPlaces(), expressions)) {
 
                     List<Expression> children = new ArrayList<>();
                     for (int k = 0; k < relationSymbol.getPlaces(); k++) {
@@ -324,6 +324,7 @@ public class ParseUtilities {
             if (expressions.get(i).getType() == ExpressionType.MFORMULA_SYM) {
                 MFormula formula = MFormula.getInstance((MFormulaSym) expressions.get(i));
                 formula.setLevel(maxTermLevel + 1);
+                formula.setChildren(new ArrayList<>());
                 expressions.set(i, formula);
 
                 if (i + 1 < expressions.size() && expressions.get(i + 1) instanceof OpenBracket) {
@@ -534,10 +535,10 @@ public class ParseUtilities {
                 if (expressions.get(i).getType() == ExpressionType.ANGLE_OPEN_BRACKET) {
                     int mid = -1;
                     int end = -1;
-                    for (int j = i + 1; i + j < expressions.size(); j++) {
-                        if (expressions.get(i+j).getType() == ExpressionType.DOUBLE_SLASH_DIVIDER) mid = i + j;
-                        if (expressions.get(i+j).getType() == ExpressionType.ANGLE_CLOSE_BRACKET) {
-                            end = i + j;
+                    for (int j = i + 1; j < expressions.size(); j++) {
+                        if (expressions.get(j).getType() == ExpressionType.DOUBLE_SLASH_DIVIDER) mid = j;
+                        if (expressions.get(j).getType() == ExpressionType.ANGLE_CLOSE_BRACKET) {
+                            end = j;
                             break;
                         }
                     }
@@ -635,12 +636,12 @@ public class ParseUtilities {
                                     ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]"))
                                 subString = getSubString(j, expressions);
                         }
-                        if (!supString.isEmpty()) places = Integer.parseInt(supString);
-                        RelationSymbol relationSymbol;
-                        if (!language.isMetalanguage()) relationSymbol = new RelationSymbol(elementStr, subString, supString, places);
-                        else relationSymbol = MRelationSymbol.getInstance(elementStr, subString, supString, places);
-                        expressions.set(i, relationSymbol);
                     }
+                    if (!supString.isEmpty()) places = Integer.parseInt(supString);
+                    RelationSymbol relationSymbol;
+                    if (!language.isMetalanguage()) relationSymbol = new RelationSymbol(elementStr, subString, supString, places);
+                    else relationSymbol = MRelationSymbol.getInstance(elementStr, subString, supString, places);
+                    expressions.set(i, relationSymbol);
                 }
             }
         }

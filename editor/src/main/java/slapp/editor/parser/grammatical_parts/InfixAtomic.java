@@ -69,7 +69,6 @@ public class InfixAtomic extends Formula implements Expression {
         texts.add(new Text(" "));
         texts.addAll(getChildren().get(1).toTextList());
         texts.addAll(closeBracket.toTextList());
-        if (getSubTransform() != null && isCombines()) {texts.addAll(getSubTransform().toTextList());}
         return texts;
     }
 
@@ -83,7 +82,6 @@ public class InfixAtomic extends Formula implements Expression {
         sb.append(" ");
         sb.append(getChildren().get(1).toString());
         sb.append(closeBracket.toString());
-        if (getSubTransform() != null && isCombines()) {sb.append(getSubTransform().toString());}
         return sb.toString();
     }
 

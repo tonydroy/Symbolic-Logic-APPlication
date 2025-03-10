@@ -318,7 +318,7 @@ public class Languages {
         lang.setAllowBinaryInfixFunctions(true);
         lang.setXfunctionSymbols(Arrays.asList("\ud835\udcbb", "\u210a", "\ud835\udcbd"));
         lang.setXfunctionSymbolSubs(true);
-        lang.setmTermSymbols(Arrays.asList("\ud835\udcc2", "\ud835\udcc9"));
+        lang.setmTermSymbols(Alphabets.getCharacterRange("\ud835\udcc2", "\ud835\udcc9"));
 
         lang.setSentenceLetters(Collections.singletonList("\ud835\udcae"));
         lang.setSentenceLetterSubs(true);

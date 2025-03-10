@@ -40,6 +40,21 @@ public class MAnyExpression extends AnyExpression {
     }
 
     @Override
+    public List<Text> toTextList() {
+
+        List<Text> list = new ArrayList<Text>();
+        list.addAll(expressionSym.toTextList());
+        return list;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(expressionSym.toString());
+        return sb.toString();
+    }
+
+    @Override
     public AnyExpression getMatch() { return matchAnyExp; }
 
     public void setMatch(AnyExpression match) throws TextMessageException {

@@ -756,6 +756,7 @@ public class SyntacticalFns {
     }
 
     private static void listNodes(Expression exp) {
+
         nodeList.add(exp);
         if (exp.getChildren() != null && exp.getLevel() > 0) {
             for (int i = 0; i < exp.getChildren().size(); i++) {
