@@ -334,6 +334,7 @@ public class Languages {
                 entry("\ue8a6", "\ue8a7")   //leq
         ));
 
+        lang.setAllowBoundedQuantifiers(true);
         lang.setmFormulaSymbols(Alphabets.getCharacterRange("\ud835\udc9c", "\ud835\udcac"));
         lang.setArbitraryExpressionSymbols(Collections.singletonList("\ud835\udcb3"));
 

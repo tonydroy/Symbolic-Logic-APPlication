@@ -3,7 +3,9 @@ package slapp.editor.parser.grammatical_parts;
 import javafx.scene.text.Text;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
+import slapp.editor.parser.symbols.CloseBracket;
 import slapp.editor.parser.symbols.FunctionSymbol;
+import slapp.editor.parser.symbols.OpenBracket;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +19,9 @@ public class Term implements Expression {
     private int level = 0;
     private boolean combines = true;
     private TermType termType = TermType.COMPLEX;
-    private SubstitutionTransform subTransform = null;
+    private OpenBracket openBracket = new OpenBracket("");
+    private CloseBracket closeBracket = new CloseBracket("");
+
 
     @Override
     public int getLevel() {
@@ -45,10 +49,6 @@ public class Term implements Expression {
         return mainFnSymbol;
     }
 
-    public SubstitutionTransform getSubTransform() {return subTransform;}
-
-    public void setSubTransform(SubstitutionTransform subTransform) {this.subTransform = subTransform;}
-
     public void setMainFnSymbol(FunctionSymbol mainFnSymbol) {
         this.mainFnSymbol = mainFnSymbol;
     }
@@ -65,6 +65,22 @@ public class Term implements Expression {
         this.combines = combines;
     }
 
+    public OpenBracket getOpenBracket() {
+        return openBracket;
+    }
+
+    public void setOpenBracket(OpenBracket openBracket) {
+        this.openBracket = openBracket;
+    }
+
+    public CloseBracket getCloseBracket() {
+        return closeBracket;
+    }
+
+    public void setCloseBracket(CloseBracket closeBracket) {
+        this.closeBracket = closeBracket;
+    }
+
     @Override
     public ExpressionType getType() { return type; }
 
@@ -72,7 +88,6 @@ public class Term implements Expression {
     public Term getMatch() {
         Term matchTerm = new Term();
         matchTerm.setMainFnSymbol(mainFnSymbol.getMatch());
-        if (subTransform != null) setSubTransform(subTransform.getMatch());
         matchTerm.setLevel(level);
         matchTerm.setCombines(combines);
         matchTerm.setTermType(termType);
@@ -92,7 +107,6 @@ public class Term implements Expression {
         for (Expression expression : children) {
            texts.addAll(expression.toTextList());
         }
-        if (subTransform != null && isCombines()) {texts.addAll(subTransform.toTextList());}
         return texts;
     }
 
@@ -103,7 +117,6 @@ public class Term implements Expression {
 
             sb.append(childExp.toString());
         }
-        if (subTransform != null && isCombines()) { sb.append(subTransform.toString());}
         return sb.toString();
     }
 
@@ -111,18 +124,16 @@ public class Term implements Expression {
     public boolean equals(Object o) {
         if (o == this) return true;
         if (o instanceof Term) {
+            System.out.println("this: " + this + " term: " + o);
+
             Term other = (Term) o;
             boolean equals = true;
             if (!mainFnSymbol.equals(other.mainFnSymbol)) { equals = false;}
-            if (getSubTransform() == null) {
-                if (other.getSubTransform() != null) equals = false;
-            }
-            else if (!getSubTransform().equals(other.getSubTransform())) {
-                equals = false;
-            }
             if (children.size() != other.children.size()) { equals = false; }
-            else for (int i = 0; i < children.size(); i++) {
-                if (!children.get(i).equals(other.children.get(i))) { equals = false; }
+            else if (children.size() > 0) {
+                for (int i = 0; i < children.size(); i++) {
+                    if (!children.get(i).equals(other.children.get(i))) { equals = false; }
+                }
             }
             return equals;
         }
@@ -130,7 +141,7 @@ public class Term implements Expression {
     }
 
     @Override public int hashCode() {
-        int code = mainFnSymbol.hashCode() + Objects.hashCode(subTransform);
+        int code = mainFnSymbol.hashCode() ;
         for (Expression child : children) {code = code + child.hashCode();}
         return code;
     }

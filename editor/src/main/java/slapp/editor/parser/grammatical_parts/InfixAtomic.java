@@ -12,8 +12,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class InfixAtomic extends Formula implements Expression {
-    private OpenBracket openBracket = new OpenBracket("");
-    private CloseBracket closeBracket = new CloseBracket("");
+
     private RelationSymbol mainRelation;
     private RelationSymbol complementRelation = null;
 
@@ -26,25 +25,22 @@ public class InfixAtomic extends Formula implements Expression {
     }
 
     public RelationSymbol getMainRelation() { return mainRelation;   }
-    public void setCloseBracket(CloseBracket closeBracket) {
-        this.closeBracket = closeBracket;
-    }
 
     public RelationSymbol getComplementRelation() {
         return complementRelation;
     }
 
-    public CloseBracket getCloseBracket() {
-        return closeBracket;
+    @Override
+    public InfixAtomic getMatch() {
+        InfixAtomic newAtomic = new InfixAtomic(mainRelation.getMatch(), complementRelation.getMatch(), isNegatingInfix());
+        List<Expression> newChildren = new ArrayList<>();
+        for (Expression child : getChildren()) {
+            newChildren.add(child.getMatch());
+        }
+        newAtomic.setChildren(newChildren);
+        return newAtomic;
     }
 
-    public void setOpenBracket(OpenBracket openBracket) {
-        this.openBracket = openBracket;
-    }
-
-    public OpenBracket getOpenBracket() {
-        return openBracket;
-    }
 
     @Override
     public List<Text> toTextList() {

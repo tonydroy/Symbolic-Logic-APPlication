@@ -28,6 +28,14 @@ public class MFunctionSymbol extends FunctionSymbol {
         return fnSymbol;
     }
 
+    public static List<MFunctionSymbol> getFnSymbols() {
+        return fnSymbols;
+    }
+
+    public FunctionSymbol getMatchFnSymbol() {
+        return matchFnSymbol;
+    }
+
     @Override
     public FunctionSymbol getMatch() {return matchFnSymbol;}
 
@@ -38,9 +46,9 @@ public class MFunctionSymbol extends FunctionSymbol {
             messageTxts.add(new Text("Variable "));
             messageTxts.addAll(this.toTextList());
             messageTxts.add(new Text(" cannot match to both "));
-            messageTxts.addAll(match.toTextList());
-            messageTxts.add(new Text(" and "));
             messageTxts.addAll(matchFnSymbol.toTextList());
+            messageTxts.add(new Text(" and "));
+            messageTxts.addAll(match.toTextList());
             messageTxts.add(new Text("."));
             throw new TextMessageException(messageTxts);
         }

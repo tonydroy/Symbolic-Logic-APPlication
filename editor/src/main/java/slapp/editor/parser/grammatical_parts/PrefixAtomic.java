@@ -22,6 +22,18 @@ public class PrefixAtomic extends Formula implements Expression {
     public RelationSymbol getMainRelation() {return mainRelation;}
 
     @Override
+    public PrefixAtomic getMatch() {
+        PrefixAtomic newAtomic = new PrefixAtomic(mainRelation.getMatch());
+        List<Expression> newChildren = new ArrayList<>();
+        for (Expression child : getChildren()) {
+            newChildren.add(child.getMatch());
+        }
+        newAtomic.setChildren(newChildren);
+        newAtomic.setLevel(getLevel());
+        return newAtomic;
+    }
+
+    @Override
     public List<Text> toTextList() {
         List<Text> texts = new ArrayList();
         texts.addAll(mainRelation.toTextList());

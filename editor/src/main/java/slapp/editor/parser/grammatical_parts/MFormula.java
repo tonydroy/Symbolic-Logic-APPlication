@@ -43,7 +43,9 @@ public class MFormula extends Formula{
         return formulaSym;
     }
 
-    
+    public static List<MFormula> getmFormulas() {
+        return mFormulas;
+    }
 
     @Override
     public Formula getMatch() { return matchFormula; }
@@ -69,11 +71,14 @@ public class MFormula extends Formula{
         else if (!matchFormula.equals(match)) {
             List<Text> messageTxts = new ArrayList<>();
             messageTxts.add(new Text("Variable "));
-            messageTxts.addAll(this.getChildren().get(0).toTextList());
+            messageTxts.addAll(this.toTextList());
+
             messageTxts.add(new Text(" cannot match to both "));
-            messageTxts.addAll(match.toTextList());
-            messageTxts.add(new Text(" and "));
             messageTxts.addAll(matchFormula.toTextList());
+
+            messageTxts.add(new Text(" and "));
+            messageTxts.addAll(match.toTextList());
+
             messageTxts.add(new Text("."));
             throw new TextMessageException(messageTxts);
         }

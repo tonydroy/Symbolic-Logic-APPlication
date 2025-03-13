@@ -28,6 +28,15 @@ public class MSentenceLetter extends SentenceLetter {
         return let;
     }
 
+
+    public static List<MSentenceLetter> getSentenceLetters() {
+        return sentenceLetters;
+    }
+
+    public SentenceLetter getMatchLetter() {
+        return matchLetter;
+    }
+
     @Override
     public SentenceLetter getMatch() { return matchLetter; }
 
@@ -38,9 +47,9 @@ public class MSentenceLetter extends SentenceLetter {
             messageTxts.add(new Text("Variable "));
             messageTxts.addAll(this.toTextList());
             messageTxts.add(new Text(" cannot match to both "));
-            messageTxts.addAll(match.toTextList());
-            messageTxts.add(new Text(" and "));
             messageTxts.addAll(matchLetter.toTextList());
+            messageTxts.add(new Text(" and "));
+            messageTxts.addAll(match.toTextList());
             messageTxts.add(new Text("."));
             throw new TextMessageException(messageTxts);
         }

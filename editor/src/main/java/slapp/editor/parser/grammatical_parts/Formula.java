@@ -60,7 +60,7 @@ public class Formula implements Expression {
         newFormula.setCombines(combines);
         newFormula.setNegatingInfix(negatingInfix);
         newFormula.setLevel(level);
-        newFormula.setMainOperator(mainOperator.getMatch());
+        if (mainOperator != null) newFormula.setMainOperator(mainOperator.getMatch());
         if (subTransform != null) { setSubTransform(subTransform.getMatch()); }
         newFormula.setOpenBracket(openBracket.getMatch());
         newFormula.setCloseBracket(closeBracket.getMatch());

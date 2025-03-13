@@ -2,6 +2,7 @@ package slapp.editor.parser;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
+import javafx.css.Match;
 import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 import javafx.scene.layout.HBox;
@@ -14,6 +15,10 @@ import javafx.scene.control.Button;
 import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
+import slapp.editor.parser.grammatical_parts.Formula;
+import slapp.editor.parser.grammatical_parts.MFormula;
+import slapp.editor.parser.grammatical_parts.MTerm;
+import slapp.editor.parser.symbols.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +28,7 @@ import static javafx.application.Application.launch;
 public class ParserMain {
 
     //for now
-    String langName = "Meta";
+    String langName = "Lq_abv";
 
     public ParserMain(Stage stage) {
 
@@ -80,6 +85,18 @@ public class ParserMain {
             }
 
 
+            //to show all elements
+            List<Expression> all = SyntacticalFns.allElementsDoc(doc0, langName);
+            texts.add(new Text("All Elements: "));
+            if (all != null && all.size() > 0) {
+                texts.addAll(all.get(0).toTextList());
+                for (int i = 1; i < all.size(); i++) {
+                    texts.add(new Text(", "));
+                    texts.addAll(all.get(i).toTextList());
+                }
+            }
+            texts.add(new Text("\n"));
+
 
             //to show subformulas
             List<Expression> subs = SyntacticalFns.subFormulasDoc(doc0, langName);
@@ -93,8 +110,8 @@ public class ParserMain {
             }
             texts.add(new Text("\n"));
 
-            /*
 
+/*
             //to show atomic subformulas
             List<Expression> atomics = SyntacticalFns.atomicSubformulas(doc0, langName);
             texts.add(new Text("Atomic Subs: "));
@@ -107,6 +124,10 @@ public class ParserMain {
             }
             texts.add(new Text("\n"));
 
+
+
+
+
             //to show atomic level
             int level = SyntacticalFns.atomicLevel(doc0, langName);
             texts.add(new Text("Atomic Level: "));
@@ -114,6 +135,9 @@ public class ParserMain {
                 texts.add(new Text(String.valueOf(level)));
             }
             texts.add(new Text("\n"));
+            */
+
+
 
             //to show immediate subformulas
             List<Expression> immediateSubs = SyntacticalFns.immediateSubformulas(doc0, langName);
@@ -135,6 +159,7 @@ public class ParserMain {
             }
             texts.add(new Text("\n"));
 
+            /*
 
             //to show unabbreviation
             Expression unabb = SyntacticalFns.unabbreviate(doc0, langName);
@@ -209,8 +234,81 @@ public class ParserMain {
 
         });
 
+        //test 5
+        Button button5 = new Button("Form match\n P / Q");  //formula (term) has term t free
+        button5.setPadding(new Insets(20));
+        button5.setOnAction(e -> {
+            rta.getActionFactory().saveNow().execute(new ActionEvent());
+            Document newDoc = rta.getDocument();
+            rta2.getActionFactory().saveNow().execute(new ActionEvent());
+            Document newDoc2 = rta2.getDocument();
 
-        HBox buttonBox = new HBox(20, button1, button2, button3, button4);
+
+            Expression metaExp = null;
+            Expression objectExp = null;
+            List<Expression> metaExpressions = ParseUtilities.parseDoc(newDoc, "Meta");
+            //to show parse contents
+            List<Text> texts = new ArrayList<>();
+            if (metaExpressions.size() == 0) {
+                texts.add(new Text("Empty"));
+                texts.add(new Text("\n"));
+            }
+            else {
+                for (Expression expr : metaExpressions) {
+                    texts.add(new Text(expr.getType() + ": "));
+                    texts.addAll(expr.toTextList());
+                    texts.add(new Text("\n"));
+                }
+            }
+            EditorAlerts.showSimpleTxtListAlert("Meta Parse Content", texts);
+
+            if (metaExpressions != null && metaExpressions.size() == 1) {
+                metaExp = metaExpressions.get(0);
+            } else {
+                System.out.println("Error parsing meta expression");
+                return;
+            }
+
+            List<Expression> objectExps = ParseUtilities.parseDoc(newDoc2, langName);
+            List<Text> oTexts = new ArrayList<>();
+            if (objectExps.size() == 0) {
+                oTexts.add(new Text("Empty"));
+                oTexts.add(new Text("\n"));
+            }
+            else {
+                for (Expression expr : objectExps) {
+                    oTexts.add(new Text(expr.getType() + ": "));
+                    oTexts.addAll(expr.toTextList());
+                    oTexts.add(new Text("\n"));
+                }
+            }
+            EditorAlerts.showSimpleTxtListAlert("Parse Content", oTexts);
+
+            if (objectExps != null && objectExps.size() == 1) {
+                objectExp = objectExps.get(0);
+            } else {
+                System.out.println("Error parsing object expression");
+
+                return;
+            }
+
+            try {
+                boolean match =  MatchUtilities.formMatch(metaExp, objectExp);
+
+                System.out.println("Form match: " + match);
+
+
+                if (match) System.out.println("Matched formula: " +  metaExp.getMatch());
+
+            } catch (TextMessageException excep) {
+                EditorAlerts.showSimpleTxtListAlert("Map Issue", excep.getMessageList());
+            }
+        });
+
+
+
+
+        HBox buttonBox = new HBox(20, button1, button2, button3, button4, button5);
             VBox box = new VBox(10, buttonBox, bdrta.getBoxedRTA(), bdrta2.getBoxedRTA(), bdrta3.getBoxedRTA());
             Scene scene = new Scene(box);
             stage.setScene(scene);

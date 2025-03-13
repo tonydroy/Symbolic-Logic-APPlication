@@ -28,6 +28,10 @@ public class MRelationSymbol extends RelationSymbol {
         return relSym;
     }
 
+    public static List<MRelationSymbol> getRelSymbols() {
+        return relSymbols;
+    }
+
     @Override
     public RelationSymbol getMatch() {return matchRelSymbol;}
 
@@ -38,9 +42,9 @@ public class MRelationSymbol extends RelationSymbol {
             messageTxts.add(new Text("Variable "));
             messageTxts.addAll(this.toTextList());
             messageTxts.add(new Text(" cannot match to both "));
-            messageTxts.addAll(match.toTextList());
-            messageTxts.add(new Text(" and "));
             messageTxts.addAll(matchRelSymbol.toTextList());
+            messageTxts.add(new Text(" and "));
+            messageTxts.addAll(match.toTextList());
             messageTxts.add(new Text("."));
             throw new TextMessageException(messageTxts);
         }

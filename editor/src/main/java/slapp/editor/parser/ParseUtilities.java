@@ -161,7 +161,7 @@ public class ParseUtilities {
 
             //sentence letter
             if (expressions.get(i).getType() == ExpressionType.SENTENCE_LETTER) {
-                SentenceAtomc sentAtomic = new SentenceAtomc((SentenceLetter) expressions.get(i));
+                SentenceAtomic sentAtomic = new SentenceAtomic((SentenceLetter) expressions.get(i));
                 sentAtomic.setLevel(maxTermLevel + 1);
                 sentAtomic.setAtomic(true);
                 sentAtomic.setCombines(true);
@@ -636,12 +636,13 @@ public class ParseUtilities {
                                     ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]"))
                                 subString = getSubString(j, expressions);
                         }
+                        if (!supString.isEmpty()) places = Integer.parseInt(supString);
+                        RelationSymbol relationSymbol;
+                        if (!language.isMetalanguage())
+                            relationSymbol = new RelationSymbol(elementStr, subString, supString, places);
+                        else relationSymbol = MRelationSymbol.getInstance(elementStr, subString, supString, places);
+                        expressions.set(i, relationSymbol);
                     }
-                    if (!supString.isEmpty()) places = Integer.parseInt(supString);
-                    RelationSymbol relationSymbol;
-                    if (!language.isMetalanguage()) relationSymbol = new RelationSymbol(elementStr, subString, supString, places);
-                    else relationSymbol = MRelationSymbol.getInstance(elementStr, subString, supString, places);
-                    expressions.set(i, relationSymbol);
                 }
             }
         }
@@ -701,7 +702,7 @@ public class ParseUtilities {
                 continue;
             }
 
-            //constantants
+            //constants
             if (expressions.get(i).getType() == ExpressionType.CONSTANT_SYM) {
                 Term term = new Term();
                 term.setLevel(0);

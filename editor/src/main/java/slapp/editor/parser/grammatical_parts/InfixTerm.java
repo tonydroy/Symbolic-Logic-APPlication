@@ -12,17 +12,15 @@ import java.util.Objects;
 
 public class InfixTerm extends Term implements Expression {
 
-    private OpenBracket openBracket;
-    private CloseBracket closeBracket;
+
 
 
     @Override
     public InfixTerm getMatch() {
         InfixTerm newTerm = new InfixTerm();
-        newTerm.setOpenBracket(openBracket.getMatch());
-        newTerm.setCloseBracket(closeBracket.getMatch());
+        newTerm.setOpenBracket(getOpenBracket().getMatch());
+        newTerm.setCloseBracket(getCloseBracket().getMatch());
         newTerm.setMainFnSymbol(getMainFnSymbol().getMatch());
-        if (getSubTransform() != null) {setSubTransform(getSubTransform().getMatch());}
         newTerm.setLevel(getLevel());
         newTerm.setCombines(isCombines());
         List<Expression> newChildren = new ArrayList<>();
@@ -38,44 +36,28 @@ public class InfixTerm extends Term implements Expression {
     @Override
     public List<Text> toTextList() {
         List<Text> texts = new ArrayList();
-        texts.addAll(openBracket.toTextList());
+        texts.addAll(getOpenBracket().toTextList());
         texts.addAll(getChildren().get(0).toTextList());
         texts.add(new Text(" "));
         texts.addAll(getMainFnSymbol().toTextList());
         texts.add(new Text(" "));
         texts.addAll(getChildren().get(1).toTextList());
-        texts.addAll(closeBracket.toTextList());
-        if (getSubTransform() != null) texts.addAll(getSubTransform().toTextList());
+        texts.addAll(getCloseBracket().toTextList());
         return texts;
     }
 
-    public OpenBracket getOpenBracket() {
-        return openBracket;
-    }
 
-    public void setOpenBracket(OpenBracket openBracket) {
-        this.openBracket = openBracket;
-    }
-
-    public CloseBracket getCloseBracket() {
-        return closeBracket;
-    }
-
-    public void setCloseBracket(CloseBracket closeBracket) {
-        this.closeBracket = closeBracket;
-    }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(openBracket.toString());
+        sb.append(getOpenBracket().toString());
         sb.append(getChildren().get(0).toString());
         sb.append(" ");
         sb.append(getMainFnSymbol().toString());
         sb.append(" ");
         sb.append(getChildren().get(1).toString());
-        sb.append(closeBracket.toString());
-        if (getSubTransform() != null) sb.append(getSubTransform().toString());
+        sb.append(getCloseBracket().toString());
 
         return sb.toString();
     }
@@ -87,12 +69,6 @@ public class InfixTerm extends Term implements Expression {
             InfixTerm other = (InfixTerm) o;
             boolean equals = true;
             if (!getMainFnSymbol().equals(other.getMainFnSymbol())) { equals = false;}
-            if (getSubTransform() == null) {
-                if (other.getSubTransform() != null) equals = false;
-            }
-            else if (!getSubTransform().equals(other.getSubTransform())) {
-                equals = false;
-            }
             if (getChildren().size() != other.getChildren().size()) { equals = false; }
             for (int i = 0; i < getChildren().size(); i++) {
                 if (!getChildren().get(i).equals(other.getChildren().get(i))) { equals = false; }
@@ -103,7 +79,7 @@ public class InfixTerm extends Term implements Expression {
     }
 
     @Override public int hashCode() {
-        int code = getMainFnSymbol().hashCode() + Objects.hashCode(getSubTransform());
+        int code = getMainFnSymbol().hashCode();
         for (Expression child : getChildren()) {code = code + child.hashCode();}
         return code;
     }

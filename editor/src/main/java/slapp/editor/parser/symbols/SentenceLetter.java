@@ -5,6 +5,7 @@ import javafx.scene.text.TextFlow;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
 import slapp.editor.parser.ParseUtilities;
+import slapp.editor.parser.grammatical_parts.SentenceAtomic;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,7 +38,7 @@ public class SentenceLetter implements Expression {
     public ExpressionType getType() { return type; }
 
     @Override
-    public Expression getMatch() {return this;}
+    public SentenceLetter getMatch() {return this;}
 
     @Override
     public List<Text> toTextList() {

@@ -42,9 +42,9 @@ public class MVariable extends Variable {
             messageTxts.add(new Text("Variable "));
             messageTxts.addAll(this.toTextList());
             messageTxts.add(new Text(" cannot match to both "));
-            messageTxts.addAll(match.toTextList());
-            messageTxts.add(new Text(" and "));
             messageTxts.addAll(matchVar.toTextList());
+            messageTxts.add(new Text(" and "));
+            messageTxts.addAll(match.toTextList());
             messageTxts.add(new Text("."));
             throw new TextMessageException(messageTxts);
         }
@@ -52,4 +52,7 @@ public class MVariable extends Variable {
 
     public static void clear() { variables.clear(); }
 
+    public static List<MVariable> getVariables() {
+        return variables;
+    }
 }

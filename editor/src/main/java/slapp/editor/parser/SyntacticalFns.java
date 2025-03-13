@@ -331,7 +331,7 @@ public class SyntacticalFns {
             else if (exp.getType() == ExpressionType.FORMULA) {
 
                 Formula formula = (Formula) exp;
-                if (formula instanceof SentenceAtomc) {
+                if (formula instanceof SentenceAtomic) {
                     parallelList.add(exp);
                 }
                 else if (formula.isAtomic()) {
@@ -531,6 +531,31 @@ public class SyntacticalFns {
         return subs;
     }
 
+    public static List<Expression> allElementsDoc(Document doc, String langName) {
+        lang = Languages.getLanguage(langName);
+
+        //get sorted node list
+        List<Expression> parsedList = ParseUtilities.parseDoc(doc, langName);
+        if (parsedList.size() == 0) {
+            return null;
+        }
+        Expression expression = parsedList.get(0);
+        if (parsedList.size() > 1 || (expression.getType() != ExpressionType.TERM && expression.getType() != ExpressionType.FORMULA)) {
+            return null;
+        }
+        return allElementsExp(expression);
+    }
+
+    public static List<Expression> allElementsExp(Expression expression) {
+        //sort nodes of parsed expression by level
+        nodeList = new ArrayList<Expression>();
+        listNodes(expression);
+        Collections.sort(nodeList, new SortByLevel());
+
+        return nodeList;
+
+    }
+
 
 
 
@@ -683,7 +708,7 @@ public class SyntacticalFns {
             }
             else if (expression.getType() == ExpressionType.FORMULA) {
                 Formula formula = (Formula) expression;
-                if (formula instanceof SentenceAtomc) {
+                if (formula instanceof SentenceAtomic) {
                     forms.add(ParseUtilities.getElements(lang.getUnabbForms().get(UnabbType.SENTENCE_LET)));
                     continue;
                 }

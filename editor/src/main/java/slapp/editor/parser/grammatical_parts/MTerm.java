@@ -43,6 +43,14 @@ public class MTerm extends Term {
         return mTermSym;
     }
 
+    public static List<MTerm> getmTerms() {
+        return mTerms;
+    }
+
+    public Term getMatchTerm() {
+        return matchTerm;
+    }
+
     @Override
     public Term getMatch() { return matchTerm;  }
 
@@ -53,9 +61,9 @@ public class MTerm extends Term {
             messageTxts.add(new Text("Variable "));
             messageTxts.addAll(mTermSym.toTextList());
             messageTxts.add(new Text(" cannot match to both "));
-            messageTxts.addAll(match.toTextList());
-            messageTxts.add(new Text(" and "));
             messageTxts.addAll(matchTerm.toTextList());
+            messageTxts.add(new Text(" and "));
+            messageTxts.addAll(match.toTextList());
             messageTxts.add(new Text("."));
             throw new TextMessageException(messageTxts);
         }

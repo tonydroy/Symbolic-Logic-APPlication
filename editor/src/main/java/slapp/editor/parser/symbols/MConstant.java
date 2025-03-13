@@ -28,6 +28,14 @@ public class MConstant extends Constant {
         return constSym;
     }
 
+    public static List<MConstant> getConstantSyms() {
+        return constantSyms;
+    }
+
+    public Constant getMatchConstant() {
+        return matchConstant;
+    }
+
     @Override
     public Constant getMatch() {return matchConstant;}
 
@@ -38,9 +46,9 @@ public class MConstant extends Constant {
             messageTxts.add(new Text("Variable "));
             messageTxts.addAll(this.toTextList());
             messageTxts.add(new Text(" cannot match to both "));
-            messageTxts.addAll(match.toTextList());
-            messageTxts.add(new Text(" and "));
             messageTxts.addAll(matchConstant.toTextList());
+            messageTxts.add(new Text(" and "));
+            messageTxts.addAll(match.toTextList());
             messageTxts.add(new Text("."));
             throw new TextMessageException(messageTxts);
         }
