@@ -9,7 +9,7 @@ import java.util.List;
 public class MSentenceLetter extends SentenceLetter {
 
     private static List<MSentenceLetter> sentenceLetters = new ArrayList<MSentenceLetter>();
-    private SentenceLetter matchLetter;
+    private SentenceLetter matchLetter = null;
 
     private MSentenceLetter(String baseSymbol, String subscriptSymbol) {
         super(baseSymbol, subscriptSymbol);

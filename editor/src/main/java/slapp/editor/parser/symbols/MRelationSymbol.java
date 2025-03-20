@@ -9,7 +9,7 @@ import java.util.List;
 public class MRelationSymbol extends RelationSymbol {
 
     private static List<MRelationSymbol> relSymbols = new ArrayList<MRelationSymbol>();
-    private RelationSymbol matchRelSymbol;
+    private RelationSymbol matchRelSymbol = null;
 
     private MRelationSymbol(String baseStr, String subscriptStr, String superscriptStr, int places) {
         super(baseStr, subscriptStr, superscriptStr, places);

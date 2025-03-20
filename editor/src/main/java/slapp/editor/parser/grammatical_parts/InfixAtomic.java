@@ -38,6 +38,8 @@ public class InfixAtomic extends Formula implements Expression {
             newChildren.add(child.getMatch());
         }
         newAtomic.setChildren(newChildren);
+        newAtomic.setOpenBracket(getOpenBracket().getMatch());
+        newAtomic.setCloseBracket(getCloseBracket().getMatch());
         return newAtomic;
     }
 
@@ -105,6 +107,8 @@ public class InfixAtomic extends Formula implements Expression {
 
             boolean equals = true;
             if (!mainRelation.equals(other.mainRelation)) { equals = false;}
+ //           if (!getOpenBracket().equals(other.getOpenBracket())) { equals = false;}
+ //           if (!getCloseBracket().equals(other.getCloseBracket())) { equals = false;}
             if (getSubTransform() == null) {
                 if (other.getSubTransform() != null) equals = false;
             }

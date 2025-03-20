@@ -12,7 +12,7 @@ import java.util.List;
 public class MTerm extends Term {
     private static List<MTerm> mTerms = new ArrayList<MTerm>();
     private MTermSym mTermSym;
-    private Term matchTerm;
+    private Term matchTerm = null;
 
 
     private MTerm(MTermSym termSym) {

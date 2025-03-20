@@ -297,9 +297,6 @@ public class ParserMain {
 
                 System.out.println("Form match: " + match);
 
-
-                if (match) System.out.println("Matched formula: " +  metaExp.getMatch());
-
             } catch (TextMessageException excep) {
                 EditorAlerts.showSimpleTxtListAlert("Map Issue", excep.getMessageList());
             }

@@ -9,7 +9,7 @@ import java.util.List;
 public class MConstant extends Constant {
 
     private static List<MConstant> constantSyms = new ArrayList<MConstant>();
-    private Constant matchConstant;
+    private Constant matchConstant = null;
 
     private MConstant(String baseSymbol, String subscriptSymbol) {
         super(baseSymbol, subscriptSymbol);

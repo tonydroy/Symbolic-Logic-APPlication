@@ -23,6 +23,7 @@ public class Formula implements Expression {
     OpenBracket openBracket = new OpenBracket("");
     CloseBracket closeBracket = new CloseBracket("");
     private SubstitutionTransform subTransform = null;
+    private Formula matchFormula = null;
 
     public RelationSymbol getMainRelation() { return null; }
 
@@ -43,6 +44,10 @@ public class Formula implements Expression {
         this.subTransform = subTransform;
     }
 
+    public void setMatchFormula(Formula matchFormula) {
+        this.matchFormula = matchFormula;
+    }
+
     @Override
     public ExpressionType getType() {
         return type;
@@ -50,22 +55,25 @@ public class Formula implements Expression {
 
     @Override
     public Formula getMatch() {
-        Formula newFormula = new Formula();
-        List<Expression> newChildren = new ArrayList<>();
-        for (Expression child : children) {
-            newChildren.add(child.getMatch());
+        if (matchFormula != null) {
+            return matchFormula;
         }
-        newFormula.setChildren(newChildren);
-        newFormula.setAtomic(atomic);
-        newFormula.setCombines(combines);
-        newFormula.setNegatingInfix(negatingInfix);
-        newFormula.setLevel(level);
-        if (mainOperator != null) newFormula.setMainOperator(mainOperator.getMatch());
-        if (subTransform != null) { setSubTransform(subTransform.getMatch()); }
-        newFormula.setOpenBracket(openBracket.getMatch());
-        newFormula.setCloseBracket(closeBracket.getMatch());
-
-        return newFormula;
+        else {
+            Formula newFormula = new Formula();
+            List<Expression> newChildren = new ArrayList<>();
+            for (Expression child : children) {
+                newChildren.add(child.getMatch());
+            }
+            newFormula.setChildren(newChildren);
+            newFormula.setAtomic(atomic);
+            newFormula.setCombines(combines);
+            newFormula.setNegatingInfix(negatingInfix);
+            newFormula.setLevel(level);
+            if (mainOperator != null) newFormula.setMainOperator(mainOperator.getMatch());
+            newFormula.setOpenBracket(openBracket.getMatch());
+            newFormula.setCloseBracket(closeBracket.getMatch());
+            return newFormula;
+        }
     }
 
     @Override
@@ -100,7 +108,7 @@ public class Formula implements Expression {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         if (mainOperator == null) {
-            sb.append(children.get(0).toString());
+            if (children.get(0) != null) sb.append(children.get(0).toString());
         }
         else if (mainOperator.isUnary()) {
             if (mainOperator.getType() == ExpressionType.NEG_OP && ((Formula) children.get(0)).isNegatingInfix()) {
@@ -113,11 +121,11 @@ public class Formula implements Expression {
         }
         else {
             sb.append(openBracket.toString());
-            sb.append(children.get(0).toString());
+            if (children.get(0) != null) sb.append(children.get(0).toString());
             sb.append(" ");
             sb.append(mainOperator.toString());
             sb.append(" ");
-            sb.append(children.get(1).toString());
+            if (children.get(1) != null) sb.append(children.get(1).toString());
             sb.append(closeBracket.toString());
         }
         if (subTransform != null && isCombines()) { sb.append(subTransform.toString()); }
@@ -131,6 +139,12 @@ public class Formula implements Expression {
             Formula other = (Formula) o;
             boolean equals = true;
             if (!mainOperator.equals(other.mainOperator)) { equals = false;}
+
+
+ //           if (!getOpenBracket().equals(other.getOpenBracket())) { equals = false;}
+ //           if (!getCloseBracket().equals(other.getCloseBracket())) { equals = false;}
+
+
             if (getSubTransform() == null) {
                 if (other.getSubTransform() != null) equals = false;
             }

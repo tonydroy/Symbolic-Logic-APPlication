@@ -9,7 +9,7 @@ import java.util.List;
 public class MFunctionSymbol extends FunctionSymbol {
 
     private static List<MFunctionSymbol> fnSymbols = new ArrayList<MFunctionSymbol>();
-    private FunctionSymbol matchFnSymbol;
+    private FunctionSymbol matchFnSymbol = null;
 
     private MFunctionSymbol(String baseStr, String subscriptStr, String superscriptStr, int places, boolean permitInfix) {
         super(baseStr, subscriptStr, superscriptStr, places, permitInfix);

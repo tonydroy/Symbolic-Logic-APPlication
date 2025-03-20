@@ -14,7 +14,7 @@ public class MFormula extends Formula{
 
     public static List<MFormula> mFormulas = new ArrayList<MFormula>();
     private MFormulaSym formulaSym;
-    private Formula matchFormula;
+    private Formula matchFormula = null;
 
 
     private MFormula(MFormulaSym formulaSym) {
@@ -38,6 +38,7 @@ public class MFormula extends Formula{
     public static void clear() {
         mFormulas.clear();
     }
+
 
     public MFormulaSym getFormulaSym() {
         return formulaSym;

@@ -115,7 +115,7 @@ public class Term implements Expression {
         StringBuilder sb = new StringBuilder(mainFnSymbol.toString());
         for (Expression childExp : children) {
 
-            sb.append(childExp.toString());
+            if (childExp != null) sb.append(childExp.toString());
         }
         return sb.toString();
     }
@@ -124,8 +124,6 @@ public class Term implements Expression {
     public boolean equals(Object o) {
         if (o == this) return true;
         if (o instanceof Term) {
-            System.out.println("this: " + this + " term: " + o);
-
             Term other = (Term) o;
             boolean equals = true;
             if (!mainFnSymbol.equals(other.mainFnSymbol)) { equals = false;}

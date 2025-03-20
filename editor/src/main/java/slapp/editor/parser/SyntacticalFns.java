@@ -422,6 +422,170 @@ public class SyntacticalFns {
         return parallelList.get(parallelList.size() - 1);
     }
 
+    public static boolean particularTermsFreeInFormula(Expression formulaExp, List<Expression> termList, String langName) {
+        boolean free = false;
+
+        Expression dummyVariable = ParseUtilities.parseDoc(new Document(Languages.getLanguage(langName).getDummyVariableSym()), langName).get(0);
+        Expression subExp = substituteParticularTerms(formulaExp, dummyVariable, termList);
+
+        if (!subExp.equals(formulaExp) ) {
+            free = true;
+        }
+        return free;
+    }
+
+
+    //Formula (term) with T1 instances replaced by T2
+    public static Expression substituteParticularTerms(Expression formulaExp, Expression term2Exp, List<Expression> term1List) {
+
+        //get variables in term1
+        variableList = new ArrayList();
+        for (Expression term1Exp : term1List) {
+            setTermVariableList(term1Exp);
+        }
+
+
+        //sort formula nodes by level
+        nodeList = new ArrayList<Expression>();
+        listNodes(formulaExp);
+        Collections.sort(nodeList, new SortByLevel());
+
+        //create parallel list
+        List<Expression> parallelList = new ArrayList();
+
+        for (int i = 0; i < nodeList.size(); i++) {
+            Expression exp = nodeList.get(i);
+            if (exp.getType() == ExpressionType.TERM) {
+                Term term = (Term) exp;
+
+                if (listContainsParticular(term1List, term)) {
+                    parallelList.add(term2Exp);
+                }
+
+                else if ( term.getTermType() == TermType.VARIABLE || term.getTermType() == TermType.CONSTANT) {
+                    parallelList.add(exp);
+                }
+                else if ( term.getTermType() == TermType.COMPLEX) {
+
+                    FunctionSymbol fnSymbol = term.getMainFnSymbol();
+                    List<Expression> parallelChildList = new ArrayList();
+                    for (int j = 0; j < term.getChildren().size(); j++) {
+                        Expression childExp = term.getChildren().get(j);
+                        int index = nodeList.indexOf(childExp);
+                        parallelChildList.add(parallelList.get(index));
+                    }
+                    if (term instanceof InfixTerm) {
+                        InfixTerm infixTerm = (InfixTerm) term;
+                        InfixTerm newTerm = new InfixTerm();
+                        newTerm.setOpenBracket(infixTerm.getOpenBracket());
+                        newTerm.setCloseBracket(infixTerm.getCloseBracket());
+                        newTerm.setMainFnSymbol(fnSymbol);
+                        newTerm.setChildren(parallelChildList);
+                        parallelList.add(newTerm);
+
+                    } else {
+                        Term newTerm = new Term();
+                        newTerm.setMainFnSymbol(fnSymbol);
+                        newTerm.setChildren(parallelChildList);
+                        parallelList.add(newTerm);
+                    }
+                }
+            }
+            else if (exp.getType() == ExpressionType.FORMULA) {
+
+                Formula formula = (Formula) exp;
+                if (formula instanceof SentenceAtomic) {
+                    parallelList.add(exp);
+                }
+                else if (formula.isAtomic()) {
+                    List<Expression> parallelChildList = new ArrayList();
+                    for (int j = 0; j < formula.getChildren().size(); j++) {
+                        Expression childExp = formula.getChildren().get(j);
+                        int index = nodeList.indexOf(childExp);
+                        parallelChildList.add(parallelList.get(index));
+                    }
+                    if (formula instanceof PrefixAtomic) {
+                        PrefixAtomic prefixAtomic = (PrefixAtomic) formula;
+                        PrefixAtomic newPrefixAtomic = new PrefixAtomic(prefixAtomic.getMainRelation()) ;
+                        newPrefixAtomic.setChildren(parallelChildList);
+                        parallelList.add(newPrefixAtomic);
+                    }
+                    else if (formula instanceof InfixAtomic) {
+                        InfixAtomic infixAtomic = (InfixAtomic) formula;
+                        InfixAtomic newInfixAtomic = new InfixAtomic(infixAtomic.getMainRelation(), infixAtomic.getComplementRelation(), infixAtomic.isNegatingInfix());
+                        newInfixAtomic.setOpenBracket(infixAtomic.getOpenBracket());
+                        newInfixAtomic.setCloseBracket(infixAtomic.getCloseBracket());
+                        newInfixAtomic.setChildren(parallelChildList);
+                        parallelList.add(newInfixAtomic);
+                    }
+                }
+                else if (formula.getMainOperator().getType() == ExpressionType.UNIVERSAL_OP && binds(formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
+                else if (formula.getMainOperator().getType() == ExpressionType.EXISTENTIAL_OP && binds(formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
+
+                else if (formula.getMainOperator().getType() == ExpressionType.UNIV_BOUNDED_OP && binds(formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
+                else if (formula.getMainOperator().getType() == ExpressionType.EXIS_BOUNDED_OP && binds(formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
+
+                else if (formula.getMainOperator().getType() == ExpressionType.UNIV_RESTRICTED_OP && binds(formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
+                else if (formula.getMainOperator().getType() == ExpressionType.EXIS_RESTRICTED_OP && binds(formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
+
+                else {
+                    Operator newMainOperator = null;
+                    if (formula.getMainOperator().getType() == ExpressionType.UNIV_BOUNDED_OP) {
+                        UnivBoundedQuantOp boundingOperator = (UnivBoundedQuantOp) formula.getMainOperator();
+                        Term newBoundingTerm = (Term) substituteParticularTerms(boundingOperator.getBoundingTerm(), term2Exp, term1List);
+                        UnivBoundedQuantOp newBoundingOp = new UnivBoundedQuantOp(boundingOperator.getOpenBracket(), boundingOperator.getCloseBracket(), boundingOperator.getUniversalOp(),
+                                boundingOperator.getInfixRelation(), newBoundingTerm);
+                        newMainOperator = newBoundingOp;
+                    } else if (formula.getMainOperator().getType() == ExpressionType.UNIV_RESTRICTED_OP) {
+                        UnivRestrictedQuantOp restrictedOperator = (UnivRestrictedQuantOp) formula.getMainOperator();
+                        Formula newRestrictingFormula = (Formula) substituteParticularTerms(restrictedOperator.getRestrictingFormula(), term2Exp, term1List);
+                        UnivRestrictedQuantOp newRestrictingOp = new UnivRestrictedQuantOp(restrictedOperator.getOpenBracket(), restrictedOperator.getCloseBracket(), restrictedOperator.getUniversalOp(),
+                                restrictedOperator.getDivider(), newRestrictingFormula);
+                        newMainOperator = newRestrictingOp;
+                    } else if (formula.getMainOperator().getType() == ExpressionType.EXIS_BOUNDED_OP) {
+                        ExisBoundedQuantOp boundingOperator = (ExisBoundedQuantOp) formula.getMainOperator();
+                        Term newBoundingTerm = (Term) substituteParticularTerms(boundingOperator.getBoundingTerm(), term2Exp, term1List);
+                        ExisBoundedQuantOp newBoundingOp = new ExisBoundedQuantOp(boundingOperator.getOpenBracket(), boundingOperator.getCloseBracket(), boundingOperator.getExistentialOp(),
+                                boundingOperator.getInfixRelation(), newBoundingTerm);
+                        newMainOperator = newBoundingOp;
+                    } else if (formula.getMainOperator().getType() == ExpressionType.EXIS_RESTRICTED_OP) {
+                        ExisRestrictedQuantOp restrictingOp = (ExisRestrictedQuantOp) formula.getMainOperator();
+                        Formula newRestrictingFormula = (Formula) substituteParticularTerms(restrictingOp.getRestrictingFormula(), term2Exp, term1List);
+                        ExisRestrictedQuantOp newRestrictingOp = new ExisRestrictedQuantOp(restrictingOp.getOpenBracket(), restrictingOp.getCloseBracket(), restrictingOp.getExistentialOp(),
+                                restrictingOp.getDivider(), newRestrictingFormula);
+                        newMainOperator = newRestrictingOp;
+                    } else {
+                        newMainOperator = formula.getMainOperator();
+                    }
+
+                    //reset node list
+                    nodeList = new ArrayList<Expression>();
+                    listNodes(formulaExp);
+                    Collections.sort(nodeList, new SortByLevel());
+
+
+                    List<Expression> parallelChildList = new ArrayList();
+                    for (int j = 0; j < formula.getChildren().size(); j++) {
+                        Expression childExp = formula.getChildren().get(j);
+                        int index = nodeList.indexOf(childExp);
+                        parallelChildList.add(parallelList.get(index));
+                    }
+                    Formula newFormula = new Formula();
+                    newFormula.setChildren(parallelChildList);
+                    newFormula.setCombines(formula.isCombines());
+                    newFormula.setMainOperator(newMainOperator);
+                    newFormula.setOpenBracket(formula.getOpenBracket());
+                    newFormula.setCloseBracket(formula.getCloseBracket());
+                    newFormula.setNegatingInfix(formula.isNegatingInfix());
+                    parallelList.add(newFormula);
+                }
+            }
+        }
+
+        return parallelList.get(parallelList.size() - 1);
+    }
+
+
 
     private static boolean binds(Expression var) {
         boolean binds = false;

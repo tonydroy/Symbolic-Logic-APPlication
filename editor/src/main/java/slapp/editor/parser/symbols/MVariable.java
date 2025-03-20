@@ -11,11 +11,12 @@ import java.util.List;
 public class MVariable extends Variable {
 
     private static List<MVariable> variables = new ArrayList<MVariable>();
-    private Variable matchVar;
+    private Variable matchVar = null;
 
     private MVariable(String baseSymbol, String subscriptStr) {
         super(baseSymbol, subscriptStr);
         variables.add(this);
+
     }
 
     public static MVariable getInstance(String baseSymbol, String subscriptStr) {
@@ -50,7 +51,9 @@ public class MVariable extends Variable {
         }
     }
 
-    public static void clear() { variables.clear(); }
+    public static void clear() {
+        variables.clear();
+    }
 
     public static List<MVariable> getVariables() {
         return variables;
