@@ -23,11 +23,12 @@ public class PrefixAtomic extends Formula implements Expression {
 
     @Override
     public PrefixAtomic getMatch() {
-        PrefixAtomic newAtomic = new PrefixAtomic(mainRelation.getMatch());
         List<Expression> newChildren = new ArrayList<>();
         for (Expression child : getChildren()) {
-            newChildren.add(child.getMatch());
+            if (child.getMatch() == null) return null;
+            else newChildren.add(child.getMatch());
         }
+        PrefixAtomic newAtomic = new PrefixAtomic(mainRelation.getMatch());
         newAtomic.setChildren(newChildren);
         newAtomic.setLevel(getLevel());
         return newAtomic;

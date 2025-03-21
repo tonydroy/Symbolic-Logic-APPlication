@@ -32,11 +32,12 @@ public class InfixAtomic extends Formula implements Expression {
 
     @Override
     public InfixAtomic getMatch() {
-        InfixAtomic newAtomic = new InfixAtomic(mainRelation.getMatch(), complementRelation.getMatch(), isNegatingInfix());
         List<Expression> newChildren = new ArrayList<>();
         for (Expression child : getChildren()) {
-            newChildren.add(child.getMatch());
+            if (child.getMatch() == null) return null;
+            else newChildren.add(child.getMatch());
         }
+        InfixAtomic newAtomic = new InfixAtomic(mainRelation.getMatch(), complementRelation.getMatch(), isNegatingInfix());
         newAtomic.setChildren(newChildren);
         newAtomic.setOpenBracket(getOpenBracket().getMatch());
         newAtomic.setCloseBracket(getCloseBracket().getMatch());

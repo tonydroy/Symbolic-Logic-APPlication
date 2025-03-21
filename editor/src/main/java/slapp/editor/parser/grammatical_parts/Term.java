@@ -86,15 +86,16 @@ public class Term implements Expression {
 
     @Override
     public Term getMatch() {
+        List<Expression> newChildren = new ArrayList<>();
+        for (Expression child : children) {
+            if (child.getMatch() == null) return null;
+            else newChildren.add(child.getMatch());
+        }
         Term matchTerm = new Term();
         matchTerm.setMainFnSymbol(mainFnSymbol.getMatch());
         matchTerm.setLevel(level);
         matchTerm.setCombines(combines);
         matchTerm.setTermType(termType);
-        List<Expression> newChildren = new ArrayList<>();
-        for (Expression child : children) {
-            newChildren.add(child.getMatch());
-        }
         matchTerm.setChildren(newChildren);
         return matchTerm;
     }

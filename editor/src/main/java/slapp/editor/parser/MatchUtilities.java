@@ -88,9 +88,9 @@ public class MatchUtilities {
             Expression sourceExp = metaForm.getChildren().get(0).getMatch();
             Expression exp1 = subTransform.getExp1().getMatch();
 
-            if (sourceExp != null && !sourceExp.toString().equals("")) {
+            if (sourceExp != null) {
 
-                if (exp1 != null && !exp1.toString().equals("")) {
+                if (exp1 != null) {
 
                     findReplacements(sourceExp, targetFormula, subTransform);
 

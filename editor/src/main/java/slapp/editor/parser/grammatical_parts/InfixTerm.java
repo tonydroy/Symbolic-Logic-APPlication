@@ -17,16 +17,17 @@ public class InfixTerm extends Term implements Expression {
 
     @Override
     public InfixTerm getMatch() {
+        List<Expression> newChildren = new ArrayList<>();
+        for (Expression child : getChildren()) {
+            if (child.getMatch() == null) return null;
+            else newChildren.add(child.getMatch());
+        }
         InfixTerm newTerm = new InfixTerm();
         newTerm.setOpenBracket(getOpenBracket().getMatch());
         newTerm.setCloseBracket(getCloseBracket().getMatch());
         newTerm.setMainFnSymbol(getMainFnSymbol().getMatch());
         newTerm.setLevel(getLevel());
         newTerm.setCombines(isCombines());
-        List<Expression> newChildren = new ArrayList<>();
-        for (Expression child : getChildren()) {
-            newChildren.add(child.getMatch());
-        }
         newTerm.setChildren(newChildren);
         return newTerm;
     }

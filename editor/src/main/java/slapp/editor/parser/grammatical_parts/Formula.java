@@ -59,11 +59,12 @@ public class Formula implements Expression {
             return matchFormula;
         }
         else {
-            Formula newFormula = new Formula();
             List<Expression> newChildren = new ArrayList<>();
             for (Expression child : children) {
-                newChildren.add(child.getMatch());
+                if (child.getMatch() == null) return null;
+                else newChildren.add(child.getMatch());
             }
+            Formula newFormula = new Formula();
             newFormula.setChildren(newChildren);
             newFormula.setAtomic(atomic);
             newFormula.setCombines(combines);
