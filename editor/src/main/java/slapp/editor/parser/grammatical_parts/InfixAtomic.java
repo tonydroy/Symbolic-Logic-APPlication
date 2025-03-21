@@ -74,11 +74,11 @@ public class InfixAtomic extends Formula implements Expression {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(openBracket.toString());
-        sb.append(getChildren().get(0).toString());
+        if (getChildren().get(0) != null) sb.append(getChildren().get(0).toString());
         sb.append(" ");
-        sb.append(mainRelation.toString());
+        if (mainRelation != null) sb.append(mainRelation.toString());
         sb.append(" ");
-        sb.append(getChildren().get(1).toString());
+        if (getChildren().get(1) != null) sb.append(getChildren().get(1).toString());
         sb.append(closeBracket.toString());
         return sb.toString();
     }

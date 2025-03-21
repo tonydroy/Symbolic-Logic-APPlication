@@ -45,9 +45,10 @@ public class PrefixAtomic extends Formula implements Expression {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder(mainRelation.toString());
+        StringBuilder sb = new StringBuilder();
+        if (mainRelation != null) {sb.append(mainRelation.toString());}
         for (Expression child : getChildren()) {
-            sb.append(child.toString());
+            if (child != null) sb.append(child.toString());
         }
         return sb.toString();
     }

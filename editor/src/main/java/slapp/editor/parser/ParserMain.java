@@ -2,7 +2,6 @@ package slapp.editor.parser;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
-import javafx.css.Match;
 import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 import javafx.scene.layout.HBox;
@@ -15,10 +14,6 @@ import javafx.scene.control.Button;
 import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
-import slapp.editor.parser.grammatical_parts.Formula;
-import slapp.editor.parser.grammatical_parts.MFormula;
-import slapp.editor.parser.grammatical_parts.MTerm;
-import slapp.editor.parser.symbols.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +23,8 @@ import static javafx.application.Application.launch;
 public class ParserMain {
 
     //for now
-    String langName = "Lq_abv";
+    String objectLangName = "Lq_abv";
+    String metaLangName = "Meta";
 
     public ParserMain(Stage stage) {
 
@@ -71,7 +67,7 @@ public class ParserMain {
 
 
             //to show parse contents
-            List<Expression> parseExpressions = ParseUtilities.parseDoc(doc0, langName);
+            List<Expression> parseExpressions = ParseUtilities.parseDoc(doc0, objectLangName);
             if (parseExpressions.size() == 0) {
                 texts.add(new Text("Empty"));
                 texts.add(new Text("\n"));
@@ -86,7 +82,7 @@ public class ParserMain {
 
 
             //to show all elements
-            List<Expression> all = SyntacticalFns.allElementsDoc(doc0, langName);
+            List<Expression> all = SyntacticalFns.allElementsDoc(doc0, objectLangName);
             texts.add(new Text("All Elements: "));
             if (all != null && all.size() > 0) {
                 texts.addAll(all.get(0).toTextList());
@@ -99,7 +95,7 @@ public class ParserMain {
 
 
             //to show subformulas
-            List<Expression> subs = SyntacticalFns.subFormulasDoc(doc0, langName);
+            List<Expression> subs = SyntacticalFns.subFormulasDoc(doc0, objectLangName);
             texts.add(new Text("Subformulas: "));
             if (subs != null && subs.size() > 0) {
                 texts.addAll(subs.get(0).toTextList());
@@ -140,7 +136,7 @@ public class ParserMain {
 
 
             //to show immediate subformulas
-            List<Expression> immediateSubs = SyntacticalFns.immediateSubformulas(doc0, langName);
+            List<Expression> immediateSubs = SyntacticalFns.immediateSubformulas(doc0, objectLangName);
             texts.add(new Text("Immediate Subs: "));
             if (immediateSubs != null && immediateSubs.size() > 0) {
                 texts.addAll(immediateSubs.get(0).toTextList());
@@ -152,7 +148,7 @@ public class ParserMain {
             texts.add(new Text("\n"));
 
             //to show main operator
-            Expression mainOp = SyntacticalFns.mainOperator(doc0, langName);
+            Expression mainOp = SyntacticalFns.mainOperator(doc0, objectLangName);
             texts.add(new Text("Main Operator: "));
             if (mainOp != null) {
                 texts.addAll(mainOp.toTextList());
@@ -194,7 +190,7 @@ public class ParserMain {
             rta3.getActionFactory().saveNow().execute(new ActionEvent());
             Document newDoc3 = rta3.getDocument();
 
-           Expression result = SyntacticalFns.substituteDocTerms(newDoc, newDoc2, newDoc3, langName);
+           Expression result = SyntacticalFns.substituteDocTerms(newDoc, newDoc2, newDoc3, objectLangName);
 
 
            //to text flow and show
@@ -215,7 +211,7 @@ public class ParserMain {
             rta2.getActionFactory().saveNow().execute(new ActionEvent());
             Document newDoc2 = rta2.getDocument();
 
-            System.out.println("term " + newDoc2.getText() + " is free in " + newDoc.getText() + ": " + SyntacticalFns.docTermFreeInFormula(newDoc, newDoc2, langName));
+            System.out.println("term " + newDoc2.getText() + " is free in " + newDoc.getText() + ": " + SyntacticalFns.docTermFreeInFormula(newDoc, newDoc2, objectLangName));
         });
 
         //test 4
@@ -229,7 +225,7 @@ public class ParserMain {
             rta3.getActionFactory().saveNow().execute(new ActionEvent());
             Document newDoc3 = rta3.getDocument();
 
-           System.out.println("term " + newDoc3.getText() + " is free for term " + newDoc2.getText() + " in formula " + newDoc.getText() + ": " + SyntacticalFns.freeForDoc(newDoc, newDoc2, newDoc3, langName));
+           System.out.println("term " + newDoc3.getText() + " is free for term " + newDoc2.getText() + " in formula " + newDoc.getText() + ": " + SyntacticalFns.freeForDoc(newDoc, newDoc2, newDoc3, objectLangName));
 
 
         });
@@ -246,7 +242,7 @@ public class ParserMain {
 
             Expression metaExp = null;
             Expression objectExp = null;
-            List<Expression> metaExpressions = ParseUtilities.parseDoc(newDoc, "Meta");
+            List<Expression> metaExpressions = ParseUtilities.parseDoc(newDoc, metaLangName);
             //to show parse contents
             List<Text> texts = new ArrayList<>();
             if (metaExpressions.size() == 0) {
@@ -269,7 +265,7 @@ public class ParserMain {
                 return;
             }
 
-            List<Expression> objectExps = ParseUtilities.parseDoc(newDoc2, langName);
+            List<Expression> objectExps = ParseUtilities.parseDoc(newDoc2, objectLangName);
             List<Text> oTexts = new ArrayList<>();
             if (objectExps.size() == 0) {
                 oTexts.add(new Text("Empty"));
@@ -293,7 +289,7 @@ public class ParserMain {
             }
 
             try {
-                boolean match =  MatchUtilities.formMatch(metaExp, objectExp);
+                boolean match =  MatchUtilities.formMatch(metaExp, objectExp, objectLangName, metaLangName);
 
                 System.out.println("Form match: " + match);
 

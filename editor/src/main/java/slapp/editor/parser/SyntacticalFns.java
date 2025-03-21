@@ -471,7 +471,7 @@ public class SyntacticalFns {
                     List<Expression> parallelChildList = new ArrayList();
                     for (int j = 0; j < term.getChildren().size(); j++) {
                         Expression childExp = term.getChildren().get(j);
-                        int index = nodeList.indexOf(childExp);
+                        int index = listIndexParticular(nodeList, childExp);
                         parallelChildList.add(parallelList.get(index));
                     }
                     if (term instanceof InfixTerm) {
@@ -501,7 +501,7 @@ public class SyntacticalFns {
                     List<Expression> parallelChildList = new ArrayList();
                     for (int j = 0; j < formula.getChildren().size(); j++) {
                         Expression childExp = formula.getChildren().get(j);
-                        int index = nodeList.indexOf(childExp);
+                        int index = listIndexParticular(nodeList, childExp);
                         parallelChildList.add(parallelList.get(index));
                     }
                     if (formula instanceof PrefixAtomic) {
@@ -567,7 +567,7 @@ public class SyntacticalFns {
                     List<Expression> parallelChildList = new ArrayList();
                     for (int j = 0; j < formula.getChildren().size(); j++) {
                         Expression childExp = formula.getChildren().get(j);
-                        int index = nodeList.indexOf(childExp);
+                        int index = listIndexParticular(nodeList, childExp);
                         parallelChildList.add(parallelList.get(index));
                     }
                     Formula newFormula = new Formula();

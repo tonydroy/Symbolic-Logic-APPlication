@@ -21,7 +21,7 @@ public class ExisRestrictedQuantOp extends Operator implements Expression {
 
 
     public ExisRestrictedQuantOp(OpenBracket openBracket, CloseBracket closeBracket, ExistentialOp existentialOp, DividerSym divider, Formula restrictingFormula) {
-        super(ExpressionType.UNIV_RESTRICTED_OP, new UniversalQuantifierSym(""), true);
+        super(ExpressionType.EXIS_RESTRICTED_OP, new UniversalQuantifierSym(""), true);
         this.openBracket = openBracket;
         this.closeBracket = closeBracket;
         this.divider = divider;
