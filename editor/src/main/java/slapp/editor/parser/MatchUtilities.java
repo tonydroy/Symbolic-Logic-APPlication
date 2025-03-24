@@ -13,17 +13,19 @@ import java.util.List;
 public class MatchUtilities {
 
     private static boolean relaxBracketMatch = true;
-    private static List<Pair<Formula, Formula>> transformList = new ArrayList<>();
+    private static List<Pair<Expression, Expression>> transformList = new ArrayList<>();
     private static List<Expression> matchedInstances = new ArrayList<>();
     private static List<Expression> allInstances = new ArrayList<>();
+    private static Boolean subFreeFor = true;
 
 
 
-    public static boolean formMatch(Expression metaExp, Expression objectExp, String objectL, String metaL) throws TextMessageException {
+    public static Pair<Boolean, Boolean> formMatch(Expression metaExp, Expression objectExp, String objectL, String metaL) throws TextMessageException {
         clearMatching();
         transformList.clear();
         matchedInstances.clear();
         allInstances.clear();
+        subFreeFor = true;
 
         if ((metaExp.getType() == ExpressionType.TERM && objectExp.getType() == ExpressionType.TERM) ||
                 (metaExp.getType() == ExpressionType.FORMULA && objectExp.getType() == ExpressionType.FORMULA))
@@ -48,26 +50,27 @@ public class MatchUtilities {
                 }
             }
 
-            try {
+  //          try {
                 setMatching(metaExp, objectExp);
-
                 processTransforms(objectL);
 
+                boolean formMatch = metaExp.getMatch().equals(objectExp);
 
-     //           System.out.println("meta exp: " + metaExp + " match: " + metaExp.getMatch());
+                Pair<Boolean, Boolean> subResults = new Pair<>(formMatch, subFreeFor);
 
-                boolean match = metaExp.getMatch().equals(objectExp);
-
-                if (!match) {
+                if (!formMatch) {
                     throw new TextMessageException(getMessageTexts(metaExp.getMatch(), objectExp, "Mapped expression ", " not the same as ", "."));
                 }
+                return subResults;
 
-                return match;
-
-            } catch (TextMessageException e) {
+      //      }
+            /*
+            catch (TextMessageException e) {
                 EditorAlerts.showSimpleTxtListAlert("Map Issue", e.getMessageList());
                 return false;
             }
+
+             */
         }
         else {
             throw new TextMessageException(getMessageTexts(metaExp, objectExp, "", " and ", " do not both parse to formulas or both to terms."));
@@ -79,23 +82,22 @@ public class MatchUtilities {
 
   //          System.out.println(transformList.get(i));
 
-            Pair<Formula, Formula> transformPair = transformList.get(i);
+            Pair<Expression, Expression> transformPair = transformList.get(i);
 
-            Formula metaForm = transformPair.getKey();
-            SubstitutionTransform subTransform = metaForm.getSubTransform();
-            Formula targetFormula = transformPair.getValue();
+            SubstitutionTransform subTransform;
+            Expression metaExp = transformPair.getKey();
+            if (metaExp.getType() == ExpressionType.FORMULA) subTransform = ((Formula) metaExp).getSubTransform();
+            else subTransform = ((Term) metaExp).getSubTransform();
+            Expression targetExp = transformPair.getValue();
 
-            Expression sourceExp = metaForm.getChildren().get(0).getMatch();
+            Expression sourceExp = metaExp.getChildren().get(0).getMatch();
             Expression exp1 = subTransform.getExp1().getMatch();
 
             if (sourceExp != null) {
-
                 if (exp1 != null) {
-
-                    findReplacements(sourceExp, targetFormula, subTransform);
+                    findReplacements(sourceExp, targetExp, subTransform);
 
          //            if (!allInstances.isEmpty()) {
-
 
                          boolean allFree = true;
                          for (Expression exp : allInstances) {
@@ -114,13 +116,24 @@ public class MatchUtilities {
                                  throw new TextMessageException(getMessageTexts(subTransform.getExp1().getMatch(), subTransform.getExp2().getMatch(), "Not every free instance of ", " is replaced by ", "."));
                          }
 
-              //           System.out.println("source Exp: " + sourceExp + " target formula: " + targetFormula + "transform match: " + subTransform.getExp2().getMatch() + " matched instances: " + matchedInstances + " all instances: " + allInstances);
-
                          Expression subExp = SyntacticalFns.substituteParticularTerms(sourceExp, subTransform.getExp2().getMatch(), matchedInstances);
 
-                         metaForm.setMatchFormula((Formula) subExp);
-                         /*
+                         if (metaExp.getType() == ExpressionType.FORMULA) { ((Formula) metaExp).setMatchFormula((Formula) subExp);}
+                         else ((Term) metaExp).setMatchTerm((Term) subExp);
 
+                         for (Expression exp : matchedInstances) {
+                             if (SyntacticalFns.particularTermsFreeInFormula(sourceExp, Collections.singletonList(exp), objectL)) {
+                                 if (!SyntacticalFns.freeForExp(sourceExp, exp, subTransform.getExp2().getMatch(), objectL)) {
+                                     subFreeFor = false;
+                                     throw new TextMessageException(getMessageTexts(subTransform.getExp2().getMatch(), exp, "Substituted instance(s) of ", " not free for ", "."));
+                                 }
+                             }
+                             else throw new TextMessageException(getMessageTexts(exp, sourceExp, "Replaced instnace(s) of ", " not free in ", "."));
+                         }
+
+
+
+                         /*
                      }
                      else {
                          throw new TextMessageException(getMessageTexts(subTransform, subTransform.getExp1(), "Cannot map ", "without prior specification of ", "."));
@@ -133,7 +146,7 @@ public class MatchUtilities {
                 }
             }
             else {
-                throw new TextMessageException(getMessageTexts(metaForm, metaForm.getChildren().get(0), "Cannot map ", " without prior specification of ", "."));
+                throw new TextMessageException(getMessageTexts(metaExp, metaExp.getChildren().get(0), "Cannot map ", " without prior specification of ", "."));
             }
 
 
@@ -143,20 +156,14 @@ public class MatchUtilities {
 
     private static void findReplacements(Expression sourceExp, Expression targetExp, SubstitutionTransform subTransform) throws TextMessageException {
 
-        System.out.println("source: " + sourceExp + " target: " + targetExp + " trans: " + subTransform);
-
         Expression exp1 = subTransform.getExp1().getMatch();
         Expression exp2 = subTransform.getExp2();
-
-
 
         if (sourceExp != null && sourceExp.equals(exp1)) {
             allInstances.add(sourceExp);
             if (!sourceExp.equals(targetExp)) {
                 setMatching(exp2, targetExp);
                 matchedInstances.add(sourceExp);
-
- //               System.out.println("match exp2: " + exp2 + " targetExp: " + targetExp);
             }
             return;
         }
@@ -250,7 +257,8 @@ public class MatchUtilities {
 
   //      System.out.println("meta exp: " + metaExp + " object exp: " + objectExp);
 
-        if (metaExp.getType() != ExpressionType.FORMULA || (metaExp.getType() == ExpressionType.FORMULA && ((Formula) metaExp).getSubTransform() == null)) {
+
+        if ( (metaExp.getType() == ExpressionType.FORMULA && ((Formula) metaExp).getSubTransform() == null) || (metaExp.getType() == ExpressionType.TERM && ((Term) metaExp).getSubTransform() == null)) {
 
 
 
@@ -335,25 +343,22 @@ public class MatchUtilities {
         }
         else {
             //process sub
-            if (objectExp instanceof Formula) {
-                Pair<Formula, Formula> pair = new Pair((Formula) metaExp, (Formula) objectExp);
-                transformList.add(pair);
-                skip = true;
-            }
+            Pair<Expression, Expression> pair = new Pair(metaExp, objectExp);
+            transformList.add(pair);
+            skip = true;
         }
 
        if (!skip && metaExp.getChildren() != null && metaExp.getLevel() > 0 && metaExp.getChildren().size() == objectExp.getChildren().size() ){
 
            for (int i = 0; i < metaExp.getChildren().size(); i++) {
-               if (metaExp.getChildren().get(i).getType() != ExpressionType.FORMULA || (metaExp.getChildren().get(i).getType() == ExpressionType.FORMULA && ((Formula) metaExp.getChildren().get(i)).getSubTransform() == null)) {
+               if ((metaExp.getChildren().get(i).getType() == ExpressionType.FORMULA && ((Formula) metaExp.getChildren().get(i)).getSubTransform() == null) ||
+                       (metaExp.getChildren().get(i).getType() == ExpressionType.TERM && ((Term) metaExp.getChildren().get(i)).getSubTransform() == null)) {
                    setMatching(metaExp.getChildren().get(i), objectExp.getChildren().get(i));
                }
                else {
                    //process sub
-                   if (objectExp.getChildren().get(i) instanceof Formula) {
-                       Pair<Formula, Formula> pair = new Pair((Formula) metaExp.getChildren().get(i), (Formula) objectExp.getChildren().get(i));
-                       transformList.add(pair);
-                   }
+                   Pair<Expression, Expression> pair = new Pair(metaExp.getChildren().get(i), objectExp.getChildren().get(i));
+                   transformList.add(pair);
                }
            }
        }

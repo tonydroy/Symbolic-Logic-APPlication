@@ -117,7 +117,7 @@ public class SyntacticalFns {
                 }
                 else {
                     Expression childExp = formula.getChildren().get(0);
-                    if (expTermFreeInFormula(term2Exp, variable, langName) && expTermFreeInFormula(childExp, term1Exp, langName)) {
+                    if (expTermFreeInFormula(term2Exp, variable, langName) && particularTermsFreeInFormula(childExp, Collections.singletonList(term1Exp), langName)) {
                         freeFor = false;
                         index++;
                         continue;
@@ -133,7 +133,7 @@ public class SyntacticalFns {
                 }
                 else {
                     Expression childExp = formula.getChildren().get(0);
-                    if (expTermFreeInFormula(term2Exp, variable, langName) && expTermFreeInFormula(childExp, term1Exp, langName)) {
+                    if (expTermFreeInFormula(term2Exp, variable, langName) && particularTermsFreeInFormula(childExp, Collections.singletonList(term1Exp), langName)) {
                         freeFor = false;
                         index++;
                         continue;

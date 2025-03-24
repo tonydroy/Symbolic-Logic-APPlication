@@ -140,9 +140,7 @@ public class ParseUtilities {
 
 
     public static void isTreeNode(Expression exp, Expression match) {
- //       System.out.println("L: " + exp.getLevel() + " T: " + exp.getType() + " " + exp.toString());
         if (exp.equals(match)) {
- //           System.out.println("MATCH");
             matchVal = true;
         }
         if (exp.getChildren() != null && exp.getLevel() >= 0) {

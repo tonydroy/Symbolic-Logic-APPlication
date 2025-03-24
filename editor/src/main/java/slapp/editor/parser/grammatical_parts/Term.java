@@ -87,6 +87,10 @@ public class Term implements Expression {
         this.subTransform = subTransform;
     }
 
+    public SubstitutionTransform getSubTransform() {
+        return subTransform;
+    }
+
     public void setMatchTerm(Term matchTerm) {
         this.matchTerm = matchTerm;
     }

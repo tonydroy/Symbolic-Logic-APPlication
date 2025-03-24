@@ -11,6 +11,7 @@ import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
+import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
@@ -289,9 +290,9 @@ public class ParserMain {
             }
 
             try {
-                boolean match =  MatchUtilities.formMatch(metaExp, objectExp, objectLangName, metaLangName);
+                Pair<Boolean, Boolean> matchResults =  MatchUtilities.formMatch(metaExp, objectExp, objectLangName, metaLangName);
 
-                System.out.println("Form match: " + match);
+                System.out.println("Form match: " + (matchResults).getKey() + " sub free for: " + (matchResults).getValue()  );
 
             } catch (TextMessageException excep) {
                 EditorAlerts.showSimpleTxtListAlert("Map Issue", excep.getMessageList());
