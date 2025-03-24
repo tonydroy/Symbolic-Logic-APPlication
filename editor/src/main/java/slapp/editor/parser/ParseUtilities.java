@@ -511,7 +511,7 @@ public class ParseUtilities {
         }
 
         if (language.isMetalanguage()) {
-
+/*
             for (int i = expressions.size() - 1; i >= 0; i--) {
                 if (expressions.get(i).getType() == ExpressionType.ANGLE_OPEN_BRACKET && i + 4 < expressions.size() && expressions.get(i+4).getType() == ExpressionType.ANGLE_CLOSE_BRACKET &&
                         expressions.get(i+1).getType() == ExpressionType.TERM && expressions.get(i + 3).getType() == ExpressionType.TERM )
@@ -530,6 +530,8 @@ public class ParseUtilities {
                    expressions.remove(i + 1);
                 }
             }
+
+ */
 
             for (int i = expressions.size() - 1; i >= 0; i--) {
                 if (expressions.get(i).getType() == ExpressionType.ANGLE_OPEN_BRACKET) {
@@ -727,7 +729,10 @@ public class ParseUtilities {
                 MAnyExpression any = MAnyExpression.getInstance((MAnyExpressionSym) expressions.get(i));
                 expressions.set(i, any);
             }
+
         }
+
+
 
         boolean changes = true;
         while(changes) {
@@ -764,6 +769,25 @@ public class ParseUtilities {
                     }
                 }
             }
+
+            //substitution
+            boolean subChanges = true;
+            while (subChanges == true) {
+                subChanges = false;
+                for (int i = 0; i < expressions.size() - 1; i++) {
+                    if (expressions.get(i + 1) instanceof SubstitutionTransform && expressions.get(i).getType() == ExpressionType.TERM && ((Term) expressions.get(i)).isCombines()) {
+                        Term t = new Term();
+                        t.getChildren().add((Term) expressions.get(i));
+                        t.setSubTransform((SubstitutionTransform) expressions.get(i + 1));
+                        t.setLevel(expressions.get(i).getLevel() + 1);
+                        expressions.set(i, t);
+                        expressions.remove(i + 1);
+                        changes = true;
+                        subChanges = true;
+                    }
+                }
+            }
+
 
             //infix terms
             for (int i = 0; i < expressions.size(); i++) {
@@ -811,6 +835,34 @@ public class ParseUtilities {
                     }
                 }
             }
+
+            //set sub transform for term
+            if (language.isMetalanguage()) {
+
+                for (int i = expressions.size() - 1; i >= 0; i--) {
+                    if (expressions.get(i).getType() == ExpressionType.ANGLE_OPEN_BRACKET && i + 4 < expressions.size() && expressions.get(i + 4).getType() == ExpressionType.ANGLE_CLOSE_BRACKET &&
+                            expressions.get(i + 1).getType() == ExpressionType.TERM && expressions.get(i + 3).getType() == ExpressionType.TERM) {
+                        SubstitutionTransform subTrans = null;
+                        if (expressions.get(i + 2).getType() == ExpressionType.COMMA_DIVIDER)
+                            subTrans = new SubstitutionTransform((Term) expressions.get(i + 1), (Term) expressions.get(i + 3), ExpressionType.ALL_TERM_SUB,
+                                    ((CommaDivider) expressions.get(i + 2)).toString());
+                        if (expressions.get(i + 2).getType() == ExpressionType.SLASH_DIVIDER)
+                            subTrans = new SubstitutionTransform((Term) expressions.get(i + 1), (Term) expressions.get(i + 3), ExpressionType.SOME_TERM_SUB,
+                                    ((SlashDivider) expressions.get(i + 2)).toString());
+                        if (expressions.get(i + 2).getType() == ExpressionType.DOUBLE_SLASH_DIVIDER)
+                            subTrans = new SubstitutionTransform((Term) expressions.get(i + 1), (Term) expressions.get(i + 3), ExpressionType.ONE_TERM_SUB,
+                                    ((DoubleSlashDivider) expressions.get(i + 2)).toString());
+                        expressions.set(i, subTrans);
+                        expressions.remove(i + 1);
+                        expressions.remove(i + 1);
+                        expressions.remove(i + 1);
+                        expressions.remove(i + 1);
+                        changes = true;
+                        break;
+                    }
+                }
+            }
+
         }
         return expressions;
     }

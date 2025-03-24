@@ -21,6 +21,8 @@ public class Term implements Expression {
     private TermType termType = TermType.COMPLEX;
     private OpenBracket openBracket = new OpenBracket("");
     private CloseBracket closeBracket = new CloseBracket("");
+    private SubstitutionTransform subTransform = null;
+    private Term matchTerm = null;
 
 
     @Override
@@ -81,23 +83,36 @@ public class Term implements Expression {
         this.closeBracket = closeBracket;
     }
 
+    public void setSubTransform(SubstitutionTransform subTransform) {
+        this.subTransform = subTransform;
+    }
+
+    public void setMatchTerm(Term matchTerm) {
+        this.matchTerm = matchTerm;
+    }
+
     @Override
     public ExpressionType getType() { return type; }
 
     @Override
     public Term getMatch() {
-        List<Expression> newChildren = new ArrayList<>();
-        for (Expression child : children) {
-            if (child.getMatch() == null) return null;
-            else newChildren.add(child.getMatch());
+        if (matchTerm != null) {
+            return matchTerm;
         }
-        Term matchTerm = new Term();
-        matchTerm.setMainFnSymbol(mainFnSymbol.getMatch());
-        matchTerm.setLevel(level);
-        matchTerm.setCombines(combines);
-        matchTerm.setTermType(termType);
-        matchTerm.setChildren(newChildren);
-        return matchTerm;
+        else {
+            List<Expression> newChildren = new ArrayList<>();
+            for (Expression child : children) {
+                if (child.getMatch() == null) return null;
+                else newChildren.add(child.getMatch());
+            }
+            Term newTerm = new Term();
+            if (mainFnSymbol != null) newTerm.setMainFnSymbol(mainFnSymbol.getMatch());
+            newTerm.setLevel(level);
+            newTerm.setCombines(combines);
+            newTerm.setTermType(termType);
+            newTerm.setChildren(newChildren);
+            return newTerm;
+        }
     }
 
 
@@ -108,6 +123,7 @@ public class Term implements Expression {
         for (Expression expression : children) {
            texts.addAll(expression.toTextList());
         }
+        if (subTransform != null && isCombines()) {texts.addAll(subTransform.toTextList());}
         return texts;
     }
 
@@ -118,6 +134,7 @@ public class Term implements Expression {
 
             if (childExp != null) sb.append(childExp.toString());
         }
+        if (subTransform != null && isCombines()) sb.append(subTransform.toString());
         return sb.toString();
     }
 
@@ -128,6 +145,12 @@ public class Term implements Expression {
             Term other = (Term) o;
             boolean equals = true;
             if (!mainFnSymbol.equals(other.mainFnSymbol)) { equals = false;}
+
+            if (subTransform == null) {
+                if (other.subTransform != null) { equals = false;}
+            }
+            else if (!subTransform.equals(other.subTransform)) { equals = false;}
+
             if (children.size() != other.children.size()) { equals = false; }
             else if (children.size() > 0) {
                 for (int i = 0; i < children.size(); i++) {
@@ -140,7 +163,7 @@ public class Term implements Expression {
     }
 
     @Override public int hashCode() {
-        int code = mainFnSymbol.hashCode() ;
+        int code = mainFnSymbol.hashCode() + Objects.hashCode(subTransform) ;
         for (Expression child : children) {code = code + child.hashCode();}
         return code;
     }

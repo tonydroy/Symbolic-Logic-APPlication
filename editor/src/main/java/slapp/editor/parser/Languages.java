@@ -310,7 +310,9 @@ public class Languages {
 
         lang.setVariables(Alphabets.getCharacterRange("\ud835\udcca", "\ud835\udccf"));
         lang.setVariableSubs(true);
-        lang.setConstants(Alphabets.getCharacterRange("\ud835\udcb6", "\u212f"));
+
+
+        lang.setConstants(Alphabets.getCharacterRange("\ue886", "\u212f"));
         lang.setConstantSubs(true);
 
         lang.setOnePlaceFunctionSymbols(Collections.singletonList("\ud835\udc46"));
