@@ -17,6 +17,155 @@ public class MatchUtilities {
     private static List<Expression> matchedInstances = new ArrayList<>();
     private static List<Expression> allInstances = new ArrayList<>();
     private static Boolean subFreeFor = true;
+    private static List<Formula> replacementList = new ArrayList<>();
+
+
+    /*
+    For replacement check if one form has more "content" than another
+    (as for abbreviation of inequality where u does not appear in abbreviation)
+    f1 is the form with greater content.  This is because matching on the first
+    form is used to identify a matches for the second.
+     */
+    public static boolean replacementCheck(Expression f1, Expression f2, Expression s, Expression t) throws TextMessageException {
+        replacementList.clear();
+
+
+        if (f1.getType() == ExpressionType.FORMULA && f2.getType() == ExpressionType.FORMULA && s.getType() == ExpressionType.FORMULA && t.getType() == ExpressionType.FORMULA) {
+            Formula form1 = (Formula) f1;
+            Formula form2 = (Formula) f2;
+            Formula source = (Formula) s;
+            Formula target = (Formula) t;
+
+
+            //check with outer brackets on forms and formulas
+            setParens(form1, form2, source, target);
+
+            try {
+                checkReplacements(form1, form2, source, target);
+                System.out.println("c1: " + replacementList.size());
+            }
+            catch (Exception e) {System.out.println(e);}
+
+            try {
+                checkReplacements(form1, form2, target, source);
+                System.out.println("c2: " + replacementList.size());
+            }
+            catch (TextMessageException e) { System.out.println(e); }
+
+        }
+        else {
+            throw new TextMessageException(getMessageTexts(null, null, "Replacement check applies just to formulas.", "", ""));
+        }
+
+        boolean replacementMade = false;
+        if (replacementList.size() == 1) { replacementMade = true; }
+
+        else if (replacementList.size() == 0) {
+            throw new TextMessageException(getMessageTexts(null, null, "No replacements made.", "", ""));
+        }
+        else if (replacementList.size() > 1) {
+            throw new TextMessageException(getMessageTexts(null, null, "More than one replacement is made.", "", ""));
+        }
+
+        return replacementMade;
+    }
+
+    private static void setParens(Formula form1, Formula form2, Formula form3, Formula form4) {
+        ExpressionType opType = null;
+        OpenBracket emptyOpen = new OpenBracket("");
+        CloseBracket emptyClose = new CloseBracket("");
+
+        if (form1.getMainOperator() != null) opType = form1.getMainOperator().getType();
+        if (opType == ExpressionType.COND_OP || opType == ExpressionType.BICOND_OP || opType == ExpressionType.CONJ_OP || opType == ExpressionType.DISJ_OP ||
+                opType == ExpressionType.NAND_OP || opType == ExpressionType.NOR_OP) {
+            if (form1.getOpenBracket().equals(emptyOpen)) form1.setOpenBracket(new OpenBracket1("("));
+            if (form1.getCloseBracket().equals(emptyClose)) form1.setCloseBracket(new CloseBracket1(")"));
+        }
+
+
+        if (form2.getMainOperator() != null) opType = form2.getMainOperator().getType();
+        if (opType == ExpressionType.COND_OP || opType == ExpressionType.BICOND_OP || opType == ExpressionType.CONJ_OP || opType == ExpressionType.DISJ_OP ||
+                opType == ExpressionType.NAND_OP || opType == ExpressionType.NOR_OP) {
+            if (form2.getOpenBracket().equals(emptyOpen)) form2.setOpenBracket(new OpenBracket1("("));
+            if (form2.getCloseBracket().equals(emptyClose)) form2.setCloseBracket(new CloseBracket1(")"));
+        }
+
+        if (form3.getMainOperator() != null) opType = form3.getMainOperator().getType();
+        if (opType == ExpressionType.COND_OP || opType == ExpressionType.BICOND_OP || opType == ExpressionType.CONJ_OP || opType == ExpressionType.DISJ_OP ||
+                opType == ExpressionType.NAND_OP || opType == ExpressionType.NOR_OP) {
+            if (form3.getOpenBracket().equals(emptyOpen)) form3.setOpenBracket(new OpenBracket1("("));
+            if (form3.getCloseBracket().equals(emptyClose)) form3.setCloseBracket(new CloseBracket1(")"));
+        }
+
+        if (form4.getMainOperator() != null) opType = form4.getMainOperator().getType();
+        if (opType == ExpressionType.COND_OP || opType == ExpressionType.BICOND_OP || opType == ExpressionType.CONJ_OP || opType == ExpressionType.DISJ_OP ||
+                opType == ExpressionType.NAND_OP || opType == ExpressionType.NOR_OP) {
+            if (form4.getOpenBracket().equals(emptyOpen)) form4.setOpenBracket(new OpenBracket1("("));
+            if (form4.getCloseBracket().equals(emptyClose)) form4.setCloseBracket(new CloseBracket1(")"));
+        }
+    }
+
+    private static void checkReplacements(Formula form1, Formula form2, Formula source, Formula target) throws TextMessageException {
+    //    System.out.println("form1: " + form1 + " form2: " + form2 + " source: " + source + " target: " + target);
+
+        clearMatching();
+        try {
+            setMatching(form1, source);
+        }
+        catch (TextMessageException e) {
+            //ignore match failure (which happens repeately as we make bad tries)
+            //System.out.println("exception!");
+        }
+
+        System.out.println("f1: " + form1 + ", source: " + source + ", f1 match: " + form1.getMatch() + ", f2: " + form2 + ", f2 match: " + form2.getMatch() + ", target: " + target);
+
+        if (form2.getMatch() != null && form2.getMatch().equals(target)) {
+            if (!replacementList.contains(form2.getMatch())) replacementList.add(form2.getMatch());
+            return;
+        }
+
+        else if (source instanceof SentenceAtomic && target instanceof SentenceAtomic && source.equals(target)) { return;  }
+
+        else if (source instanceof MFormula && target instanceof MFormula && source.equals(target)) { return; }
+
+        else if (source instanceof PrefixAtomic && target instanceof PrefixAtomic && source.equals(target)) { return; }
+
+        else if (source instanceof InfixAtomic && target instanceof InfixAtomic && source.equals(target)) { return; }
+
+        else if (source instanceof Formula && target instanceof Formula && !source.isAtomic() && !target.isAtomic() &&
+                bracketMatch(source.getOpenBracket(), source.getCloseBracket(), target.getOpenBracket(), target.getCloseBracket()) &&
+                source.getChildren().size() == target.getChildren().size()) {
+            boolean good = false;
+            if (source.getMainOperator() instanceof UnivRestrictedQuantOp && target.getMainOperator() instanceof UnivRestrictedQuantOp) {
+                Formula qSource = ((UnivRestrictedQuantOp) source.getMainOperator()).getRestrictingFormula();
+                Formula qTarget = ((UnivRestrictedQuantOp) target.getMainOperator()).getRestrictingFormula();
+                setParens(form1, form2, qSource, qTarget);
+                checkReplacements(form1, form2, qSource, qTarget);
+                good = true;
+            }
+            else if (source.getMainOperator() instanceof ExisRestrictedQuantOp && target.getMainOperator() instanceof ExisRestrictedQuantOp) {
+                Formula qSource = ((ExisRestrictedQuantOp) source.getMainOperator()).getRestrictingFormula();
+                Formula qTarget = ((ExisRestrictedQuantOp) target.getMainOperator()).getRestrictingFormula();
+                setParens(form1, form2, qSource, qTarget);
+                checkReplacements(form1, form2, qSource, qTarget);
+                good = true;
+            }
+            else if (source.getMainOperator().equals(target.getMainOperator())) {
+                good = true;
+            }
+            if (good) {
+                for (int i = 0; i < source.getChildren().size(); i++) {
+                    if (source.getChildren().get(i).getType() == ExpressionType.FORMULA && target.getChildren().get(i).getType() == ExpressionType.FORMULA) {
+                        checkReplacements(form1, form2, (Formula) source.getChildren().get(i), (Formula) target.getChildren().get(i));
+                    }
+                }
+            }
+        }
+
+        else {
+      //      throw new TextMessageException(getMessageTexts(target, source, "", " does not substitute into ", "."));
+        }
+    }
 
 
 
@@ -255,7 +404,7 @@ public class MatchUtilities {
     private static void setMatching(Expression metaExp, Expression objectExp) throws TextMessageException {
         boolean skip = false;
 
-  //      System.out.println("meta exp: " + metaExp + " object exp: " + objectExp);
+     //   System.out.println("meta exp: " + metaExp + " object exp: " + objectExp);
 
 
         if ( (metaExp.getType() == ExpressionType.FORMULA && ((Formula) metaExp).getSubTransform() == null) || (metaExp.getType() == ExpressionType.TERM && ((Term) metaExp).getSubTransform() == null)) {
@@ -389,9 +538,9 @@ public class MatchUtilities {
         List<Text> texts = new ArrayList<Text>();
 
         texts.add(new Text(lead));
-        texts.addAll(exp1.toTextList());
+        if (exp1 != null) texts.addAll(exp1.toTextList());
         texts.add(new Text(middle));
-        texts.addAll(exp2.toTextList());
+        if (exp2 != null) texts.addAll(exp2.toTextList());
         texts.add(new Text(close));
         return texts;
     }

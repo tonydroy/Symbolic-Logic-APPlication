@@ -36,8 +36,15 @@ public class MTerm extends Term {
         return newTerm;
     }
 
-    public static void clear() { mTerms.clear(); }
+    public static void clear() {
+        for (MTerm term : mTerms) {
+            term.clearMatch();
+        }
+    }
 
+    private void clearMatch() {
+        matchTerm = null;
+    }
 
     public MTermSym getmTermSym() {
         return mTermSym;

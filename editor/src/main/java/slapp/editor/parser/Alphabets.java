@@ -45,7 +45,7 @@ public class Alphabets {
         scriptL = List.of("\ue886", "\ud835\udcb6", "\ud835\udcb7", "\ud835\udcb8", "\ud835\udcb9", "\u212f", "\ud835\udcbb", "\u210a", "\ud835\udcbd", "\ud835\udcbe", "\ud835\udcbf", "\ud835\udcc0", "\ud835\udcc1", "\ud835\udcc2",
                 "\ud835\udcc3", "\u2134", "\ud835\udcc5", "\ud835\udcc6", "\ud835\udcc7", "\ud835\udcc8", "\ud835\udcc9", "\ud835\udcca", "\ud835\udccb", "\ud835\udccc", "\ud835\udccd", "\ud835\udcce", "\ud835\udccf"); //0 slash and a - z script
         scriptU = List.of("\ud835\udc9c", "\u212c", "\ud835\udc9e", "\ud835\udc9f", "\u2130", "\u2131", "\ud835\udca2", "\u210b", "\u2110", "\ud835\udca5", "\ud835\udca6", "\u2112", "\u2133",
-                "\ud835\udca9", " \ud835\udcaa", "\ud835\udcab", "\ud835\udcac", "\u211b", "\ud835\udcae", "\ud835\udcaf", "\ud835\udcb0", "\ud835\udcb1", "\ud835\udcb2", "\ud835\udcb3", "\ud835\udcb4", "\ud835\udcb5");  //A - Z script
+                "\ud835\udca9", "\ud835\udcaa", "\ud835\udcab", "\ud835\udcac", "\u211b", "\ud835\udcae", "\ud835\udcaf", "\ud835\udcb0", "\ud835\udcb1", "\ud835\udcb2", "\ud835\udcb3", "\ud835\udcb4", "\ud835\udcb5");  //A - Z script
         bbL = List.of("\uf893", "\uf894", "\uf895", "\uf896", "\uf897", "\uf898", "\uf899", "\uf89a", "\uf89b", "\uf89c", "\uf89d", "\uf89e", "\uf89f",
                 "\uf8a0", "\uf8a1", "\uf8a2", "\uf8a3", "\uf8a4", "\uf8a5", "\uf8a6", "\uf8a7", "\uf8a8", "\uf8a9", "\uf8aa", "\uf8ab", "\uf8ac");  //a - z bb
         bbU = List.of("\uf880", "\uf881", "\uf8ad", "\uf882", "\uf883", "\uf884", "\uf885", "\uf8ae", "\uf886", "\uf887", "\uf888", "\uf889", "\uf88a",

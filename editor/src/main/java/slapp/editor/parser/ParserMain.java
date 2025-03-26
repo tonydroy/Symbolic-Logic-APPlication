@@ -15,6 +15,7 @@ import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
+import slapp.editor.parser.grammatical_parts.Formula;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +25,7 @@ import static javafx.application.Application.launch;
 public class ParserMain {
 
     //for now
-    String objectLangName = "Lq_abv";
+    String objectLangName = "Meta";
     String metaLangName = "Meta";
 
     public ParserMain(Stage stage) {
@@ -55,6 +56,15 @@ public class ParserMain {
         Document doc3 = new Document("");
         rta3.getActionFactory().open(doc3).execute(new ActionEvent());
         rta3.setPadding(new Insets(10));
+
+        BoxedDRTA bdrta4 = new BoxedDRTA();
+        DecoratedRTA drta4 = bdrta4.getDRTA();
+        RichTextArea rta4 = drta4.getEditor();
+        rta4.setPrefHeight(100);
+        rta4.setPrefWidth(400);
+        Document doc4 = new Document("");
+        rta4.getActionFactory().open(doc4).execute(new ActionEvent());
+        rta4.setPadding(new Insets(10));
 
 
         //test1
@@ -299,11 +309,70 @@ public class ParserMain {
             }
         });
 
+        //test 6
+        Button button6 = new Button("Replacement Test\n F1, F2, / P, Q");  //Q is P with an instance of F1 replaced with F2
+        button6.setPadding(new Insets(20));
+        button6.setOnAction(e -> {
+            rta.getActionFactory().saveNow().execute(new ActionEvent());
+            Document newDoc = rta.getDocument();
+            rta2.getActionFactory().saveNow().execute(new ActionEvent());
+            Document newDoc2 = rta2.getDocument();
+            rta3.getActionFactory().saveNow().execute(new ActionEvent());
+            Document newDoc3 = rta3.getDocument();
+            rta4.getActionFactory().saveNow().execute(new ActionEvent());
+            Document newDoc4 = rta4.getDocument();
 
 
+            Formula f1 = null;
+            Formula f2 = null;
+            Formula s = null;
+            Expression t = null;
 
-        HBox buttonBox = new HBox(20, button1, button2, button3, button4, button5);
-            VBox box = new VBox(10, buttonBox, bdrta.getBoxedRTA(), bdrta2.getBoxedRTA(), bdrta3.getBoxedRTA());
+            List<Expression> f1Expressions = ParseUtilities.parseDoc(newDoc, metaLangName);
+            if (f1Expressions != null && f1Expressions.size() == 1 && f1Expressions.get(0).getType() == ExpressionType.FORMULA) {
+                f1 = (Formula) f1Expressions.get(0);
+            } else {
+                System.out.println("Error parsing form1 expression into formula");
+                return;
+            }
+
+            List<Expression> f2Expressions = ParseUtilities.parseDoc(newDoc2, metaLangName);
+            if (f2Expressions != null && f2Expressions.size() == 1 && f2Expressions.get(0).getType() == ExpressionType.FORMULA) {
+                f2 = (Formula) f2Expressions.get(0);
+            } else {
+                System.out.println("Error parsing form2 expression into formula");
+                return;
+            }
+
+            List<Expression> sExpressions = ParseUtilities.parseDoc(newDoc3, objectLangName);
+            if (sExpressions != null && sExpressions.size() == 1 && sExpressions.get(0).getType() == ExpressionType.FORMULA) {
+                s = (Formula) sExpressions.get(0);
+            } else {
+                System.out.println("Error parsing source expression into formula");
+                return;
+            }
+            List<Expression> tExpressions = ParseUtilities.parseDoc(newDoc4, objectLangName);
+            if (tExpressions != null && tExpressions.size() == 1 && tExpressions.get(0).getType() == ExpressionType.FORMULA) {
+                t = (Formula) tExpressions.get(0);
+            } else {
+                System.out.println("Error parsing target expression into formula");
+                return;
+            }
+
+            boolean good = false;
+            try {
+                good = MatchUtilities.replacementCheck(f1, f2, s, t);
+
+            } catch (TextMessageException excep) {
+                EditorAlerts.showSimpleTxtListAlert("Map Issue", excep.getMessageList());
+            }
+
+            System.out.println("replacement good: " + good);
+        });
+
+
+        HBox buttonBox = new HBox(20, button1, button2, button3, button4, button5, button6);
+            VBox box = new VBox(10, buttonBox, bdrta.getBoxedRTA(), bdrta2.getBoxedRTA(), bdrta3.getBoxedRTA(), bdrta4.getBoxedRTA());
             Scene scene = new Scene(box);
             stage.setScene(scene);
             stage.show();

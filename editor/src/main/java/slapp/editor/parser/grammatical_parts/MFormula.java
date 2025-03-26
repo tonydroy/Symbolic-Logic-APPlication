@@ -36,7 +36,16 @@ public class MFormula extends Formula{
     }
 
     public static void clear() {
-        mFormulas.clear();
+     //   System.out.println("clearing");
+
+        for (MFormula formula : mFormulas) {
+            formula.clearMatch();
+        }
+   //     mFormulas.clear();
+    }
+
+    private void clearMatch() {
+        matchFormula = null;
     }
 
 
@@ -60,7 +69,7 @@ public class MFormula extends Formula{
                 messageTxts.add(new Text("A metalinguistic expression with " + vars + " ("));
                 for (int i = 0; i < getChildren().size(); i++) {
                     messageTxts.addAll(getChildren().get(i).toTextList());
-                    if (i < getChildren().size() - 1) { messageTxts.add(new Text(","));}
+                    if (i < getChildren().size() - 1) { messageTxts.add(new Text(", "));}
                 }
                 messageTxts.add(new Text(") does not map."));
                 throw new TextMessageException(messageTxts);

@@ -54,8 +54,15 @@ public class MFunctionSymbol extends FunctionSymbol {
         }
     }
 
-    public static void clear() { fnSymbols.clear(); }
+    public static void clear() {
+        for (MFunctionSymbol fnSymbol : fnSymbols) {
+            fnSymbol.clearMatch();
+        }
+    }
 
+    private void clearMatch() {
+        matchFnSymbol = null;
+    }
 
 
 }

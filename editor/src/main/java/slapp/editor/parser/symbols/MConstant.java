@@ -54,6 +54,14 @@ public class MConstant extends Constant {
         }
     }
 
-    public static void clear() { constantSyms.clear();  }
+    public static void clear() {
+        for (MConstant sym : constantSyms) {
+            sym.clearMatch();
+        }
+    }
+
+    private void clearMatch() {
+        matchConstant = null;
+    }
 
 }

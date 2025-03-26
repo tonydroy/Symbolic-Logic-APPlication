@@ -55,6 +55,14 @@ public class MSentenceLetter extends SentenceLetter {
         }
     }
 
-    public static void clear() { sentenceLetters.clear(); }
+    public static void clear() {
+        for (MSentenceLetter sentenceLetter : sentenceLetters) {
+            sentenceLetter.clearMatch();
+        }
+    }
+
+    private void clearMatch() {
+        matchLetter = null;
+    }
 
 }

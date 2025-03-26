@@ -72,6 +72,13 @@ public class MAnyExpression extends AnyExpression {
         }
     }
 
-    public static void clear() { mAnyExpressions.clear(); }
+    public static void clear() {
+        for (MAnyExpression e : mAnyExpressions) {
+            e.clearMatch();
+        }
+    }
 
+    private void clearMatch() {
+        matchAnyExp = null;
+    }
 }

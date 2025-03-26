@@ -50,6 +50,14 @@ public class MRelationSymbol extends RelationSymbol {
         }
     }
 
-    public static void clear() { relSymbols.clear(); }
+    public static void clear() {
+        for (MRelationSymbol sym : relSymbols) {
+            sym.clearMatch();
+        }
+    }
+
+    private void clearMatch() {
+        matchRelSymbol = null;
+    }
 
 }

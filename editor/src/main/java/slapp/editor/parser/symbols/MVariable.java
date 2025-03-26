@@ -52,7 +52,14 @@ public class MVariable extends Variable {
     }
 
     public static void clear() {
+        for (MVariable var : variables) {
+            var.clearMatch();
+        }
         variables.clear();
+    }
+
+    private void clearMatch() {
+        matchVar = null;
     }
 
     public static List<MVariable> getVariables() {
