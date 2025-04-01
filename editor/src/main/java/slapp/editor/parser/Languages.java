@@ -27,7 +27,7 @@ public class Languages {
         fixedLanguages.add(Meta());
     }
 
-    static Language getLanguage(String name) {
+    public static Language getLanguage(String name) {
         for (Language l : fixedLanguages){
             if (l.getNameString().equals(name)) return l;
         }

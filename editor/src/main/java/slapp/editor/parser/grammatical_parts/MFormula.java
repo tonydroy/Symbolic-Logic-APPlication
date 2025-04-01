@@ -36,18 +36,14 @@ public class MFormula extends Formula{
     }
 
     public static void clear() {
-     //   System.out.println("clearing");
-
         for (MFormula formula : mFormulas) {
             formula.clearMatch();
         }
-   //     mFormulas.clear();
     }
 
     private void clearMatch() {
         matchFormula = null;
     }
-
 
     public MFormulaSym getFormulaSym() {
         return formulaSym;
@@ -61,23 +57,7 @@ public class MFormula extends Formula{
     public Formula getMatch() { return matchFormula; }
 
     public void setMatch(Formula match) throws TextMessageException {
-        if (matchFormula == null) {
-            if (!getChildren().isEmpty()) {
-                String vars = "variables";
-                if (getChildren().size() == 1) {vars = "variable";}
-                List<Text> messageTxts = new ArrayList<>();
-                messageTxts.add(new Text("A metalinguistic expression with " + vars + " ("));
-                for (int i = 0; i < getChildren().size(); i++) {
-                    messageTxts.addAll(getChildren().get(i).toTextList());
-                    if (i < getChildren().size() - 1) { messageTxts.add(new Text(", "));}
-                }
-                messageTxts.add(new Text(") does not map."));
-                throw new TextMessageException(messageTxts);
-            }
-            else {
-                matchFormula = match;
-            }
-        }
+        if (matchFormula == null) {  matchFormula = match;    }
         else if (!matchFormula.equals(match)) {
             List<Text> messageTxts = new ArrayList<>();
             messageTxts.add(new Text("Variable "));
@@ -96,32 +76,12 @@ public class MFormula extends Formula{
 
     @Override
     public List<Text> toTextList() {
-        List<Text> texts = new ArrayList<>();
-        texts.addAll(formulaSym.toTextList());
-        if (!getChildren().isEmpty()) {
-            texts.addAll(getOpenBracket().toTextList());
-            for (int i = 0; i < getChildren().size(); i++) {
-                texts.addAll(getChildren().get(i).toTextList());
-                if (i < getChildren().size() - 1) {texts.add(new Text(", "));}
-            }
-            texts.addAll(getCloseBracket().toTextList());
-        }
-        return texts;
+        return formulaSym.toTextList();
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(formulaSym.toString());
-        if (!getChildren().isEmpty()) {
-            sb.append(getOpenBracket().toString());
-            for (int i = 0; i < getChildren().size(); i++) {
-                sb.append(getChildren().get(i).toString());
-                if (i < getChildren().size() - 1) {sb.append(", ");}
-            }
-            sb.append(getCloseBracket().toString());
-        }
-        return sb.toString();
+        return formulaSym.toString();
     }
 
     @Override

@@ -27,6 +27,11 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+import javafx.scene.text.TextFlow;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.ExerciseView;
@@ -71,6 +76,19 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
     private double contentRowHeight = 19.0;
     private double shelfRowHeight = 5.0;
     private double gapRowHeight = 7.0;
+
+    //-------------
+    private Node rightControlNode;
+    private Button checkButton;
+    private Button helpButton;
+    private Text bigCheck;
+    private String checkText;
+    private Text checkedElements;
+    private Label helpTriesLabel;
+    private Label checkTriesLabel;
+    private boolean checkSuccess;
+
+
 
 
     /**
@@ -140,6 +158,43 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         controlBox.setPadding(new Insets(40,20,0,20));
         controlBox.setMinWidth(150); controlBox.setMaxWidth(150);
         exerciseControlNode = controlBox;
+
+
+        /*
+        bigCheck = new Text("\ue89a");
+        bigCheck.setFont(Font.font("Noto Serif Combo", 72));
+        bigCheck.setFill(Color.LAWNGREEN);
+        checkedElements = new Text(checkText);
+        checkedElements.setFont(Font.font("Noto Serif Combo", 11));
+        checkedElements.setFill(Color.GREEN);
+        TextFlow checkedElementsFlow = new TextFlow(checkedElements);
+        checkedElementsFlow.setMaxWidth(150);
+        VBox bigCheckBox = new VBox(0, bigCheck, checkedElementsFlow);
+        bigCheckBox.setAlignment(Pos.CENTER);
+
+
+        checkButton = new Button("Check");
+        checkButton.setPrefWidth(100);
+        checkButton.setTooltip(new Tooltip("Check derivation for correctness"));
+        checkTriesLabel = new Label("0/10");
+        VBox checksBox = new VBox(10, checkButton, checkTriesLabel);
+        checksBox.setAlignment(Pos.CENTER);
+
+        helpButton = new Button("Help");
+        helpButton.setPrefWidth(100);
+        helpButton.setTooltip(new Tooltip("Get help for selected goal"));
+        helpTriesLabel = new Label("0/3");
+        VBox helpBox = new VBox(10, helpButton, helpTriesLabel);
+        helpBox.setAlignment(Pos.CENTER);
+
+        VBox rightControlBox = new VBox(40, bigCheckBox, checksBox, helpBox );
+        rightControlBox.setAlignment(Pos.TOP_CENTER);
+        rightControlBox.setPadding(new Insets(60,20,0,20));
+        rightControlNode = rightControlBox;
+
+        deactivateBigCheck();
+
+         */
     }
 
     /**
@@ -274,6 +329,49 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         });
 
         setSizeSpinners();
+
+
+    }
+
+    public void setRightControlBox() {
+        //right control box
+        bigCheck = new Text("\ue89a");
+        bigCheck.setFont(Font.font("Noto Serif Combo", 72));
+        bigCheck.setFill(Color.LAWNGREEN);
+
+        checkedElements = new Text(checkText);
+        checkedElements.setFont(Font.font("Noto Serif Combo", 11));
+        checkedElements.setFill(Color.GREEN);
+        TextFlow checkedElementsFlow = new TextFlow(checkedElements);
+        checkedElementsFlow.setMaxWidth(150);
+
+        VBox bigCheckBox = new VBox(0, bigCheck, checkedElementsFlow);
+        bigCheckBox.setAlignment(Pos.CENTER);
+        checkedElementsFlow.setTextAlignment(TextAlignment.CENTER);
+
+
+        checkButton = new Button("Check");
+        checkButton.setPrefWidth(100);
+        checkButton.setTooltip(new Tooltip("Check derivation for correctness"));
+        checkTriesLabel = new Label();
+        VBox checksBox = new VBox(10, checkButton, checkTriesLabel);
+        checksBox.setAlignment(Pos.CENTER);
+        checkTriesLabel.setAlignment(Pos.CENTER);
+
+        helpButton = new Button("Help");
+        helpButton.setPrefWidth(100);
+        helpButton.setTooltip(new Tooltip("Get help for selected goal"));
+        helpTriesLabel = new Label();
+        VBox helpBox = new VBox(10, helpButton, helpTriesLabel);
+        helpBox.setAlignment(Pos.CENTER);
+        helpTriesLabel.setAlignment(Pos.CENTER);
+
+        VBox rightControlBox = new VBox(40, bigCheckBox, checksBox, helpBox );
+        rightControlBox.setAlignment(Pos.TOP_CENTER);
+        rightControlBox.setPadding(new Insets(60,20,0,20));
+        rightControlNode = rightControlBox;
+
+        if (!checkSuccess) deactivateBigCheck();
     }
 
     private void setSizeSpinners() {
@@ -359,6 +457,11 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
                 rta.setPrefWidth(100);
                 rta.getStylesheets().add("slappDerivation.css");
 
+                if (viewLine.isLineHighlight()) {
+                    rta.getStylesheets().clear();
+                    rta.getStylesheets().add("slappDerivationHighlight.css");
+                }
+
                 contentBox = bdrta.getBoxedRTA();
                 contentBox.setHgrow(bdrta.getRTA(), Priority.ALWAYS);
             }
@@ -392,6 +495,15 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
 
             if (viewLine.getJustificationFlow() != null) grid.add(viewLine.getJustificationFlow(), 22, index);
         }
+    }
+
+    public void activateBigCheck() {
+        bigCheck.setVisible(true);
+        checkedElements.setVisible(true);
+    }
+    public void deactivateBigCheck() {
+        bigCheck.setVisible(false);
+        checkedElements.setVisible(false);
     }
 
     /**
@@ -527,6 +639,34 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
 
     Spinner getSplitPaneWidthSpinner() { return splitPaneWidthSpinner; }
 
+    public Button getCheckButton() {
+        return checkButton;
+    }
+
+    public Button getHelpButton() {
+        return helpButton;
+    }
+
+    public Text getBigCheck() {
+        return bigCheck;
+    }
+
+    public Label getHelpTriesLabel() {
+        return helpTriesLabel;
+    }
+
+    public Label getCheckTriesLabel() {
+        return checkTriesLabel;
+    }
+
+    public void setCheckText(String checkText) {
+        this.checkText = checkText;
+    }
+
+    public void setCheckSuccess(boolean checkSuccess) {
+        this.checkSuccess = checkSuccess;
+    }
+
     /**
      * The comment decoratedRTA
      * @return comment DecoratedRTA
@@ -592,7 +732,7 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
      * @return the control node
      */
     @Override
-    public Node getRightControl() { return null; }
+    public Node getRightControl() { return rightControlNode; }
 
 
 }

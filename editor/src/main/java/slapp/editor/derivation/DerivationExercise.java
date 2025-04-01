@@ -46,7 +46,7 @@ import slapp.editor.EditorAlerts;
 import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
-import slapp.editor.decorated_rta.KeyboardDiagram;
+import slapp.editor.derivation.DerSystems.DerivationRulesets;
 import slapp.editor.main_window.*;
 
 import java.util.ArrayList;
@@ -60,6 +60,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
     private DerivationModel derivationModel;
     private DerivationView derivationView;
     private MainWindowView mainView;
+    private DerivationCheck derivationCheck;
     private boolean exerciseModified = false;
     private Font labelFont = new Font("Noto Serif Combo", 11);
     private boolean editJustification;
@@ -67,6 +68,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
     private RichTextArea lastJustificationRTA;
     private int lastJustificationRow;
     private UndoRedoList<DerivationModel> undoRedoList = new UndoRedoList<>(20);
+
 
 
     /**
@@ -80,13 +82,30 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         if (model.getOriginalModel() == null) {model.setOriginalModel(model); }
         this.mainView = mainWindow.getMainView();
         this.derivationView = new DerivationView(mainView);
+
         setDerivationView();
+
+
+
+        derivationView.setCheckText(derivationModel.getCheckMessage());
+        derivationView.setCheckSuccess(derivationModel.isCheckSuccess());
+        derivationView.setRightControlBox();
+        this.derivationCheck = new DerivationCheck(this, derivationView, DerivationRulesets.getRuleset(model.getRuleset()));
+        derivationCheck.setCheckMax(derivationModel.getCheckMax());
+        derivationCheck.setCheckTries(derivationModel.getCheckTries());
+        derivationCheck.setHelpMax(derivationModel.getHelpMax());
+        derivationCheck.setHelpTries(derivationModel.getHelpTries());
+        derivationCheck.updateCounters();
+
+
 
         //cannot depend on pushUndoRedo because documents can't yet be extracted from view
         DerivationModel deepCopy = (DerivationModel) SerializationUtils.clone(derivationModel);
         undoRedoList.push(deepCopy);
         updateUndoRedoButtons();
     }
+
+
 
     /*
      * Set up the derivation view from the model
@@ -152,7 +171,10 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         setViewLinesFromModel();
         derivationView.setGridFromViewLines();
         setContentFocusListeners();
+
+
     }
+
 
     /*
      * Set the view lines
@@ -389,6 +411,11 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         rta.applyCss();
         rta.layout();
 
+        if (derivationView.getViewLines().get(rowIndex).isLineHighlight()) {
+            rta.getStylesheets().clear();
+            rta.getStylesheets().add("slappDerivationHighlight.css");
+        }
+
         justificationClickFilter = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -502,6 +529,9 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         String justificationString = rta.getDocument().getText();
 
         TextFlow justificationFlow = getJustificationFlow(justificationString, derivationView.getViewLines());
+        if (derivationView.getViewLines().get(rowIndex).isLineHighlight()) {
+            justificationFlow.setStyle("-fx-background-color: mistyrose");
+        }
         derivationView.getViewLines().get(rowIndex).setJustificationFlow(justificationFlow);
 
         //removing the RTA from the grid seems to rewrite the grid, causing focus to jump.  Here we simply
@@ -1211,5 +1241,20 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
 
         return newModel;
     }
+
+    MainWindow getMainWindow() {
+        return mainWindow;
+    }
+
+    public RichTextArea getLastJustificationRTA() {
+        return lastJustificationRTA;
+    }
+
+    public int getLastJustificationRow() {
+        return lastJustificationRow;
+    }
+
+
+
 
 }

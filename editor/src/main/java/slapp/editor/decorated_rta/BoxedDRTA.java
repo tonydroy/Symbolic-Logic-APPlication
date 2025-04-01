@@ -17,6 +17,7 @@ package slapp.editor.decorated_rta;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -49,13 +50,18 @@ public class BoxedDRTA {
         boxedRTA.addEventFilter(MouseEvent.MOUSE_CLICKED, mouseEventHandler);
     }
 
-    public void setBorderColor(Color color) {
-        Border border = new Border(new BorderStroke(color, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT));
-        boxedRTA.setBorder(border);
+
+
+    public void setBackgroundColor() {
+        RichTextArea rta = drta.getEditor();
+        rta.getStylesheets().clear();
+        rta.getStylesheets().add("slappDerivationHighlight.css");
     }
 
-    public void resetColor() {
-        boxedRTA.setStyle("-fx-border-color: transparent");
+    public void resetBackgroundColor() {
+        RichTextArea rta = drta.getEditor();
+        rta.getStylesheets().clear();
+        rta.getStylesheets().add("slappDerivation.css");
     }
 
     /**

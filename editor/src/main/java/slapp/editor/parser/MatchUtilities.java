@@ -208,7 +208,7 @@ public class MatchUtilities {
                 Pair<Boolean, Boolean> subResults = new Pair<>(formMatch, subFreeFor);
 
                 if (!formMatch) {
-                    throw new TextMessageException(getMessageTexts(metaExp.getMatch(), objectExp, "Mapped expression ", " not the same as ", "."));
+                    throw new TextMessageException(getMessageTexts(metaExp.getMatch(), objectExp, "Mapped expression ", " not the same as ", "." ));
                 }
                 return subResults;
 
@@ -332,8 +332,10 @@ public class MatchUtilities {
             return;
         }
         else if (sourceExp instanceof SentenceAtomic && targetExp instanceof SentenceAtomic) return;
-        else if (sourceExp instanceof MFormula && targetExp instanceof MFormula &&
-                ((MFormula) sourceExp).getFormulaSym().equals(((MFormula) targetExp).getFormulaSym())) {
+        else if (sourceExp instanceof MFormula && targetExp instanceof MFormula) return;
+
+        else if (sourceExp instanceof MComplexFormula && targetExp instanceof MComplexFormula &&
+                ((MComplexFormula) sourceExp).getFormulaSym().equals(((MComplexFormula) targetExp).getFormulaSym())) {
             if (sourceExp.getChildren() != null && targetExp.getChildren() != null && sourceExp.getChildren().size() == targetExp.getChildren().size()) {
                 for (int i = 0; i < sourceExp.getChildren().size(); i++) {
                     if (sourceExp.getChildren().get(i).getLevel() >= 0 && targetExp.getChildren().get(i).getLevel() >= 0) {

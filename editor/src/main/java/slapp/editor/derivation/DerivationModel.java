@@ -47,6 +47,14 @@ public class DerivationModel implements ExerciseModel<Document>, Serializable {
     private double commentTextHeight = 0;
     private List<ModelLine> derivationLines = new ArrayList<>();
 
+    private String ruleset = "NDs";
+    private boolean checkSuccess = false;
+    private String checkMessage = "Derivation";
+    private int checkMax = 10;
+    private int checkTries = 0;
+    private int helpMax = 3;
+    private int helpTries = 0;
+
 
     /**
      * Construct derivation model
@@ -153,6 +161,62 @@ public class DerivationModel implements ExerciseModel<Document>, Serializable {
      * @param commentTextHeight the height value
      */
     void setCommentTextHeight(double commentTextHeight) {     this.commentTextHeight = commentTextHeight;   }
+
+    public String getRuleset() {
+        return ruleset;
+    }
+
+    public void setRuleset(String ruleset) {
+        this.ruleset = ruleset;
+    }
+
+    public boolean isCheckSuccess() {
+        return checkSuccess;
+    }
+
+    public void setCheckSuccess(boolean checkSuccess) {
+        this.checkSuccess = checkSuccess;
+    }
+
+    public String getCheckMessage() {
+        return checkMessage;
+    }
+
+    public void setCheckMessage(String checkMessage) {
+        this.checkMessage = checkMessage;
+    }
+
+    public int getCheckMax() {
+        return checkMax;
+    }
+
+    public void setCheckMax(int checkMax) {
+        this.checkMax = checkMax;
+    }
+
+    public int getCheckTries() {
+        return checkTries;
+    }
+
+    public void setCheckTries(int checkTries) {
+        this.checkTries = checkTries;
+    }
+
+    public int getHelpMax() {
+        return helpMax;
+    }
+
+    public void setHelpMax(int helpMax) {
+        this.helpMax = helpMax;
+    }
+
+    public int getHelpTries() {
+        return helpTries;
+    }
+
+    public void setHelpTries(int helpTries) {
+        this.helpTries = helpTries;
+    }
 
     /**
      * The exercise name (used also as file name)

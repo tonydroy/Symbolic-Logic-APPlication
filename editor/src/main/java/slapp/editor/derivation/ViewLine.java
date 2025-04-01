@@ -33,6 +33,7 @@ public class ViewLine {
     private BoxedDRTA lineContentBoxedDRTA = null;
     private TextFlow justificationFlow = null;
     private List<Label> clientLabels = new ArrayList<Label>();
+    private boolean lineHighlight;
 
     /**
      * Construct view line from scratch
@@ -55,6 +56,23 @@ public class ViewLine {
         this.lineContentBoxedDRTA = bdrta;
         this.justificationFlow = justificationFlow;
         this.clientLabels = clientLabels;
+    }
+
+    public boolean isLineHighlight() {
+        return lineHighlight;
+    }
+
+    public void setLineHighlight(boolean lineHighlight) {
+        this.lineHighlight = lineHighlight;
+    }
+
+    public int realDepth() {
+        if (LineType.isGapLine(lineType) == true) {
+            return depth -1;
+        }
+        else {
+            return depth;
+        }
     }
 
     /**

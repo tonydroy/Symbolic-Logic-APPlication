@@ -17,6 +17,7 @@ public class SyntacticalFns {
     private static List<Expression> nodeList = new ArrayList<>();
     private static Language lang;
     private static List<Expression> variableList;
+    private static List<Expression> variableList2;
     private static List<Expression> removalList;
 
     public SyntacticalFns() {}
@@ -58,7 +59,7 @@ public class SyntacticalFns {
         int i = sortedSubformulas.size() - 1;
         while (i >= 0) {
             Formula formula = (Formula) sortedSubformulas.get(i);
-            if (!formula.isAtomic() && formula.getChildren() != null) {
+            if (!formula.isAtomic() && !(formula instanceof MFormula) && !(formula instanceof MComplexFormula) && formula.getChildren() != null) {
                 ExpressionType type = formula.getMainOperator().getType();
                 if (type == ExpressionType.UNIVERSAL_OP || type == ExpressionType.UNIV_BOUNDED_OP || type == ExpressionType.UNIV_RESTRICTED_OP ||
                         type == ExpressionType.EXISTENTIAL_OP || type == ExpressionType.EXIS_BOUNDED_OP || type == ExpressionType.EXIS_RESTRICTED_OP
@@ -92,6 +93,30 @@ public class SyntacticalFns {
                 continue;
             }
 
+            if (formula instanceof MFormula) {
+                index++;
+                continue;
+            }
+
+            if (formula instanceof MComplexFormula) {
+                variableList2 = new ArrayList<>();
+                setTermVariableList2(term2Exp);
+
+                //term2 has a variable not in term1
+                boolean extraVariable = false;
+                for (Expression exp : variableList2) {
+                    if (!variableList.contains(exp)) {
+                        extraVariable = true;
+                    }
+                }
+                if (extraVariable) {
+                    freeFor = false;
+                    System.out.println("Cannot verify that " + term2Exp + " is free for " + term1Exp + " in " + formulaExp +".");
+                }
+                index++;
+                continue;
+            }
+
             Operator mainOperator = formula.getMainOperator();
             ExpressionType opType = formula.getMainOperator().getType();
 
@@ -111,6 +136,8 @@ public class SyntacticalFns {
 
             if (opType == ExpressionType.UNIVERSAL_OP || opType == ExpressionType.EXISTENTIAL_OP || opType == ExpressionType.UNIV_BOUNDED_OP || opType == ExpressionType.EXIS_BOUNDED_OP) {
                 Term variable = mainOperator.getVariableTerm();
+
+                //term1 is bound so no substitution
                 if (variableList.contains(variable)) {
                     index++;
                     continue;
@@ -230,23 +257,20 @@ public class SyntacticalFns {
         boolean free = false;
 
         Expression formExp = ParseUtilities.parseDoc(formulaDoc, langName).get(0);
-        Expression subExp = substituteDocTerms(formulaDoc, termDoc, new Document(Languages.getLanguage(langName).getDummyVariableSym()), langName );
-
-        if (!subExp.equals(formExp) ) {
-            free = true;
-        }
-        return free;
+        Expression termExp = ParseUtilities.parseDoc(termDoc, langName).get(0);
+        return expTermFreeInFormula(formExp, termExp, langName);
     }
 
     public static boolean expTermFreeInFormula(Expression formulaExp, Expression termExp, String langName) {
-        boolean free = false;
+        boolean free = true;
 
         Expression dummyVariable = ParseUtilities.parseDoc(new Document(Languages.getLanguage(langName).getDummyVariableSym()), langName).get(0);
         Expression subExp = substituteExpTerms(formulaExp, termExp, dummyVariable);
 
-        if (!subExp.equals(formulaExp) ) {
-            free = true;
+        if (subExp.equals(formulaExp)) {
+            free = false;
         }
+
         return free;
     }
 
@@ -331,7 +355,7 @@ public class SyntacticalFns {
             else if (exp.getType() == ExpressionType.FORMULA) {
 
                 Formula formula = (Formula) exp;
-                if (formula instanceof SentenceAtomic) {
+                if (formula instanceof SentenceAtomic || formula instanceof MFormula) {
                     parallelList.add(exp);
                 }
                 else if (formula.isAtomic()) {
@@ -356,6 +380,21 @@ public class SyntacticalFns {
                         parallelList.add(newInfixAtomic);
                     }
                 }
+                else if (formula instanceof MComplexFormula) {
+                    List<Expression> parallelChildList = new ArrayList();
+                    for (int j = 0; j < formula.getChildren().size(); j++) {
+                        Expression childExp = formula.getChildren().get(j);
+                        int index = listIndexParticular(nodeList, childExp);
+                        parallelChildList.add(parallelList.get(index));
+                    }
+                    MComplexFormula complexFormula = (MComplexFormula) formula;
+                    MComplexFormula newComplexFormula = new MComplexFormula(complexFormula.getFormulaSym());
+                    newComplexFormula.setChildren(parallelChildList);
+                    newComplexFormula.setOpenBracket(complexFormula.getOpenBracket());
+                    newComplexFormula.setCloseBracket(complexFormula.getCloseBracket());
+                    parallelList.add(newComplexFormula);
+                }
+
                 else if (formula.getMainOperator().getType() == ExpressionType.UNIVERSAL_OP && binds(formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
                 else if (formula.getMainOperator().getType() == ExpressionType.EXISTENTIAL_OP && binds(formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
 
@@ -423,14 +462,15 @@ public class SyntacticalFns {
     }
 
     public static boolean particularTermsFreeInFormula(Expression formulaExp, List<Expression> termList, String langName) {
-        boolean free = false;
+        boolean free = true;
 
         Expression dummyVariable = ParseUtilities.parseDoc(new Document(Languages.getLanguage(langName).getDummyVariableSym()), langName).get(0);
         Expression subExp = substituteParticularTerms(formulaExp, dummyVariable, termList);
 
-        if (!subExp.equals(formulaExp) ) {
-            free = true;
+        if (subExp.equals(formulaExp)) {
+            free = false;
         }
+
         return free;
     }
 
@@ -494,7 +534,7 @@ public class SyntacticalFns {
             else if (exp.getType() == ExpressionType.FORMULA) {
 
                 Formula formula = (Formula) exp;
-                if (formula instanceof SentenceAtomic) {
+                if (formula instanceof SentenceAtomic || formula instanceof MFormula) {
                     parallelList.add(exp);
                 }
                 else if (formula.isAtomic()) {
@@ -519,6 +559,21 @@ public class SyntacticalFns {
                         parallelList.add(newInfixAtomic);
                     }
                 }
+                else if (formula instanceof MComplexFormula) {
+                    List<Expression> parallelChildList = new ArrayList();
+                    for (int j = 0; j < formula.getChildren().size(); j++) {
+                        Expression childExp = formula.getChildren().get(j);
+                        int index = listIndexParticular(nodeList, childExp);
+                        parallelChildList.add(parallelList.get(index));
+                    }
+                    MComplexFormula complexFormula = (MComplexFormula) formula;
+                    MComplexFormula newComplexFormula = new MComplexFormula(complexFormula.getFormulaSym());
+                    newComplexFormula.setChildren(parallelChildList);
+                    newComplexFormula.setOpenBracket(complexFormula.getOpenBracket());
+                    newComplexFormula.setCloseBracket(complexFormula.getCloseBracket());
+                    parallelList.add(newComplexFormula);
+                }
+
                 else if (formula.getMainOperator().getType() == ExpressionType.UNIVERSAL_OP && binds(formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
                 else if (formula.getMainOperator().getType() == ExpressionType.EXISTENTIAL_OP && binds(formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
 
@@ -604,6 +659,17 @@ public class SyntacticalFns {
         if (exp.getChildren() != null && exp.getLevel() >=0) {
             for (int i = 0; i < exp.getChildren().size(); i++) {
                 setTermVariableList(exp.getChildren().get(i));
+            }
+        }
+    }
+
+    public static void setTermVariableList2(Expression exp) {
+        if (exp.getType() == ExpressionType.TERM && ((Term) exp).getTermType() == TermType.VARIABLE && !variableList2.contains(exp)) {
+            variableList2.add(exp);
+        }
+        if (exp.getChildren() != null && exp.getLevel() >=0) {
+            for (int i = 0; i < exp.getChildren().size(); i++) {
+                setTermVariableList2(exp.getChildren().get(i));
             }
         }
     }

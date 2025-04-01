@@ -4,6 +4,7 @@ import com.gluonhq.richtextarea.model.DecorationModel;
 import com.gluonhq.richtextarea.model.Document;
 import com.gluonhq.richtextarea.model.TextDecoration;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
 import javafx.scene.text.Text;
 import slapp.editor.parser.grammatical_parts.*;
 import slapp.editor.parser.symbols.*;
@@ -320,12 +321,15 @@ public class ParseUtilities {
 
             //treat meta formmula here
             if (expressions.get(i).getType() == ExpressionType.MFORMULA_SYM) {
-                MFormula formula = MFormula.getInstance((MFormulaSym) expressions.get(i));
-                formula.setLevel(maxTermLevel + 1);
-                formula.setChildren(new ArrayList<>());
-                expressions.set(i, formula);
+                MFormulaSym formulaSym = (MFormulaSym) expressions.get(i);
+
 
                 if (i + 1 < expressions.size() && expressions.get(i + 1) instanceof OpenBracket) {
+                    //complex
+                    MComplexFormula formula = new MComplexFormula(formulaSym);
+                    formula.setLevel(maxTermLevel + 1);
+                    expressions.set(i, formula);
+
                     ExpressionType openBracketType = ExpressionType.OPEN_BRACKET1;
                     ExpressionType closeBracketType = ExpressionType.CLOSE_BRACKET1;
                     if (expressions.get(i+1).getType() == ExpressionType.OPEN_BRACKET2) {openBracketType = ExpressionType.OPEN_BRACKET2; closeBracketType = ExpressionType.CLOSE_BRACKET2; }
@@ -366,8 +370,13 @@ public class ParseUtilities {
                         }
                     }
                 }
+                else {
+                    //simple
+                    MFormula formula = MFormula.getInstance(formulaSym);
+                    formula.setLevel(maxTermLevel + 1);
+                    expressions.set(i, formula);
+                }
             }
-
             i = i + 1;
         }
 
@@ -509,27 +518,6 @@ public class ParseUtilities {
         }
 
         if (language.isMetalanguage()) {
-/*
-            for (int i = expressions.size() - 1; i >= 0; i--) {
-                if (expressions.get(i).getType() == ExpressionType.ANGLE_OPEN_BRACKET && i + 4 < expressions.size() && expressions.get(i+4).getType() == ExpressionType.ANGLE_CLOSE_BRACKET &&
-                        expressions.get(i+1).getType() == ExpressionType.TERM && expressions.get(i + 3).getType() == ExpressionType.TERM )
-                {
-                    SubstitutionTransform subTrans = null;
-                   if (expressions.get(i+2).getType() == ExpressionType.COMMA_DIVIDER) subTrans = new SubstitutionTransform((Term) expressions.get(i+1), (Term) expressions.get(i+3), ExpressionType.ALL_TERM_SUB,
-                           ((CommaDivider) expressions.get(i + 2)).toString());
-                   if (expressions.get(i+2).getType() == ExpressionType.SLASH_DIVIDER) subTrans = new SubstitutionTransform((Term) expressions.get(i+1), (Term) expressions.get(i+3), ExpressionType.SOME_TERM_SUB,
-                           ((SlashDivider) expressions.get(i+2)).toString());
-                   if (expressions.get(i+2).getType() == ExpressionType.DOUBLE_SLASH_DIVIDER) subTrans = new SubstitutionTransform((Term) expressions.get(i+1), (Term) expressions.get(i+3), ExpressionType.ONE_TERM_SUB,
-                           ((DoubleSlashDivider) expressions.get(i+2)).toString());
-                   expressions.set(i, subTrans);
-                   expressions.remove(i + 1);
-                   expressions.remove(i + 1);
-                   expressions.remove(i + 1);
-                   expressions.remove(i + 1);
-                }
-            }
-
- */
 
             for (int i = expressions.size() - 1; i >= 0; i--) {
                 if (expressions.get(i).getType() == ExpressionType.ANGLE_OPEN_BRACKET) {
@@ -1217,14 +1205,15 @@ public class ParseUtilities {
         return decorationAtIndex;
     }
 
+    public static Text newItalicText(String string) {
+        Text t = new Text();
+        if (!string.isEmpty()) {
+            t = new Text(string);
+            t.setFont(Font.font("Noto Serif Combo", FontPosture.ITALIC, baseFontSize));
 
-
-
-
-
-
-
-
+        }
+        return t;
+    }
 
     public static Text newRegularText(String string) {
         Text t = new Text();

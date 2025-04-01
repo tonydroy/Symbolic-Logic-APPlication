@@ -322,6 +322,7 @@ public class MainWindowView {
         borderPane.setMargin(centerPane, new Insets(10,0,0,0));
         borderPane.getCenter().setStyle("-fx-background-color: transparent");
 
+
         //bottom
 
         statusBar = new VBox(5);
