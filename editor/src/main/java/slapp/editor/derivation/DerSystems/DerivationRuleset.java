@@ -10,7 +10,8 @@ import java.util.regex.Pattern;
 public class DerivationRuleset {
     String name;
     List<Text> textName;
-    Language language;
+    Language objectLanguage;
+    Language metaLanguage;
     List<DerivationRule> rules;
     DerivationRule premiseRule;
     Pattern genericAssumption;
@@ -18,10 +19,11 @@ public class DerivationRuleset {
 
     List<Pair<Pattern, String>> dummyRules;
 
-    DerivationRuleset(String name, List<Text> textName, Language language) {
+    DerivationRuleset(String name, List<Text> textName, Language objectLanguage, Language metaLanguage) {
         this.name = name;
         this.textName = textName;
-        this.language = language;
+        this.objectLanguage = objectLanguage;
+        this.metaLanguage = metaLanguage;
     }
 
     public List<DerivationRule> getRules() {
@@ -32,6 +34,10 @@ public class DerivationRuleset {
         this.rules = rules;
     }
 
+    public Language getMetaLanguage() {
+        return metaLanguage;
+    }
+
     public String getName() {
         return name;
     }
@@ -40,8 +46,8 @@ public class DerivationRuleset {
         return textName;
     }
 
-    public Language getLanguage() {
-        return language;
+    public Language getObjectLanguage() {
+        return objectLanguage;
     }
 
     public DerivationRule getPremiseRule() {

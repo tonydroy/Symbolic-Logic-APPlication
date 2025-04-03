@@ -26,6 +26,10 @@ public class CloseBracket implements Expression {
         this.type = type;
     }
 
+    public String getTextString() {
+        return textString;
+    }
+
     @Override
     public ExpressionType getType() {return type;}
 

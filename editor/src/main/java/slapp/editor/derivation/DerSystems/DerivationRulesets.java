@@ -34,7 +34,7 @@ public class DerivationRulesets implements Serializable {
 
 
     private static DerivationRuleset getNDs() {
-        DerivationRuleset NDs = new DerivationRuleset("NDs", Collections.singletonList(ParseUtilities.newItalicText("NDs")), Languages.getLanguage("Ls_abv"));
+        DerivationRuleset NDs = new DerivationRuleset("NDs", Collections.singletonList(ParseUtilities.newItalicText("NDs")), Languages.getLanguage("Ls_abv"), Languages.getLanguage("Meta"));
 
         DerivationRule premiseRule = new Premise("P","^\\s*P\\s*$");
         NDs.setPremiseRule(premiseRule);
@@ -49,8 +49,8 @@ public class DerivationRulesets implements Serializable {
         rules.add(new AsspDisjExploitC("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\d*\\s*\\u2228E\\)\\s*$"));  //assp disj E for contradiction
 
         rules.add(new Rieteration("R", "^\\s*\\d+\\s*R\\s*$"));  //reiteration
-        rules.add(new ConjunctionIntro("\\u2227I","^\\s*\\d+\\s*,\\s*\\d+\\s*\\u2227I\\s*$"));  // caret I
-        rules.add(new ConjunctionExploit("\\u2227E","^\\s*\\d+\\s*\\u2227E\\s*$"));  //caret E
+        rules.add(new ConjunctionIntro("\u2227I","^\\s*\\d+\\s*,\\s*\\d+\\s*\\u2227I\\s*$"));  // caret I
+        rules.add(new ConjunctionExploit("\u2227E","^\\s*\\d+\\s*\\u2227E\\s*$"));  //caret E
         NDs.setRules(rules);
 
         List<Pair<Pattern, String>> dummyRules = new ArrayList<>();

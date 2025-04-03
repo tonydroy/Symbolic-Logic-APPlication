@@ -110,9 +110,12 @@ public class DerivationCheck {
 
     public ViewLine getLineFromLabel(String label) {
         ViewLine line = null;
+
         for (ViewLine viewLine : viewLines) {
-            if (viewLine.getLineNumberLabel().equals(label)) line = viewLine;
-            break;
+            if (LineType.isContentLine(viewLine.getLineType()) && viewLine.getLineNumberLabel().getText().equals(label)) {
+                line = viewLine;
+                break;
+            }
         }
         return line;
     }
@@ -121,14 +124,14 @@ public class DerivationCheck {
     public Pair<Boolean, List<Text>> lineIsAccessibleTo(ViewLine justifier, ViewLine candidate) {
         String justifierLabel = justifier.getLineNumberLabel().getText();
         String candidateLabel = candidate.getLineNumberLabel().getText();
-        if (viewLines.indexOf(candidate) >= viewLines.indexOf(justifier)) {
-            return new Pair<>(false, Collections.singletonList(new Text("Line " + justifierLabel + " (does not come after and) is not available for justification of line " + candidateLabel + ".")));
+        if (viewLines.indexOf(candidate) <= viewLines.indexOf(justifier)) {
+            return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Line " + justifierLabel + " (does not come before and) is not available for justification of line " + candidateLabel + ".")));
         }
         List<String> justifierAssps = justifier.getAssumptionList();
         List<String> candidateAssps = candidate.getAssumptionList();
         for (String labelStr : justifierAssps) {
             if (!candidateAssps.contains(labelStr)) {
-                return new Pair<>(false, Collections.singletonList(new Text("Line " + justifierLabel + " is not accessible for justification of line " + candidateLabel + ".")));
+                return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Line " + justifierLabel + " is not accessible for justification of line " + candidateLabel + ".")));
             }
         }
         return new Pair(true, null);
@@ -156,11 +159,11 @@ public class DerivationCheck {
         String startJustificationString = derivationExercise.getStringFromJustificationFlow(startJustificationFlow);
         Matcher matcher = derivationRuleset.getGenericAssumption().matcher(startJustificationString);
         if (!matcher.matches()) {
-            return new Pair<>(false, Collections.singletonList(new Text("A subderivation " + label1 + "-" + label2 + " must start with an assumption.")));
+            return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("A subderivation " + label1 + "-" + label2 + " must start with an assumption.")));
         }
         ViewLine lastLine = lastLineAtScope(startLine);
         if (!lastLine.getLineNumberLabel().equals(label2)) {
-            return new Pair<>(false, Collections.singletonList(new Text(label2 + "does not identify the last line of the subderivation beginning at " + label1 + ".")));
+            return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText(label2 + "does not identify the last line of the subderivation beginning at " + label1 + ".")));
         }
         return new Pair<>(true, null);
     }
@@ -172,7 +175,7 @@ public class DerivationCheck {
         }
         Pair<Boolean, List<Text>> accessibleResult = lineIsAccessibleTo(getLineFromLabel(label2), line);
         if (!accessibleResult.getKey()) {
-            return new Pair<>(false, Collections.singletonList(new Text("Subderivation " + label1 + "-" + label2 + " is not accessible for the justification of " + line.getLineNumberLabel() + ".")));
+            return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Subderivation " + label1 + "-" + label2 + " is not accessible for the justification of " + line.getLineNumberLabel() + ".")));
         }
         return new Pair<>(true, null);
     }
@@ -182,7 +185,7 @@ public class DerivationCheck {
     private void setScopeLists() {
         LinkedList premiseList = new LinkedList();
         LinkedList<String> assumptionList = new LinkedList<>();
-        int currentDepth = viewLines.get(0).realDepth();
+        int currentDepth = 1;
 
         for (int i = 0; i < viewLines.size(); i++) {
             ViewLine viewLine = viewLines.get(i);
@@ -223,13 +226,13 @@ public class DerivationCheck {
             Matcher matcher = derivationRuleset.getGenericAssumption().matcher(justificationString);
             if (viewLine.realDepth() == currentDepth + 1 && !matcher.matches()) {
                 highlightLine(i);
-                EditorAlerts.showSimpleTxtListAlert("Scope Increase:", Collections.singletonList(new Text("An increase in scope should be associated with a justification by assumption.")));
+                EditorAlerts.showSimpleTxtListAlert("Scope Increase:", Collections.singletonList(ParseUtilities.newRegularText("An increase in scope should be associated with a justification by assumption.")));
                 resetHighlights();
                 return false;
             }
             else if (viewLine.realDepth() != currentDepth + 1 && matcher.matches()) {
                 highlightLine(i);
-                EditorAlerts.showSimpleTxtListAlert("Assumption Scope:", Collections.singletonList(new Text("A justification by assumption should be associated with a scope increase.")));
+                EditorAlerts.showSimpleTxtListAlert("Assumption Scope:", Collections.singletonList(ParseUtilities.newRegularText("A justification by assumption should be associated with a scope increase.")));
                 resetHighlights();
                 return false;
             }
@@ -253,7 +256,7 @@ public class DerivationCheck {
 
                 if (lineDoc.getText().equals("") && !justificationString.equals("")) {
                     highlightJustification(i);
-                    EditorAlerts.showSimpleTxtListAlert("Missing Formula", Collections.singletonList(new Text("No formula to which justification applies.")));
+                    EditorAlerts.showSimpleTxtListAlert("Missing Formula", Collections.singletonList(ParseUtilities.newRegularText("No formula to which justification applies.")));
                     resetHighlights();
                     return false;
                 }
@@ -262,7 +265,7 @@ public class DerivationCheck {
 
                     if (justificationString.equals("")) {
                         highlightJustification(i);
-                        EditorAlerts.showSimpleTxtListAlert("Missing Justification:", Collections.singletonList(new Text("Line requires justification.")));
+                        EditorAlerts.showSimpleTxtListAlert("Missing Justification:", Collections.singletonList(ParseUtilities.newRegularText("Line requires justification.")));
                         resetHighlights();
                         return false;
                     } else {
@@ -278,7 +281,7 @@ public class DerivationCheck {
                                 Matcher matcher = dummyPair.getKey().matcher(justificationString);
                                 if (matcher.matches()) {
                                     highlightJustification(i);
-                                    EditorAlerts.showSimpleTxtListAlert("Justification Error:", Collections.singletonList(new Text(dummyPair.getValue())));
+                                    EditorAlerts.showSimpleTxtListAlert("Justification Error:", Collections.singletonList(ParseUtilities.newRegularText(dummyPair.getValue())));
                                     resetHighlights();
                                     return false;
                                 }
@@ -308,7 +311,7 @@ public class DerivationCheck {
                 rta.getActionFactory().saveNow().execute(new ActionEvent());
                 Document lineDoc = rta.getDocument();
                 if (!lineDoc.getText().equals("")) {
-                    List<Expression> parseExpressions = ParseUtilities.parseDoc(lineDoc, derivationRuleset.getLanguage().getNameString());
+                    List<Expression> parseExpressions = ParseUtilities.parseDoc(lineDoc, derivationRuleset.getObjectLanguage().getNameString());
                     if (parseExpressions.size() == 1) {
                         continue;
                     }
@@ -364,12 +367,12 @@ public class DerivationCheck {
         if (viewLines.size() > 0) {
             ViewLine firstLine = viewLines.get(0);
             if (!LineType.isContentLine(firstLine.getLineType())) {
-                EditorAlerts.showSimpleTxtListAlert("Derivation Start:", Collections.singletonList(new Text("Top line of derivation cannot be a 'shelf' or 'gap'.")));
+                EditorAlerts.showSimpleTxtListAlert("Derivation Start:", Collections.singletonList(ParseUtilities.newRegularText("Top line of derivation cannot be a 'shelf' or 'gap'.")));
                 return false;
             }
             if (firstLine.realDepth() > 2) {
                 highlightFormula(0);
-                EditorAlerts.showSimpleTxtListAlert("Derivation Start:", Collections.singletonList(new Text("Starting scope depth cannot be greater than 2.")));
+                EditorAlerts.showSimpleTxtListAlert("Derivation Start:", Collections.singletonList(ParseUtilities.newRegularText("Starting scope depth cannot be greater than 2.")));
                 resetHighlights();
                 return false;
             }
@@ -377,12 +380,12 @@ public class DerivationCheck {
         if (viewLines.size() > 1) {
             ViewLine lastLine = viewLines.get(viewLines.size() - 1);
             if (!LineType.isContentLine(lastLine.getLineType())) {
-                EditorAlerts.showSimpleTxtListAlert("Derivation End", Collections.singletonList(new Text("Last line of derivation cannot be a 'shelf' or 'gap'.")));
+                EditorAlerts.showSimpleTxtListAlert("Derivation End", Collections.singletonList(ParseUtilities.newRegularText("Last line of derivation cannot be a 'shelf' or 'gap'.")));
                 return false;
             }
             if (lastLine.realDepth() != 1) {
                 highlightFormula(viewLines.size() - 1);
-                EditorAlerts.showSimpleTxtListAlert("Derivation End", Collections.singletonList(new Text("Last line of derivation cannot have scope depth greater than 1.")));
+                EditorAlerts.showSimpleTxtListAlert("Derivation End", Collections.singletonList(ParseUtilities.newRegularText("Last line of derivation cannot have scope depth greater than 1.")));
                 resetHighlights();
                 return false;
             }
@@ -395,13 +398,13 @@ public class DerivationCheck {
             if (LineType.isGapLine(currentLine.getLineType())) {
                 if (currentDepth + 1 != viewLines.get(i - 1).realDepth() ) {
                     highlightFormula(i - 1);
-                    EditorAlerts.showSimpleTxtListAlert("Gap Scope:", Collections.singletonList(new Text("Scope depth of line before gap should be one more than that of gap.")));
+                    EditorAlerts.showSimpleTxtListAlert("Gap Scope:", Collections.singletonList(ParseUtilities.newRegularText("Scope depth of line before gap should be one more than that of gap.")));
                     resetHighlights();
                     return false;
                 }
                 if (currentDepth + 1 != viewLines.get(i + 1).realDepth()) {
                     highlightFormula(i + 1);
-                    EditorAlerts.showSimpleTxtListAlert("Gap Scope:", Collections.singletonList(new Text("Scope depth of line after gap should be one more than that of gap.")));
+                    EditorAlerts.showSimpleTxtListAlert("Gap Scope:", Collections.singletonList(ParseUtilities.newRegularText("Scope depth of line after gap should be one more than that of gap.")));
                     resetHighlights();
                     return false;
                 }
@@ -409,7 +412,7 @@ public class DerivationCheck {
             else if (LineType.isContentLine(currentLine.getLineType())) {
                 if (currentLine.realDepth() > depth + 1 || currentLine.realDepth() < depth - 1) {
                     highlightFormula(i);
-                    EditorAlerts.showSimpleTxtListAlert("Scope Jump:", Collections.singletonList(new Text("From one line to the next, scope depth cannot change by more than one.")));
+                    EditorAlerts.showSimpleTxtListAlert("Scope Jump:", Collections.singletonList(ParseUtilities.newRegularText("From one line to the next, scope depth cannot change by more than one.")));
                     resetHighlights();
                     return false;
                 }

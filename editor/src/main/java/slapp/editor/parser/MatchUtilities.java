@@ -1,5 +1,6 @@
 package slapp.editor.parser;
 
+import com.gluonhq.richtextarea.model.Document;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
@@ -165,6 +166,46 @@ public class MatchUtilities {
         else {
       //      throw new TextMessageException(getMessageTexts(target, source, "", " does not substitute into ", "."));
         }
+    }
+
+    public static void clearFormMatch() {
+        clearMatching();
+        transformList.clear();
+        matchedInstances.clear();
+        allInstances.clear();
+        subFreeFor = true;
+    }
+
+    public static Pair<Boolean, Boolean> simpleFormMatch(Document metaDoc, Document objectDoc, String objectL, String metaL) throws TextMessageException {
+        Expression metaExp = ParseUtilities.parseDoc(metaDoc, metaL).get(0);
+        Expression objectExp = ParseUtilities.parseDoc(objectDoc, objectL).get(0);
+
+        //conditionally compensate for dropped outer brackets by matching meta expression to object expression
+        if (relaxBracketMatch) {
+                if (metaExp.getType() == ExpressionType.TERM) {
+                    Term mTerm = (Term) metaExp;
+                    Term oTerm = (Term) objectExp;
+                    if (mTerm.getOpenBracket().getType() != null && mTerm.getCloseBracket().getType() != null && oTerm.getOpenBracket().getType() == null && oTerm.getCloseBracket().getType() == null) {
+                        mTerm.setOpenBracket(new OpenBracket(""));
+                        mTerm.setCloseBracket(new CloseBracket(""));
+                    }
+                }
+                if (metaExp.getType() == ExpressionType.FORMULA) {
+                    Formula mFormula = (Formula) metaExp;
+                    Formula oFormula = (Formula) objectExp;
+                    if (mFormula.getOpenBracket().getType() != null && mFormula.getCloseBracket().getType() != null && oFormula.getOpenBracket().getType() == null && oFormula.getCloseBracket().getType() == null) {
+                        mFormula.setOpenBracket(new OpenBracket(""));
+                        mFormula.setCloseBracket(new CloseBracket(""));
+                    }
+                }
+            }
+
+            setMatching(metaExp, objectExp);
+            processTransforms(objectL);
+
+            boolean formMatch = metaExp.getMatch().equals(objectExp);
+            Pair<Boolean, Boolean> subResults = new Pair<>(formMatch, subFreeFor);
+            return subResults;
     }
 
 

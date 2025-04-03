@@ -19,10 +19,15 @@ public abstract class DerivationRule {
     public DerivationRule(String name, String rgexTemplate) {
         Pattern pattern = Pattern.compile(rgexTemplate);
         matcher = pattern.matcher("");
+        this.name = name;
     }
 
     public boolean isPremAssp() {
         return premAssp;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public boolean matches(String input) {
