@@ -4,15 +4,15 @@ import javafx.scene.text.Text;
 import javafx.util.Pair;
 import slapp.editor.derivation.DerivationCheck;
 import slapp.editor.derivation.ViewLine;
-import slapp.editor.parser.Language;
 
 import java.util.List;
 
-public class ConjunctionExploit extends DerivationRule {
+public class Rieteration extends DerivationRule {
 
-    public ConjunctionExploit(String name, String rgexTemplate) {
+    public Rieteration(String name, String rgexTemplate) {
         super(name, rgexTemplate);
         this.premAssp = false;
+
     }
 
     public Pair<Boolean, List<Text>> applies(DerivationCheck checker, ViewLine line, String... inputs) {

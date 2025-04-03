@@ -34,6 +34,7 @@ public class ViewLine {
     private TextFlow justificationFlow = null;
     private List<Label> clientLabels = new ArrayList<Label>();
     private boolean lineHighlight;
+    private List<String> assumptionList;
 
     /**
      * Construct view line from scratch
@@ -56,6 +57,7 @@ public class ViewLine {
         this.lineContentBoxedDRTA = bdrta;
         this.justificationFlow = justificationFlow;
         this.clientLabels = clientLabels;
+
     }
 
     public boolean isLineHighlight() {
@@ -73,6 +75,14 @@ public class ViewLine {
         else {
             return depth;
         }
+    }
+
+    public List<String> getAssumptionList() {
+        return assumptionList;
+    }
+
+    public void setAssumptionList(List<String> assumptionList) {
+        this.assumptionList = assumptionList;
     }
 
     /**

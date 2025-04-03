@@ -159,42 +159,6 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         controlBox.setMinWidth(150); controlBox.setMaxWidth(150);
         exerciseControlNode = controlBox;
 
-
-        /*
-        bigCheck = new Text("\ue89a");
-        bigCheck.setFont(Font.font("Noto Serif Combo", 72));
-        bigCheck.setFill(Color.LAWNGREEN);
-        checkedElements = new Text(checkText);
-        checkedElements.setFont(Font.font("Noto Serif Combo", 11));
-        checkedElements.setFill(Color.GREEN);
-        TextFlow checkedElementsFlow = new TextFlow(checkedElements);
-        checkedElementsFlow.setMaxWidth(150);
-        VBox bigCheckBox = new VBox(0, bigCheck, checkedElementsFlow);
-        bigCheckBox.setAlignment(Pos.CENTER);
-
-
-        checkButton = new Button("Check");
-        checkButton.setPrefWidth(100);
-        checkButton.setTooltip(new Tooltip("Check derivation for correctness"));
-        checkTriesLabel = new Label("0/10");
-        VBox checksBox = new VBox(10, checkButton, checkTriesLabel);
-        checksBox.setAlignment(Pos.CENTER);
-
-        helpButton = new Button("Help");
-        helpButton.setPrefWidth(100);
-        helpButton.setTooltip(new Tooltip("Get help for selected goal"));
-        helpTriesLabel = new Label("0/3");
-        VBox helpBox = new VBox(10, helpButton, helpTriesLabel);
-        helpBox.setAlignment(Pos.CENTER);
-
-        VBox rightControlBox = new VBox(40, bigCheckBox, checksBox, helpBox );
-        rightControlBox.setAlignment(Pos.TOP_CENTER);
-        rightControlBox.setPadding(new Insets(60,20,0,20));
-        rightControlNode = rightControlBox;
-
-        deactivateBigCheck();
-
-         */
     }
 
     /**

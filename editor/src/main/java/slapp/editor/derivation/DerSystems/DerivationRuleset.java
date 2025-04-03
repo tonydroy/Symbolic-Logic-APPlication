@@ -1,15 +1,22 @@
 package slapp.editor.derivation.DerSystems;
 
 import javafx.scene.text.Text;
+import javafx.util.Pair;
 import slapp.editor.parser.Language;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class DerivationRuleset {
     String name;
     List<Text> textName;
     Language language;
     List<DerivationRule> rules;
+    DerivationRule premiseRule;
+    Pattern genericAssumption;
+    boolean requirePremisesAtTop = true;
+
+    List<Pair<Pattern, String>> dummyRules;
 
     DerivationRuleset(String name, List<Text> textName, Language language) {
         this.name = name;
@@ -35,6 +42,38 @@ public class DerivationRuleset {
 
     public Language getLanguage() {
         return language;
+    }
+
+    public DerivationRule getPremiseRule() {
+        return premiseRule;
+    }
+
+    public void setPremiseRule(DerivationRule premiseRule) {
+        this.premiseRule = premiseRule;
+    }
+
+    public List<Pair<Pattern, String>> getDummyRules() {
+        return dummyRules;
+    }
+
+    public void setDummyRules(List<Pair<Pattern, String>> dummyRules) {
+        this.dummyRules = dummyRules;
+    }
+
+    public Pattern getGenericAssumption() {
+        return genericAssumption;
+    }
+
+    public void setGenericAssumption(Pattern genericAssumption) {
+        this.genericAssumption = genericAssumption;
+    }
+
+    public boolean isRequirePremisesAtTop() {
+        return requirePremisesAtTop;
+    }
+
+    public void setRequirePremisesAtTop(boolean requirePremisesAtTop) {
+        this.requirePremisesAtTop = requirePremisesAtTop;
     }
 }
 

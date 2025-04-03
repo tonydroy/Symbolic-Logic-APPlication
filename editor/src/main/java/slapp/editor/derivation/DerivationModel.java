@@ -50,7 +50,7 @@ public class DerivationModel implements ExerciseModel<Document>, Serializable {
     private String ruleset = "NDs";
     private boolean checkSuccess = false;
     private String checkMessage = "Derivation";
-    private int checkMax = 10;
+    private int checkMax = -1;
     private int checkTries = 0;
     private int helpMax = 3;
     private int helpTries = 0;

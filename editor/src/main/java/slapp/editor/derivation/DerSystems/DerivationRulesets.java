@@ -1,6 +1,6 @@
 package slapp.editor.derivation.DerSystems;
 
-import javafx.scene.text.Text;
+import javafx.util.Pair;
 import slapp.editor.parser.Languages;
 import slapp.editor.parser.ParseUtilities;
 
@@ -8,8 +8,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
-public class DerivationRulesets {
+public class DerivationRulesets implements Serializable {
     private static List<DerivationRuleset> rulesets = new ArrayList<>();
 
     static {
@@ -33,21 +34,42 @@ public class DerivationRulesets {
 
 
     private static DerivationRuleset getNDs() {
-        DerivationRuleset NDs = new DerivationRuleset("NDs", Collections.singletonList(ParseUtilities.newItalicText("NDs")), Languages.getLanguage("Ls"));
+        DerivationRuleset NDs = new DerivationRuleset("NDs", Collections.singletonList(ParseUtilities.newItalicText("NDs")), Languages.getLanguage("Ls_abv"));
+
+        DerivationRule premiseRule = new Premise("P","^\\s*P\\s*$");
+        NDs.setPremiseRule(premiseRule);
 
         List<DerivationRule> rules = new ArrayList<>();
+        rules.add(premiseRule);
+        rules.add(new AsspCondIntro("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\u2192I\\)\\s*$"));   //assp arrow I
+        rules.add(new AsspBicondIntro("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\u2194I\\)\\s*$")); //assp double arrow I
+        rules.add(new AsspNegIntro("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\u223cI\\)\\s*$"));  //assp tilde I
+        rules.add(new AsspNegExploit("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\u223cE\\)\\s*$"));  //assp tilde E
+        rules.add(new AsspDisjExploitG("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\d+\\s*\\u2228E\\)\\s*$"));  //assp disj E for goal
+        rules.add(new AsspDisjExploitC("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\d*\\s*\\u2228E\\)\\s*$"));  //assp disj E for contradiction
 
-        rules.add(new Premise("\\s*P\\s*"));
-        rules.add(new AsspCondIntro("\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\u2192I\\)\\s*"));
-        rules.add(new AsspBicondIntro("\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\u2194I\\)\\s*"));
-        rules.add(new AsspNegIntro("\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\u223cI\\)\\s*"));
-        rules.add(new AsspNegExploit("\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\u223cE\\)\\s*"));
-        rules.add(new AsspDisjExploit("\\s*A\\s*\\((g|\\ud835\\udc54|c|\\ud835\\udc50),?\\s*\\u2228E\\)\\s*"));
-
-        rules.add(new ConjunctionIntro("\\s*\\d+\\s+,\\s*\\d+\\s*\\u2227I\\s*"));
-        rules.add(new ConjunctionExploit("\\s*\\d+\\s*\\u2227E\\s*"));
-
+        rules.add(new Rieteration("R", "^\\s*\\d+\\s*R\\s*$"));  //reiteration
+        rules.add(new ConjunctionIntro("\\u2227I","^\\s*\\d+\\s*,\\s*\\d+\\s*\\u2227I\\s*$"));  // caret I
+        rules.add(new ConjunctionExploit("\\u2227E","^\\s*\\d+\\s*\\u2227E\\s*$"));  //caret E
         NDs.setRules(rules);
+
+        List<Pair<Pattern, String>> dummyRules = new ArrayList<>();
+        dummyRules.add(new Pair(Pattern.compile("^\\s*A\\s*$"), "Assumption must by followed by (parenthetical) exit strategy."));
+        dummyRules.add(new Pair(Pattern.compile("^.*\\((g|\\ud835\\udc54|c|\\ud835\\udc50),?\\s*\\u2227I\\)\\s*$"), "\u2227I does not appeal to a subderivation and cannot appear as part of an exit strategy." ));
+        dummyRules.add(new Pair(Pattern.compile("^.*\\((g|\\ud835\\udc54|c|\\ud835\\udc50),?\\s*\\u2227E\\)\\s*$"), "\u2227E does not appeal to a subderivation and cannot appear as part of an exit strategy." ));
+        dummyRules.add(new Pair(Pattern.compile("^.*\\((g|\\ud835\\udc54|c|\\ud835\\udc50),?\\s*\\u2192E\\)\\s*$"), "\u2192E does not appeal to a subderivation and cannot appear as part of an exit strategy." ));
+        dummyRules.add(new Pair(Pattern.compile("^.*\\((g|\\ud835\\udc54|c|\\ud835\\udc50),?\\s*\\u2228I\\)\\s*$"), "\u2228I does not appeal to a subderivation and cannot appear as part of an exit strategy." ));
+        dummyRules.add(new Pair(Pattern.compile("^.*\\((g|\\ud835\\udc54|c|\\ud835\\udc50),?\\s*\\u2194E\\)\\s*$"), "\u2194E does not appeal to a subderivation and cannot appear as part of an exit strategy." ));
+        dummyRules.add(new Pair(Pattern.compile("^\\s*\\d+\\s*\\u2192E\\s*$"), "\u2192E requires two lines: both the conditional and the antecedent."));
+        dummyRules.add(new Pair(Pattern.compile("^\\s*\\d+\\s*,\\s*\\d+\\s*\\u2192I\\s*$"), "\u2192I requires a subderivation, not two individual lines."));
+        dummyRules.add(new Pair(Pattern.compile("^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\u2228E\\)\\s*$"), "Exit strategy for \u2228E should cite the line number of the disjunction to which it applies."));
+        dummyRules.add(new Pair(Pattern.compile("^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\u2228E\\)\\s*$"), "Exit strategy for \u2228E should cite the line number of the disjunction to which it applies."));
+
+        NDs.setDummyRules(dummyRules);
+
+        NDs.setGenericAssumption(Pattern.compile("^\\s*A.*$"));
+        NDs.setRequirePremisesAtTop(true);
+
         return NDs;
     }
 

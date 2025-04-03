@@ -2,15 +2,23 @@ package slapp.editor.derivation;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
+import javafx.event.ActionEvent;
 import javafx.scene.Node;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
+import javafx.scene.text.*;
+import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
+import slapp.editor.derivation.DerSystems.DerivationRule;
 import slapp.editor.derivation.DerSystems.DerivationRuleset;
+import slapp.editor.parser.Expression;
+import slapp.editor.parser.ParseUtilities;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DerivationCheck {
 
@@ -29,6 +37,8 @@ public class DerivationCheck {
         this.derivationExercise = derivationExercise;
         this.derivationView = derivationView;
         this.derivationRuleset = ruleset;
+
+
 
         setRightControlBox();
     }
@@ -59,12 +69,269 @@ public class DerivationCheck {
 
         viewLines = derivationView.getViewLines();
 
-
         if (!checkFormulas()) return false;
         if (!checkScopeStructure()) return false;
+        if (!checkFormulas()) return false;
+        if (!checkAssumptionScopes()) return false;
+        if (!checkJustificationForms()) return false;
+        setScopeLists();
+        if (!checkJustifications()) return false;
 
         derivationView.activateBigCheck();
         //set check on model
+        return true;
+    }
+
+    private boolean checkJustifications() {
+        for (int i = 0; i < viewLines.size(); i++) {
+            ViewLine viewLine = viewLines.get(i);
+            if (LineType.isContentLine(viewLine.getLineType())) {
+                TextFlow justificationFlow = viewLine.getJustificationFlow();
+                String justificationString = derivationExercise.getStringFromJustificationFlow(justificationFlow);
+                for (DerivationRule rule : derivationRuleset.getRules()) {
+                    if (rule.matches(justificationString)) {
+                        List<String> lineLabels = derivationExercise.getLineLabelsFromJustificationFlow(justificationFlow);
+                        String[] labelArray = new String[lineLabels.size()];
+                        lineLabels.toArray(labelArray);
+                        Pair<Boolean, List<Text>> resultPair = rule.applies(this, viewLines.get(i), labelArray);
+                        if (!resultPair.getKey()) {
+                            highlightLine(i);
+                            EditorAlerts.showSimpleTxtListAlert("Justification Issue:", resultPair.getValue());
+                            resetHighlights();
+                            return false;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    public ViewLine getLineFromLabel(String label) {
+        ViewLine line = null;
+        for (ViewLine viewLine : viewLines) {
+            if (viewLine.getLineNumberLabel().equals(label)) line = viewLine;
+            break;
+        }
+        return line;
+    }
+
+    //requires justifier and candidate are content lines
+    public Pair<Boolean, List<Text>> lineIsAccessibleTo(ViewLine justifier, ViewLine candidate) {
+        String justifierLabel = justifier.getLineNumberLabel().getText();
+        String candidateLabel = candidate.getLineNumberLabel().getText();
+        if (viewLines.indexOf(candidate) >= viewLines.indexOf(justifier)) {
+            return new Pair<>(false, Collections.singletonList(new Text("Line " + justifierLabel + " (does not come after and) is not available for justification of line " + candidateLabel + ".")));
+        }
+        List<String> justifierAssps = justifier.getAssumptionList();
+        List<String> candidateAssps = candidate.getAssumptionList();
+        for (String labelStr : justifierAssps) {
+            if (!candidateAssps.contains(labelStr)) {
+                return new Pair<>(false, Collections.singletonList(new Text("Line " + justifierLabel + " is not accessible for justification of line " + candidateLabel + ".")));
+            }
+        }
+        return new Pair(true, null);
+    }
+
+    //requires start line is content line
+    public ViewLine lastLineAtScope(ViewLine startLine) {
+        int index = viewLines.indexOf(startLine);
+        int depth = startLine.realDepth();
+        ViewLine lastCandidate = startLine;
+        for (int i = index; i < viewLines.size(); i++) {
+            ViewLine viewLine = viewLines.get(i);
+            if (viewLine.realDepth() >= depth && LineType.isContentLine(viewLine.getLineType())) {
+                lastCandidate = viewLine;
+            }
+            else break;
+        }
+        return lastCandidate;
+    }
+
+
+    public Pair<Boolean, List<Text>> isSubderivation(String label1, String label2) {
+        ViewLine startLine = getLineFromLabel(label1);
+        TextFlow startJustificationFlow = startLine.getJustificationFlow();
+        String startJustificationString = derivationExercise.getStringFromJustificationFlow(startJustificationFlow);
+        Matcher matcher = derivationRuleset.getGenericAssumption().matcher(startJustificationString);
+        if (!matcher.matches()) {
+            return new Pair<>(false, Collections.singletonList(new Text("A subderivation " + label1 + "-" + label2 + " must start with an assumption.")));
+        }
+        ViewLine lastLine = lastLineAtScope(startLine);
+        if (!lastLine.getLineNumberLabel().equals(label2)) {
+            return new Pair<>(false, Collections.singletonList(new Text(label2 + "does not identify the last line of the subderivation beginning at " + label1 + ".")));
+        }
+        return new Pair<>(true, null);
+    }
+
+    public Pair<Boolean, List<Text>> isAccessibleSubderivationFor(ViewLine line, String label1, String label2) {
+        Pair<Boolean, List<Text>> subderResult = isSubderivation(label1, label2);
+        if (!subderResult.getKey()) {
+            return subderResult;
+        }
+        Pair<Boolean, List<Text>> accessibleResult = lineIsAccessibleTo(getLineFromLabel(label2), line);
+        if (!accessibleResult.getKey()) {
+            return new Pair<>(false, Collections.singletonList(new Text("Subderivation " + label1 + "-" + label2 + " is not accessible for the justification of " + line.getLineNumberLabel() + ".")));
+        }
+        return new Pair<>(true, null);
+    }
+
+
+
+    private void setScopeLists() {
+        LinkedList premiseList = new LinkedList();
+        LinkedList<String> assumptionList = new LinkedList<>();
+        int currentDepth = viewLines.get(0).realDepth();
+
+        for (int i = 0; i < viewLines.size(); i++) {
+            ViewLine viewLine = viewLines.get(i);
+            if (viewLine.realDepth() == currentDepth) {
+                if (LineType.isContentLine(viewLine.getLineType())) {
+                    TextFlow justificationFlow = viewLine.getJustificationFlow();
+                    String justificationString = derivationExercise.getStringFromJustificationFlow(justificationFlow);
+                    if (derivationRuleset.getPremiseRule().matches(justificationString)) {
+                        premiseList.push(viewLine.getLineNumberLabel().getText());
+                    }
+                }
+            }
+            else {
+                if (LineType.isContentLine(viewLine.getLineType()) && viewLine.realDepth() == currentDepth + 1) {
+                    assumptionList.push(viewLine.getLineNumberLabel().getText());
+                    currentDepth++;
+                }
+                else if (viewLine.realDepth() == currentDepth - 1) {
+                    assumptionList.pop();
+                    currentDepth--;
+                }
+            }
+            ArrayList newList = new ArrayList(premiseList);
+            newList.addAll(assumptionList);
+            viewLine.setAssumptionList(newList);
+        }
+    }
+
+    private boolean checkAssumptionScopes() {
+        int currentDepth = 1;
+        for (int i = 0; i < viewLines.size(); i++) {
+            ViewLine viewLine = viewLines.get(i);
+            String justificationString = "";
+            if (LineType.isContentLine(viewLine.getLineType())) {
+                TextFlow justificationFlow = viewLine.getJustificationFlow();
+                justificationString = derivationExercise.getStringFromJustificationFlow(justificationFlow);
+            }
+            Matcher matcher = derivationRuleset.getGenericAssumption().matcher(justificationString);
+            if (viewLine.realDepth() == currentDepth + 1 && !matcher.matches()) {
+                highlightLine(i);
+                EditorAlerts.showSimpleTxtListAlert("Scope Increase:", Collections.singletonList(new Text("An increase in scope should be associated with a justification by assumption.")));
+                resetHighlights();
+                return false;
+            }
+            else if (viewLine.realDepth() != currentDepth + 1 && matcher.matches()) {
+                highlightLine(i);
+                EditorAlerts.showSimpleTxtListAlert("Assumption Scope:", Collections.singletonList(new Text("A justification by assumption should be associated with a scope increase.")));
+                resetHighlights();
+                return false;
+            }
+            else{
+                currentDepth = viewLine.realDepth();
+            }
+        }
+        return true;
+    }
+
+    private boolean checkJustificationForms() {
+        for (int i = 0; i < viewLines.size(); i++) {
+            ViewLine viewLine = viewLines.get(i);
+            if (LineType.isContentLine(viewLine.getLineType())) {
+                BoxedDRTA bdrta = viewLine.getLineContentBoxedDRTA();
+                RichTextArea rta = bdrta.getRTA();
+                rta.getActionFactory().saveNow().execute(new ActionEvent());
+                Document lineDoc = rta.getDocument();
+                TextFlow justificationFlow = viewLine.getJustificationFlow();
+                String justificationString = derivationExercise.getStringFromJustificationFlow(justificationFlow);
+
+                if (lineDoc.getText().equals("") && !justificationString.equals("")) {
+                    highlightJustification(i);
+                    EditorAlerts.showSimpleTxtListAlert("Missing Formula", Collections.singletonList(new Text("No formula to which justification applies.")));
+                    resetHighlights();
+                    return false;
+                }
+
+                if (!lineDoc.getText().equals("")) {
+
+                    if (justificationString.equals("")) {
+                        highlightJustification(i);
+                        EditorAlerts.showSimpleTxtListAlert("Missing Justification:", Collections.singletonList(new Text("Line requires justification.")));
+                        resetHighlights();
+                        return false;
+                    } else {
+                        boolean ok = false;
+                        for (DerivationRule rule : derivationRuleset.getRules()) {
+                            if (rule.matches(justificationString)) {
+                                ok = true;
+                                break;
+                            }
+                        }
+                        if (!ok) {
+                            for (Pair<Pattern, String> dummyPair : derivationRuleset.getDummyRules()) {
+                                Matcher matcher = dummyPair.getKey().matcher(justificationString);
+                                if (matcher.matches()) {
+                                    highlightJustification(i);
+                                    EditorAlerts.showSimpleTxtListAlert("Justification Error:", Collections.singletonList(new Text(dummyPair.getValue())));
+                                    resetHighlights();
+                                    return false;
+                                }
+                            }
+                            highlightJustification(i);
+                            List<Text> texts = new ArrayList<>();
+                            texts.add(new Text("I do not recognize this as a(n) "));
+                            texts.addAll(derivationRuleset.getTextName());
+                            texts.add(new Text(" justification."));
+                            EditorAlerts.showSimpleTxtListAlert("Justification Issue:", texts);
+                            resetHighlights();
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean checkFormulas() {
+        for (int i = 0; i < viewLines.size(); i++) {
+            ViewLine viewLine = viewLines.get(i);
+            if (LineType.isContentLine(viewLine.getLineType())) {
+                BoxedDRTA bdrta = viewLine.getLineContentBoxedDRTA();
+                RichTextArea rta = bdrta.getRTA();
+                rta.getActionFactory().saveNow().execute(new ActionEvent());
+                Document lineDoc = rta.getDocument();
+                if (!lineDoc.getText().equals("")) {
+                    List<Expression> parseExpressions = ParseUtilities.parseDoc(lineDoc, derivationRuleset.getLanguage().getNameString());
+                    if (parseExpressions.size() == 1) {
+                        continue;
+                    }
+                    else {
+                        List<Text> texts = new ArrayList<>();
+                        Text leadText = new Text("Parse results:\n");
+                        leadText.setFont(Font.font("Noto Serif Combo", FontPosture.ITALIC, 11));
+                        texts.add(leadText);
+
+                        for (Expression expr : parseExpressions) {
+                            texts.add(new Text("    "));
+                            texts.add(new Text(expr.getType() + ": "));
+                            texts.addAll(expr.toTextList());
+                            texts.add(new Text("\n"));
+                        }
+                        highlightFormula(i);
+                        EditorAlerts.showSimpleTxtListAlert("Not a formula:", texts);
+                        resetHighlights();
+                        return false;
+                    }
+                }
+            }
+        }
         return true;
     }
 
@@ -152,18 +419,6 @@ public class DerivationCheck {
         return true;
     }
 
-    private boolean checkFormulas() {
-        for (ViewLine line : viewLines) {
-            if (LineType.isContentLine(line.getLineType())) {
-                BoxedDRTA bdrta = line.getLineContentBoxedDRTA();
-                RichTextArea rta = bdrta.getRTA();
-                Document formulaDoc = rta.getDocument();
-
-                //check empty or formula of derivationRuleset.getLanguage();
-            }
-        }
-        return true;
-    }
 
 
     private void highlightLine(int index) {
@@ -176,7 +431,7 @@ public class DerivationCheck {
         TextFlow justificationFlow = line.getJustificationFlow();
         justificationFlow.setStyle("-fx-background-color: mistyrose");
         line.setLineHighlight(true);
-
+        markedLine = line;
     }
 
     private void highlightFormula(int index) {
@@ -219,5 +474,29 @@ public class DerivationCheck {
 
     public void setHelpTries(int helpTries) {
         this.helpTries = helpTries;
+    }
+
+    public List<ViewLine> getViewLines() {
+        return viewLines;
+    }
+
+    public void setViewLines(List<ViewLine> viewLines) {
+        this.viewLines = viewLines;
+    }
+
+    public DerivationRuleset getDerivationRuleset() {
+        return derivationRuleset;
+    }
+
+    public void setDerivationRuleset(DerivationRuleset derivationRuleset) {
+        this.derivationRuleset = derivationRuleset;
+    }
+
+    public DerivationExercise getDerivationExercise() {
+        return derivationExercise;
+    }
+
+    public void setDerivationExercise(DerivationExercise derivationExercise) {
+        this.derivationExercise = derivationExercise;
     }
 }

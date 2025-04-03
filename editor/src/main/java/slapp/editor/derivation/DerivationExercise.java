@@ -552,7 +552,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
      * @param flow the text flow
      * @return the extracted string
      */
-    private String getStringFromJustificationFlow(TextFlow flow) {
+    public String getStringFromJustificationFlow(TextFlow flow) {
         StringBuilder sb = new StringBuilder();
         ObservableList<Node> list = flow.getChildren();
         for (Node node : flow.getChildren()) {
@@ -560,6 +560,15 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
             else if (node instanceof Text) sb.append(((Text) node).getText());
         }
         return sb.toString();
+    }
+
+    public List<String> getLineLabelsFromJustificationFlow(TextFlow flow) {
+        List labelList = new ArrayList();
+        ObservableList<Node> list = flow.getChildren();
+        for (Node node : flow.getChildren()) {
+            if (node instanceof Label) labelList.add(((Label) node).getText());
+        }
+        return labelList;
     }
 
     /*

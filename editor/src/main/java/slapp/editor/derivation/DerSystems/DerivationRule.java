@@ -2,6 +2,7 @@ package slapp.editor.derivation.DerSystems;
 
 import javafx.scene.text.Text;
 import javafx.util.Pair;
+import slapp.editor.derivation.DerivationCheck;
 import slapp.editor.derivation.ViewLine;
 import slapp.editor.parser.Language;
 
@@ -11,10 +12,11 @@ import java.util.regex.Pattern;
 
 public abstract class DerivationRule {
 
+    String name;
     Matcher matcher;
     boolean premAssp;
 
-    public DerivationRule(String rgexTemplate) {
+    public DerivationRule(String name, String rgexTemplate) {
         Pattern pattern = Pattern.compile(rgexTemplate);
         matcher = pattern.matcher("");
     }
@@ -28,7 +30,7 @@ public abstract class DerivationRule {
         return matcher.matches();
     }
 
-    abstract Pair<Boolean, List<Text>> applies(List<ViewLine> viewLines, String... inputs);
+    public abstract Pair<Boolean, List<Text>> applies(DerivationCheck checker, ViewLine line, String... inputs);
 
 
 }
