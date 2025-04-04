@@ -5,20 +5,20 @@ import com.gluonhq.richtextarea.model.Document;
 import javafx.event.ActionEvent;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
-import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.derivation.DerivationCheck;
 import slapp.editor.derivation.ViewLine;
-import slapp.editor.parser.*;
-import slapp.editor.parser.symbols.OpenBracket;
+import slapp.editor.parser.Language;
+import slapp.editor.parser.MatchUtilities;
+import slapp.editor.parser.ParseUtilities;
+import slapp.editor.parser.TextMessageException;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class ConjunctionExploit extends DerivationRule {
+public class DisjunctionIntro extends DerivationRule {
 
-    public ConjunctionExploit(String name, String rgexTemplate) {
+    public DisjunctionIntro(String name, String rgexTemplate) {
         super(name, rgexTemplate);
         this.premAssp = false;
     }
@@ -47,46 +47,36 @@ public class ConjunctionExploit extends DerivationRule {
         String openBracketString = metaLanguage.getOpenBracket1();
         String closeBracketString = metaLanguage.getCloseBracket1();
 
-        Document inputForm = new Document(openBracketString + "\ud835\udcab \u2227 \ud835\udcac" + closeBracketString);
-        Document outputFormA = new Document("\ud835\udcab" );
-        Document outputFormB = new Document("\ud835\udcac" );
+        Document outputForm = new Document(openBracketString + "\ud835\udcab \u2228 \ud835\udcac" + closeBracketString);
+        Document inputFormA = new Document("\ud835\udcab" );
+        Document inputFormB = new Document("\ud835\udcac" );
         boolean resultGood = false;
 
         //try A
         MatchUtilities.clearFormMatch();
         try {
-            Pair<Boolean, Boolean> inputMatch = MatchUtilities.simpleFormMatch(inputForm, inputDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
-            System.out.println("input match: " + inputMatch.getKey());
+            Pair<Boolean, Boolean> outputMatch = MatchUtilities.simpleFormMatch(outputForm, lineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
         }
         catch (TextMessageException e) {
-            return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("Line (" + inputs[0] + ") is not of the right form to result in (" + line.getLineNumberLabel().getText() + ") by " + getName() + ".")));
+            return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("Line (" + line.getLineNumberLabel().getText() + ") is not of the right form to be justified by " + getName() + ".")));
         }
 
         try {
-            Pair<Boolean, Boolean> outputMatchA = MatchUtilities.simpleFormMatch(outputFormA, lineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
-            if (outputMatchA.getKey()) resultGood = true;
-            System.out.println("output matchA: " + outputMatchA.getKey());
+            Pair<Boolean, Boolean> inputMatchA = MatchUtilities.simpleFormMatch(inputFormA, inputDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
+            if (inputMatchA.getKey()) resultGood = true;
         }
-        catch (TextMessageException e) {
-  //          return new Pair(false, e.getMessage());
-        }
+        catch (TextMessageException e) { }
 
         if (!resultGood) {
             //try B
             MatchUtilities.clearFormMatch();
             try {
-                Pair<Boolean, Boolean> inputMatch = MatchUtilities.simpleFormMatch(inputForm, inputDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
-                System.out.println("input match: " + inputMatch.getKey());
-            } catch (TextMessageException e) {
-                //           return new Pair(false, e.getMessage());
-            }
+                Pair<Boolean, Boolean> inputMatch = MatchUtilities.simpleFormMatch(outputForm, lineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
+            } catch (TextMessageException e) { }
             try {
-                Pair<Boolean, Boolean> outputMatchB = MatchUtilities.simpleFormMatch(outputFormB, lineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
-                if (outputMatchB.getKey()) resultGood = true;
-                System.out.println("output matchB: " + outputMatchB.getKey());
-            } catch (TextMessageException e) {
-                //           return new Pair(false, e.getMessage());
-            }
+                Pair<Boolean, Boolean> inputMatchB = MatchUtilities.simpleFormMatch(inputFormB, inputDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
+                if (inputMatchB.getKey()) resultGood = true;
+            } catch (TextMessageException e) { }
         }
 
         if (resultGood) return new Pair(true, null);

@@ -51,6 +51,10 @@ public class DerivationRulesets implements Serializable {
         rules.add(new Rieteration("R", "^\\s*\\d+\\s*R\\s*$"));  //reiteration
         rules.add(new ConjunctionIntro("\u2227I","^\\s*\\d+\\s*,\\s*\\d+\\s*\\u2227I\\s*$"));  // caret I
         rules.add(new ConjunctionExploit("\u2227E","^\\s*\\d+\\s*\\u2227E\\s*$"));  //caret E
+        rules.add(new ConditionalExploit("\u2192E","^\\s*\\d+\\s*,\\s*\\d+\\s*\\u2192E\\s*$"));  // arrow E
+        rules.add(new DisjunctionIntro("\u2228I", "^\\s*\\d+\\s*\\u2228I\\s*$"));  //wedgeI))
+        rules.add(new BiconditionalExploit("\u2194E","^\\s*\\d+\\s*,\\s*\\d+\\s*\\u2194E\\s*$"));  // double arrow E
+
         NDs.setRules(rules);
 
         List<Pair<Pattern, String>> dummyRules = new ArrayList<>();
