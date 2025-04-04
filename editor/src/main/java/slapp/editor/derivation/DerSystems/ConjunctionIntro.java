@@ -31,13 +31,21 @@ public class ConjunctionIntro extends DerivationRule {
         lineRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document lineDoc = lineRTA.getDocument();
 
-        ViewLine inputLine1 = checker.getLineFromLabel(inputs[0]);
+        ViewLine inputLine1;
+        Pair<ViewLine, List<Text>> line1Pair = checker.getLineFromLabel(inputs[0]);
+        if (line1Pair.getKey() != null) inputLine1 = line1Pair.getKey();
+        else return new Pair(false, line1Pair.getValue());
+
         BoxedDRTA inputBDRTA1 = inputLine1.getLineContentBoxedDRTA();
         RichTextArea inputRTA1 = inputBDRTA1.getRTA();
         inputRTA1.getActionFactory().saveNow().execute(new ActionEvent());
         Document inputDoc1 = inputRTA1.getDocument();
 
-        ViewLine inputLine2 = checker.getLineFromLabel(inputs[1]);
+        ViewLine inputLine2;
+        Pair<ViewLine, List<Text>> line2Pair = checker.getLineFromLabel(inputs[1]);
+        if (line2Pair.getKey() != null) inputLine2 = line2Pair.getKey();
+        else return new Pair(false, line2Pair.getValue());
+
         BoxedDRTA inputBDRTA2 = inputLine2.getLineContentBoxedDRTA();
         RichTextArea inputRTA2 = inputBDRTA2.getRTA();
         inputRTA2.getActionFactory().saveNow().execute(new ActionEvent());

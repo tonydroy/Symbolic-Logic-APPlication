@@ -108,7 +108,7 @@ public class DerivationCheck {
         return true;
     }
 
-    public ViewLine getLineFromLabel(String label) {
+    public Pair<ViewLine, List<Text>>getLineFromLabel(String label) {
         ViewLine line = null;
 
         for (ViewLine viewLine : viewLines) {
@@ -117,7 +117,9 @@ public class DerivationCheck {
                 break;
             }
         }
-        return line;
+        List texts = new ArrayList();
+        if (line == null) texts.add(ParseUtilities.newRegularText("Line (" + label + ") not found in this derivation."));
+        return new Pair(line, texts);
     }
 
     //requires justifier and candidate are content lines
@@ -154,7 +156,12 @@ public class DerivationCheck {
 
 
     public Pair<Boolean, List<Text>> isSubderivation(String label1, String label2) {
-        ViewLine startLine = getLineFromLabel(label1);
+
+        ViewLine startLine;
+        Pair<ViewLine, List<Text>> startLinePair = getLineFromLabel(label1);
+        if (startLinePair.getKey() != null) startLine = startLinePair.getKey();
+        else return new Pair<>(false, startLinePair.getValue());
+
         TextFlow startJustificationFlow = startLine.getJustificationFlow();
         String startJustificationString = derivationExercise.getStringFromJustificationFlow(startJustificationFlow);
         Matcher matcher = derivationRuleset.getGenericAssumption().matcher(startJustificationString);
@@ -173,13 +180,37 @@ public class DerivationCheck {
         if (!subderResult.getKey()) {
             return subderResult;
         }
-        Pair<Boolean, List<Text>> accessibleResult = lineIsAccessibleTo(getLineFromLabel(label2), line);
-        if (!accessibleResult.getKey()) {
-            return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Subderivation " + label1 + "-" + label2 + " is not accessible for the justification of " + line.getLineNumberLabel() + ".")));
+
+
+        ViewLine firstLine;
+        Pair<ViewLine, List<Text>> firstLinePair = getLineFromLabel(label1);
+        if (firstLinePair.getKey() != null) firstLine = firstLinePair.getKey();
+        else return new Pair(false, firstLinePair.getValue());
+
+        ViewLine lastLine;
+        Pair<ViewLine, List<Text>> lastLinePair = getLineFromLabel(label2);
+        if (lastLinePair.getKey() != null) lastLine = lastLinePair.getKey();
+        else return new Pair(false, lastLinePair.getValue());
+
+        String candidateLabel = line.getLineNumberLabel().getText();
+        if (viewLines.indexOf(line) >= viewLines.indexOf(firstLine)) {
+            return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Subderivation must be complete (and assumption discharged) before any appeal to it.")));
+        }
+
+        if (viewLines.indexOf(line) <= viewLines.indexOf(lastLine)) {
+            return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Assumption (" + label1 + ") is not discharged at (" + candidateLabel + ") and so (" + label1 + ")-(" + label2 +") is not accessible to (" + candidateLabel + ").")));
+        }
+
+        List<String> lastLineAssps = lastLine.getAssumptionList();
+        List<String> candidateAssps = line.getAssumptionList();
+        for (int i = 0; i < lastLineAssps.size() - 1; i++) {
+            String labelStr = lastLineAssps.get(i);
+            if (!candidateAssps.contains(labelStr)) {
+                return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Subderivation (" + label1 + ")-(" + label2 + ") is not accessible for the justification of (" + line.getLineNumberLabel() + ").")));
+            }
         }
         return new Pair<>(true, null);
     }
-
 
 
     private void setScopeLists() {

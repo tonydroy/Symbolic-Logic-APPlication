@@ -30,7 +30,11 @@ public class DisjunctionIntro extends DerivationRule {
         lineRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document lineDoc = lineRTA.getDocument();
 
-        ViewLine inputLine = checker.getLineFromLabel(inputs[0]);
+        ViewLine inputLine;
+        Pair<ViewLine, List<Text>> inputLinePair = checker.getLineFromLabel(inputs[0]);
+        if (inputLinePair.getKey() != null) inputLine = inputLinePair.getKey();
+        else return new Pair(false, inputLinePair.getValue());
+
         BoxedDRTA inputBDRTA = inputLine.getLineContentBoxedDRTA();
         RichTextArea inputRTA = inputBDRTA.getRTA();
         inputRTA.getActionFactory().saveNow().execute(new ActionEvent());
