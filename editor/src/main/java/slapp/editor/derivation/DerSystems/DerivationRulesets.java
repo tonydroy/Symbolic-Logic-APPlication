@@ -86,10 +86,10 @@ public class DerivationRulesets implements Serializable {
     }
 
     private static DerivationRuleset getNDs_p() {
-        DerivationRuleset NDs = new DerivationRuleset("NDs+", Collections.singletonList(ParseUtilities.newItalicText("NDs+")), Languages.getLanguage("Ls_abv"), Languages.getLanguage("Meta"));
+        DerivationRuleset NDs_p = new DerivationRuleset("NDs+", Collections.singletonList(ParseUtilities.newItalicText("NDs+")), Languages.getLanguage("Ls_abv"), Languages.getLanguage("Meta"));
 
         DerivationRule premiseRule = new Premise("P","^\\s*P\\s*$");
-        NDs.setPremiseRule(premiseRule);
+        NDs_p.setPremiseRule(premiseRule);
 
         List<DerivationRule> rules = new ArrayList<>();
         rules.add(premiseRule);
@@ -114,10 +114,17 @@ public class DerivationRulesets implements Serializable {
         rules.add(new NegationExploit("\u223cE", "^\\s*\\d+\\s*-\\s*\\d+\\s*\\u223cE\\s*$"));  // tilde E
         rules.add(new DisjunctionExploit("\u2228E", "^\\s*\\d+\\s*,\\s*\\d+\\s*-\\s*\\d+,\\s*\\d+\\s*-\\s*\\d+\\s*\\u2228E\\s*$")); // wedge E
 
+        //plus rules
+        rules.add(new ContradictionExploit("\u22a5E", "^\\s*\\d+\\s*\\u22a5E\\s*$"));  //bottomE
+        rules.add(new ModusTollens("MT","^\\s*\\d+\\s*,\\s*\\d+\\s*MT\\s*$"));  // MT
+        rules.add(new NegatedBiconditional("NB","^\\s*\\d+\\s*,\\s*\\d+\\s*NB\\s*$"));  //NB
+        rules.add(new DisjunctiveSyllogism("DS","^\\s*\\d+\\s*,\\s*\\d+\\s*DS\\s*$"));  //DS
+        rules.add(new HyptheticalSyllogism("HS","^\\s*\\d+\\s*,\\s*\\d+\\s*HS\\s*$"));  // HS
 
 
 
-        NDs.setRules(rules);
+
+        NDs_p.setRules(rules);
 
         List<Pair<Pattern, String>> dummyRules = new ArrayList<>();
         dummyRules.add(new Pair(Pattern.compile("^\\s*A\\s*$"), "Assumption must by followed by (parenthetical) exit strategy."));
@@ -131,12 +138,12 @@ public class DerivationRulesets implements Serializable {
         dummyRules.add(new Pair(Pattern.compile("^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\u2228E\\)\\s*$"), "Exit strategy for \u2228E should cite the line number of the disjunction to which it applies."));
         dummyRules.add(new Pair(Pattern.compile("^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\u2228E\\)\\s*$"), "Exit strategy for \u2228E should cite the line number of the disjunction to which it applies."));
 
-        NDs.setDummyRules(dummyRules);
+        NDs_p.setDummyRules(dummyRules);
 
-        NDs.setGenericAssumption(Pattern.compile("^\\s*A.*$"));
-        NDs.setRequirePremisesAtTop(true);
+        NDs_p.setGenericAssumption(Pattern.compile("^\\s*A.*$"));
+        NDs_p.setRequirePremisesAtTop(true);
 
-        return NDs;
+        return NDs_p;
     }
 
 

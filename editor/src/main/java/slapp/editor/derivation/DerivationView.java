@@ -329,7 +329,7 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
 
         checkProgButton = new Button("Check Progress");
         checkProgButton.setPrefWidth(105);
-        checkProgButton.setTooltip(new Tooltip("Check derivation rules so far."));
+        checkProgButton.setTooltip(new Tooltip("Check derivation progress so far."));
    //    checkTriesLabel = new Label();
         VBox checksBox = new VBox(10, checkProgButton, checkButton, checkTriesLabel);
         checksBox.setAlignment(Pos.CENTER);

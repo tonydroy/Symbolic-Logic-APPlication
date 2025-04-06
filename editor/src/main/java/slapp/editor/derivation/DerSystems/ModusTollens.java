@@ -16,9 +16,9 @@ import slapp.editor.parser.TextMessageException;
 import java.util.Collections;
 import java.util.List;
 
-public class ContradictionIntro extends DerivationRule {
+public class ModusTollens extends DerivationRule {
 
-    public ContradictionIntro(String name, String rgexTemplate) {
+    public ModusTollens(String name, String rgexTemplate) {
         super(name, rgexTemplate);
         this.premAssp = false;
     }
@@ -39,7 +39,7 @@ public class ContradictionIntro extends DerivationRule {
         RichTextArea inputRTA1 = inputBDRTA1.getRTA();
         inputRTA1.getActionFactory().saveNow().execute(new ActionEvent());
         Document inputDoc1 = inputRTA1.getDocument();
-        if (inputDoc1.getText().equals("")) return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("Justification cannot appeal to empty line (" + inputs[0] + ").")));
+        if (inputDoc1.getText().equals("")) return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("Justification cannot appeal to the empty line (" + inputs[0] + ").")));
 
 
         ViewLine inputLine2;
@@ -70,36 +70,34 @@ public class ContradictionIntro extends DerivationRule {
         String openBracketString = metaLanguage.getOpenBracket1();
         String closeBracketString = metaLanguage.getCloseBracket1();
 
-        Document inputFormA = new Document("\ud835\udcab" );
-        Document inputFormB = new Document("\u223c\ud835\udcab" );
-
-        Document outputForm = new Document("\u22a5");
-
-
+        Document inputFormA = new Document(openBracketString + "\ud835\udcab \u2192 \ud835\udcac" + closeBracketString);
+        Document inputFormB = new Document("\u223c\ud835\udcac");
+        Document outputForm = new Document("\u223c\ud835\udcab");
 
 
         //try correct
         MatchUtilities.clearFormMatch();
         boolean resultGood1 = false;
         boolean resultGood2 = false;
+        boolean resultGood3 = false;
         try {
-            Pair<Boolean, Boolean> outputMatch = MatchUtilities.simpleFormMatch(outputForm, lineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
-        }
-        catch (TextMessageException e) {
-            return new Pair(false, Collections.singletonList((ParseUtilities.newRegularText("Only the contradiction symbol " + checker.getContradictionSymbolString() + " can be justified by " + getName() + "."))));
-        }
-        try {
-            Pair<Boolean, Boolean> inputMatch1 = MatchUtilities.simpleFormMatch(inputFormA, inputDoc1, objectLanguage.getNameString(), metaLanguage.getNameString());
+            Pair<Boolean, Boolean> inputMatchA = MatchUtilities.simpleFormMatch(inputFormA, inputDoc1, objectLanguage.getNameString(), metaLanguage.getNameString());
             resultGood1 = true;
         }
-        catch (TextMessageException e) {}
-        if (resultGood1) {
-            try {
-                Pair<Boolean, Boolean> inputMatch2 = MatchUtilities.simpleFormMatch(inputFormB, inputDoc2, objectLanguage.getNameString(), metaLanguage.getNameString());
-                resultGood2 = true;
-            } catch (TextMessageException e) { }
+        catch (TextMessageException e) {
+       //     return new Pair(false, Collections.singletonList((ParseUtilities.newRegularText("Line (" + inputLine1.getLineNumberLabel().getText() + ") is not of the right form be an input to " + getName() + "."))));
         }
-        if (resultGood1 && resultGood2) {
+        try {
+            Pair<Boolean, Boolean> inputMatchB = MatchUtilities.simpleFormMatch(inputFormB, inputDoc2, objectLanguage.getNameString(), metaLanguage.getNameString());
+            resultGood2 = true;
+        }
+        catch (TextMessageException e) {}
+        try {
+            Pair<Boolean, Boolean> outputMatch = MatchUtilities.simpleFormMatch(outputForm, lineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
+            resultGood3 = true;
+        } catch (TextMessageException e) { }
+
+        if (resultGood1 && resultGood2 && resultGood3) {
             return new Pair(true, null);
         }
 
@@ -107,23 +105,25 @@ public class ContradictionIntro extends DerivationRule {
         MatchUtilities.clearFormMatch();
         resultGood1 = false;
         resultGood2 = false;
+        resultGood3 = false;
         try {
-            Pair<Boolean, Boolean> outputMatch = MatchUtilities.simpleFormMatch(outputForm, lineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
+            Pair<Boolean, Boolean> inputMatchA = MatchUtilities.simpleFormMatch(inputFormA, inputDoc2, objectLanguage.getNameString(), metaLanguage.getNameString());
+            resultGood1 = true;
         }
         catch (TextMessageException e) { }
         try {
             Pair<Boolean, Boolean> inputMatch1 = MatchUtilities.simpleFormMatch(inputFormB, inputDoc1, objectLanguage.getNameString(), metaLanguage.getNameString());
-            resultGood1 = true;
+            resultGood2 = true;
         }
         catch (TextMessageException e) {}
-        if (resultGood1) {
             try {
-                Pair<Boolean, Boolean> inputMatch2 = MatchUtilities.simpleFormMatch(inputFormA, inputDoc2, objectLanguage.getNameString(), metaLanguage.getNameString());
-                resultGood2 = true;
+                Pair<Boolean, Boolean> outputMatch = MatchUtilities.simpleFormMatch(outputForm, lineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
+                resultGood3 = true;
             } catch (TextMessageException e) { }
-        }
-        if (resultGood1 && resultGood2) {
-            return new Pair(true, null);
+
+        if (resultGood1 && resultGood2 && resultGood3) {
+            return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText(("Lines (" + inputLine1.getLineNumberLabel().getText() + ") and (" + inputLine2.getLineNumberLabel().getText() +
+                    ") are not of the right form to result in (" + line.getLineNumberLabel().getText() + ") by " + getName() + " (check citation order)."))));
         }
         else {
             return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText(("Lines (" + inputLine1.getLineNumberLabel().getText() + ") and (" + inputLine2.getLineNumberLabel().getText() +
