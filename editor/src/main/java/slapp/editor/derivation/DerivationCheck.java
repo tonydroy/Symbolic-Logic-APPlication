@@ -398,7 +398,11 @@ public class DerivationCheck {
     }
 
     private void setChecksCounter() {
-        if (checkMax != -1 && checkTries >= checkMax) {derivationView.getCheckButton().setDisable(true);}
+        if (checkMax != -1 && checkTries >= checkMax) {
+            derivationView.getCheckButton().setDisable(true);
+            derivationView.getCheckProgButton().setDisable(true);
+
+        }
 
         String checkString;
         if (checkMax == -1) checkString = "(unlimited)";

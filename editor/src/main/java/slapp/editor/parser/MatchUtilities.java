@@ -45,11 +45,13 @@ public class MatchUtilities {
                 checkReplacements(form1, form2, source, target);
             }
             catch (Exception e) {  }
-
+/*
             try {
                 checkReplacements(form1, form2, target, source);
             }
             catch (TextMessageException e) { }
+
+ */
 
         }
         else {

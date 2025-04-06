@@ -121,6 +121,20 @@ public class DerivationRulesets implements Serializable {
         rules.add(new DisjunctiveSyllogism("DS","^\\s*\\d+\\s*,\\s*\\d+\\s*DS\\s*$"));  //DS
         rules.add(new HyptheticalSyllogism("HS","^\\s*\\d+\\s*,\\s*\\d+\\s*HS\\s*$"));  // HS
 
+        rules.add(new DoubleNegation("DN", "^\\s*\\d+\\s*DN\\s*$"));  //DN
+        rules.add(new Idempotence("Idem", "^\\s*\\d+\\s*Idem\\s*$"));  //Idem
+        rules.add(new Association("Assoc", "^\\s*\\d+\\s*Assoc\\s*$"));  //Assoc
+        rules.add(new Commutation("Com", "^\\s*\\d+\\s*Com\\s*$"));  //Com
+        rules.add(new Exportation("Exp", "^\\s*\\d+\\s*Exp\\s*$"));  //Exp
+        rules.add(new Transposition("Trans", "^\\s*\\d+\\s*Trans\\s*$"));  //Trans
+        rules.add(new DeMorgan("DeM", "^\\s*\\d+\\s*DeM\\s*$"));  //DeM
+        rules.add(new Implication("Impl", "^\\s*\\d+\\s*Impl\\s*$"));  //Impl
+        rules.add(new Distribution("Dist", "^\\s*\\d+\\s*Dist\\s*$"));  //Dist
+        rules.add(new Equivalence("Equiv", "^\\s*\\d+\\s*Equiv\\s*$"));  //Equiv
+
+
+
+
 
 
 
