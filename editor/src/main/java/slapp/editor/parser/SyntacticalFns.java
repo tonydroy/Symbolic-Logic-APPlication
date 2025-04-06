@@ -111,7 +111,6 @@ public class SyntacticalFns {
                 }
                 if (extraVariable) {
                     freeFor = false;
-                    System.out.println("Cannot verify that " + term2Exp + " is free for " + term1Exp + " in " + formulaExp +".");
                 }
                 index++;
                 continue;
@@ -905,11 +904,10 @@ public class SyntacticalFns {
                 unAbbList.add(parsedUnabbFormula.get(0));
             }
             else {
-                System.out.println("parse failure");
                 for (Expression e : parsedUnabbFormula) {
-                    System.out.println("element: " + e.toString());
+          //          System.out.println("element: " + e.toString());
                 }
-                System.out.println();
+          //      System.out.println();
             }
         }
         return unAbbList;
@@ -934,7 +932,6 @@ public class SyntacticalFns {
                     forms.add(ParseUtilities.getElements(lang.getUnabbForms().get(UnabbType.COMPLEX_TERM)));
                     continue;
                 }
-                System.out.println("List forms term error");
             }
             else if (expression.getType() == ExpressionType.FORMULA) {
                 Formula formula = (Formula) expression;
@@ -1004,7 +1001,6 @@ public class SyntacticalFns {
                     forms.add(ParseUtilities.getElements(lang.getUnabbForms().get(UnabbType.NOR)));
                     continue;
                 }
-                System.out.println("List forms formula error");
             }
         }
         return forms;

@@ -4,6 +4,7 @@ import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
+import javafx.scene.paint.Color;
 import javafx.scene.text.*;
 import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
@@ -12,6 +13,9 @@ import slapp.editor.derivation.DerSystems.DerivationRule;
 import slapp.editor.derivation.DerSystems.DerivationRuleset;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.ParseUtilities;
+import slapp.editor.parser.grammatical_parts.ContradictionSimple;
+import slapp.editor.parser.grammatical_parts.MFormula;
+import slapp.editor.parser.symbols.ContradictionSymbol;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,6 +37,8 @@ public class DerivationCheck {
     private int helpMax;
     private int helpTries;
 
+    private boolean checkFinal = true;
+
     DerivationCheck(DerivationExercise derivationExercise, DerivationView derivationView, DerivationRuleset ruleset) {
         this.derivationExercise = derivationExercise;
         this.derivationView = derivationView;
@@ -41,6 +47,10 @@ public class DerivationCheck {
 
 
         setRightControlBox();
+    }
+
+    public String getContradictionSymbolString() {
+        return derivationRuleset.getObjectLanguage().getContradictionSymbol().toString();
     }
 
     public void updateCounters() {
@@ -52,14 +62,28 @@ public class DerivationCheck {
 
 
         derivationView.getCheckButton().setOnAction(e -> {
-           boolean check = runCheck();
-           System.out.println(check);
+            checkFinal = true;
+            derivationView.setCheckColor(Color.LAWNGREEN);
+            derivationView.setCheckElementsString("Derivation");
+            derivationView.setCheckElementsColor(Color.GREEN);
+            boolean check = runCheck();
         });
 
+
+        derivationView.getCheckProgButton().setOnAction(e -> {
+            checkFinal = false;
+            derivationView.setCheckColor(Color.ORCHID);
+            derivationView.setCheckElementsString("Checked Lines: Good");
+            derivationView.setCheckElementsColor(Color.PURPLE);
+
+            boolean check = runCheck();
+        });
 
         derivationView.getHelpButton().setOnAction(e -> {
 
         });
+
+
     }
 
     private boolean runCheck() {
@@ -105,6 +129,7 @@ public class DerivationCheck {
                 }
             }
         }
+
         return true;
     }
 
@@ -146,8 +171,8 @@ public class DerivationCheck {
         ViewLine lastCandidate = startLine;
         for (int i = index; i < viewLines.size(); i++) {
             ViewLine viewLine = viewLines.get(i);
-            if (viewLine.realDepth() >= depth && LineType.isContentLine(viewLine.getLineType())) {
-                lastCandidate = viewLine;
+            if (viewLine.realDepth() >= depth) {
+                if (LineType.isContentLine(viewLine.getLineType())) lastCandidate = viewLine;
             }
             else break;
         }
@@ -169,8 +194,8 @@ public class DerivationCheck {
             return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("A subderivation " + label1 + "-" + label2 + " must start with an assumption.")));
         }
         ViewLine lastLine = lastLineAtScope(startLine);
-        if (!lastLine.getLineNumberLabel().equals(label2)) {
-            return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText(label2 + "does not identify the last line of the subderivation beginning at " + label1 + ".")));
+        if (!lastLine.getLineNumberLabel().getText().equals(label2)) {
+            return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText(label2 + " does not identify the last line of the subderivation beginning at " + label1 + ".")));
         }
         return new Pair<>(true, null);
     }
@@ -193,7 +218,7 @@ public class DerivationCheck {
         else return new Pair(false, lastLinePair.getValue());
 
         String candidateLabel = line.getLineNumberLabel().getText();
-        if (viewLines.indexOf(line) >= viewLines.indexOf(firstLine)) {
+        if (viewLines.indexOf(line) <= viewLines.indexOf(firstLine)) {
             return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Subderivation must be complete (and assumption discharged) before any appeal to it.")));
         }
 
@@ -206,7 +231,7 @@ public class DerivationCheck {
         for (int i = 0; i < lastLineAssps.size() - 1; i++) {
             String labelStr = lastLineAssps.get(i);
             if (!candidateAssps.contains(labelStr)) {
-                return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Subderivation (" + label1 + ")-(" + label2 + ") is not accessible for the justification of (" + line.getLineNumberLabel() + ").")));
+                return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Subderivation " + label1 + "-" + label2 + " is not accessible for the justification of (" + line.getLineNumberLabel().getText() + ").")));
             }
         }
         return new Pair<>(true, null);
@@ -214,8 +239,8 @@ public class DerivationCheck {
 
 
     private void setScopeLists() {
-        LinkedList premiseList = new LinkedList();
-        LinkedList<String> assumptionList = new LinkedList<>();
+        ArrayList<String> premiseList = new ArrayList();
+        ArrayList<String> assumptionList = new ArrayList<>();
         int currentDepth = 1;
 
         for (int i = 0; i < viewLines.size(); i++) {
@@ -225,17 +250,17 @@ public class DerivationCheck {
                     TextFlow justificationFlow = viewLine.getJustificationFlow();
                     String justificationString = derivationExercise.getStringFromJustificationFlow(justificationFlow);
                     if (derivationRuleset.getPremiseRule().matches(justificationString)) {
-                        premiseList.push(viewLine.getLineNumberLabel().getText());
+                        premiseList.add(viewLine.getLineNumberLabel().getText());
                     }
                 }
             }
             else {
                 if (LineType.isContentLine(viewLine.getLineType()) && viewLine.realDepth() == currentDepth + 1) {
-                    assumptionList.push(viewLine.getLineNumberLabel().getText());
+                    assumptionList.add(viewLine.getLineNumberLabel().getText());
                     currentDepth++;
                 }
                 else if (viewLine.realDepth() == currentDepth - 1) {
-                    assumptionList.pop();
+                    assumptionList.remove(assumptionList.size() - 1);
                     currentDepth--;
                 }
             }
@@ -295,10 +320,13 @@ public class DerivationCheck {
                 if (!lineDoc.getText().equals("")) {
 
                     if (justificationString.equals("")) {
-                        highlightJustification(i);
-                        EditorAlerts.showSimpleTxtListAlert("Missing Justification:", Collections.singletonList(ParseUtilities.newRegularText("Line requires justification.")));
-                        resetHighlights();
-                        return false;
+
+                        if (checkFinal) {
+                            highlightJustification(i);
+                            EditorAlerts.showSimpleTxtListAlert("Missing Justification:", Collections.singletonList(ParseUtilities.newRegularText("Line requires justification.")));
+                            resetHighlights();
+                            return false;
+                        }
                     } else {
                         boolean ok = false;
                         for (DerivationRule rule : derivationRuleset.getRules()) {
@@ -419,6 +447,19 @@ public class DerivationCheck {
                 EditorAlerts.showSimpleTxtListAlert("Derivation End", Collections.singletonList(ParseUtilities.newRegularText("Last line of derivation cannot have scope depth greater than 1.")));
                 resetHighlights();
                 return false;
+            }
+
+            BoxedDRTA bottomDRTA = lastLine.getLineContentBoxedDRTA();
+            RichTextArea bottomRTA = bottomDRTA.getRTA();
+            bottomRTA.getActionFactory().saveNow().execute(new ActionEvent());
+            Document bottomLineDoc = bottomRTA.getDocument();
+
+            if (bottomLineDoc.getText().equals("")) {
+                highlightFormula(viewLines.size() - 1);
+                EditorAlerts.showSimpleTxtListAlert("Derivation End", Collections.singletonList(ParseUtilities.newRegularText("Last line of derivation should be populated with a formula.")));
+                resetHighlights();
+                return false;
+
             }
         }
         int depth = viewLines.get(0).getDepth();

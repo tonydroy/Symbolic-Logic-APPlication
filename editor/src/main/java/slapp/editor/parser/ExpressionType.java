@@ -51,6 +51,7 @@ public enum ExpressionType {
     RELATION_SYMBOL("Rel Sym"),
     COMPLEMENT_REL_SYM("Neg Rel Sym"),
     FUNCTION_SYMBOL("Fn Sym"),
+    CONTRADICTION_SYM("Cond Sym"),
 
 
     ANY_EXPRESSION("Any Expression"),

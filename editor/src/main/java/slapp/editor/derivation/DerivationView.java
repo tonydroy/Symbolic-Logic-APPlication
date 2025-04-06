@@ -80,13 +80,18 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
     //-------------
     private Node rightControlNode;
     private Button checkButton;
+    private Button checkProgButton;
     private Button helpButton;
     private Text bigCheck;
-    private String checkText;
+    private String checkElementsString;
     private Text checkedElements;
     private Label helpTriesLabel;
     private Label checkTriesLabel;
     private boolean checkSuccess;
+
+    private Color checkColor = Color.LAWNGREEN;
+    private Color checkElementsColor = Color.GREEN;
+
 
 
 
@@ -301,11 +306,11 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         //right control box
         bigCheck = new Text("\ue89a");
         bigCheck.setFont(Font.font("Noto Serif Combo", 72));
-        bigCheck.setFill(Color.LAWNGREEN);
+        bigCheck.setFill(checkColor);
 
-        checkedElements = new Text(checkText);
+        checkedElements = new Text(checkElementsString);
         checkedElements.setFont(Font.font("Noto Serif Combo", 11));
-        checkedElements.setFill(Color.GREEN);
+        checkedElements.setFill(checkElementsColor);
         TextFlow checkedElementsFlow = new TextFlow(checkedElements);
         checkedElementsFlow.setMaxWidth(150);
 
@@ -314,16 +319,26 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         checkedElementsFlow.setTextAlignment(TextAlignment.CENTER);
 
 
-        checkButton = new Button("Check");
-        checkButton.setPrefWidth(100);
-        checkButton.setTooltip(new Tooltip("Check derivation for correctness"));
+        checkButton = new Button("Check Final");
+        checkButton.setPrefWidth(105);
+        checkButton.setTooltip(new Tooltip("Check complete derivation for correctness."));
         checkTriesLabel = new Label();
-        VBox checksBox = new VBox(10, checkButton, checkTriesLabel);
+ //       VBox checksBox = new VBox(10, checkButton, checkTriesLabel);
+  //      checksBox.setAlignment(Pos.CENTER);
+  //      checkTriesLabel.setAlignment(Pos.CENTER);
+
+        checkProgButton = new Button("Check Progress");
+        checkProgButton.setPrefWidth(105);
+        checkProgButton.setTooltip(new Tooltip("Check derivation rules so far."));
+   //    checkTriesLabel = new Label();
+        VBox checksBox = new VBox(10, checkProgButton, checkButton, checkTriesLabel);
         checksBox.setAlignment(Pos.CENTER);
         checkTriesLabel.setAlignment(Pos.CENTER);
+        checksBox.setMargin(checkProgButton, new Insets(0,0,10, 0));
+
 
         helpButton = new Button("Help");
-        helpButton.setPrefWidth(100);
+        helpButton.setPrefWidth(105);
         helpButton.setTooltip(new Tooltip("Get help for selected goal"));
         helpTriesLabel = new Label();
         VBox helpBox = new VBox(10, helpButton, helpTriesLabel);
@@ -462,7 +477,10 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
     }
 
     public void activateBigCheck() {
+        bigCheck.setFill(checkColor);
         bigCheck.setVisible(true);
+        checkedElements.setText(checkElementsString);
+        checkedElements.setFill(checkElementsColor);
         checkedElements.setVisible(true);
     }
     public void deactivateBigCheck() {
@@ -607,6 +625,10 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         return checkButton;
     }
 
+    public Button getCheckProgButton() {
+        return checkProgButton;
+    }
+
     public Button getHelpButton() {
         return helpButton;
     }
@@ -623,12 +645,20 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         return checkTriesLabel;
     }
 
-    public void setCheckText(String checkText) {
-        this.checkText = checkText;
+    public void setCheckElementsString(String checkElementsString) {
+        this.checkElementsString = checkElementsString;
     }
 
     public void setCheckSuccess(boolean checkSuccess) {
         this.checkSuccess = checkSuccess;
+    }
+
+    public void setCheckColor(Color checkColor) {
+        this.checkColor = checkColor;
+    }
+
+    public void setCheckElementsColor(Color checkElementsColor) {
+        this.checkElementsColor = checkElementsColor;
     }
 
     /**

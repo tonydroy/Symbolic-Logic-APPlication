@@ -1,11 +1,19 @@
 package slapp.editor.derivation.DerSystems;
 
+import com.gluonhq.richtextarea.RichTextArea;
+import com.gluonhq.richtextarea.model.Document;
+import javafx.event.ActionEvent;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
+import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.derivation.DerivationCheck;
 import slapp.editor.derivation.ViewLine;
 import slapp.editor.parser.Language;
+import slapp.editor.parser.MatchUtilities;
+import slapp.editor.parser.ParseUtilities;
+import slapp.editor.parser.TextMessageException;
 
+import java.util.Collections;
 import java.util.List;
 
 public class AsspNegIntro extends DerivationRule {
@@ -17,8 +25,49 @@ public class AsspNegIntro extends DerivationRule {
 
     public Pair<Boolean, List<Text>> applies(DerivationCheck checker, ViewLine line, String... inputs) {
 
-        return new Pair(true, null);
+        ViewLine bottomLine = checker.lastLineAtScope(line);
+
+        BoxedDRTA bottomDRTA = bottomLine.getLineContentBoxedDRTA();
+        RichTextArea bottomRTA = bottomDRTA.getRTA();
+        bottomRTA.getActionFactory().saveNow().execute(new ActionEvent());
+        Document bottomLineDoc = bottomRTA.getDocument();
+
+        Document bottomForm1 = new Document("\u22a5" );
+        Document bottomForm2 = new Document("\ud835\udcac \u2227 \u223c\ud835\udcac");
+
+        //check for empty
+        if (bottomLineDoc.getText().equals("")) {
+            String bottomLineLabel = bottomLine.getLineNumberLabel().getText();
+            return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("To complete this exit strategy, indicate contradiction as target at the bottom of the scope line (" +  checker.getContradictionSymbolString() + " ok).")));
+        }
+        // check for contradiction
+        MatchUtilities.clearFormMatch();
+        boolean resultGood1 = false;
+        boolean resultGood2 = false;
+        try {
+            Pair<Boolean, Boolean> bottomMatch1 = MatchUtilities.simpleFormMatch(bottomForm1, bottomLineDoc, checker.getDerivationRuleset().getObjectLanguage().getNameString(), checker.getDerivationRuleset().getMetaLanguage().getNameString());
+            resultGood1 = true;
+        } catch (TextMessageException e) { }
+
+        try {
+            Pair<Boolean, Boolean> bottomMatch2 = MatchUtilities.simpleFormMatch(bottomForm2, bottomLineDoc, checker.getDerivationRuleset().getObjectLanguage().getNameString(), checker.getDerivationRuleset().getMetaLanguage().getNameString());
+            resultGood2 = true;
+        } catch (TextMessageException e) { }
+
+        if (resultGood1 || resultGood2) {
+            return new Pair(true, null);
+        }
+        else {
+            String bottomLineLabel = bottomLine.getLineNumberLabel().getText();
+            return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("To complete this exit strategy, indicate contradiction as target at the bottom of the scope line (" +  checker.getContradictionSymbolString() + " ok).")));
+        }
+
+
+
     }
+
+
+
 
 
 }

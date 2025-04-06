@@ -30,6 +30,7 @@ public class Language implements Serializable {
     private String nor; // down arrow
     private String universalQuant;
     private String existentialQuant;
+    private String contradictionSymbol;
 
     private List<String> variables = new ArrayList();
     private boolean variableSubs = false;
@@ -452,5 +453,13 @@ public class Language implements Serializable {
 
     public void setMetalanguage(boolean metalanguage) {
         this.metalanguage = metalanguage;
+    }
+
+    public String getContradictionSymbol() {
+        return contradictionSymbol;
+    }
+
+    public void setContradictionSymbol(String contradictionSymbol) {
+        this.contradictionSymbol = contradictionSymbol;
     }
 }

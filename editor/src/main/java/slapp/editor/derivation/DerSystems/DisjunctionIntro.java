@@ -39,6 +39,8 @@ public class DisjunctionIntro extends DerivationRule {
         RichTextArea inputRTA = inputBDRTA.getRTA();
         inputRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document inputDoc = inputRTA.getDocument();
+        if (inputDoc.getText().equals("")) return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("Justification cannot appeal to the empty line (" + inputs[0] + ").")));
+
 
         Pair<Boolean, List<Text>> accessibilityPair = checker.lineIsAccessibleTo(inputLine, line);
         if (!accessibilityPair.getKey()) {

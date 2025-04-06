@@ -110,7 +110,7 @@ public class FrontPageAnimation {
         Text title1 = new Text("Symbolic Logic APPlication");
         title1.setFont(Font.font("Noto Serif Combo", FontWeight.BOLD, 36));
 
-        Text title2 = new Text("SLAPP editor, v2.1");
+        Text title2 = new Text("SLAPP editor, v3.0");
         title2.setFont(Font.font("Noto Serif Combo",20));
         VBox titleBox = new VBox(title0, title1, title2);
         titleBox.setPadding(new Insets(10, 20, 10, 20));

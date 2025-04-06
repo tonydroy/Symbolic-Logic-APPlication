@@ -44,6 +44,7 @@ public class Languages {
         lang.setOpenBracket1("("); lang.setCloseBracket1(")");
         lang.setNegation("\u223c");
         lang.setConditional("\u2192");
+        lang.setContradictionSymbol("\u22a5");
 
         lang.setSentenceLetters(Alphabets.getCharacterRange("\ud835\udc34", "\ud835\udc4d"));
         lang.setSentenceLetterSubs(true);
@@ -70,6 +71,7 @@ public class Languages {
         lang.setBiconditional("\u2194");
         lang.setConjunction("\u2227");
         lang.setDisjunction("\u2228");
+        lang.setContradictionSymbol("\u22a5");
 
         lang.setSentenceLetters(Alphabets.getCharacterRange("\ud835\udc34", "\ud835\udc4d"));
         lang.setSentenceLetterSubs(true);
@@ -95,6 +97,7 @@ public class Languages {
         lang.setNegation("\u223c");
         lang.setConditional("\u2192");
         lang.setUniversalQuant("\u2200");
+        lang.setContradictionSymbol("\u22a5");
 
         lang.setVariables(Alphabets.getCharacterRange("\ud835\udc56", "\ud835\udc67"));
 
@@ -145,6 +148,7 @@ public class Languages {
         lang.setDisjunction("\u2228");
         lang.setUniversalQuant("\u2200");
         lang.setExistentialQuant("\u2203");
+        lang.setContradictionSymbol("\u22a5");
 
         lang.setVariables(Alphabets.getCharacterRange("\ud835\udc56", "\ud835\udc67"));
         lang.setVariableSubs(true);
@@ -205,6 +209,7 @@ public class Languages {
         lang.setDisjunction("\u2228");
         lang.setUniversalQuant("\u2200");
         lang.setExistentialQuant("\u2203");
+        lang.setContradictionSymbol("\u22a5");
 
         lang.setVariables(Alphabets.getCharacterRange("\ud835\udc56", "\ud835\udc67"));
         lang.setVariableSubs(true);
@@ -251,6 +256,7 @@ public class Languages {
         lang.setDisjunction("\u2228");
         lang.setUniversalQuant("\u2200");
         lang.setExistentialQuant("\u2203");
+        lang.setContradictionSymbol("\u22a5");
 
         lang.setVariables(Alphabets.getCharacterRange("\ud835\udc4e", "\ud835\udc67"));
         lang.setVariableSubs(true);
@@ -304,6 +310,7 @@ public class Languages {
         lang.setDisjunction("\u2228");
         lang.setUniversalQuant("\u2200");
         lang.setExistentialQuant("\u2203");
+        lang.setContradictionSymbol("\u22a5");
         lang.setNand("\u2191");
         lang.setNor("\u2193");
         lang.setDividerSymbol(":");

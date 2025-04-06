@@ -14,6 +14,8 @@ public class DerivationRuleset {
     Language metaLanguage;
     List<DerivationRule> rules;
     DerivationRule premiseRule;
+
+
     Pattern genericAssumption;
     boolean requirePremisesAtTop = true;
 
@@ -81,6 +83,8 @@ public class DerivationRuleset {
     public void setRequirePremisesAtTop(boolean requirePremisesAtTop) {
         this.requirePremisesAtTop = requirePremisesAtTop;
     }
+
+
 }
 
 

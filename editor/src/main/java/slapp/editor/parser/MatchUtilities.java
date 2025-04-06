@@ -43,15 +43,13 @@ public class MatchUtilities {
 
             try {
                 checkReplacements(form1, form2, source, target);
-                System.out.println("c1: " + replacementList.size());
             }
-            catch (Exception e) {System.out.println(e);}
+            catch (Exception e) {  }
 
             try {
                 checkReplacements(form1, form2, target, source);
-                System.out.println("c2: " + replacementList.size());
             }
-            catch (TextMessageException e) { System.out.println(e); }
+            catch (TextMessageException e) { }
 
         }
         else {
@@ -107,18 +105,12 @@ public class MatchUtilities {
     }
 
     private static void checkReplacements(Formula form1, Formula form2, Formula source, Formula target) throws TextMessageException {
-    //    System.out.println("form1: " + form1 + " form2: " + form2 + " source: " + source + " target: " + target);
 
         clearMatching();
         try {
             setMatching(form1, source);
         }
-        catch (TextMessageException e) {
-            //ignore match failure (which happens repeately as we make bad tries)
-            //System.out.println("exception!");
-        }
-
-        System.out.println("f1: " + form1 + ", source: " + source + ", f1 match: " + form1.getMatch() + ", f2: " + form2 + ", f2 match: " + form2.getMatch() + ", target: " + target);
+        catch (TextMessageException e) {     }
 
         if (form2.getMatch() != null && form2.getMatch().equals(target)) {
             if (!replacementList.contains(form2.getMatch())) replacementList.add(form2.getMatch());
@@ -269,8 +261,6 @@ public class MatchUtilities {
 
     private static void processTransforms(String objectL) throws TextMessageException {
         for (int i = transformList.size() - 1; i >= 0; i--) {
-
-  //          System.out.println(transformList.get(i));
 
             Pair<Expression, Expression> transformPair = transformList.get(i);
 
@@ -447,9 +437,6 @@ public class MatchUtilities {
     private static void setMatching(Expression metaExp, Expression objectExp) throws TextMessageException {
         boolean skip = false;
 
-     //   System.out.println("meta exp: " + metaExp + " object exp: " + objectExp);
-
-
         if ( (metaExp.getType() == ExpressionType.FORMULA && ((Formula) metaExp).getSubTransform() == null) || (metaExp.getType() == ExpressionType.TERM && ((Term) metaExp).getSubTransform() == null)) {
 
 
@@ -477,6 +464,9 @@ public class MatchUtilities {
                     throw new TextMessageException(getMessageTexts(metaExp, objectExp, "", " does not map to ", "."));
                 }
             }
+
+            else if (metaExp instanceof ContradictionSimple && objectExp instanceof ContradictionSimple) {}
+
             else if (metaExp instanceof SentenceAtomic && objectExp instanceof SentenceAtomic)
                 ((MSentenceLetter) ((SentenceAtomic) metaExp).getMainLetter()).setMatch(((SentenceLetter) ((SentenceAtomic) objectExp).getMainLetter()));
 

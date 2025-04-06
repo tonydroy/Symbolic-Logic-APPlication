@@ -158,6 +158,16 @@ public class ParseUtilities {
         int i = 0;
         while (i < expressions.size()) {
 
+            //contradiction
+            if (expressions.get(i).getType() == ExpressionType.CONTRADICTION_SYM) {
+                ContradictionSimple contradiction = new ContradictionSimple((ContradictionSymbol) expressions.get(i));
+                contradiction.setLevel(maxTermLevel + 1);
+                contradiction.setCombines(true);
+                expressions.set(i, contradiction);
+                i = i + 1;
+                continue;
+            }
+
             //sentence letter
             if (expressions.get(i).getType() == ExpressionType.SENTENCE_LETTER) {
                 SentenceAtomic sentAtomic = new SentenceAtomic((SentenceLetter) expressions.get(i));
@@ -1083,6 +1093,9 @@ public class ParseUtilities {
                 }
                 if (elementStr.equals(language.getdSlashDivider()) && ((OriginalElement) expressions.get(i)).isNormal()) {
                     expressions.set(i, new DoubleSlashDivider(elementStr));
+                }
+                if (elementStr.equals(language.getContradictionSymbol()) && ((OriginalElement) expressions.get(i)).isNormal()) {
+                    expressions.set(i, new ContradictionSymbol(elementStr));
                 }
 
             }

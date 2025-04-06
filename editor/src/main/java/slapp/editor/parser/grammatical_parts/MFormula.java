@@ -41,6 +41,8 @@ public class MFormula extends Formula{
         }
     }
 
+
+
     private void clearMatch() {
         matchFormula = null;
     }

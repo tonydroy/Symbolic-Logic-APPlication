@@ -87,7 +87,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
 
 
 
-        derivationView.setCheckText(derivationModel.getCheckMessage());
+        derivationView.setCheckElementsString(derivationModel.getCheckMessage());
         derivationView.setCheckSuccess(derivationModel.isCheckSuccess());
         derivationView.setRightControlBox();
         this.derivationCheck = new DerivationCheck(this, derivationView, DerivationRulesets.getRuleset(model.getRuleset()));
