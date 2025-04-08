@@ -4,6 +4,7 @@ import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.event.ActionEvent;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.util.Pair;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.derivation.DerivationCheck;
@@ -96,6 +97,16 @@ public class BiconditionalIntro extends DerivationRule {
             return accessibility2Pair;
         }
 
+        boolean asspOK = true;
+        TextFlow topJustificationFlow1 = topLine1.getJustificationFlow();
+        String justificationString1 = checker.getDerivationExercise().getStringFromJustificationFlow(topJustificationFlow1);
+        TextFlow topJustificationFlow2 = topLine2.getJustificationFlow();
+        String juustificationString2 = checker.getDerivationExercise().getStringFromJustificationFlow(topJustificationFlow2);
+        DerivationRule rule = checker.getDerivationRuleset().getAsspBicondIntroRule();
+        if (!rule.matches(justificationString1) || !rule.matches(juustificationString2)) {
+            asspOK = false;
+        }
+
         Language objectLanguage = checker.getDerivationRuleset().getObjectLanguage();
         Language metaLanguage = checker.getDerivationRuleset().getMetaLanguage();
 
@@ -140,7 +151,7 @@ public class BiconditionalIntro extends DerivationRule {
             resultGood4= true;
         } catch (TextMessageException e) { }
 
-        if (resultGood1 && resultGood2 && resultGood3 && resultGood4) {
+        if (resultGood1 && resultGood2 && resultGood3 && resultGood4 && asspOK) {
             return new Pair(true, null);
         }
 
@@ -176,12 +187,16 @@ public class BiconditionalIntro extends DerivationRule {
             resultGood4= true;
         } catch (TextMessageException e) { }
 
-        if (resultGood1 && resultGood2 && resultGood3 && resultGood4) {
+        if (resultGood1 && resultGood2 && resultGood3 && resultGood4 && asspOK) {
             return new Pair(true, null);
         }
 
-        else {
+        if (asspOK) {
             return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("Line (" + line.getLineNumberLabel().getText() + ") requires a pair of subderivations, one starting with the left side and going to the right, and another starting with the right and going to the left.")));
+        }
+        else {
+            return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("To use these subderivations by " + getName() + " the exit strategies should both be (\ud835\udc54, " + getName() + ").")));
+
         }
 
     }

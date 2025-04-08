@@ -17,6 +17,10 @@ package slapp.editor.derivation;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.ParallelTransition;
+import javafx.animation.SequentialTransition;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.collections.ObservableList;
@@ -32,6 +36,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
+import javafx.util.Duration;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.ExerciseView;
@@ -91,6 +96,7 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
 
     private Color checkColor = Color.LAWNGREEN;
     private Color checkElementsColor = Color.GREEN;
+    private boolean checkShowing = false;
 
 
 
@@ -478,14 +484,30 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
 
     public void activateBigCheck() {
         bigCheck.setFill(checkColor);
-        bigCheck.setVisible(true);
         checkedElements.setText(checkElementsString);
         checkedElements.setFill(checkElementsColor);
-        checkedElements.setVisible(true);
+
+        if (checkShowing) {
+            FadeTransition t1 = new FadeTransition(new Duration(250), checkedElements);
+            t1.setToValue(1.0);
+            t1.setInterpolator(Interpolator.DISCRETE);
+
+            FadeTransition t2 = new FadeTransition(new Duration(250), bigCheck);
+            t2.setToValue(1.0);
+            t2.setInterpolator(Interpolator.DISCRETE);
+
+            ParallelTransition pt = new ParallelTransition(t1, t2);
+            pt.play();
+        }
+        else {
+            bigCheck.setOpacity(1.0);
+            checkedElements.setOpacity(1.0);
+        }
     }
+
     public void deactivateBigCheck() {
-        bigCheck.setVisible(false);
-        checkedElements.setVisible(false);
+        bigCheck.setOpacity(0.0);
+        checkedElements.setOpacity(0.0);
     }
 
     /**
@@ -659,6 +681,10 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
 
     public void setCheckElementsColor(Color checkElementsColor) {
         this.checkElementsColor = checkElementsColor;
+    }
+
+    public void setCheckShowing(boolean checkShowing) {
+        this.checkShowing = checkShowing;
     }
 
     /**

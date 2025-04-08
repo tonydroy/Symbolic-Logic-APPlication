@@ -4,6 +4,7 @@ import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.event.ActionEvent;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.util.Pair;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.derivation.DerivationCheck;
@@ -64,6 +65,13 @@ public class NegationIntro extends DerivationRule {
             return accessibilityPair;
         }
 
+        boolean asspOK = true;
+        TextFlow justificationFlow = topLine.getJustificationFlow();
+        String justificationString = checker.getDerivationExercise().getStringFromJustificationFlow(justificationFlow);
+        if (!checker.getDerivationRuleset().getAsspNegIntroRule().matches(justificationString)) {
+            asspOK = false;
+        }
+
         Language objectLanguage = checker.getDerivationRuleset().getObjectLanguage();
         Language metaLanguage = checker.getDerivationRuleset().getMetaLanguage();
 
@@ -99,7 +107,7 @@ public class NegationIntro extends DerivationRule {
             resultGood2 = true;
         } catch (TextMessageException e) { }
 
-        if (resultGood1 && resultGood2) {
+        if (resultGood1 && resultGood2 && asspOK) {
             return new Pair(true, null);
         }
 
@@ -122,12 +130,16 @@ public class NegationIntro extends DerivationRule {
             resultGood2 = true;
         } catch (TextMessageException e) { }
 
-        if (resultGood1 && resultGood2) {
+        if (resultGood1 && resultGood2 && asspOK) {
             return new Pair(true, null);
         }
 
-        else {
+        if (asspOK) {
             return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("Line (" + line.getLineNumberLabel().getText() + ") requires a subderivation starting with an assumption that drops the (main) negation, and ends with a contradiction (at the same scope).")));
+        }
+        else {
+            return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("To use this subderivation by " + getName() + " its exit strategy should be (\ud835\udc50, " + getName() + ").")));
+
         }
 
     }

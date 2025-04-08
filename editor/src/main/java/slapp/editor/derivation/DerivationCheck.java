@@ -36,7 +36,6 @@ public class DerivationCheck {
     private int checkTries;
     private int helpMax;
     private int helpTries;
-
     private boolean checkFinal = true;
 
     DerivationCheck(DerivationExercise derivationExercise, DerivationView derivationView, DerivationRuleset ruleset) {
@@ -87,6 +86,8 @@ public class DerivationCheck {
     }
 
     private boolean runCheck() {
+        if (derivationView.getBigCheck().getOpacity() > .5) derivationView.setCheckShowing(true);
+        else derivationView.setCheckShowing(false);
         derivationView.deactivateBigCheck();
         checkTries++;
         setChecksCounter();

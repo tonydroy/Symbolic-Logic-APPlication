@@ -32,8 +32,10 @@ public class AsspNegIntro extends DerivationRule {
         bottomRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document bottomLineDoc = bottomRTA.getDocument();
 
+        String openBracketString = checker.getDerivationRuleset().getMetaLanguage().getOpenBracket1();
+        String closeBracketString = checker.getDerivationRuleset().getMetaLanguage().getCloseBracket1();
         Document bottomForm1 = new Document("\u22a5" );
-        Document bottomForm2 = new Document("\ud835\udcac \u2227 \u223c\ud835\udcac");
+        Document bottomForm2 = new Document(openBracketString + "\ud835\udcac \u2227 \u223c\ud835\udcac" + closeBracketString);
 
         //check for empty
         if (bottomLineDoc.getText().equals("")) {

@@ -14,6 +14,13 @@ public class DerivationRuleset {
     Language metaLanguage;
     List<DerivationRule> rules;
     DerivationRule premiseRule;
+    DerivationRule asspBicondIntroRule;
+    DerivationRule asspCondIntroRule;
+    DerivationRule asspDisjExploitCRule;
+    DerivationRule asspDisjExploitGRule;
+    DerivationRule asspNegExploitRule;
+    DerivationRule asspNegIntroRule;
+
 
 
     Pattern genericAssumption;
@@ -58,6 +65,54 @@ public class DerivationRuleset {
 
     public void setPremiseRule(DerivationRule premiseRule) {
         this.premiseRule = premiseRule;
+    }
+
+    public DerivationRule getAsspCondIntroRule() {
+        return asspCondIntroRule;
+    }
+
+    public void setAsspCondIntroRule(DerivationRule asspCondIntroRule) {
+        this.asspCondIntroRule = asspCondIntroRule;
+    }
+
+    public DerivationRule getAsspBicondIntroRule() {
+        return asspBicondIntroRule;
+    }
+
+    public void setAsspBicondIntroRule(DerivationRule asspBicondIntroRule) {
+        this.asspBicondIntroRule = asspBicondIntroRule;
+    }
+
+    public DerivationRule getAsspDisjExploitCRule() {
+        return asspDisjExploitCRule;
+    }
+
+    public void setAsspDisjExploitCRule(DerivationRule asspDisjExploitCRule) {
+        this.asspDisjExploitCRule = asspDisjExploitCRule;
+    }
+
+    public DerivationRule getAsspDisjExploitGRule() {
+        return asspDisjExploitGRule;
+    }
+
+    public void setAsspDisjExploitGRule(DerivationRule asspDisjExploitGRule) {
+        this.asspDisjExploitGRule = asspDisjExploitGRule;
+    }
+
+    public DerivationRule getAsspNegExploitRule() {
+        return asspNegExploitRule;
+    }
+
+    public void setAsspNegExploitRule(DerivationRule asspNegExploitRule) {
+        this.asspNegExploitRule = asspNegExploitRule;
+    }
+
+    public DerivationRule getAsspNegIntroRule() {
+        return asspNegIntroRule;
+    }
+
+    public void setAsspNegIntroRule(DerivationRule asspNegIntroRule) {
+        this.asspNegIntroRule = asspNegIntroRule;
     }
 
     public List<Pair<Pattern, String>> getDummyRules() {

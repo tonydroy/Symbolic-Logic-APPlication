@@ -4,6 +4,7 @@ import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.event.ActionEvent;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.util.Pair;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.derivation.DerivationCheck;
@@ -64,6 +65,13 @@ public class ConditionalIntro extends DerivationRule {
             return accessibilityPair;
         }
 
+        boolean asspOK = true;
+        TextFlow justificationFlow = topLine.getJustificationFlow();
+        String justificationString = checker.getDerivationExercise().getStringFromJustificationFlow(justificationFlow);
+        if (!checker.getDerivationRuleset().getAsspCondIntroRule().matches(justificationString)) {
+            asspOK = false;
+        }
+
         Language objectLanguage = checker.getDerivationRuleset().getObjectLanguage();
         Language metaLanguage = checker.getDerivationRuleset().getMetaLanguage();
 
@@ -96,11 +104,15 @@ public class ConditionalIntro extends DerivationRule {
             resultGood2 = true;
         } catch (TextMessageException e) { }
 
-        if (resultGood1 && resultGood2) {
+        if (resultGood1 && resultGood2 && asspOK) {
             return new Pair(true, null);
         }
-        else {
+
+        if (asspOK) {
             return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("Line (" + line.getLineNumberLabel().getText() + ") requires a subderivation starting with the antecedent as its assumption, and ending with the consequent (at the same scope) as its last line.")));
+        }
+        else {
+            return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("To use this subderivation by " + getName() + " the exit strategy should be (\ud835\udc54, " + getName() + ").")));
         }
 
     }

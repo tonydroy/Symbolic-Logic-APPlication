@@ -90,15 +90,33 @@ public class DerivationRulesets implements Serializable {
 
         DerivationRule premiseRule = new Premise("P","^\\s*P\\s*$");
         NDs_p.setPremiseRule(premiseRule);
+        DerivationRule asspCondIntroRule = new AsspCondIntro("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\u2192I\\)\\s*$");
+        NDs_p.setAsspCondIntroRule(asspCondIntroRule);
+        DerivationRule asspBicondIntroRule = new AsspBicondIntro("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\u2194I\\)\\s*$");
+        NDs_p.setAsspBicondIntroRule(asspBicondIntroRule);
+        DerivationRule asspNegIntro = new AsspNegIntro("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\u223cI\\)\\s*$");
+        NDs_p.setAsspNegIntroRule(asspNegIntro);
+        DerivationRule asspNegExploit = new AsspNegExploit("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\u223cE\\)\\s*$");
+        NDs_p.setAsspNegExploitRule(asspNegExploit);
+        DerivationRule asspDisjExploitGRule = new AsspDisjExploitG("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\d+\\s*\\u2228E\\)\\s*$");
+        NDs_p.setAsspDisjExploitGRule(asspDisjExploitGRule);
+        DerivationRule asspDisjExploitCRule = new AsspDisjExploitC("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\d*\\s*\\u2228E\\)\\s*$");
+        NDs_p.asspDisjExploitCRule = asspDisjExploitCRule;
 
         List<DerivationRule> rules = new ArrayList<>();
         rules.add(premiseRule);
-        rules.add(new AsspCondIntro("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\u2192I\\)\\s*$"));   //assp arrow I
-        rules.add(new AsspBicondIntro("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\u2194I\\)\\s*$")); //assp double arrow I
-        rules.add(new AsspNegIntro("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\u223cI\\)\\s*$"));  //assp tilde I
-        rules.add(new AsspNegExploit("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\u223cE\\)\\s*$"));  //assp tilde E
-        rules.add(new AsspDisjExploitG("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\d+\\s*\\u2228E\\)\\s*$"));  //assp disj E for goal
-        rules.add(new AsspDisjExploitC("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\d*\\s*\\u2228E\\)\\s*$"));  //assp disj E for contradiction
+        rules.add(asspCondIntroRule);
+        rules.add(asspBicondIntroRule);
+        rules.add(asspNegIntro);
+        rules.add(asspNegExploit);
+        rules.add(asspDisjExploitGRule);
+        rules.add(asspDisjExploitCRule);
+    //    rules.add(new AsspCondIntro("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\u2192I\\)\\s*$"));   //assp arrow I
+   //     rules.add(new AsspBicondIntro("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\u2194I\\)\\s*$")); //assp double arrow I
+   //     rules.add(new AsspNegIntro("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\u223cI\\)\\s*$"));  //assp tilde I
+   //     rules.add(new AsspNegExploit("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\u223cE\\)\\s*$"));  //assp tilde E
+   //     rules.add(new AsspDisjExploitG("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\d+\\s*\\u2228E\\)\\s*$"));  //assp disj E for goal
+   //     rules.add(new AsspDisjExploitC("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\d*\\s*\\u2228E\\)\\s*$"));  //assp disj E for contradiction
 
         rules.add(new Rieteration("R", "^\\s*\\d+\\s*R\\s*$"));  //reiteration
         rules.add(new ConjunctionIntro("\u2227I","^\\s*\\d+\\s*,\\s*\\d+\\s*\\u2227I\\s*$"));  // caret I
