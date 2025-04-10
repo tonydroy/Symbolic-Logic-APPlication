@@ -64,10 +64,13 @@ public class EditorAlerts {
      */
     //collects list of texts into text flow for showSimpleTxtFlowAlert
     public static void showSimpleTxtListAlert(String header, List<Text> messageTxts) {
-        Text[] resultArray = new Text[messageTxts.size()];
-        messageTxts.toArray(resultArray);
-        TextFlow textFlow = new TextFlow(resultArray);
-        EditorAlerts.showSimpleTxtFlowAlert(header, textFlow);
+        TextFlow textFlow = new TextFlow();
+        if (messageTxts != null) {
+            Text[] resultArray = new Text[messageTxts.size()];
+            messageTxts.toArray(resultArray);
+            textFlow = new TextFlow(resultArray);
+        }
+            EditorAlerts.showSimpleTxtFlowAlert(header, textFlow);
     }
 
     /**

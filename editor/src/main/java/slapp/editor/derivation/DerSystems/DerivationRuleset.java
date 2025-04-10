@@ -20,6 +20,8 @@ public class DerivationRuleset {
     DerivationRule asspDisjExploitGRule;
     DerivationRule asspNegExploitRule;
     DerivationRule asspNegIntroRule;
+    DerivationRule asspExisExploitCRule;
+    DerivationRule asspExisExploitGRule;
 
 
 
@@ -105,6 +107,22 @@ public class DerivationRuleset {
 
     public void setAsspNegExploitRule(DerivationRule asspNegExploitRule) {
         this.asspNegExploitRule = asspNegExploitRule;
+    }
+
+    public DerivationRule getAsspExisExploitCRule() {
+        return asspExisExploitCRule;
+    }
+
+    public void setAsspExisExploitCRule(DerivationRule asspExisExploitCRule) {
+        this.asspExisExploitCRule = asspExisExploitCRule;
+    }
+
+    public DerivationRule getAsspExisExploitGRule() {
+        return asspExisExploitGRule;
+    }
+
+    public void setAsspExisExploitGRule(DerivationRule asspExisExploitGRule) {
+        this.asspExisExploitGRule = asspExisExploitGRule;
     }
 
     public DerivationRule getAsspNegIntroRule() {

@@ -191,6 +191,10 @@ public class MatchUtilities {
                         mFormula.setOpenBracket(new OpenBracket(""));
                         mFormula.setCloseBracket(new CloseBracket(""));
                     }
+                    if (mFormula.getOpenBracket().getType() == null && mFormula.getCloseBracket().getType() == null && oFormula.getOpenBracket().getType() != null && oFormula.getCloseBracket().getType() != null) {
+                        mFormula.setOpenBracket(new OpenBracket(Languages.getLanguage(metaL).getOpenBracket1()));
+                        mFormula.setCloseBracket(new CloseBracket(Languages.getLanguage(metaL).getCloseBracket1()));
+                    }
                 }
             }
 
@@ -210,6 +214,7 @@ public class MatchUtilities {
         matchedInstances.clear();
         allInstances.clear();
         subFreeFor = true;
+        replacementList.clear();
 
         if ((metaExp.getType() == ExpressionType.TERM && objectExp.getType() == ExpressionType.TERM) ||
                 (metaExp.getType() == ExpressionType.FORMULA && objectExp.getType() == ExpressionType.FORMULA))
@@ -243,7 +248,7 @@ public class MatchUtilities {
                 Pair<Boolean, Boolean> subResults = new Pair<>(formMatch, subFreeFor);
 
                 if (!formMatch) {
-                    throw new TextMessageException(getMessageTexts(metaExp.getMatch(), objectExp, "Mapped expression ", " not the same as ", "." ));
+      //              throw new TextMessageException(getMessageTexts(metaExp.getMatch(), objectExp, "Mapped expression ", " not the same as ", "." ));
                 }
                 return subResults;
 
@@ -277,7 +282,31 @@ public class MatchUtilities {
 
             if (sourceExp != null) {
                 if (exp1 != null) {
-                    findReplacements(sourceExp, targetExp, subTransform);
+                    try {
+
+                        findReplacements(sourceExp, targetExp, subTransform);
+                    }
+                    catch (TextMessageException e) {
+                        List<Text> list = new ArrayList<>();
+
+                        if (subTransform.getExp2().getMatch() != null) {
+                            list.addAll(targetExp.toTextList());
+                            list.add(new Text(" is not "));
+                            list.addAll(sourceExp.toTextList());
+                            list.addAll(new SubstitutionTransform(exp1, subTransform.getExp2().getMatch(), subTransform.getType(), subTransform.getDividerSymbol()).toTextList());
+                            list.add(new Text("."));
+                        }
+                        else {
+                            list.addAll(targetExp.toTextList());
+                            list.add(new Text(" is not "));
+                            list.addAll(sourceExp.toTextList());
+                            list.addAll(new SubstitutionTransform(exp1, subTransform.getExp2(), subTransform.getType(), subTransform.getDividerSymbol()).toTextList());
+                            list.add(new Text(" for some "));
+                            list.addAll(subTransform.getExp2().toTextList());
+                            list.add(new Text("."));
+                        }
+                        throw new TextMessageException(list);
+                    }
 
          //            if (!allInstances.isEmpty()) {
 
@@ -290,7 +319,8 @@ public class MatchUtilities {
                          }
 
                          if (matchedInstances.isEmpty()) {
-                         } else if (subTransform.getType() == ExpressionType.ONE_TERM_SUB) {
+                         }
+                         else if (subTransform.getType() == ExpressionType.ONE_TERM_SUB) {
                              if (matchedInstances.size() != 1)
                                  throw new TextMessageException(getMessageTexts(subTransform.getExp1().getMatch(), subTransform.getExp2().getMatch(), "More than one instance of ", " is replaced by ", "."));
                          } else if (subTransform.getType() == ExpressionType.ALL_TERM_SUB) {
@@ -324,7 +354,7 @@ public class MatchUtilities {
                           */
                 }
                 else {
-                    throw new TextMessageException(getMessageTexts(subTransform, subTransform.getExp1(), "Cannot map ", "without prior specification of ", "."));
+                    throw new TextMessageException(getMessageTexts(subTransform, subTransform.getExp1(), "Cannot map ", " without prior specification of ", "."));
                 }
             }
             else {
@@ -343,7 +373,7 @@ public class MatchUtilities {
 
         if (sourceExp != null && sourceExp.equals(exp1)) {
             allInstances.add(sourceExp);
-            if (!sourceExp.equals(targetExp)) {
+            if (subTransform.getType() == ExpressionType.ALL_TERM_SUB || !sourceExp.equals(targetExp)) {  //if distinguish between original and sub, set matching when not the same.  Otherwise match.
                 setMatching(exp2, targetExp);
                 matchedInstances.add(sourceExp);
             }
@@ -355,7 +385,7 @@ public class MatchUtilities {
         else if (sourceExp instanceof Term && ((Term) sourceExp).getTermType() == TermType.COMPLEX && targetExp instanceof Term && ((Term) targetExp).getTermType() == TermType.COMPLEX &&
                 sourceExp instanceof InfixTerm == targetExp instanceof InfixTerm &&
                 ((Term) sourceExp).getMainFnSymbol().equals(((Term) targetExp).getMainFnSymbol()) &&
-                bracketMatch (((Term) sourceExp).getOpenBracket(), ((Term) sourceExp).getCloseBracket(), ((Term) targetExp).getOpenBracket(), ((Term) targetExp).getCloseBracket()) &&
+         //       bracketMatch (((Term) sourceExp).getOpenBracket(), ((Term) sourceExp).getCloseBracket(), ((Term) targetExp).getOpenBracket(), ((Term) targetExp).getCloseBracket()) &&
                 sourceExp.getChildren() != null && targetExp.getChildren() != null && sourceExp.getChildren().size() == targetExp.getChildren().size()) {
             for (int i = 0; i < sourceExp.getChildren().size(); i++) {
                 if (sourceExp.getChildren().get(i).getLevel() >= 0 && targetExp.getChildren().get(i).getLevel() >= 0) {
@@ -366,6 +396,7 @@ public class MatchUtilities {
         }
         else if (sourceExp instanceof SentenceAtomic && targetExp instanceof SentenceAtomic) return;
         else if (sourceExp instanceof MFormula && targetExp instanceof MFormula) return;
+        else if (sourceExp instanceof ContradictionSimple && targetExp instanceof ContradictionSimple) return;
 
         else if (sourceExp instanceof MComplexFormula && targetExp instanceof MComplexFormula &&
                 ((MComplexFormula) sourceExp).getFormulaSym().equals(((MComplexFormula) targetExp).getFormulaSym())) {
@@ -399,7 +430,8 @@ public class MatchUtilities {
             return;
         }
         else if (sourceExp instanceof Formula && targetExp instanceof Formula && !((Formula) sourceExp).isAtomic() && !((Formula) targetExp).isAtomic() &&
-                bracketMatch(((Formula) sourceExp).getOpenBracket(), ((Formula) sourceExp).getCloseBracket(), ((Formula) targetExp).getOpenBracket(), ((Formula) targetExp).getCloseBracket()) &&
+                //took out because inner member might have parens where separately stated matcer does not -- ok??
+       //         bracketMatch(((Formula) sourceExp).getOpenBracket(), ((Formula) sourceExp).getCloseBracket(), ((Formula) targetExp).getOpenBracket(), ((Formula) targetExp).getCloseBracket()) &&
                 sourceExp.getChildren().size() == targetExp.getChildren().size()) {
             Formula sourceFormula = (Formula) sourceExp;
             Formula targetFormula = (Formula) targetExp;
@@ -430,9 +462,12 @@ public class MatchUtilities {
                     }
                 }
             }
+            else {
+                throw new TextMessageException(getMessageTexts(sourceExp, targetExp, "Substitution mismatch: from ", " to ", "."));
+            }
         }
         else {
-            throw new TextMessageException(getMessageTexts(sourceExp, targetExp, "", " does not match ", "."));
+            throw new TextMessageException(getMessageTexts(sourceExp, targetExp, "Substitution mismatch: from ", " to ", "."));
         }
     }
 
@@ -468,6 +503,7 @@ public class MatchUtilities {
             }
 
             else if (metaExp instanceof ContradictionSimple && objectExp instanceof ContradictionSimple) {}
+
 
             else if (metaExp instanceof SentenceAtomic && objectExp instanceof SentenceAtomic)
                 ((MSentenceLetter) ((SentenceAtomic) metaExp).getMainLetter()).setMatch(((SentenceLetter) ((SentenceAtomic) objectExp).getMainLetter()));
@@ -591,4 +627,7 @@ public class MatchUtilities {
         MAnyExpression.clear();
     }
 
+    public static List<Pair<Expression, Expression>> getTransformList() {
+        return transformList;
+    }
 }

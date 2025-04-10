@@ -40,8 +40,8 @@ public class MVariable extends Variable {
         if (matchVar == null) { matchVar = match; }
         else if (!matchVar.equals(match)) {
             List<Text> messageTxts = new ArrayList<>();
-            messageTxts.add(new Text("Variable "));
-            messageTxts.addAll(this.toTextList());
+            messageTxts.add(new Text("A variable"));
+        //    messageTxts.addAll(this.toTextList());
             messageTxts.add(new Text(" cannot match to both "));
             messageTxts.addAll(matchVar.toTextList());
             messageTxts.add(new Text(" and "));

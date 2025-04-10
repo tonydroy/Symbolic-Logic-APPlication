@@ -62,8 +62,8 @@ public class MFormula extends Formula{
         if (matchFormula == null) {  matchFormula = match;    }
         else if (!matchFormula.equals(match)) {
             List<Text> messageTxts = new ArrayList<>();
-            messageTxts.add(new Text("Variable "));
-            messageTxts.addAll(this.toTextList());
+            messageTxts.add(new Text("A formula"));
+      //      messageTxts.addAll(this.toTextList());
 
             messageTxts.add(new Text(" cannot match to both "));
             messageTxts.addAll(matchFormula.toTextList());

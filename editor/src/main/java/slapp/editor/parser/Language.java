@@ -447,6 +447,18 @@ public class Language implements Serializable {
         return dSlashDivider;
     }
 
+    public void setdSlashDivider(String dSlashDivider) {
+        this.dSlashDivider = dSlashDivider;
+    }
+
+    public void setSlashDivider(String slashDivider) {
+        this.slashDivider = slashDivider;
+    }
+
+    public void setCommaDivider(String commaDivider) {
+        this.commaDivider = commaDivider;
+    }
+
     public boolean isMetalanguage() {
         return metalanguage;
     }

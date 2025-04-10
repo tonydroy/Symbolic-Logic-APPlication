@@ -354,7 +354,7 @@ public class SyntacticalFns {
             else if (exp.getType() == ExpressionType.FORMULA) {
 
                 Formula formula = (Formula) exp;
-                if (formula instanceof SentenceAtomic || formula instanceof MFormula) {
+                if (formula instanceof SentenceAtomic || formula instanceof MFormula || formula instanceof ContradictionSimple) {
                     parallelList.add(exp);
                 }
                 else if (formula.isAtomic()) {

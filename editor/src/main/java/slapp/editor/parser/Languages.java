@@ -314,6 +314,9 @@ public class Languages {
         lang.setNand("\u2191");
         lang.setNor("\u2193");
         lang.setDividerSymbol(":");
+        lang.setCommaDivider(",");
+        lang.setSlashDivider("/");
+        lang.setdSlashDivider("\u2afd");
 
         lang.setVariables(Alphabets.getCharacterRange("\ud835\udcca", "\ud835\udccf"));
         lang.setVariableSubs(true);

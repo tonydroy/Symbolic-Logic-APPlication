@@ -65,8 +65,8 @@ public class MTerm extends Term {
         if (matchTerm == null)  {  matchTerm = match;      }
         else if (!matchTerm.equals(match)) {
             List<Text> messageTxts = new ArrayList<>();
-            messageTxts.add(new Text("Variable "));
-            messageTxts.addAll(mTermSym.toTextList());
+            messageTxts.add(new Text("A term"));
+     //       messageTxts.addAll(mTermSym.toTextList());
             messageTxts.add(new Text(" cannot match to both "));
             messageTxts.addAll(matchTerm.toTextList());
             messageTxts.add(new Text(" and "));

@@ -14,6 +14,7 @@ public class TextMessageException extends Exception {
         this.messageList = messageList;
     }
 
+
     public List<Text> getMessageList() {
         return messageList;
     }

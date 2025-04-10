@@ -69,7 +69,10 @@ public class PrefixAtomic extends Formula implements Expression {
             }
             if (getChildren().size() != other.getChildren().size()) { equals = false; }
             else for (int i = 0; i < getChildren().size(); i++) {
-                if (!getChildren().get(i).equals(other.getChildren().get(i))) { equals = false; }
+                if (getChildren().get(i) == null)  {
+                    if (other.getChildren().get(i) != null) equals = false;
+                }
+                else if (!getChildren().get(i).equals(other.getChildren().get(i))) { equals = false; }
             }
             return equals;
         }

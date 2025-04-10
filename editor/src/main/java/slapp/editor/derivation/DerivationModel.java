@@ -47,7 +47,7 @@ public class DerivationModel implements ExerciseModel<Document>, Serializable {
     private double commentTextHeight = 0;
     private List<ModelLine> derivationLines = new ArrayList<>();
 
-    private String ruleset = "NDs+";
+    private String ruleset = "ND";
     private boolean checkSuccess = false;
     private String checkMessage = "Derivation";
     private int checkMax = -1;

@@ -371,6 +371,7 @@ public class DerivationCheck {
                 rta.getActionFactory().saveNow().execute(new ActionEvent());
                 Document lineDoc = rta.getDocument();
                 if (!lineDoc.getText().equals("")) {
+
                     List<Expression> parseExpressions = ParseUtilities.parseDoc(lineDoc, derivationRuleset.getObjectLanguage().getNameString());
                     if (parseExpressions.size() == 1) {
                         continue;
