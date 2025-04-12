@@ -62,7 +62,10 @@ public class MTerm extends Term {
     public Term getMatch() { return matchTerm;  }
 
     public void setMatch(Term match) throws TextMessageException {
-        if (matchTerm == null)  {  matchTerm = match;      }
+
+
+        if (matchTerm == null)  {
+            matchTerm = match;      }
         else if (!matchTerm.equals(match)) {
             List<Text> messageTxts = new ArrayList<>();
             messageTxts.add(new Text("A term"));

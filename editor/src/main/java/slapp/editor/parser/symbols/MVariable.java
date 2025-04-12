@@ -16,7 +16,6 @@ public class MVariable extends Variable {
     private MVariable(String baseSymbol, String subscriptStr) {
         super(baseSymbol, subscriptStr);
         variables.add(this);
-
     }
 
     public static MVariable getInstance(String baseSymbol, String subscriptStr) {
@@ -37,7 +36,8 @@ public class MVariable extends Variable {
     }
 
     public void setMatch (Variable match) throws TextMessageException {
-        if (matchVar == null) { matchVar = match; }
+        if (matchVar == null) {
+            matchVar = match; }
         else if (!matchVar.equals(match)) {
             List<Text> messageTxts = new ArrayList<>();
             messageTxts.add(new Text("A variable"));
@@ -55,7 +55,7 @@ public class MVariable extends Variable {
         for (MVariable var : variables) {
             var.clearMatch();
         }
-        variables.clear();
+   //     variables.clear();
     }
 
     private void clearMatch() {

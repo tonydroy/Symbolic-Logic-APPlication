@@ -108,6 +108,13 @@ public class DerivationRulesets implements Serializable {
         rules.add(new Equivalence("Equiv", "^\\s*\\d+\\s*Equiv\\s*$"));  //Equiv
 
         rules.add(new QuantifierSwitch("QS", "^\\s*\\d+\\s*QS\\s*$"));  //QS
+        rules.add(new QuantifierDistribution("QD", "^\\s*\\d+\\s*QD\\s*$"));  //QD
+        rules.add(new QuantifierNegation("QN", "^\\s*\\d+\\s*QN\\s*$"));
+        rules.add(new RestrictedQuantifierNegation("RQN", "^\\s*\\d+\\s*RQN\\s*$"));
+        rules.add(new QuantifierPlacement("QP", "^\\s*\\d+\\s*QP\\s*$"));
+
+
+
 
 
 

@@ -59,7 +59,8 @@ public class MFormula extends Formula{
     public Formula getMatch() { return matchFormula; }
 
     public void setMatch(Formula match) throws TextMessageException {
-        if (matchFormula == null) {  matchFormula = match;    }
+        if (matchFormula == null) {
+            matchFormula = match;    }
         else if (!matchFormula.equals(match)) {
             List<Text> messageTxts = new ArrayList<>();
             messageTxts.add(new Text("A formula"));

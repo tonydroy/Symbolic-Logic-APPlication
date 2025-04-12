@@ -108,7 +108,7 @@ public class MatchUtilities {
 
     private static void checkReplacements(Formula form1, Formula form2, Formula source, Formula target) throws TextMessageException {
 
-        clearMatching();
+ //       clearMatching();
         try {
             setMatching(form1, source);
         }
@@ -209,7 +209,7 @@ public class MatchUtilities {
 
 
     public static Pair<Boolean, Boolean> formMatch(Expression metaExp, Expression objectExp, String objectL, String metaL) throws TextMessageException {
-        clearMatching();
+  //      clearMatching();
         transformList.clear();
         matchedInstances.clear();
         allInstances.clear();
@@ -471,12 +471,10 @@ public class MatchUtilities {
         }
     }
 
-    private static void setMatching(Expression metaExp, Expression objectExp) throws TextMessageException {
+    public static void setMatching(Expression metaExp, Expression objectExp) throws TextMessageException {
         boolean skip = false;
 
         if ( (metaExp.getType() == ExpressionType.FORMULA && ((Formula) metaExp).getSubTransform() == null) || (metaExp.getType() == ExpressionType.TERM && ((Term) metaExp).getSubTransform() == null)) {
-
-
 
             if (metaExp instanceof Term && ((Term) metaExp).getTermType() == TermType.VARIABLE && objectExp instanceof Term && ((Term) objectExp).getTermType() == TermType.VARIABLE)
                 ((MVariable) ((Term) metaExp).getChildren().get(0)).setMatch(((Variable) ((Term) objectExp).getChildren().get(0)));
