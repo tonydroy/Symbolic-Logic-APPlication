@@ -275,7 +275,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
      * @param row the row value
      * @return the view line
      */
-    private ViewLine getContentLineBelow(int row) {
+    public ViewLine getContentLineBelow(int row) {
         ViewLine line = derivationView.getViewLines().get(row);
         row++;
         for (int i = row; i < derivationView.getViewLines().size(); i++) {
@@ -293,7 +293,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
      * @param row the row value
      * @return the view line
      */
-    private ViewLine getContentLineAbove(int row) {
+    public ViewLine getContentLineAbove(int row) {
         ViewLine line = derivationView.getViewLines().get(row);
         row--;
         for (int i = row; i >= 0; i--) {

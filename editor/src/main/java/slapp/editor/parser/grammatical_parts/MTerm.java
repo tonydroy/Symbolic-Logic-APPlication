@@ -1,6 +1,8 @@
 package slapp.editor.parser.grammatical_parts;
 
 import javafx.scene.text.Text;
+import slapp.editor.EditorAlerts;
+import slapp.editor.ReplacementTxtMsgException;
 import slapp.editor.parser.TextMessageException;
 import slapp.editor.parser.symbols.MTermSym;
 import slapp.editor.parser.symbols.MVariable;
@@ -63,7 +65,6 @@ public class MTerm extends Term {
 
     public void setMatch(Term match) throws TextMessageException {
 
-
         if (matchTerm == null)  {
             matchTerm = match;      }
         else if (!matchTerm.equals(match)) {
@@ -75,7 +76,10 @@ public class MTerm extends Term {
             messageTxts.add(new Text(" and "));
             messageTxts.addAll(match.toTextList());
             messageTxts.add(new Text("."));
-            throw new TextMessageException(messageTxts);
+
+    //        EditorAlerts.showSimpleTxtListAlert("from mterm", messageTxts);
+
+            throw new ReplacementTxtMsgException(messageTxts);
         }
     }
 

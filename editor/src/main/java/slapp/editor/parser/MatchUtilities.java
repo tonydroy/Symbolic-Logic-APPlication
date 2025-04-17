@@ -4,6 +4,7 @@ import com.gluonhq.richtextarea.model.Document;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
+import slapp.editor.ReplacementTxtMsgException;
 import slapp.editor.parser.grammatical_parts.*;
 import slapp.editor.parser.symbols.*;
 
@@ -44,14 +45,7 @@ public class MatchUtilities {
             try {
                 checkReplacements(form1, form2, source, target);
             }
-            catch (Exception e) {  }
-/*
-            try {
-                checkReplacements(form1, form2, target, source);
-            }
-            catch (TextMessageException e) { }
-
- */
+            catch (TextMessageException e) { throw new TextMessageException(e.getMessageList());  }
 
         }
         else {
@@ -108,11 +102,12 @@ public class MatchUtilities {
 
     private static void checkReplacements(Formula form1, Formula form2, Formula source, Formula target) throws TextMessageException {
 
- //       clearMatching();
+        clearMatching();
         try {
             setMatching(form1, source);
         }
         catch (TextMessageException e) {     }
+
 
         if (form2.getMatch() != null && form2.getMatch().equals(target)) {
             if (!replacementList.contains(form2.getMatch())) replacementList.add(form2.getMatch());
@@ -155,10 +150,13 @@ public class MatchUtilities {
                     }
                 }
             }
+            else {
+                throw new TextMessageException(getMessageTexts(target, source, "", " does not substitute into ", "."));
+            }
         }
 
         else {
-      //      throw new TextMessageException(getMessageTexts(target, source, "", " does not substitute into ", "."));
+            throw new TextMessageException(getMessageTexts(target, source, "", " does not substitute into ", "."));
         }
     }
 
@@ -173,6 +171,13 @@ public class MatchUtilities {
     public static Pair<Boolean, Boolean> simpleFormMatch(Document metaDoc, Document objectDoc, String objectL, String metaL) throws TextMessageException {
         Expression metaExp = ParseUtilities.parseDoc(metaDoc, metaL).get(0);
         Expression objectExp = ParseUtilities.parseDoc(objectDoc, objectL).get(0);
+
+        transformList.clear();
+        matchedInstances.clear();
+        allInstances.clear();
+        subFreeFor = true;
+        replacementList.clear();
+
 
         //conditionally compensate for dropped outer brackets by matching meta expression to object expression
         if (relaxBracketMatch) {
@@ -198,12 +203,16 @@ public class MatchUtilities {
                 }
             }
 
-            setMatching(metaExp, objectExp);
-            processTransforms(objectL);
 
-            boolean formMatch = metaExp.getMatch().equals(objectExp);
-            Pair<Boolean, Boolean> subResults = new Pair<>(formMatch, subFreeFor);
-            return subResults;
+        setMatching(metaExp, objectExp);
+        processTransforms(objectL);
+
+        boolean formMatch = metaExp.getMatch().equals(objectExp);
+
+
+
+        Pair<Boolean, Boolean> subResults = new Pair<>(formMatch, subFreeFor);
+        return subResults;
     }
 
 
@@ -280,13 +289,29 @@ public class MatchUtilities {
             Expression sourceExp = metaExp.getChildren().get(0).getMatch();
             Expression exp1 = subTransform.getExp1().getMatch();
 
+            boolean badReplacements = false;
+
             if (sourceExp != null) {
                 if (exp1 != null) {
                     try {
+                        findReplacements(sourceExp, targetExp, subTransform, objectL);
 
-                        findReplacements(sourceExp, targetExp, subTransform);
+             //           System.out.println("target: " + targetExp.toString() + " source: " + sourceExp + " transform: " + SyntacticalFns.substituteParticularTerms(sourceExp, subTransform.getExp2().getMatch(), matchedInstances));
+
+                        if (!targetExp.equals(SyntacticalFns.substituteParticularTerms(sourceExp, subTransform.getExp2().getMatch(), matchedInstances))) {
+                            badReplacements = true;
+                        }
+                    }
+                    catch (ReplacementTxtMsgException e) {
+                        throw new TextMessageException(e.getMessageList());
+
                     }
                     catch (TextMessageException e) {
+                        badReplacements = true;
+
+                    }
+
+                    if (badReplacements) {
                         List<Text> list = new ArrayList<>();
 
                         if (subTransform.getExp2().getMatch() != null) {
@@ -306,6 +331,7 @@ public class MatchUtilities {
                             list.add(new Text("."));
                         }
                         throw new TextMessageException(list);
+
                     }
 
          //            if (!allInstances.isEmpty()) {
@@ -337,7 +363,17 @@ public class MatchUtilities {
                              if (SyntacticalFns.particularTermsFreeInFormula(sourceExp, Collections.singletonList(exp), objectL)) {
                                  if (!SyntacticalFns.freeForExp(sourceExp, exp, subTransform.getExp2().getMatch(), objectL)) {
                                      subFreeFor = false;
-                                     throw new TextMessageException(getMessageTexts(subTransform.getExp2().getMatch(), exp, "Substituted instance(s) of ", " not free for ", "."));
+                                     List<Text> texts = new ArrayList<>();
+                                     texts.add(ParseUtilities.newRegularText("Substituted instancess of "));
+                                     texts.addAll(subTransform.getExp2().getMatch().toTextList());
+                                     texts.add(ParseUtilities.newRegularText(" not free for "));
+                                     texts.addAll(exp.toTextList());
+                                     texts.add(ParseUtilities.newRegularText(" in"));
+                                     texts.addAll(sourceExp.toTextList());
+                                     texts.add(ParseUtilities.newRegularText("."));
+                                     throw new TextMessageException(texts);
+
+                               //      throw new TextMessageException(getMessageTexts(subTransform.getExp2().getMatch(), exp, "Substituted instance(s) of ", " not free for ", "."));
                                  }
                              }
                              else throw new TextMessageException(getMessageTexts(exp, sourceExp, "Replaced instnace(s) of ", " not free in ", "."));
@@ -366,14 +402,19 @@ public class MatchUtilities {
         }
     }
 
-    private static void findReplacements(Expression sourceExp, Expression targetExp, SubstitutionTransform subTransform) throws TextMessageException {
+    private static void findReplacements(Expression sourceExp, Expression targetExp, SubstitutionTransform subTransform, String objectL) throws ReplacementTxtMsgException, TextMessageException {
+
+
 
         Expression exp1 = subTransform.getExp1().getMatch();
         Expression exp2 = subTransform.getExp2();
 
+        if (sourceExp instanceof Formula && exp1 instanceof Term && !SyntacticalFns.expTermFreeInFormula(sourceExp, exp1, objectL)) return;
+
         if (sourceExp != null && sourceExp.equals(exp1)) {
             allInstances.add(sourceExp);
             if (subTransform.getType() == ExpressionType.ALL_TERM_SUB || !sourceExp.equals(targetExp)) {  //if distinguish between original and sub, set matching when not the same.  Otherwise match.
+
                 setMatching(exp2, targetExp);
                 matchedInstances.add(sourceExp);
             }
@@ -389,7 +430,7 @@ public class MatchUtilities {
                 sourceExp.getChildren() != null && targetExp.getChildren() != null && sourceExp.getChildren().size() == targetExp.getChildren().size()) {
             for (int i = 0; i < sourceExp.getChildren().size(); i++) {
                 if (sourceExp.getChildren().get(i).getLevel() >= 0 && targetExp.getChildren().get(i).getLevel() >= 0) {
-                    findReplacements(sourceExp.getChildren().get(i), targetExp.getChildren().get(i), subTransform);
+                    findReplacements(sourceExp.getChildren().get(i), targetExp.getChildren().get(i), subTransform, objectL);
                 }
             }
             return;
@@ -403,7 +444,7 @@ public class MatchUtilities {
             if (sourceExp.getChildren() != null && targetExp.getChildren() != null && sourceExp.getChildren().size() == targetExp.getChildren().size()) {
                 for (int i = 0; i < sourceExp.getChildren().size(); i++) {
                     if (sourceExp.getChildren().get(i).getLevel() >= 0 && targetExp.getChildren().get(i).getLevel() >= 0) {
-                        findReplacements(sourceExp.getChildren().get(i), targetExp.getChildren().get(i), subTransform);
+                        findReplacements(sourceExp.getChildren().get(i), targetExp.getChildren().get(i), subTransform, objectL);
                     }
                 }
             }
@@ -414,7 +455,7 @@ public class MatchUtilities {
                 sourceExp.getChildren().size() == targetExp.getChildren().size()) {
             for (int i = 0; i < sourceExp.getChildren().size(); i++) {
                 if (sourceExp.getChildren().get(i).getLevel() >= 0 && targetExp.getChildren().get(i).getLevel() >= 0) {
-                    findReplacements(sourceExp.getChildren().get(i), targetExp.getChildren().get(i), subTransform);
+                    findReplacements(sourceExp.getChildren().get(i), targetExp.getChildren().get(i), subTransform, objectL);
                 }
             }
             return;
@@ -424,32 +465,32 @@ public class MatchUtilities {
                 sourceExp.getChildren().size() == targetExp.getChildren().size()) {
             for (int i = 0; i < sourceExp.getChildren().size(); i++) {
                 if (sourceExp.getChildren().get(i).getLevel() >= 0 && targetExp.getChildren().get(i).getLevel() >= 0) {
-                    findReplacements(sourceExp.getChildren().get(i), targetExp.getChildren().get(i), subTransform);
+                    findReplacements(sourceExp.getChildren().get(i), targetExp.getChildren().get(i), subTransform, objectL);
                 }
             }
             return;
         }
         else if (sourceExp instanceof Formula && targetExp instanceof Formula && !((Formula) sourceExp).isAtomic() && !((Formula) targetExp).isAtomic() &&
-                //took out because inner member might have parens where separately stated matcer does not -- ok??
+                //took out because inner member might have parens where separately stated matcher does not -- ok??
        //         bracketMatch(((Formula) sourceExp).getOpenBracket(), ((Formula) sourceExp).getCloseBracket(), ((Formula) targetExp).getOpenBracket(), ((Formula) targetExp).getCloseBracket()) &&
                 sourceExp.getChildren().size() == targetExp.getChildren().size()) {
             Formula sourceFormula = (Formula) sourceExp;
             Formula targetFormula = (Formula) targetExp;
             boolean good = false;
             if (sourceFormula.getMainOperator() instanceof UnivBoundedQuantOp && targetFormula.getMainOperator() instanceof UnivBoundedQuantOp) {
-                findReplacements(((UnivBoundedQuantOp) sourceFormula.getMainOperator()).getBoundingTerm(), ((UnivBoundedQuantOp) targetFormula.getMainOperator()).getBoundingTerm(), subTransform);
+                findReplacements(((UnivBoundedQuantOp) sourceFormula.getMainOperator()).getBoundingTerm(), ((UnivBoundedQuantOp) targetFormula.getMainOperator()).getBoundingTerm(), subTransform, objectL);
                 good = true;
             }
             else if (sourceFormula.getMainOperator() instanceof ExisBoundedQuantOp && targetFormula.getMainOperator() instanceof ExisBoundedQuantOp) {
-                findReplacements(((ExisBoundedQuantOp) sourceFormula.getMainOperator()).getBoundingTerm(), ((ExisBoundedQuantOp) targetFormula.getMainOperator()).getBoundingTerm(), subTransform);
+                findReplacements(((ExisBoundedQuantOp) sourceFormula.getMainOperator()).getBoundingTerm(), ((ExisBoundedQuantOp) targetFormula.getMainOperator()).getBoundingTerm(), subTransform, objectL);
                 good = true;
             }
             else if (sourceFormula.getMainOperator() instanceof UnivRestrictedQuantOp && targetFormula.getMainOperator() instanceof UnivRestrictedQuantOp) {
-                findReplacements(((UnivRestrictedQuantOp) sourceFormula.getMainOperator()).getRestrictingFormula(), ((UnivRestrictedQuantOp) targetFormula.getMainOperator()).getRestrictingFormula(), subTransform);
+                findReplacements(((UnivRestrictedQuantOp) sourceFormula.getMainOperator()).getRestrictingFormula(), ((UnivRestrictedQuantOp) targetFormula.getMainOperator()).getRestrictingFormula(), subTransform, objectL);
                 good = true;
             }
             else if (sourceFormula.getMainOperator() instanceof ExisRestrictedQuantOp && targetFormula.getMainOperator() instanceof ExisRestrictedQuantOp) {
-                findReplacements(((ExisRestrictedQuantOp) sourceFormula.getMainOperator()).getRestrictingFormula(), ((ExisRestrictedQuantOp) targetFormula.getMainOperator()).getRestrictingFormula(), subTransform);
+                findReplacements(((ExisRestrictedQuantOp) sourceFormula.getMainOperator()).getRestrictingFormula(), ((ExisRestrictedQuantOp) targetFormula.getMainOperator()).getRestrictingFormula(), subTransform, objectL);
                 good = true;
             }
             else if (sourceFormula.getMainOperator().equals(targetFormula.getMainOperator())) {
@@ -458,7 +499,7 @@ public class MatchUtilities {
             if (good) {
                 for (int i = 0; i < sourceExp.getChildren().size(); i++) {
                     if (sourceExp.getChildren().get(i).getLevel() >= 0 && targetExp.getChildren().get(i).getLevel() >= 0) {
-                        findReplacements(sourceExp.getChildren().get(i), targetExp.getChildren().get(i), subTransform);
+                        findReplacements(sourceExp.getChildren().get(i), targetExp.getChildren().get(i), subTransform, objectL);
                     }
                 }
             }

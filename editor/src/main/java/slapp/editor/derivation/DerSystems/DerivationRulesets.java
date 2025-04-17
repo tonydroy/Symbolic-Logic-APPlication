@@ -48,12 +48,19 @@ public class DerivationRulesets implements Serializable {
         ND_p.setAsspNegExploitRule(asspNegExploit);
         DerivationRule asspDisjExploitGRule = new AsspDisjExploitG("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\d+\\s*\\u2228E\\)\\s*$");
         ND_p.setAsspDisjExploitGRule(asspDisjExploitGRule);
-        DerivationRule asspDisjExploitCRule = new AsspDisjExploitC("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\d*\\s*\\u2228E\\)\\s*$");
+        DerivationRule asspDisjExploitCRule = new AsspDisjExploitC("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\d+\\s*\\u2228E\\)\\s*$");
         ND_p.setAsspDisjExploitCRule(asspDisjExploitCRule);
-        DerivationRule asspExisExploitCRule = new AsspExisExploitC("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\d*\\s*\\u2203E\\)\\s*$");
+        DerivationRule asspExisExploitCRule = new AsspExisExploitC("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\d+\\s*\\u2203E\\)\\s*$");
         ND_p.setAsspExisExploitCRule(asspExisExploitCRule);
         DerivationRule asspExisExploitGRule = new AsspExisExploitG("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\d+\\s*\\u2203E\\)\\s*$");
         ND_p.setAsspExisExploitGRule(asspExisExploitGRule);
+        DerivationRule asspRestrictedUnivIntroRule = new AsspRestrictedUnivIntroRule("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\(\\u2200I\\)\\)\\s*$");
+        ND_p.setAsspRestrictedUnivIntroRule(asspRestrictedUnivIntroRule);
+
+        DerivationRule asspRestrictedExisExploitCRule = new AsspRestrictedExisExploitC("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\d+\\s*\\(\\u2203E\\)\\)\\s*$");
+        ND_p.setAsspRestrictedExisExploitCRule(asspRestrictedExisExploitCRule);
+        DerivationRule asspRestrictedExisExploitGRule = new AsspRestrictedExisExploitG("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\d+\\s*\\(\\u2203E\\)\\)\\s*$");
+        ND_p.setAsspRestrictedExisExploitGRule(asspRestrictedExisExploitGRule);
 
 
         List<DerivationRule> rules = new ArrayList<>();
@@ -66,6 +73,9 @@ public class DerivationRulesets implements Serializable {
         rules.add(asspDisjExploitCRule);
         rules.add(asspExisExploitCRule);
         rules.add(asspExisExploitGRule);
+        rules.add(asspRestrictedUnivIntroRule);
+        rules.add(asspRestrictedExisExploitCRule);
+        rules.add(asspRestrictedExisExploitGRule);
 
 
         rules.add(new Rieteration("R", "^\\s*\\d+\\s*R\\s*$"));  //reiteration
@@ -112,6 +122,12 @@ public class DerivationRulesets implements Serializable {
         rules.add(new QuantifierNegation("QN", "^\\s*\\d+\\s*QN\\s*$"));
         rules.add(new RestrictedQuantifierNegation("RQN", "^\\s*\\d+\\s*RQN\\s*$"));
         rules.add(new QuantifierPlacement("QP", "^\\s*\\d+\\s*QP\\s*$"));
+        rules.add(new RestrictedUnivExploit("(\u2200E)","^\\s*\\d+\\s*,\\s*\\d+\\s*\\(\\u2200E\\)\\s*$"));
+        rules.add(new RestrictedExisIntro("(\u2203I)","^\\s*\\d+\\s*,\\s*\\d+\\s*\\(\\u2203I\\)\\s*$"));
+        rules.add(new RestrictedUnivIntro("(\u2200I)", "^\\s*\\d+\\s*-\\s*\\d+\\s*\\(\\u2200I\\)\\s*$"));
+        rules.add(new RestrictedExisExploit("(\u2203E)", "^\\s*\\d+\\s*,\\s*\\d+\\s*-\\s*\\d+\\s*\\(\\u2203E\\)\\s*$"));
+
+
 
 
 

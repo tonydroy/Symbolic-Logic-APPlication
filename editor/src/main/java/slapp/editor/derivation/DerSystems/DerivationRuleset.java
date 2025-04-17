@@ -22,6 +22,9 @@ public class DerivationRuleset {
     DerivationRule asspNegIntroRule;
     DerivationRule asspExisExploitCRule;
     DerivationRule asspExisExploitGRule;
+    DerivationRule asspRestrictedUnivIntroRule;
+    DerivationRule asspRestrictedExisExploitCRule;
+    DerivationRule asspRestrictedExisExploitGRule;
 
 
 
@@ -131,6 +134,30 @@ public class DerivationRuleset {
 
     public void setAsspNegIntroRule(DerivationRule asspNegIntroRule) {
         this.asspNegIntroRule = asspNegIntroRule;
+    }
+
+    public DerivationRule getAsspRestrictedUnivIntroRule() {
+        return asspRestrictedUnivIntroRule;
+    }
+
+    public void setAsspRestrictedUnivIntroRule(DerivationRule asspRestrictedUnivIntroRule) {
+        this.asspRestrictedUnivIntroRule = asspRestrictedUnivIntroRule;
+    }
+
+    public DerivationRule getAsspRestrictedExisExploitCRule() {
+        return asspRestrictedExisExploitCRule;
+    }
+
+    public void setAsspRestrictedExisExploitCRule(DerivationRule asspRestrictedExisExploitCRule) {
+        this.asspRestrictedExisExploitCRule = asspRestrictedExisExploitCRule;
+    }
+
+    public DerivationRule getAsspRestrictedExisExploitGRule() {
+        return asspRestrictedExisExploitGRule;
+    }
+
+    public void setAsspRestrictedExisExploitGRule(DerivationRule asspRestrictedExisExploitGRule) {
+        this.asspRestrictedExisExploitGRule = asspRestrictedExisExploitGRule;
     }
 
     public List<Pair<Pattern, String>> getDummyRules() {

@@ -319,9 +319,18 @@ public class DerivationCheck {
                 }
 
                 if (!lineDoc.getText().equals("")) {
+                    boolean blankOK = false;
+                    ViewLine priorLine = derivationExercise.getContentLineAbove(i);
+                    if (!priorLine.equals(viewLine)) {
+                        TextFlow priorJustificationFlow = priorLine.getJustificationFlow();
+                        String priorJustificationString = derivationExercise.getStringFromJustificationFlow(priorJustificationFlow);
+                        if (derivationRuleset.getAsspRestrictedExisExploitCRule().matches(priorJustificationString) || derivationRuleset.getAsspRestrictedExisExploitGRule().matches(priorJustificationString)) {
+                            blankOK = true;
+                        }
+                    }
 
                     if (justificationString.equals("")) {
-
+                        if (blankOK) break;
                         if (checkFinal) {
                             highlightJustification(i);
                             EditorAlerts.showSimpleTxtListAlert("Missing Justification:", Collections.singletonList(ParseUtilities.newRegularText("Line requires justification.")));

@@ -122,10 +122,13 @@ public class QuantifierPlacement extends DerivationRule {
         Document rightForm11 = new Document(openBracketString + "\ud835\udcab \u2192 \u2203\ud835\udccd\uud835\udcac" + closeBracketString );
         Expression rightFormExp11 = ParseUtilities.parseDoc(rightForm11, metaLanguage.getNameString()).get(0);
 
+
         Document leftForm12 = new Document("\u2203\ud835\udccd" + openBracketString + "\ud835\udcac \u2192 \ud835\udcab" + closeBracketString );
         Expression leftFormExp12 = ParseUtilities.parseDoc(leftForm12, metaLanguage.getNameString()).get(0);
         Document rightForm12 = new Document(openBracketString + "\u2200\ud835\udccd\ud835\udcac \u2192 \ud835\udcab" + closeBracketString );
         Expression rightFormExp12 = ParseUtilities.parseDoc(rightForm12, metaLanguage.getNameString()).get(0);
+
+
 
 
 
@@ -225,6 +228,7 @@ public class QuantifierPlacement extends DerivationRule {
         }
         catch (TextMessageException e) {  }
 
+
         //form 6
         MatchUtilities.clearFormMatch();
         try {
@@ -243,6 +247,8 @@ public class QuantifierPlacement extends DerivationRule {
             if (resultGood6) return new Pair(true, null);
         }
         catch (TextMessageException e) {  }
+
+
 
         //form 7
         MatchUtilities.clearFormMatch();
@@ -339,6 +345,7 @@ public class QuantifierPlacement extends DerivationRule {
         }
         catch (TextMessageException e) {  }
 
+
         //form 12
         MatchUtilities.clearFormMatch();
         try {
@@ -357,6 +364,8 @@ public class QuantifierPlacement extends DerivationRule {
             if (resultGood12) return new Pair(true, null);
         }
         catch (TextMessageException e) {  }
+
+
 
 
         return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText(("Lines (" + inputLine1.getLineNumberLabel().getText() + ") and (" + line.getLineNumberLabel().getText() + ") are not of the right form for application of " + getName() + "."))));
@@ -382,12 +391,17 @@ public class QuantifierPlacement extends DerivationRule {
                 variableMatch = term;
             }
         }
+  //      System.out.println("var: " + variableMatch);
+
         List<MFormula> mFormulas = MFormula.getmFormulas();
         for (MFormula mFormula : mFormulas) {
             if (mFormula.getFormulaSym().getBaseStr().equals("\ud835\udcab")) {
                 formulaMatch = mFormula.getMatch();
             }
         }
+
+ //       System.out.println("formula: " + formulaMatch);
+
         if (variableMatch != null && formulaMatch != null) {
 
             boolean freeInFormula = SyntacticalFns.expTermFreeInFormula(formulaMatch, variableMatch, objectLanguage.getNameString());
@@ -405,7 +419,7 @@ public class QuantifierPlacement extends DerivationRule {
             return freeInFormula;
         }
         else {
-            System.out.println("problem with 'free in formula' check");
+      //      System.out.println("problem with 'free in formula' check");
             return false;
         }
 
