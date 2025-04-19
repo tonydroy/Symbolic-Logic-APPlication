@@ -11,15 +11,13 @@ import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.derivation.DerSystems.DerivationRule;
 import slapp.editor.derivation.DerSystems.DerivationRuleset;
+import slapp.editor.derivation.DerSystems.DerivationRulesets;
 import slapp.editor.parser.Expression;
+import slapp.editor.parser.Languages;
 import slapp.editor.parser.ParseUtilities;
-import slapp.editor.parser.grammatical_parts.ContradictionSimple;
-import slapp.editor.parser.grammatical_parts.MFormula;
-import slapp.editor.parser.symbols.ContradictionSymbol;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,6 +26,7 @@ public class DerivationCheck {
 
     private DerivationExercise derivationExercise;
     private DerivationView derivationView;
+    private DerivationModel derivationModel;
     private DerivationRuleset derivationRuleset;
     private ViewLine markedLine;
     private List<ViewLine> viewLines;
@@ -36,16 +35,43 @@ public class DerivationCheck {
     private int checkTries;
     private int helpMax;
     private int helpTries;
-    private boolean checkFinal = true;
+    private boolean checkFinal;
+    private boolean checkSuccess;
 
-    DerivationCheck(DerivationExercise derivationExercise, DerivationView derivationView, DerivationRuleset ruleset) {
+    DerivationCheck(DerivationExercise derivationExercise) {
         this.derivationExercise = derivationExercise;
-        this.derivationView = derivationView;
-        this.derivationRuleset = ruleset;
-
-
-
+        this.derivationView = derivationExercise.getExerciseView();
+        this.derivationModel = derivationExercise.getExerciseModel();
         setRightControlBox();
+
+        CheckSetup checkSetup = derivationExercise.getExerciseModel().getCheckSetup();
+
+
+        checkSuccess = checkSetup.isCheckSuccess();
+        checkFinal = checkSetup.isCheckFinal();
+        if (checkFinal) {
+            derivationView.setCheckColor(Color.LAWNGREEN);
+            derivationView.setCheckElementsColor(Color.GREEN);
+            derivationView.setCheckMessage("Derivation");
+        }
+        else {
+            derivationView.setCheckColor(Color.ORCHID);
+            derivationView.setCheckElementsColor(Color.PURPLE);
+            derivationView.setCheckMessage("Checked Lines: Good");
+        }
+        if (checkSuccess) derivationView.activateBigCheck();
+        else derivationView.deactivateBigCheck();
+
+        derivationRuleset = DerivationRulesets.getRuleset(checkSetup.getRulesetName());
+        derivationRuleset.setMetaLanguage(Languages.getLanguage(checkSetup.getMetLangName()));
+        derivationRuleset.setObjectLanguage(Languages.getLanguage(checkSetup.getObjLangName()));
+
+        checkMax = checkSetup.getCheckMax();
+        checkTries = checkSetup.getCheckTries();
+        helpMax = checkSetup.getHelpMax();
+        helpTries = checkSetup.getHelpTries();
+        updateCounters();
+
     }
 
     public String getContradictionSymbolString() {
@@ -57,22 +83,44 @@ public class DerivationCheck {
         setHelpCounter();
     }
 
-    private void setRightControlBox() {
+    private void setChecksCounter() {
+        if (checkMax != -1 && checkTries >= checkMax) {
+            derivationView.getCheckButton().setDisable(true);
+            derivationView.getCheckProgButton().setDisable(true);
+        }
+        String checkString;
+        if (checkMax == -1) checkString = "(unlimited)";
+        else if (checkMax == 0) checkString = "(none)";
+        else checkString = "(" + String.valueOf(checkTries) + "/" + String.valueOf(checkMax) + ")";
 
+        derivationView.getCheckTriesLabel().setText(checkString);
+    }
+
+    private void setHelpCounter() {
+        if (helpMax != -1 && helpTries >= helpMax) {derivationView.getHelpButton().setDisable(true);}
+
+        String helpString;
+        if (helpMax == -1) helpString = "(unlimited)";
+        else if (helpMax == 0) helpString = "(none)";
+        else helpString = "(" + String.valueOf(helpTries) + "/" + String.valueOf(helpMax) + ")";
+
+        derivationView.getHelpTriesLabel().setText(helpString);
+    }
+
+    private void setRightControlBox() {
 
         derivationView.getCheckButton().setOnAction(e -> {
             checkFinal = true;
             derivationView.setCheckColor(Color.LAWNGREEN);
-            derivationView.setCheckElementsString("Derivation");
+            derivationView.setCheckMessage("Derivation");
             derivationView.setCheckElementsColor(Color.GREEN);
             boolean check = runCheck();
         });
 
-
         derivationView.getCheckProgButton().setOnAction(e -> {
             checkFinal = false;
             derivationView.setCheckColor(Color.ORCHID);
-            derivationView.setCheckElementsString("Checked Lines: Good");
+            derivationView.setCheckMessage("Checked Lines: Good");
             derivationView.setCheckElementsColor(Color.PURPLE);
 
             boolean check = runCheck();
@@ -82,12 +130,10 @@ public class DerivationCheck {
 
         });
 
-
     }
 
     private boolean runCheck() {
-        if (derivationView.getBigCheck().getOpacity() > .5) derivationView.setCheckShowing(true);
-        else derivationView.setCheckShowing(false);
+        checkSuccess = false;
         derivationView.deactivateBigCheck();
         checkTries++;
         setChecksCounter();
@@ -102,6 +148,7 @@ public class DerivationCheck {
         setScopeLists();
         if (!checkJustifications()) return false;
 
+        checkSuccess = true;
         derivationView.activateBigCheck();
         //set check on model
         return true;
@@ -408,34 +455,6 @@ public class DerivationCheck {
         return true;
     }
 
-    private void setChecksCounter() {
-        if (checkMax != -1 && checkTries >= checkMax) {
-            derivationView.getCheckButton().setDisable(true);
-            derivationView.getCheckProgButton().setDisable(true);
-
-        }
-
-        String checkString;
-        if (checkMax == -1) checkString = "(unlimited)";
-        else if (checkMax == 0) checkString = "(none)";
-        else checkString = "(" + String.valueOf(checkTries) + "/" + String.valueOf(checkMax) + ")";
-
-        derivationView.getCheckTriesLabel().setText(checkString);
-    }
-
-    private void setHelpCounter() {
-        if (helpMax != -1 && helpTries >= helpMax) {derivationView.getHelpButton().setDisable(true);}
-
-        String helpString;
-        if (helpMax == -1) helpString = "(unlimited)";
-        else if (helpMax == 0) helpString = "(none)";
-        else helpString = "(" + String.valueOf(helpTries) + "/" + String.valueOf(helpMax) + ")";
-
-        derivationView.getHelpTriesLabel().setText(helpString);
-    }
-
-
-
     private boolean checkScopeStructure() {
 
         if (viewLines.size() > 0) {
@@ -570,23 +589,38 @@ public class DerivationCheck {
         return viewLines;
     }
 
-    public void setViewLines(List<ViewLine> viewLines) {
-        this.viewLines = viewLines;
-    }
 
     public DerivationRuleset getDerivationRuleset() {
         return derivationRuleset;
-    }
-
-    public void setDerivationRuleset(DerivationRuleset derivationRuleset) {
-        this.derivationRuleset = derivationRuleset;
     }
 
     public DerivationExercise getDerivationExercise() {
         return derivationExercise;
     }
 
-    public void setDerivationExercise(DerivationExercise derivationExercise) {
-        this.derivationExercise = derivationExercise;
+    public int getCheckMax() {
+        return checkMax;
     }
+
+    public int getCheckTries() {
+        return checkTries;
+    }
+
+    public int getHelpMax() {
+        return helpMax;
+    }
+
+    public int getHelpTries() {
+        return helpTries;
+    }
+
+    public boolean isCheckFinal() {
+        return checkFinal;
+    }
+
+    public boolean isCheckSuccess() {
+        return checkSuccess;
+    }
+
+
 }

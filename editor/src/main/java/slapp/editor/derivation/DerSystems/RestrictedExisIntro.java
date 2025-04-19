@@ -105,8 +105,8 @@ public class RestrictedExisIntro extends DerivationRule {
             return new Pair(false, e.getMessageList());
         }
 
-
         if (resultGood2 && resultGood3) return new Pair(true, null);
+
 
         else {
             return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("Line (" + line.getLineNumberLabel().getText() + ") does not result from (" + inputs[0] + ") and (" + inputs[1] + ") by " + getName() + ".")));

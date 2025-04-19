@@ -391,7 +391,7 @@ public class QuantifierPlacement extends DerivationRule {
                 variableMatch = term;
             }
         }
-  //      System.out.println("var: " + variableMatch);
+ //       System.out.println("var: " + variableMatch);
 
         List<MFormula> mFormulas = MFormula.getmFormulas();
         for (MFormula mFormula : mFormulas) {
@@ -419,7 +419,7 @@ public class QuantifierPlacement extends DerivationRule {
             return freeInFormula;
         }
         else {
-      //      System.out.println("problem with 'free in formula' check");
+            System.out.println("problem with 'free in formula' check");
             return false;
         }
 

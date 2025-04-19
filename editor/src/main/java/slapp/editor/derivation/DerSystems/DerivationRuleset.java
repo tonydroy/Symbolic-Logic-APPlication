@@ -33,7 +33,7 @@ public class DerivationRuleset {
 
     List<Pair<Pattern, String>> dummyRules;
 
-    DerivationRuleset(String name, List<Text> textName, Language objectLanguage, Language metaLanguage) {
+    DerivationRuleset(String name, List<Text> textName) {
         this.name = name;
         this.textName = textName;
         this.objectLanguage = objectLanguage;
@@ -184,7 +184,13 @@ public class DerivationRuleset {
         this.requirePremisesAtTop = requirePremisesAtTop;
     }
 
+    public void setObjectLanguage(Language objectLanguage) {
+        this.objectLanguage = objectLanguage;
+    }
 
+    public void setMetaLanguage(Language metaLanguage) {
+        this.metaLanguage = metaLanguage;
+    }
 }
 
 

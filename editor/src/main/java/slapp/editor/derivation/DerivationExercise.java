@@ -37,6 +37,9 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -84,28 +87,13 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         this.derivationView = new DerivationView(mainView);
 
         setDerivationView();
-
-
-
-        derivationView.setCheckElementsString(derivationModel.getCheckMessage());
-        derivationView.setCheckSuccess(derivationModel.isCheckSuccess());
-        derivationView.setRightControlBox();
-        this.derivationCheck = new DerivationCheck(this, derivationView, DerivationRulesets.getRuleset(model.getRuleset()));
-        derivationCheck.setCheckMax(derivationModel.getCheckMax());
-        derivationCheck.setCheckTries(derivationModel.getCheckTries());
-        derivationCheck.setHelpMax(derivationModel.getHelpMax());
-        derivationCheck.setHelpTries(derivationModel.getHelpTries());
-        derivationCheck.updateCounters();
-
-
+        derivationCheck = new DerivationCheck(this);
 
         //cannot depend on pushUndoRedo because documents can't yet be extracted from view
         DerivationModel deepCopy = (DerivationModel) SerializationUtils.clone(derivationModel);
         undoRedoList.push(deepCopy);
         updateUndoRedoButtons();
     }
-
-
 
     /*
      * Set up the derivation view from the model
@@ -171,6 +159,8 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         setViewLinesFromModel();
         derivationView.setGridFromViewLines();
         setContentFocusListeners();
+
+        derivationView.setRightControlBox();
 
 
     }
@@ -1034,8 +1024,12 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         //header node
         Label exerciseName = new Label(derivationModel.getExerciseName());
         exerciseName.setStyle("-fx-font-weight: bold;");
-        HBox hbox = new HBox(exerciseName);
+        Region spacer = new Region();
+
+        HBox hbox = new HBox(exerciseName, spacer, printCheckNode());
+        hbox.setHgrow(spacer, Priority.ALWAYS);
         hbox.setPadding(new Insets(0,0,10,0));
+        hbox.setMinWidth(nodeWidth);
 
         Group headerRoot = new Group();
         Scene headerScene = new Scene(headerRoot);
@@ -1100,8 +1094,30 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         return nodeList;
     }
 
+    TextFlow printCheckNode() {
+        TextFlow flow = new TextFlow();
+        flow.setMaxWidth(200);
+        if (derivationCheck.isCheckSuccess()) {
+            Text bigCheck = new Text("\ue89a");
+            bigCheck.setFont(Font.font("Noto Serif Combo", 14));
+            Text message = new Text("  " + derivationView.getCheckMessage());
+            message.setFont(Font.font("Noto Serif Combo", 11));
+
+            if (derivationCheck.isCheckFinal()) {
+                bigCheck.setFill(Color.LAWNGREEN);
+                message.setFill(Color.GREEN);
+            }
+            else {
+                bigCheck.setFill(Color.ORCHID);
+                message.setFill(Color.PURPLE);
+            }
+            flow.getChildren().addAll(bigCheck, message);
+        }
+        return flow;
+    }
+
     /**
-     * Return to the initial (unworked) version of the exercise, retaining the comment only.
+     * Return to the initial (unworked) version of the exercise, retaining the comment and check/help tries only.
      * @return the initial exercise
      */
     @Override
@@ -1111,6 +1127,11 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         Document commentDocument = commentRTA.getDocument();
         DerivationModel originalModel = (DerivationModel) (derivationModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
+        CheckSetup setup = originalModel.getCheckSetup();
+        setup.setHelpTries(derivationCheck.getHelpTries());
+        setup.setCheckTries(derivationCheck.getCheckTries());
+        originalModel.setCheckSetup(setup);
+
         DerivationExercise clearExercise = new DerivationExercise(originalModel, mainWindow);
         return clearExercise;
     }
@@ -1247,6 +1268,15 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         newModel.setSplitPanePrefWidth(derivationView.getSplitPanePrefWidth());
         newModel.setCommentTextHeight(derivationModel.getCommentTextHeight());
         newModel.setStatementTextHeight(derivationModel.getStatementTextHeight());
+
+        ///
+        CheckSetup setup = derivationModel.getCheckSetup();
+        setup.setCheckSuccess(derivationCheck.isCheckSuccess());
+        setup.setCheckFinal(derivationCheck.isCheckFinal());
+        setup.setCheckTries(derivationCheck.getCheckTries());
+        setup.setHelpTries(derivationCheck.getHelpTries());
+        newModel.setCheckSetup(setup);
+       ///
 
         return newModel;
     }

@@ -47,13 +47,7 @@ public class DerivationModel implements ExerciseModel<Document>, Serializable {
     private double commentTextHeight = 0;
     private List<ModelLine> derivationLines = new ArrayList<>();
 
-    private String ruleset = "ND+";
-    private boolean checkSuccess = false;
-    private String checkMessage = "Derivation";
-    private int checkMax = -1;
-    private int checkTries = 0;
-    private int helpMax = 3;
-    private int helpTries = 0;
+    private CheckSetup checkSetup;
 
 
     /**
@@ -82,6 +76,7 @@ public class DerivationModel implements ExerciseModel<Document>, Serializable {
         this.exerciseComment = exerciseComment;
         this.derivationLines = derivationLines;
         this.splitPanePrefWidth = PrintUtilities.getPageWidth();
+        this.checkSetup = new CheckSetup();
     }
 
     /**
@@ -162,60 +157,12 @@ public class DerivationModel implements ExerciseModel<Document>, Serializable {
      */
     void setCommentTextHeight(double commentTextHeight) {     this.commentTextHeight = commentTextHeight;   }
 
-    public String getRuleset() {
-        return ruleset;
+    public CheckSetup getCheckSetup() {
+        return checkSetup;
     }
 
-    public void setRuleset(String ruleset) {
-        this.ruleset = ruleset;
-    }
-
-    public boolean isCheckSuccess() {
-        return checkSuccess;
-    }
-
-    public void setCheckSuccess(boolean checkSuccess) {
-        this.checkSuccess = checkSuccess;
-    }
-
-    public String getCheckMessage() {
-        return checkMessage;
-    }
-
-    public void setCheckMessage(String checkMessage) {
-        this.checkMessage = checkMessage;
-    }
-
-    public int getCheckMax() {
-        return checkMax;
-    }
-
-    public void setCheckMax(int checkMax) {
-        this.checkMax = checkMax;
-    }
-
-    public int getCheckTries() {
-        return checkTries;
-    }
-
-    public void setCheckTries(int checkTries) {
-        this.checkTries = checkTries;
-    }
-
-    public int getHelpMax() {
-        return helpMax;
-    }
-
-    public void setHelpMax(int helpMax) {
-        this.helpMax = helpMax;
-    }
-
-    public int getHelpTries() {
-        return helpTries;
-    }
-
-    public void setHelpTries(int helpTries) {
-        this.helpTries = helpTries;
+    public void setCheckSetup(CheckSetup checkSetup) {
+        this.checkSetup = checkSetup;
     }
 
     /**

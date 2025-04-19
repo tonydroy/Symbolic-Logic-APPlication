@@ -20,7 +20,6 @@ import com.gluonhq.richtextarea.RichTextAreaSkin;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.animation.ParallelTransition;
-import javafx.animation.SequentialTransition;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.collections.ObservableList;
@@ -88,14 +87,17 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
     private Button checkProgButton;
     private Button helpButton;
     private Text bigCheck;
-    private String checkElementsString;
+    private String checkMessage;
     private Text checkedElements;
     private Label helpTriesLabel;
     private Label checkTriesLabel;
     private boolean checkSuccess;
 
-    private Color checkColor = Color.LAWNGREEN;
-    private Color checkElementsColor = Color.GREEN;
+    private Color checkColor;
+    private Color checkElementsColor;
+
+
+
     private boolean checkShowing = false;
 
 
@@ -312,11 +314,11 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         //right control box
         bigCheck = new Text("\ue89a");
         bigCheck.setFont(Font.font("Noto Serif Combo", 72));
-        bigCheck.setFill(checkColor);
+     //   bigCheck.setFill(checkColor);
 
-        checkedElements = new Text(checkElementsString);
+        checkedElements = new Text(checkMessage);
         checkedElements.setFont(Font.font("Noto Serif Combo", 11));
-        checkedElements.setFill(checkElementsColor);
+     //   checkedElements.setFill(checkElementsColor);
         TextFlow checkedElementsFlow = new TextFlow(checkedElements);
         checkedElementsFlow.setMaxWidth(150);
 
@@ -356,7 +358,7 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         rightControlBox.setPadding(new Insets(60,20,0,20));
         rightControlNode = rightControlBox;
 
-        if (!checkSuccess) deactivateBigCheck();
+        deactivateBigCheck();
     }
 
     private void setSizeSpinners() {
@@ -484,8 +486,9 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
 
     public void activateBigCheck() {
         bigCheck.setFill(checkColor);
-        checkedElements.setText(checkElementsString);
+        checkedElements.setText(checkMessage);
         checkedElements.setFill(checkElementsColor);
+
 
         if (checkShowing) {
             FadeTransition t1 = new FadeTransition(new Duration(250), checkedElements);
@@ -505,7 +508,10 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         }
     }
 
+    //record status, and deactivate
     public void deactivateBigCheck() {
+        if (bigCheck.getOpacity() > .5) checkShowing = true;
+        else checkShowing = false;
         bigCheck.setOpacity(0.0);
         checkedElements.setOpacity(0.0);
     }
@@ -667,8 +673,8 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         return checkTriesLabel;
     }
 
-    public void setCheckElementsString(String checkElementsString) {
-        this.checkElementsString = checkElementsString;
+    public void setCheckMessage(String checkMessage) {
+        this.checkMessage = checkMessage;
     }
 
     public void setCheckSuccess(boolean checkSuccess) {
@@ -685,6 +691,18 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
 
     public void setCheckShowing(boolean checkShowing) {
         this.checkShowing = checkShowing;
+    }
+
+    public Color getCheckColor() {
+        return checkColor;
+    }
+
+    public Color getCheckElementsColor() {
+        return checkElementsColor;
+    }
+
+    public String getCheckMessage() {
+        return checkMessage;
     }
 
     /**

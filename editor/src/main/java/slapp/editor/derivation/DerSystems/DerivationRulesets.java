@@ -26,15 +26,15 @@ public class DerivationRulesets implements Serializable {
         rulesets.add(getND_p());
     }
 
-    public static DerivationRuleset getRuleset(String name) {
+    public static DerivationRuleset getRuleset(String rulesetName) {
         for (DerivationRuleset ruleset : rulesets) {
-            if (ruleset.getName().equals(name)) return ruleset;
+            if (ruleset.getName().equals(rulesetName))  return ruleset;
         }
         return null;
     }
 
     private static DerivationRuleset getND_p() {
-        DerivationRuleset ND_p = new DerivationRuleset("ND+", Collections.singletonList(ParseUtilities.newItalicText("ND+")), Languages.getLanguage("Lq_abv"), Languages.getLanguage("Meta"));
+        DerivationRuleset ND_p = new DerivationRuleset("ND+", Collections.singletonList(ParseUtilities.newItalicText("ND+")));
 
         DerivationRule premiseRule = new Premise("P","^\\s*P\\s*$");
         ND_p.setPremiseRule(premiseRule);
@@ -159,7 +159,7 @@ public class DerivationRulesets implements Serializable {
 
 
     private static DerivationRuleset getND() {
-        DerivationRuleset ND = new DerivationRuleset("ND", Collections.singletonList(ParseUtilities.newItalicText("ND")), Languages.getLanguage("Lq_abv"), Languages.getLanguage("Meta"));
+        DerivationRuleset ND = new DerivationRuleset("ND", Collections.singletonList(ParseUtilities.newItalicText("ND")));
 
         DerivationRule premiseRule = new Premise("P","^\\s*P\\s*$");
         ND.setPremiseRule(premiseRule);
@@ -239,7 +239,7 @@ public class DerivationRulesets implements Serializable {
 
 
     private static DerivationRuleset getNDs() {
-        DerivationRuleset NDs = new DerivationRuleset("NDs", Collections.singletonList(ParseUtilities.newItalicText("NDs")), Languages.getLanguage("Ls_abv"), Languages.getLanguage("Meta"));
+        DerivationRuleset NDs = new DerivationRuleset("NDs", Collections.singletonList(ParseUtilities.newItalicText("NDs")));
 
         DerivationRule premiseRule = new Premise("P","^\\s*P\\s*$");
         NDs.setPremiseRule(premiseRule);
@@ -302,7 +302,7 @@ public class DerivationRulesets implements Serializable {
     }
 
     private static DerivationRuleset getNDs_p() {
-        DerivationRuleset NDs_p = new DerivationRuleset("NDs+", Collections.singletonList(ParseUtilities.newItalicText("NDs+")), Languages.getLanguage("Ls_abv"), Languages.getLanguage("Meta"));
+        DerivationRuleset NDs_p = new DerivationRuleset("NDs+", Collections.singletonList(ParseUtilities.newItalicText("NDs+")));
 
         DerivationRule premiseRule = new Premise("P","^\\s*P\\s*$");
         NDs_p.setPremiseRule(premiseRule);
