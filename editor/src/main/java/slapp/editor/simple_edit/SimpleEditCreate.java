@@ -31,10 +31,10 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.transform.Scale;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import slapp.editor.DiskUtilities;
@@ -80,6 +80,9 @@ public class SimpleEditCreate {
     private VBox nameNpromptBox;
     private BorderPane borderPane;
 
+    private Pane spacerPane;
+    private Spinner<Double> statementHeightSpinner;
+
 
     /**
      * Construct the create window from scratch.
@@ -123,12 +126,31 @@ public class SimpleEditCreate {
         statementRTA = statementDRTA.getEditor();
         statementRTA.setPromptText("Exercise Statement:");
         statementRTA.getStylesheets().add("slappTextArea.css");
-
         statementRTA.setPrefWidth(PrintUtilities.getPageWidth() );
+        statementRTA.setMinWidth(PrintUtilities.getPageWidth());
+        statementRTA.setMaxWidth(PrintUtilities.getPageWidth());
 
-  //      statementRTA.setPrefWidth(PrintUtilities.getPageWidth() + 20);
-  //      statementRTA.setContentAreaWidth(PrintUtilities.getPageWidth());
-        statementRTA.setPrefHeight(200);
+        statementRTA.setMinHeight(100);
+
+        double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
+        statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
+        statementHeightSpinner.setPrefWidth(60);
+        statementHeightSpinner.setDisable(false);
+        statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
+        statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
+            if (increment != null) increment.getOnMouseReleased().handle(null);
+            Node decrement = statementHeightSpinner.lookup(".decrement-arrow-button");
+            if (decrement != null) decrement.getOnMouseReleased().handle(null);
+        });
+
+        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+            statementRTA.prefHeightProperty().unbind();
+            statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
+            statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+
+        });
 
         statementRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
             fieldModified = true;
@@ -181,22 +203,34 @@ public class SimpleEditCreate {
         HBox promptBox = new HBox(promptLabel, promptField);
         promptBox.setAlignment(Pos.BASELINE_LEFT);
         nameNpromptBox = new VBox(10,nameBox,promptBox);
-        nameNpromptBox.setPadding(new Insets(20,0,20,70));
+        nameNpromptBox.setPadding(new Insets(20,0,20,0));
 
-        String helpText = "Simple Edit Exercise is appropriate for any exercise that calls for a single text box.  (In the usual case, these appear as elements of the 'free form' exercise -- where Simple Edit is superseded by Page Edit for stand-alone exercises.)  All the usual keyboard and edit commands apply.\n\n" +
-                "For the Simple Edit Exercise, you need only provide the exercise name, exercise statement and, if desired, a prompt that will appear in an empty content area (you may not see the prompt until the content area gains focus).";
-        helpArea = new TextArea(helpText);
-        helpArea.setWrapText(true);
-        helpArea.setPrefHeight(150);
-        helpArea.setEditable(false);
-        helpArea.setFocusTraversable(false);
-        helpArea.setMouseTransparent(true);
-        helpArea.setStyle("-fx-text-fill: mediumslateblue");
+        String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
+                "<p>Simple Edit Exercise is appropriate for any exercise that calls for a single text box.</p>" +
+                "<ul>" +
+                "<li><p> In the usual case, the simple edit exercise appears as an element of the 'free form' exercise -- where Simple Edit is superseded by Page Edit for stand-alone exercises.  </p></li>" +
+                "<li><p>For the Simple Edit Exercise, you need only provide the exercise name, exercise statement and, if desired, a prompt that will appear in an empty content area (you may not see the prompt until the content area gains focus).</p></li>" +
+                "</ul>";
 
-        centerBox = new VBox(10, statementRTA, helpArea);
+        WebView helpArea = new WebView();
+        WebEngine webEngine = helpArea.getEngine();
+        webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
+        webEngine.loadContent(helpText);
+        helpArea.setPrefHeight(200);
 
-        Group centerGroup = new Group(centerBox);
-        borderPane.setCenter(centerGroup);
+
+
+        centerBox = new VBox(10, nameNpromptBox, statementRTA, helpArea);
+        centerBox.setPadding(new Insets(10,0,10,20));
+
+        spacerPane = new Pane();
+        spacerPane.prefHeightProperty().bind(centerBox.heightProperty());
+        spacerPane.prefWidthProperty().bind(centerBox.widthProperty());
+        Group group = new Group(spacerPane);
+        AnchorPane comboPane = new AnchorPane(group, centerBox);
+        ScrollPane centerPane = new ScrollPane(comboPane);
+
+        borderPane.setCenter(centerPane);
 
         Button closeButton = new Button("Close");
         closeButton.setOnAction(e -> closeWindow());
@@ -238,13 +272,13 @@ public class SimpleEditCreate {
 
             scale = (double) nv/100;
             updateZoom();
-            scene.getWindow().setWidth(Math.max(860, PrintUtilities.getPageWidth() * scale + 55));
-            setCenterVgrow();
+       //     scene.getWindow().setWidth(Math.max(880, PrintUtilities.getPageWidth() * scale + 55));
+
         });
 
         sizeToolBar = new ToolBar();
         sizeToolBar.setPrefHeight(38);
-        sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     "));
+        sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     V Sz:"), statementHeightSpinner);
 
         stage = new Stage();
         stage.initOwner(EditorMain.mainStage);
@@ -252,10 +286,10 @@ public class SimpleEditCreate {
         stage.setTitle("Create Simple Edit Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
 
-        stage.setWidth(860);
+        stage.setWidth(890);
         stage.setHeight(700);
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 860));
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 890));
         stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 700));
 
         stage.initModality(Modality.WINDOW_MODAL);
@@ -267,7 +301,6 @@ public class SimpleEditCreate {
         stage.show();
         statementRTA.getActionFactory().save().execute(new ActionEvent());
         centerBox.layout();
-        setCenterVgrow();
         Platform.runLater(() -> nameField.requestFocus());
     }
 
@@ -275,28 +308,15 @@ public class SimpleEditCreate {
      * update zoom value
      */
     private void updateZoom() {
-        centerBox.setScaleX(scale);
-        centerBox.setScaleY(scale);
-        scene.getWindow().setWidth(Math.max(860, PrintUtilities.getPageWidth() * scale + 55));
-        setCenterVgrow();
-
         KeyboardDiagram keyboardDiagram = KeyboardDiagram.getInstance();
         keyboardDiagram.updateFontSize(scale);
         keyboardDiagram.initialize(statementDRTA);
         keyboardDiagram.update();
-    }
 
-    /*
-     * The center statement area sizes as the stage is sized
-     */
-    private void setCenterVgrow() {
-        double fixedHeight = helpArea.getHeight() * scale + 400;
-        DoubleProperty fixedValueProperty = new SimpleDoubleProperty(fixedHeight);
-        DoubleProperty maximumHeightProperty = new SimpleDoubleProperty(PrintUtilities.getPageHeight() );
-        DoubleProperty scaleProperty = new SimpleDoubleProperty(scale);
-        centerHeightProperty = new SimpleDoubleProperty();
-        centerHeightProperty.bind(Bindings.min(maximumHeightProperty, (stage.heightProperty().subtract(fixedValueProperty)).divide(scaleProperty)));
-        statementRTA.prefHeightProperty().bind(centerHeightProperty);
+        centerBox.getTransforms().clear();
+        centerBox.getTransforms().add(new Scale(scale, scale));
+        spacerPane.getTransforms().clear();
+        spacerPane.getTransforms().add(new Scale(scale, scale));
     }
 
     /*
@@ -442,7 +462,7 @@ public class SimpleEditCreate {
         fontsAndEditBox.setHgrow(editToolbar, Priority.ALWAYS);
         kbdBox.setHgrow(sizeToolBar, Priority.ALWAYS);
 
-        VBox topBox = new VBox(menuBar, paragraphToolbar, fontsAndEditBox, kbdBox, nameNpromptBox);
+        VBox topBox = new VBox(menuBar, paragraphToolbar, fontsAndEditBox, kbdBox);
         borderPane.topProperty().setValue(topBox);
     }
 

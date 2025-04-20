@@ -39,6 +39,9 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
+import javafx.scene.transform.Scale;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import slapp.editor.DiskUtilities;
@@ -106,6 +109,8 @@ public class TruthTableGenCreate {
     private BoxedDRTA focusedBoxedDRTA;
     private DecoratedRTA dummyDRTA = new DecoratedRTA();
 
+    private Pane spacerPane;
+    private Spinner<Double> statementHeightSpinner;
 
     /**
      * Create new truth table generate exercise
@@ -158,10 +163,32 @@ public class TruthTableGenCreate {
         statementRTA = statementDRTA.getEditor();
         statementRTA.setPromptText("Exercise Statement:");
         statementRTA.getStylesheets().add("slappTextArea.css");
-        statementRTA.setPrefWidth(PrintUtilities.getPageWidth());
-  //      statementRTA.setContentAreaWidth(PrintUtilities.getPageWidth());
-        statementRTA.setPrefHeight(100);
-        statementRTA.setMinHeight(50);
+
+        statementRTA.setPrefWidth(PrintUtilities.getPageWidth() );
+        statementRTA.setMinWidth(PrintUtilities.getPageWidth());
+        statementRTA.setMaxWidth(PrintUtilities.getPageWidth());
+        statementRTA.setMinHeight(100);
+
+        double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
+        statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
+        statementHeightSpinner.setPrefWidth(60);
+        statementHeightSpinner.setDisable(false);
+        statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
+        statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
+            if (increment != null) increment.getOnMouseReleased().handle(null);
+            Node decrement = statementHeightSpinner.lookup(".decrement-arrow-button");
+            if (decrement != null) decrement.getOnMouseReleased().handle(null);
+        });
+
+        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+            statementRTA.prefHeightProperty().unbind();
+            statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
+            statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+
+        });
+
         statementRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
             fieldModified = true;
             statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
@@ -209,6 +236,8 @@ public class TruthTableGenCreate {
         });
 
         Label explainPromptLabel = new Label("Explain Prompt: ");
+        explainPromptLabel.setPrefWidth(95);
+        explainPromptLabel.setAlignment(Pos.CENTER_RIGHT);
         explainPromptField  = new TextField();
         explainPromptField.setPromptText("(plain text)");
         explainPromptListener = new ChangeListener() {
@@ -246,6 +275,8 @@ public class TruthTableGenCreate {
         });
 
         Label aPromptLabel = new Label("A prompt: ");
+        aPromptLabel.setPrefWidth(95);
+        aPromptLabel.setAlignment(Pos.CENTER_RIGHT);
         aPromptField  = new TextField();
         aPromptField.setPromptText("(plain text)");
         aPromptListener = new ChangeListener() {
@@ -465,28 +496,37 @@ public class TruthTableGenCreate {
         mainFormulasTop.setMargin(conclusionDividerCheck, new Insets(0, 0, 0, 100));
 
         upperFieldsBox = new VBox(10, nameBox, genPromptBox, choicesBox, languagePresetsBox, unaryOperatorBox, binaryOperatorBox, mainFormulasTop, mainFormulasPane);
-        upperFieldsBox.setPadding(new Insets(20, 0, 20, 20));
+        upperFieldsBox.setPadding(new Insets(20, 0, 20, 0));
 
         //center area
-        String helpText = "Truth Table Gen Exercise is like Truth Table Explain Exercise in that it requests a choice between some mutually exclusive options along with an explanation.  " +
-                "In addition it begins with a field for an interpretation/translation, and lets the student generate the premises and conclusion on the table.\n\n" +
-                "For the Truth Table Gen exercise, supply the exercise name and exercise statement.  The Explain Prompt appears in the explain field.  The Interp Prompt appears in the interpretation/translation field.  The Checkbox lead appears prior to the check boxes, the A prompt with the first box, and the B prompt with the second.  " +
-                "The preset operator buttons set operators according to the official and abbreviating languages from Symbolic Logic; alternatively, you may edit sentential operator symbols individually. " +
-                "Finally you will usually leave the formula fields blank, as formulas you enter here may be overwritten by the student working the exercise.  " +
-                "In the ordinary case, you will also leave the \"conclusion divider\" selected as the student is expeceted to provide at least a conclusion sentence." ;
+        String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
+                "<p>The Truth Table Gen Exercise is like Truth Table Explain Exercise in that it requests a truth table along with choice between some mutually exclusive options and an explanation.  " +
+                "In addition the truth table gen exercise begins with a field for an interpretation/translation, and lets the student generate the premises and conclusion on the table.</p>" +
+                "<ul>" +
+                "<li><p>Begin with the exercise name and prompts to appear in the interpretation and explanation fields.</p></li>" +
+                "<li><p>The Checkbox lead appears prior to the check boxes, the A prompt with the first box, and the B prompt with the second.</p></li>" +
+                "<li><p>The preset operator buttons set operators according to the official and abbreviating sentential languages from <em>Symbolic Logic</em>; alternatively, you may edit sentential operator symbols individually, using the plus and minus buttons to add and remove fields.</p></li> " +
+                "<li><p>In the ordinary case, you will leave the formula fields blank, as any formulas you enter here may be overwritten by the student working the exercise.  And you will typically leave the \"conclusion divider\" selected, as the student is expected to provide at least a conclusion sentence.</p></li> " +
+                "<li><p>Finally, provide the exercise statement.</p></li>" +
+                "</ul>";
 
-        helpArea = new TextArea(helpText);
-        helpArea.setWrapText(true);
-        helpArea.setPrefHeight(255);
-        helpArea.setEditable(false);
-        helpArea.setFocusTraversable(false);
-        helpArea.setMouseTransparent(true);
-        helpArea.setStyle("-fx-text-fill: mediumslateblue");
+        WebView helpArea = new WebView();
+        WebEngine webEngine = helpArea.getEngine();
+        webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
+        webEngine.loadContent(helpText);
+        helpArea.setPrefHeight(340);
 
-        centerBox = new VBox(10, statementRTA, helpArea);
-        centerBox = new VBox(10, statementRTA, helpArea);
-        Group centerGroup = new Group(centerBox);
-        borderPane.setCenter(centerGroup);
+        centerBox = new VBox(10, upperFieldsBox, statementRTA, helpArea);
+        centerBox.setPadding(new Insets(10,0,10,20));
+
+        spacerPane = new Pane();
+        spacerPane.prefHeightProperty().bind(centerBox.heightProperty());
+        spacerPane.prefWidthProperty().bind(centerBox.widthProperty());
+        Group group = new Group(spacerPane);
+        AnchorPane comboPane = new AnchorPane(group, centerBox);
+        ScrollPane centerPane = new ScrollPane(comboPane);
+
+        borderPane.setCenter(centerPane);
 
         //bottom buttons
         Button closeButton = new Button("Close");
@@ -527,12 +567,12 @@ public class TruthTableGenCreate {
 
             scale = (double) nv/100;
             updateZoom();
-            setCenterVgrow();
+
         });
 
         sizeToolBar = new ToolBar();
         sizeToolBar.setPrefHeight(38);
-        sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     "));
+        sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     V Sz:"), statementHeightSpinner);
 
         //setup  window
         scene = new Scene(borderPane);
@@ -544,11 +584,11 @@ public class TruthTableGenCreate {
 
         stage.setTitle("Create Truth Table Gen Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
-        stage.setWidth(860);
+        stage.setWidth(890);
         stage.setMinWidth(860);
         stage.setHeight(950);
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 860));
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 890));
         stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 950));
 
 
@@ -561,7 +601,7 @@ public class TruthTableGenCreate {
         stage.show();
         statementRTA.getActionFactory().save().execute(new ActionEvent());
         centerBox.layout();
-        setCenterVgrow();
+
         Platform.runLater(() -> nameField.requestFocus());
 
     }
@@ -804,31 +844,18 @@ public class TruthTableGenCreate {
      * Update zoom setting
      */
     private void updateZoom() {
-        centerBox.setScaleX(scale);
-        centerBox.setScaleY(scale);
-        scene.getWindow().setWidth(Math.max(1030, PrintUtilities.getPageWidth() * scale + 55));
-        setCenterVgrow();
-
         KeyboardDiagram keyboardDiagram = KeyboardDiagram.getInstance();
         keyboardDiagram.updateFontSize(scale);
         keyboardDiagram.initialize(statementDRTA);
         keyboardDiagram.update();
+
+        centerBox.getTransforms().clear();
+        centerBox.getTransforms().add(new Scale(scale, scale));
+        spacerPane.getTransforms().clear();
+        spacerPane.getTransforms().add(new Scale(scale, scale));
     }
 
-    /*
-     *  Bind vertical height of statement field to window size
-     */
-    private void setCenterVgrow() {
-        double fixedHeight = helpArea.getHeight() * scale + 550;
-        DoubleProperty fixedValueProperty = new SimpleDoubleProperty(fixedHeight);
-        DoubleProperty externalHeightProperty = new SimpleDoubleProperty();
-        externalHeightProperty.bind(fixedValueProperty.add(mainFormulasPane.heightProperty()));
-        DoubleProperty maximumHeightProperty = new SimpleDoubleProperty(PrintUtilities.getPageHeight() );
-        DoubleProperty scaleProperty = new SimpleDoubleProperty(scale);
-        centerHeightProperty = new SimpleDoubleProperty();
-        centerHeightProperty.bind(Bindings.min(maximumHeightProperty, (stage.heightProperty().subtract(externalHeightProperty)).divide(scaleProperty)));
-        statementRTA.prefHeightProperty().bind(centerHeightProperty);
-    }
+
 
     /*
      * Get the truth table generate model for the currently constructed exercise.
@@ -970,7 +997,7 @@ public class TruthTableGenCreate {
         fontsAndEditBox.setHgrow(editToolbar, Priority.ALWAYS);
         kbdBox.setHgrow(sizeToolBar, Priority.ALWAYS);
 
-        VBox topBox = new VBox(menuBar, paragraphToolbar, fontsAndEditBox, kbdBox, upperFieldsBox);
+        VBox topBox = new VBox(menuBar, paragraphToolbar, fontsAndEditBox, kbdBox);
         borderPane.topProperty().setValue(topBox);
     }
 

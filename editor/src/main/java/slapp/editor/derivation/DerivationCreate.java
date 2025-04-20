@@ -35,6 +35,9 @@ import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
+import javafx.scene.transform.Scale;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import slapp.editor.DiskUtilities;
@@ -106,6 +109,10 @@ public class DerivationCreate {
     private Button saveAsButton;
     private DecoratedRTA dummyDRTA = new DecoratedRTA();
 
+    private Pane spacerPane;
+    private HBox nameBox;
+    private Spinner<Double> statementHeightSpinner;
+
 
     /**
      * Create new derivation exercise
@@ -162,9 +169,32 @@ public class DerivationCreate {
         statementRTA.setPromptText("Exercise Statement:");
         statementRTA.getStylesheets().add("slappTextArea.css");
         statementRTA.setPrefWidth(PrintUtilities.getPageWidth());
- //       statementRTA.setContentAreaWidth(PrintUtilities.getPageWidth());
-        statementRTA.setPrefHeight(100);
-        statementRTA.setMinHeight(50);
+        statementRTA.setMinWidth(PrintUtilities.getPageWidth());
+        statementRTA.setMaxWidth(PrintUtilities.getPageWidth());
+  //      statementRTA.setContentAreaWidth(PrintUtilities.getPageWidth());
+ //       statementRTA.setPrefHeight(100);
+        statementRTA.setMinHeight(100);
+
+        double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
+        statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
+        statementHeightSpinner.setPrefWidth(60);
+        statementHeightSpinner.setDisable(false);
+        statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
+        statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
+            if (increment != null) increment.getOnMouseReleased().handle(null);
+            Node decrement = statementHeightSpinner.lookup(".decrement-arrow-button");
+            if (decrement != null) decrement.getOnMouseReleased().handle(null);
+        });
+
+        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+                statementRTA.prefHeightProperty().unbind();
+                statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
+                statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+
+            });
+
 
         statementRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
             fieldModified = true;
@@ -358,7 +388,7 @@ public class DerivationCreate {
             }
         });
 
-        HBox nameBox = new HBox(10, nameLabel, nameField);
+        nameBox = new HBox(10, nameLabel, nameField);
         nameBox.setAlignment(Pos.CENTER_LEFT);
 
         HBox keyboardBox = new HBox(10, keyboardLabel, italicAndSansCheck, scriptAndItalicCheck, scriptAndSansCheck, italicAndBlackboardCheck, greekAndFrakturCheck);
@@ -387,14 +417,27 @@ public class DerivationCreate {
         setupLinesPane.setVgap(15);
         updateGridFromSetupLines();
 
-        upperFieldsBox = new VBox(15, nameBox, keyboardBox, topFields, setupLinesPane);
-        upperFieldsBox.setPadding(new Insets(20,0,20,20));
 
-        String helpText = "Derivation Exercise is appropriate for any exercise that calls for a derivation as response.\n\n" +
-                "For the derivation exercise, provide the exercise statement and exercise name, select the default keyboard for derivation content lines, and select whether there is to be a leftmost scope line, and/or a \"shelf\" beneath the top line of an automatically generated subderivation. "  +
-                "A typical natural derivation system (as chapter 6 of Symbolic Logic) selects 'italic and sans', 'leftmost scope line' and 'default shelf'.  The width is the (default) percentage of the window's width allocated to this derivation.\n\n" +
-                "After that, insert setup derivation lines as appropriate.  In the ordinary case, there will be some premise lines with justification 'P' (the last sitting on a shelf), a blank line, and a conclusion line (without justification), all at scope depth 1. " +
-                "A line identified as a premise cannot have either its formula or justification modified; one identified as a conclusion cannot have its formula modified.  Different arrangements (as, e.g. \"fill in the justification\" exercises) are possible.";
+        upperFieldsBox = new VBox(15, nameBox, keyboardBox, topFields, setupLinesPane);
+
+        upperFieldsBox.setPadding(new Insets(20,0,20,0));
+     //   upperFieldsBox.setPadding(new Insets(20,0,20,20));
+
+        String helpText = "<body style=\"margin-left:10; margin-right: 20\">"+
+                "<p>Derivation Exercise is appropriate for any exercise that calls for a derivation as response.<p>" +
+                "<ul>" +
+                "<li><p>For the derivation exercise, select the default keyboard for derivation content lines, and select whether there is to be a leftmost scope line, and/or a \"shelf\" beneath the top line of an automatically generated subderivation. "  +
+                "A typical natural derivation system (as chapter 6 of <em>Symbolic Logic</em>) selects 'italic and sans', 'leftmost scope line' and 'default shelf'.  The width is the (default) percentage of the window's width allocated to this derivation.</p></li>" +
+                "<li><p>After that, insert setup derivation lines as appropriate, and give the exercise statement.  In the ordinary case, setup lines will include some premise lines with justification 'P' (the last sitting on a shelf), a blank line, and a conclusion line (without justification), all at scope depth 1. " +
+                "A line identified as a premise cannot have either its formula or justification modified; one identified as a conclusion cannot have its formula modified.  Different arrangements (as, e.g. \"fill in the justification\" exercises) are possible.</p></li>" +
+                "</ul>";
+
+        WebView helpArea = new WebView();
+        WebEngine webEngine = helpArea.getEngine();
+        webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
+        webEngine.loadContent(helpText);
+        helpArea.setPrefHeight(230);
+ /*
         helpArea = new TextArea(helpText);
         helpArea.setWrapText(true);
         helpArea.setPrefHeight(270);
@@ -403,10 +446,33 @@ public class DerivationCreate {
         helpArea.setMouseTransparent(true);
         helpArea.setStyle("-fx-text-fill: mediumslateblue");
 
-        centerBox = new VBox(10, statementRTA, helpArea);
+  */
 
-        Group centerGroup = new Group(centerBox);
-        borderPane.setCenter(centerGroup);
+
+   //     HBox statementBox = new HBox(statementRTA);
+   //     statementBox.setAlignment(Pos.CENTER);
+   //     centerBox = new VBox(10, upperFieldsBox, statementBox, helpArea);
+
+        centerBox = new VBox(10, upperFieldsBox, statementRTA, helpArea);
+        centerBox.setPadding(new Insets(10, 0, 10, 20));
+
+  //      centerBox.setVgrow(statementRTA, Priority.ALWAYS);
+   //     centerBox.setMaxWidth(PrintUtilities.getPageWidth() + 20);
+
+        spacerPane = new Pane();
+        spacerPane.prefHeightProperty().bind(centerBox.heightProperty());
+        spacerPane.prefWidthProperty().bind(centerBox.widthProperty());
+        Group group = new Group(spacerPane);
+        AnchorPane comboPane = new AnchorPane(group, centerBox);
+        ScrollPane centerPane = new ScrollPane(comboPane);
+
+    //    centerPane.setPadding(new Insets(0,50,0,50));
+ //       centerPane.setMaxWidth(PrintUtilities.getPageWidth() + 100);
+
+        borderPane.setCenter(centerPane);
+
+//        Group centerGroup = new Group(centerBox);
+//        borderPane.setCenter(centerGroup);
 
         Button closeButton = new Button("Close");
         closeButton.setOnAction(e -> closeWindow());
@@ -429,6 +495,7 @@ public class DerivationCreate {
         buttonBox.setAlignment(Pos.BASELINE_CENTER);
         borderPane.setBottom(buttonBox);
 
+
         if (EditorMain.secondaryCopy) {
             lowerSaveButton.setDisable(true);
             saveAsButton.setDisable(true);
@@ -448,12 +515,14 @@ public class DerivationCreate {
 
             scale = (double) nv/100;
             updateZoom();
-            setCenterVgrow();
+ //          setCenterVgrow();
         });
+
+
 
         sizeToolBar = new ToolBar();
         sizeToolBar.setPrefHeight(38);
-        sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     "));
+        sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     V Sz:"), statementHeightSpinner);
 
         stage = new Stage();
         stage.initOwner(EditorMain.mainStage);
@@ -477,7 +546,7 @@ public class DerivationCreate {
         stage.show();
         statementRTA.getActionFactory().save().execute(new ActionEvent());
         centerBox.layout();
-        setCenterVgrow();
+ //       setCenterVgrow();
         Platform.runLater(() -> nameField.requestFocus());
     }
 
@@ -562,22 +631,24 @@ public class DerivationCreate {
      * Update zoom setting
      */
     private void updateZoom() {
-        centerBox.setScaleX(scale);
-        centerBox.setScaleY(scale);
-        scene.getWindow().setWidth(Math.max(1030, PrintUtilities.getPageWidth() * scale + 55));
-        setCenterVgrow();
-
         KeyboardDiagram keyboardDiagram = KeyboardDiagram.getInstance();
         keyboardDiagram.updateFontSize(scale);
         keyboardDiagram.initialize(statementDRTA);
         keyboardDiagram.update();
+
+        centerBox.getTransforms().clear();
+        centerBox.getTransforms().add(new Scale(scale, scale));
+        spacerPane.getTransforms().clear();
+        spacerPane.getTransforms().add(new Scale(scale, scale));
+
     }
 
     /*
      *  Bind vertical height of statement field to window size
      */
     private void setCenterVgrow() {
-        double fixedHeight = helpArea.getHeight() * scale + 400;
+        double fixedHeight = 600;
+   //     double fixedHeight = helpArea.getHeight() * scale + 400;
         DoubleProperty fixedValueProperty = new SimpleDoubleProperty(fixedHeight);
         DoubleProperty externalHeightProperty = new SimpleDoubleProperty();
         externalHeightProperty.bind(fixedValueProperty.add(setupLinesPane.heightProperty()));
@@ -785,7 +856,9 @@ public class DerivationCreate {
         fontsAndEditBox.setHgrow(editToolbar, Priority.ALWAYS);
         kbdBox.setHgrow(sizeToolBar, Priority.ALWAYS);
 
-        VBox topBox = new VBox(menuBar, paragraphToolbar, fontsAndEditBox, kbdBox, upperFieldsBox);
+
+        //VBox topBox = new VBox(menuBar, paragraphToolbar, fontsAndEditBox, kbdBox, upperFieldsBox);
+        VBox topBox = new VBox(menuBar, paragraphToolbar, fontsAndEditBox, kbdBox);
 
         borderPane.topProperty().setValue(topBox);
     }

@@ -33,10 +33,10 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.transform.Scale;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import slapp.editor.EditorAlerts;
@@ -86,6 +86,9 @@ public class ABcreate {
     private MenuBar menuBar;
     VBox textFieldsPromptBox;
     private BorderPane borderPane;
+
+    private Pane spacerPane;
+    private Spinner<Double> statementHeightSpinner;
 
 
     /**
@@ -137,9 +140,31 @@ public class ABcreate {
         statementRTA.getStylesheets().add("slappTextArea.css");
         statementRTA.setPromptText("Exercise Statement:");
 
-        statementRTA.setPrefWidth(PrintUtilities.getPageWidth());
-    //    statementRTA.setContentAreaWidth(PrintUtilities.getPageWidth());
-        statementRTA.setPrefHeight(200);
+        statementRTA.setPrefWidth(PrintUtilities.getPageWidth() );
+        statementRTA.setMinWidth(PrintUtilities.getPageWidth());
+        statementRTA.setMaxWidth(PrintUtilities.getPageWidth());
+
+        statementRTA.setMinHeight(100);
+
+        double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
+        statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
+        statementHeightSpinner.setPrefWidth(60);
+        statementHeightSpinner.setDisable(false);
+        statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
+        statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
+            if (increment != null) increment.getOnMouseReleased().handle(null);
+            Node decrement = statementHeightSpinner.lookup(".decrement-arrow-button");
+            if (decrement != null) decrement.getOnMouseReleased().handle(null);
+        });
+
+        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+            statementRTA.prefHeightProperty().unbind();
+            statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
+            statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+
+        });
 
         statementRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
             fieldsModified = true;
@@ -248,22 +273,35 @@ public class ABcreate {
         HBox bBox = new HBox(promptLabelB, promptFieldB);
         bBox.setAlignment(Pos.BASELINE_LEFT);
         textFieldsPromptBox = new VBox(10,nameBox, promptBox, leaderBox, aBbox, bBox);
-        textFieldsPromptBox.setPadding(new Insets(20,0,20,70));
+        textFieldsPromptBox.setPadding(new Insets(20,0,20,0));
 
-        String helpText = "AB Explain is appropriate for any exercise that requires a choice between mutually exclusive options (as true/false, consistent/inconsistent) together with an explanation or justification.\n\n" +
-                "For the AB Explain exercise, you supply the exercise name and, if desired, a prompt to appear in the explanation field.  Then the Checkbox Lead appears prior to the check boxes, the A Prompt with the first box, and the B Prompt with the second.";
-        helpArea = new TextArea(helpText);
-        helpArea.setWrapText(true);
-        helpArea.setPrefHeight(120);
-        helpArea.setEditable(false);
-        helpArea.setFocusTraversable(false);
-        helpArea.setMouseTransparent(true);
-        helpArea.setStyle("-fx-text-fill: mediumslateblue");
+        String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
+                "<p>AB Explain is appropriate for any exercise that requires a choice between mutually exclusive options (as true/false, consistent/inconsistent) together with an explanation or justification.</p>" +
+                "<ul>" +
+                "<li><p>For the AB Explain exercise, you supply the exercise name and, if desired, a prompt to appear in the explanation field.</p></li> " +
+                "<li><p>Then the Checkbox Lead appears prior to the check boxes, the A Prompt with the first box, and the B Prompt with the second.</p></li>" +
+                "<li><p>Finally, provide the exercise statement.</p></li>" +
+                "</ul>";
 
-        centerBox = new VBox(10, statementRTA, helpArea);
 
-        Group centerGroup = new Group(centerBox);
-        borderPane.setCenter(centerGroup);
+        WebView helpArea = new WebView();
+        WebEngine webEngine = helpArea.getEngine();
+        webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
+        webEngine.loadContent(helpText);
+        helpArea.setPrefHeight(200);
+
+
+        centerBox = new VBox(10, textFieldsPromptBox, statementRTA, helpArea);
+        centerBox.setPadding(new Insets(10,0,10,20));
+
+        spacerPane = new Pane();
+        spacerPane.prefHeightProperty().bind(centerBox.heightProperty());
+        spacerPane.prefWidthProperty().bind(centerBox.widthProperty());
+        Group group = new Group(spacerPane);
+        AnchorPane comboPane = new AnchorPane(group, centerBox);
+        ScrollPane centerPane = new ScrollPane(comboPane);
+
+        borderPane.setCenter(centerPane);
 
         Button closeButton = new Button("Close");
         closeButton.setOnAction(e -> closeWindow());
@@ -305,13 +343,11 @@ public class ABcreate {
 
             scale = (double) nv/100;
             updateZoom();
-            scene.getWindow().setWidth(Math.max(860, PrintUtilities.getPageWidth() * scale + 55));
-            setCenterVgrow();
         });
 
         sizeToolBar = new ToolBar();
         sizeToolBar.setPrefHeight(38);
-        sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     "));
+        sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     V Sz:"), statementHeightSpinner);
 
         stage = new Stage();
         stage.initOwner(EditorMain.mainStage);
@@ -322,11 +358,11 @@ public class ABcreate {
 
 
 
-        stage.setWidth(860);
+        stage.setWidth(890);
         stage.setHeight(800);
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 860));
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 890));
         stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 800));
 
 
@@ -341,7 +377,6 @@ public class ABcreate {
         stage.show();
         statementRTA.getActionFactory().save().execute(new ActionEvent());
         centerBox.layout();
-        setCenterVgrow();
         Platform.runLater(() -> nameField.requestFocus());
     }
 
@@ -349,29 +384,17 @@ public class ABcreate {
      * Update zoom value
      */
     private void updateZoom() {
-        centerBox.setScaleX(scale);
-        centerBox.setScaleY(scale);
-        scene.getWindow().setWidth(Math.max(860, PrintUtilities.getPageWidth() * scale + 55));
-        setCenterVgrow();
-
         KeyboardDiagram keyboardDiagram = KeyboardDiagram.getInstance();
         keyboardDiagram.updateFontSize(scale);
         keyboardDiagram.initialize(statementDRTA);
         keyboardDiagram.update();
+
+        centerBox.getTransforms().clear();
+        centerBox.getTransforms().add(new Scale(scale, scale));
+        spacerPane.getTransforms().clear();
+        spacerPane.getTransforms().add(new Scale(scale, scale));
     }
 
-    /*
-     * The center statement area sizes as the stage is sized
-     */
-    private void setCenterVgrow() {
-        double fixedHeight = helpArea.getHeight() * scale + 500;
-        DoubleProperty fixedValueProperty = new SimpleDoubleProperty(fixedHeight);
-        DoubleProperty maximumHeightProperty = new SimpleDoubleProperty(PrintUtilities.getPageHeight() );
-        DoubleProperty scaleProperty = new SimpleDoubleProperty(scale);
-        centerHeightProperty = new SimpleDoubleProperty();
-        centerHeightProperty.bind(Bindings.min(maximumHeightProperty, (stage.heightProperty().subtract(fixedValueProperty)).divide(scaleProperty)));
-        statementRTA.prefHeightProperty().bind(centerHeightProperty);
-    }
 
     /*
      * Close the create window
@@ -527,7 +550,7 @@ public class ABcreate {
         fontsAndEditBox.setHgrow(editToolbar, Priority.ALWAYS);
         kbdBox.setHgrow(sizeToolBar, Priority.ALWAYS);
 
-        VBox topBox = new VBox(menuBar, paragraphToolbar, fontsAndEditBox, kbdBox, textFieldsPromptBox);
+        VBox topBox = new VBox(menuBar, paragraphToolbar, fontsAndEditBox, kbdBox);
 
         borderPane.topProperty().setValue(topBox);
     }

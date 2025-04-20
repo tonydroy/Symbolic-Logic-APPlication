@@ -32,10 +32,10 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.transform.Scale;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import slapp.editor.DiskUtilities;
@@ -81,6 +81,12 @@ public class SimpleTransCreate {
     private VBox nameVBox;
     private DecoratedRTA dummyDRTA = new DecoratedRTA();
 
+    private Pane spacerPane;
+    private Spinner<Double> statementHeightSpinner;
+    private Spinner<Double> interpretationHeightSpinner;
+    private Spinner<Double> verticalSizeSpinner;
+    private RichTextArea currentSpinnerNode;
+
     /**
      * Construct the simple translate create window from scratch
      * @param mainWindow the main window
@@ -118,6 +124,11 @@ public class SimpleTransCreate {
 
         borderPane = new BorderPane();
 
+        verticalSizeSpinner = new Spinner<>(0.0, 999.0, 0.0, 5.0);
+        verticalSizeSpinner.setPrefWidth(65);
+        verticalSizeSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
+        verticalSizeSpinner.setDisable(true);
+
         //empty bar for consistent look
         Menu helpMenu = new Menu("");
         menuBar = new MenuBar(helpMenu);
@@ -126,9 +137,31 @@ public class SimpleTransCreate {
         statementRTA = statementDRTA.getEditor();
         statementRTA.setPromptText("Exercise Statement:");
         statementRTA.getStylesheets().add("slappTextArea.css");
-        statementRTA.setPrefWidth(PrintUtilities.getPageWidth());
-    //    statementRTA.setContentAreaWidth(PrintUtilities.getPageWidth());
-        statementRTA.setPrefHeight(150);
+        statementRTA.setPrefWidth(PrintUtilities.getPageWidth() );
+        statementRTA.setMinWidth(PrintUtilities.getPageWidth());
+        statementRTA.setMaxWidth(PrintUtilities.getPageWidth());
+
+        statementRTA.setMinHeight(100);
+
+        double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
+        statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
+        statementHeightSpinner.setPrefWidth(60);
+        statementHeightSpinner.setDisable(false);
+        statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
+        statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
+            if (increment != null) increment.getOnMouseReleased().handle(null);
+            Node decrement = statementHeightSpinner.lookup(".decrement-arrow-button");
+            if (decrement != null) decrement.getOnMouseReleased().handle(null);
+        });
+
+        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+            statementRTA.prefHeightProperty().unbind();
+            statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
+            statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+
+        });
 
         statementRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
             fieldModified = true;
@@ -142,13 +175,36 @@ public class SimpleTransCreate {
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
 
         interpretationDRTA = new DecoratedRTA();
+        interpretationDRTA.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.BASE_AND_SANS);
         interpretationRTA = interpretationDRTA.getEditor();
         interpretationRTA.setPromptText("Interpretation Function (may be blank)");
         interpretationRTA.getStylesheets().add("slappTextArea.css");
-        interpretationRTA.setPrefWidth(PrintUtilities.getPageWidth());
-   //     interpretationRTA.setContentAreaWidth(PrintUtilities.getPageWidth());
-        interpretationRTA.setPrefHeight(150);
-        interpretationDRTA.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.BASE_AND_SANS);
+        interpretationRTA.setPrefWidth(PrintUtilities.getPageWidth() );
+        interpretationRTA.setMinWidth(PrintUtilities.getPageWidth());
+        interpretationRTA.setMaxWidth(PrintUtilities.getPageWidth());
+        interpretationRTA.setMinHeight(100);
+
+        double interpretationInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
+
+
+        interpretationHeightSpinner = new Spinner<>(0.0, 999.0, interpretationInitialHeight, 1.0);
+        interpretationHeightSpinner.setPrefWidth(60);
+        interpretationHeightSpinner.setDisable(false);
+        interpretationHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
+        interpretationRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(interpretationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        interpretationHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            Node increment = interpretationHeightSpinner.lookup(".increment-arrow-button");
+            if (increment != null) increment.getOnMouseReleased().handle(null);
+            Node decrement = interpretationHeightSpinner.lookup(".decrement-arrow-button");
+            if (decrement != null) decrement.getOnMouseReleased().handle(null);
+        });
+
+        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+            interpretationRTA.prefHeightProperty().unbind();
+            interpretationHeightSpinner.getValueFactory().setValue((double) Math.round(interpretationHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
+            interpretationRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(interpretationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+
+        });
 
         interpretationRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
             fieldModified = true;
@@ -180,26 +236,35 @@ public class SimpleTransCreate {
 
         HBox nameBox = new HBox(nameLabel, nameField);
         nameBox.setAlignment(Pos.BASELINE_LEFT);
+        nameBox.setPadding(new Insets(20,0,20,0));
 
-        nameVBox = new VBox(nameBox);
-        nameVBox.setPadding(new Insets(20,0,20,70));
+  //      nameVBox = new VBox(nameBox);
+  //      nameVBox.setPadding(new Insets(20,0,20,70));
 
-        String helpText = "Simple Translation is appropriate for any exercise that calls for an interpretation function and simple formal translation (usually of an ordinary language sentence).\n\n" +
+        String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
+                "<p>Simple Translation is appropriate for any exercise that calls for an interpretation function and simple formal translation (usually of an ordinary language sentence).<p>" +
+                "<ul>" +
+                "<li><p>For the Simple Translate Exercise, provide the exercise name and exercise statement.</p></li>" +
+                "<li><p>If desired, you may include an interpretation function to appear along with the exercise.  If this field is left blank, an empty field for an interpretation function appears along with the exercise to be filled in by the student.</p></li>" +
+                "</ul>";
+        WebView helpArea = new WebView();
+        WebEngine webEngine = helpArea.getEngine();
+        webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
+        webEngine.loadContent(helpText);
+        helpArea.setPrefHeight(180);
 
-                "For the Simple Translate Exercise, you need only provide the exercise name, exercise statement and, if desired, an interpretation function to appear along with the exercise.  "+
-                "If this field is left blank, the empty interpretation field appears as such along with the exercise to be filled in by the student.";
-        helpArea = new TextArea(helpText);
-        helpArea.setWrapText(true);
-        helpArea.setPrefHeight(130);
-        helpArea.setEditable(false);
-        helpArea.setFocusTraversable(false);
-        helpArea.setMouseTransparent(true);
-        helpArea.setStyle("-fx-text-fill: mediumslateblue");
+        centerBox = new VBox(10, nameBox, statementRTA, interpretationRTA, helpArea);
+        centerBox.setPadding(new Insets(10,0,10,20));
 
-        centerBox = new VBox(10, statementRTA, interpretationRTA, helpArea);
+        spacerPane = new Pane();
+        spacerPane.prefHeightProperty().bind(centerBox.heightProperty());
+        spacerPane.prefWidthProperty().bind(centerBox.widthProperty());
+        Group group = new Group(spacerPane);
+        AnchorPane comboPane = new AnchorPane(group, centerBox);
+        ScrollPane centerPane = new ScrollPane(comboPane);
 
-        Group centerGroup = new Group(centerBox);
-        borderPane.setCenter(centerGroup);
+
+        borderPane.setCenter(centerPane);
 
         Button closeButton = new Button("Close");
         closeButton.setOnAction(e -> closeWindow());
@@ -241,13 +306,14 @@ public class SimpleTransCreate {
 
             scale = (double) nv/100;
             updateZoom();
-            scene.getWindow().setWidth(Math.max(860, PrintUtilities.getPageWidth() * scale + 55));
-            setCenterVgrow();
         });
+
 
         sizeToolBar = new ToolBar();
         sizeToolBar.setPrefHeight(38);
-        sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     "));
+        sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     V Sz:"), verticalSizeSpinner);
+
+        setSizeSpinners();
 
         stage = new Stage();
         stage.initOwner(EditorMain.mainStage);
@@ -255,10 +321,10 @@ public class SimpleTransCreate {
         stage.setTitle("Create Simple Translation Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
 
-        stage.setWidth(860);
+        stage.setWidth(890);
         stage.setHeight(800);
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 860));
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 890));
         stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 800));
 
         stage.initModality(Modality.WINDOW_MODAL);
@@ -270,7 +336,7 @@ public class SimpleTransCreate {
         stage.show();
         statementRTA.getActionFactory().save().execute(new ActionEvent());
         centerBox.layout();
-        setCenterVgrow();
+
         Platform.runLater(() -> nameField.requestFocus());
     }
 
@@ -278,29 +344,17 @@ public class SimpleTransCreate {
      * Update the zoom value
      */
     private void updateZoom() {
-        centerBox.setScaleX(scale);
-        centerBox.setScaleY(scale);
-        scene.getWindow().setWidth(Math.max(860, PrintUtilities.getPageWidth() * scale + 55));
-        setCenterVgrow();
-
         KeyboardDiagram keyboardDiagram = KeyboardDiagram.getInstance();
         keyboardDiagram.updateFontSize(scale);
         keyboardDiagram.initialize(statementDRTA);
         keyboardDiagram.update();
+
+        centerBox.getTransforms().clear();
+        centerBox.getTransforms().add(new Scale(scale, scale));
+        spacerPane.getTransforms().clear();
+        spacerPane.getTransforms().add(new Scale(scale, scale));
     }
 
-    /*
-     * The center space for the interpretation function sizes as the stage is sized.
-     */
-    private void setCenterVgrow() {
-        double fixedHeight = (helpArea.getHeight() + statementRTA.getHeight()) * scale + 350;
-        DoubleProperty fixedValueProperty = new SimpleDoubleProperty(fixedHeight);
-        DoubleProperty maximumHeightProperty = new SimpleDoubleProperty(PrintUtilities.getPageHeight() );
-        DoubleProperty scaleProperty = new SimpleDoubleProperty(scale);
-        centerHeightProperty = new SimpleDoubleProperty();
-        centerHeightProperty.bind(Bindings.min(maximumHeightProperty, (stage.heightProperty().subtract(fixedValueProperty)).divide(scaleProperty)));
-        interpretationRTA.prefHeightProperty().bind(centerHeightProperty);
-    }
 
     /*
      * Close the create window
@@ -401,6 +455,38 @@ public class SimpleTransCreate {
         return model;
     }
 
+    private void setSizeSpinners() {
+
+        scene.focusOwnerProperty().addListener((ob, ov, nv) -> {
+
+            if (inHierarchy(nv, statementRTA) && currentSpinnerNode != statementRTA) {
+                currentSpinnerNode = statementRTA;
+                sizeToolBar.getItems().remove(3);
+                sizeToolBar.getItems().add(3, statementHeightSpinner);
+                return;
+            }
+            if (inHierarchy(nv, interpretationRTA) && currentSpinnerNode != interpretationRTA) {
+                currentSpinnerNode = interpretationRTA;
+                sizeToolBar.getItems().remove(3);
+                sizeToolBar.getItems().add(3, interpretationHeightSpinner);
+                return;
+            }
+        });
+    }
+
+    private static boolean inHierarchy(Node node, Node potentialHierarchyElement) {
+        if (potentialHierarchyElement == null) {
+            return true;
+        }
+        while (node != null) {
+            if (node == potentialHierarchyElement) {
+                return true;
+            }
+            node = node.getParent();
+        }
+        return false;
+    }
+
     /*
      * Display and enable RTA toolbars
      * @param decoratedRTA the RTA
@@ -484,7 +570,7 @@ public class SimpleTransCreate {
         fontsAndEditBox.setHgrow(editToolbar, Priority.ALWAYS);
         kbdBox.setHgrow(sizeToolBar, Priority.ALWAYS);
 
-        VBox topBox = new VBox(menuBar, paragraphToolbar, fontsAndEditBox, kbdBox, nameVBox);
+        VBox topBox = new VBox(menuBar, paragraphToolbar, fontsAndEditBox, kbdBox);
 
 
         borderPane.topProperty().setValue(topBox);
