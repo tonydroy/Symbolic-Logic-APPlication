@@ -21,9 +21,13 @@ import com.gluonhq.richtextarea.model.Document;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.ObservableListBase;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -32,7 +36,9 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.transform.Scale;
@@ -40,6 +46,7 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import slapp.editor.DiskUtilities;
 import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
@@ -47,16 +54,19 @@ import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.decorated_rta.KeyboardDiagram;
+import slapp.editor.derivation.DerSystems.DerivationRuleset;
+import slapp.editor.derivation.DerSystems.DerivationRulesets;
 import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
+import slapp.editor.parser.Language;
+import slapp.editor.parser.Languages;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static com.gluonhq.richtextarea.RichTextAreaSkin.KeyMapValue.*;
 import static javafx.scene.control.ButtonType.OK;
+
 
 /**
  * Create window for derivation exercise.
@@ -112,6 +122,8 @@ public class DerivationCreate {
     private Pane spacerPane;
     private HBox nameBox;
     private Spinner<Double> statementHeightSpinner;
+    private Spinner checkMaxSpinner;
+    private Spinner helpMaxSpinner;
 
 
     /**
@@ -171,8 +183,8 @@ public class DerivationCreate {
         statementRTA.setPrefWidth(PrintUtilities.getPageWidth());
         statementRTA.setMinWidth(PrintUtilities.getPageWidth());
         statementRTA.setMaxWidth(PrintUtilities.getPageWidth());
-  //      statementRTA.setContentAreaWidth(PrintUtilities.getPageWidth());
- //       statementRTA.setPrefHeight(100);
+        //      statementRTA.setContentAreaWidth(PrintUtilities.getPageWidth());
+        //       statementRTA.setPrefHeight(100);
         statementRTA.setMinHeight(100);
 
         double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
@@ -189,11 +201,11 @@ public class DerivationCreate {
         });
 
         mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
-                statementRTA.prefHeightProperty().unbind();
-                statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-                statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+            statementRTA.prefHeightProperty().unbind();
+            statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
+            statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
 
-            });
+        });
 
 
         statementRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
@@ -212,7 +224,7 @@ public class DerivationCreate {
         //name field
         Label nameLabel = new Label("Exercise Name: ");
         nameLabel.setPrefWidth(95);
-        nameField  = new TextField();
+        nameField = new TextField();
         nameField.setPromptText("(plain text)");
         nameListener = new ChangeListener() {
             @Override
@@ -348,7 +360,7 @@ public class DerivationCreate {
         greekAndFrakturCheck.selectedProperty().addListener(greekAndFrakturListener);
 
 
-        widthSpinner = new Spinner<>(64.0, 100, 0, 2 );
+        widthSpinner = new Spinner<>(64.0, 100, 0, 2);
         defaultWidthListener = new ChangeListener() {
             @Override
             public void changed(ObservableValue ob, Object ov, Object nv) {
@@ -359,15 +371,165 @@ public class DerivationCreate {
         widthSpinner.valueProperty().addListener(defaultWidthListener);
         widthSpinner.setPrefWidth(65);
 
+
+        //check controls
+
+        checkMaxSpinner = new Spinner<>(-1, 99, 0);
+        checkMaxSpinner.setPrefWidth(60);
+        Label checkMaxLabel = new Label("Check Max:");
+
+        helpMaxSpinner = new Spinner<>(-1, 99, 0);
+        helpMaxSpinner.setPrefWidth(60);
+        Label helpMaxLabel = new Label("   Help Max:");
+
+        //language list view
+        Label languageLabel = new Label("   Language:");
+        Map<String, SimpleBooleanProperty> langMap = new LinkedHashMap<>();
+        for (int i = 0; i < Languages.getFixedLanguages().size(); i++) {
+            Language language = Languages.getFixedLanguages().get(i);
+            SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
+            booleanProperty.addListener((ob, ov, nv) -> {
+                if (nv) {
+                    for (SimpleBooleanProperty prop : langMap.values()) {
+                        if (prop != booleanProperty) {
+                            prop.set(false);
+                        }
+                    }
+                }
+            });
+            langMap.put(language.getNameString(), booleanProperty);
+        }
+        ListView<String> languageListView = new ListView<>();
+        languageListView.setPrefSize(120, 95);
+
+        languageListView.getItems().addAll(langMap.keySet());
+        Callback<String, ObservableValue<Boolean>> langToBoolean = (String item) -> langMap.get(item);
+        languageListView.setCellFactory(CheckBoxListCell.forListView(langToBoolean));
+
+        //ruleset listview
+        Label rulesetLabel = new Label("   Rule Set:");
+        Map<String, SimpleBooleanProperty> ruleMap = new LinkedHashMap<>();
+        for (int i = 0; i < DerivationRulesets.getRulesets().size(); i++) {
+            DerivationRuleset ruleset = DerivationRulesets.getRulesets().get(i);
+            SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
+            booleanProperty.addListener((ob, ov, nv) -> {
+                if (nv) {
+                    for (SimpleBooleanProperty prop : ruleMap.values()) {
+                        if (prop != booleanProperty) {
+                            prop.set(false);
+                        }
+                    }
+                }
+            });
+            ruleMap.put(ruleset.getName(), booleanProperty);
+        }
+        ListView<String> rulesetListView = new ListView<>();
+        rulesetListView.setPrefSize(120, 95);
+
+        rulesetListView.getItems().addAll(ruleMap.keySet());
+        Callback<String, ObservableValue<Boolean>> rulesetToBoolean = (String item) -> ruleMap.get(item);
+        rulesetListView.setCellFactory(CheckBoxListCell.forListView(rulesetToBoolean));
+
+        //empty list view 1
+        Label theoremSetLabel = new Label("   Theorem Set(s):");
+        Map<EmptyObject, SimpleBooleanProperty> thrmMap1 = new LinkedHashMap<>();
+        for (int i = 0; i < TheoremSets.getTheoremSets().size(); i++) {
+            EmptyObject emptyObject = new EmptyObject();
+            SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
+            thrmMap1.put(emptyObject, booleanProperty);
+        }
+        ListView<EmptyObject> thrmSet1ListView = new ListView<>();
+        thrmSet1ListView.setPrefSize(45, 95);
+
+        thrmSet1ListView.getItems().addAll(thrmMap1.keySet());
+        Callback<EmptyObject, ObservableValue<Boolean>> thrmSet1ToBoolean = (EmptyObject item) -> thrmMap1.get(item);
+        thrmSet1ListView.setCellFactory(CheckBoxListCell.forListView(thrmSet1ToBoolean));
+        thrmSet1ListView.getStylesheets().add("EmptyListView.css");
+        thrmSet1ListView.setStyle("-fx-background-color: transparent");
+
+
+        //empty list view 2
+        Map<EmptyObject, SimpleBooleanProperty> thrmMap2 = new LinkedHashMap<>();
+        for (int i = 0; i < TheoremSets.getTheoremSets().size(); i++) {
+            EmptyObject emptyObject = new EmptyObject();
+            SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
+            thrmMap2.put(emptyObject, booleanProperty);
+        }
+        ListView<EmptyObject> thrmSet2ListView = new ListView<>();
+        thrmSet2ListView.setPrefSize(45, 95);
+
+        thrmSet2ListView.getItems().addAll(thrmMap2.keySet());
+        Callback<EmptyObject, ObservableValue<Boolean>> thrmSet2ToBoolean = (EmptyObject item) -> thrmMap2.get(item);
+        thrmSet2ListView.setCellFactory(CheckBoxListCell.forListView(thrmSet2ToBoolean));
+        thrmSet2ListView.getStylesheets().add("EmptyListView.css");
+        thrmSet2ListView.setStyle("-fx-background-color: transparent");
+
+        //thrm list view
+        ObservableList<TheoremSet> theoremSetList = FXCollections.observableList(TheoremSets.getTheoremSets());
+        ListView thrmListView = new ListView<>(theoremSetList);
+        thrmListView.setPrefSize(95, 95);
+        thrmListView.setStyle("-fx-background-color: transparent");
+
+        thrmListView.setCellFactory(lv -> new ListCell<TheoremSet>() {
+            @Override
+            public void updateItem(TheoremSet item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(item.toString());
+                    setGraphic(null);
+                    setOnMouseClicked(mouseClickedEvent -> {
+                        if (mouseClickedEvent.getButton().equals(MouseButton.PRIMARY) && mouseClickedEvent.getClickCount() == 2) {
+                            System.out.println(item.toString());
+                        }
+                    });
+                }
+            }
+        });
+
+
+
+
+
+       /*
+        Button testButton = new Button("Test");
+        testButton.setOnAction(e -> {
+            for (String key : ruleMap.keySet()) {
+                ObservableValue<Boolean> value = ruleMap.get(key);
+                if (value.getValue()) {
+                    System.out.println(key);
+                }
+            }
+        });
+
+        */
+
+        HBox thrmBox = new HBox(thrmSet1ListView, thrmSet2ListView, thrmListView);
+        thrmBox.setStyle("-fx-border-color: lightgray; -fx-border-width: 1");
+
+        HBox checkerBox = new HBox(10, checkMaxLabel, checkMaxSpinner, helpMaxLabel, helpMaxSpinner, languageLabel, languageListView, rulesetLabel, rulesetListView,
+                //       theoremSetLabel, thrmSet1ListView, thrmSet2ListView,thrmListView, new Label ("     test:"), testButton);
+                theoremSetLabel, thrmBox);
+        checkerBox.setMargin(thrmSet2ListView, new Insets(0, 0, 0, -10));
+        checkerBox.setMargin(thrmListView, new Insets(0, 0, 0, -10));
+
+        checkerBox.setAlignment(Pos.CENTER_LEFT);
+
+
+        //////////////////
+
+
         //setup lines control
         Label setupLinesLabel = new Label("Setup Lines: ");
         setupLinesLabel.setPrefWidth(75);
         Button addSetupLineButton = new Button("+");
         Button removeSetupLineButton = new Button("-");
         addSetupLineButton.setFont(new Font(16));
-        addSetupLineButton.setPadding(new Insets(0,5,0,5));
+        addSetupLineButton.setPadding(new Insets(0, 5, 0, 5));
         removeSetupLineButton.setFont(new Font(16));
-        removeSetupLineButton.setPadding(new Insets(1,8,1,8));
+        removeSetupLineButton.setPadding(new Insets(1, 8, 1, 8));
 
         addSetupLineButton.setOnAction(e -> {
             SetupLine newLine = new SetupLine(this);
@@ -394,10 +556,13 @@ public class DerivationCreate {
         HBox keyboardBox = new HBox(10, keyboardLabel, italicAndSansCheck, scriptAndItalicCheck, scriptAndSansCheck, italicAndBlackboardCheck, greekAndFrakturCheck);
 
         Label widthLabel = new Label("Width: ");
-        HBox topFields = new HBox(30, scopeLineCheck, defaultShelfCheck, widthLabel, widthSpinner, setupLinesLabel, addSetupLineButton, removeSetupLineButton);
+        HBox topFields = new HBox(30, scopeLineCheck, defaultShelfCheck, widthLabel, widthSpinner);
         topFields.setAlignment(Pos.CENTER_LEFT);
         topFields.setMargin(widthLabel, new Insets(0, -20, 0, 0));
-        topFields.setMargin(setupLinesLabel, new Insets(0,-20, 0, 0));
+        topFields.setMargin(setupLinesLabel, new Insets(0, -20, 0, 0));
+
+        HBox setupLineButtons = new HBox(30, setupLinesLabel, addSetupLineButton, removeSetupLineButton);
+        setupLineButtons.setAlignment(Pos.CENTER_LEFT);
 
         //setup lines pane
         setupLines = new ArrayList<>();
@@ -412,24 +577,30 @@ public class DerivationCreate {
 
         setupLines.add(firstLine);
         setupLinesPane = new GridPane();
-        setupLinesPane.setPadding(new Insets(5,15,10,0));
+        setupLinesPane.setPadding(new Insets(5, 15, 10, 0));
         setupLinesPane.setHgap(15);
         setupLinesPane.setVgap(15);
         updateGridFromSetupLines();
 
 
-        upperFieldsBox = new VBox(15, nameBox, keyboardBox, topFields, setupLinesPane);
+        upperFieldsBox = new VBox(15, nameBox, keyboardBox, topFields, checkerBox, setupLineButtons, setupLinesPane);
 
-        upperFieldsBox.setPadding(new Insets(20,0,20,0));
-     //   upperFieldsBox.setPadding(new Insets(20,0,20,20));
+        upperFieldsBox.setPadding(new Insets(20, 0, 20, 0));
+        //   upperFieldsBox.setPadding(new Insets(20,0,20,20));
 
-        String helpText = "<body style=\"margin-left:10; margin-right: 20\">"+
+        String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
                 "<p>Derivation Exercise is appropriate for any exercise that calls for a derivation as response.<p>" +
                 "<ul>" +
-                "<li><p>For the derivation exercise, select the default keyboard for derivation content lines, and select whether there is to be a leftmost scope line, and/or a \"shelf\" beneath the top line of an automatically generated subderivation. "  +
+                "<li><p>Supply the exercise name.  Then select the default keyboard for derivation content lines, and select whether there is to be a leftmost scope line, and/or a \"shelf\" beneath the top line of an automatically generated subderivation. " +
                 "A typical natural derivation system (as chapter 6 of <em>Symbolic Logic</em>) selects 'italic and sans', 'leftmost scope line' and 'default shelf'.  The width is the (default) percentage of the window's width allocated to this derivation.</p></li>" +
-                "<li><p>After that, insert setup derivation lines as appropriate, and give the exercise statement.  In the ordinary case, setup lines will include some premise lines with justification 'P' (the last sitting on a shelf), a blank line, and a conclusion line (without justification), all at scope depth 1. " +
+                "<li><p>For the check and help functions: A 'max value' of -1 corresponds to 'unlimited', 0 to 'none', and otherwise to the maximum number of check or help tries allotted for the exercise.  " +
+                "Then there are checkboxes to select the formal (object) language and ruleset.  Notice that a given keyboard selection may be compatible with multiple formal languages, but a given formal language will typically have some preferred default keyboard. </p>" +
+                "<p>The Theorem Set option is relevant only to exercises which appeal to axiom or theorem lists.  Multiple selections are possible, though behavior is unpredictable in case members of selected sets have the same name. " +
+                "The first checkbox selects the set; the second whether its members are \"cumulative\" -- in the sense that one member depends just on ones before. (Ordinarily, then, an axiom set leaves the second box unchecked, but exercises that generate sequenced theorems have the check.) " +
+                "Double-clicking a theorem set name opens the set for editing.  Double clicking 'Add New' at the bottom of the list initiates a new set.</p></li>" +
+                "<li><p>After that, insert setup derivation lines as appropriate.  In the ordinary case, setup lines will include some premise lines with justification 'P' (the last sitting on a shelf), a blank line, and a conclusion line (without justification), all at scope depth 1. " +
                 "A line identified as a premise cannot have either its formula or justification modified; one identified as a conclusion cannot have its formula modified.  Different arrangements (as, e.g. \"fill in the justification\" exercises) are possible.</p></li>" +
+                "<li><p>Finally, fill in the exercise statement.</p></li>" +
                 "</ul>";
 
         WebView helpArea = new WebView();
@@ -530,11 +701,11 @@ public class DerivationCreate {
 
         stage.setTitle("Create Derivation Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
-        stage.setWidth(1030);
-        stage.setHeight(900);
+        stage.setWidth(1035);
+        stage.setHeight(950);
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1030));
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1035));
         stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 900));
 
         stage.initModality(Modality.WINDOW_MODAL);
@@ -546,7 +717,24 @@ public class DerivationCreate {
         stage.show();
         statementRTA.getActionFactory().save().execute(new ActionEvent());
         centerBox.layout();
- //       setCenterVgrow();
+
+        //lookup works only after showing the stage / scene
+        Node n1 = thrmSet1ListView.lookup(".scroll-bar");
+        if (n1 instanceof ScrollBar) {
+            ScrollBar scrollBar1 = (ScrollBar) n1;
+            Node n2 = thrmSet2ListView.lookup(".scroll-bar");
+            if (n2 instanceof ScrollBar) {
+                ScrollBar scrollBar2 = (ScrollBar) n2;
+                Node n3 = thrmListView.lookup(".scroll-bar");
+                if (n3 instanceof ScrollBar) {
+                    ScrollBar scrollBar3 = (ScrollBar) n3;
+                    scrollBar1.valueProperty().bindBidirectional(scrollBar2.valueProperty());
+                    scrollBar2.valueProperty().bindBidirectional(scrollBar3.valueProperty());
+                }
+            }
+        }
+        ////
+
         Platform.runLater(() -> nameField.requestFocus());
     }
 

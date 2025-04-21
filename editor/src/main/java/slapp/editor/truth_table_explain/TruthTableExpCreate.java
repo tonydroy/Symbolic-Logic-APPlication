@@ -487,7 +487,7 @@ public class TruthTableExpCreate {
         WebEngine webEngine = helpArea.getEngine();
         webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
         webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(320);
+        helpArea.setPrefHeight(230);
 
 
         centerBox = new VBox(10, upperFieldsBox, statementRTA, helpArea);

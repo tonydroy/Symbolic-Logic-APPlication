@@ -302,7 +302,7 @@ public class VerticalTreeCreate {
         WebEngine webEngine = helpArea.getEngine();
         webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
         webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(290);
+        helpArea.setPrefHeight(230);
 
 
 

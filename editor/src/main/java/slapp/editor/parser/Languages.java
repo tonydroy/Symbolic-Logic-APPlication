@@ -18,13 +18,19 @@ public class Languages {
     public Languages() { }
 
     private static void loadFixedLanguages(){
+
+
         fixedLanguages.add(Ls());
         fixedLanguages.add(Ls_abv());
         fixedLanguages.add(Lq());
         fixedLanguages.add(Lq_abv());
-        fixedLanguages.add(Lnt_lessthan());
         fixedLanguages.add(Lnt());
+        fixedLanguages.add(Lnt_lessthan());
         fixedLanguages.add(Meta());
+    }
+
+    public static List<Language> getFixedLanguages() {
+        return fixedLanguages;
     }
 
     public static Language getLanguage(String name) {
@@ -38,7 +44,7 @@ public class Languages {
     }
 
     private static Language Ls() {
-        Language lang = new Language("Ls");
+        Language lang = new Language("\u2112\ud835\udcc8");
         lang.setNameTexts("\u2112", "","\ud835\udcc8");
 
         lang.setOpenBracket1("("); lang.setCloseBracket1(")");
@@ -59,7 +65,7 @@ public class Languages {
     }
 
     private static Language Ls_abv() {
-        Language lang = new Language("Ls_abv");
+        Language lang = new Language("\u2112\ud835\udcc8 (w/abv)");
         lang.setNameTexts("\u2112", "","\ud835\udcc8_abv");
 
         lang.setOpenBracket1("("); lang.setCloseBracket1(")");
@@ -90,7 +96,7 @@ public class Languages {
 
 
     private static Language Lq() {
-        Language lang = new Language("Lq");
+        Language lang = new Language("\u2112\ud835\udcc6");
         lang.setNameTexts("\u2112", "","\ud835\udcc6");
 
         lang.setOpenBracket1("("); lang.setCloseBracket1(")");
@@ -134,7 +140,7 @@ public class Languages {
     }
 
     private static Language Lq_abv() {
-        Language lang = new Language("Lq_abv");
+        Language lang = new Language("\u2112\ud835\udcc6 (w/abv)");
         lang.setNameTexts("\u2112", "","\ud835\udcc6_abv");
 
         lang.setOpenBracket1("("); lang.setCloseBracket1(")");
@@ -195,7 +201,7 @@ public class Languages {
     }
 
     private static Language Lnt_lessthan() {
-        Language lang = new Language("Lnt<");
+        Language lang = new Language("\u2112\u0274\u1d1b<");
         lang.setNameTexts("\u2112", "","NT<");
 
         lang.setOpenBracket1("("); lang.setCloseBracket1(")");
@@ -242,7 +248,7 @@ public class Languages {
     }
 
     private static Language Lnt() {
-        Language lang = new Language("Lnt");
+        Language lang = new Language("\u2112\u0274\u1d1b");
         lang.setNameTexts("\u2112", "","NT");
 
         lang.setOpenBracket1("("); lang.setCloseBracket1(")");

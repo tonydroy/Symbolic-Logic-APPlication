@@ -326,7 +326,7 @@ public class VerticalTreeExpCreate {
         WebEngine webEngine = helpArea.getEngine();
         webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
         webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(310);
+        helpArea.setPrefHeight(230);
 
         centerBox = new VBox(10, fieldsBox, statementRTA, helpArea);
         centerBox.setPadding(new Insets(10,0,10,20));

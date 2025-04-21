@@ -435,7 +435,7 @@ public class VerticalTreeABEFExpCreate {
         WebEngine webEngine = helpArea.getEngine();
         webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
         webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(350);
+        helpArea.setPrefHeight(230);
 
 
         centerBox = new VBox(10, fieldsBox, statementRTA, helpArea);
