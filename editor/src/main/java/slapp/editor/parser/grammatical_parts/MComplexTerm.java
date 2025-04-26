@@ -2,45 +2,45 @@ package slapp.editor.parser.grammatical_parts;
 
 import javafx.scene.text.Text;
 import slapp.editor.parser.Expression;
-import slapp.editor.parser.TextMessageException;
 import slapp.editor.parser.symbols.MFormulaSym;
-import slapp.editor.parser.symbols.PseudoMFormulaSym;
+import slapp.editor.parser.symbols.MTermSym;
+import slapp.editor.parser.symbols.PseudoMTermSym;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MComplexFormula extends Formula{
+public class MComplexTerm extends Term{
 
-    private PseudoMFormulaSym formulaSym;
+    private PseudoMTermSym pMTermSym;
 
 
-    public MComplexFormula(PseudoMFormulaSym formulaSym) {
+    public MComplexTerm(PseudoMTermSym pTermSym) {
         super();
-        this.formulaSym = formulaSym;
+        this.pMTermSym = pTermSym;
     }
 
-    public PseudoMFormulaSym getFormulaSym() {
-        return formulaSym;
+    public PseudoMTermSym getPMTermSym() {
+        return pMTermSym;
     }
 
 
     @Override
-    public Formula getMatch() {
+    public Term getMatch() {
         List<Expression> newChildren = new ArrayList<>();
         for (Expression child : getChildren()) {
             if (child.getMatch() == null) { return null; }
             else newChildren.add(child.getMatch());
         }
-        MComplexFormula formula = new MComplexFormula(formulaSym.getMatch());
-        formula.setChildren(newChildren);
-        formula.setLevel(getLevel());
-        return formula;
+        MComplexTerm term = new MComplexTerm(pMTermSym.getMatch());
+        term.setChildren(newChildren);
+        term.setLevel(getLevel());
+        return term;
     }
 
     @Override
     public List<Text> toTextList() {
         List<Text> texts = new ArrayList<>();
-        texts.addAll(formulaSym.toTextList());
+        texts.addAll(pMTermSym.toTextList());
         if (!getChildren().isEmpty()) {
             texts.addAll(getOpenBracket().toTextList());
             for (int i = 0; i < getChildren().size(); i++) {
@@ -55,7 +55,7 @@ public class MComplexFormula extends Formula{
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(formulaSym.toString());
+        sb.append(pMTermSym.toString());
         if (!getChildren().isEmpty()) {
             sb.append(getOpenBracket().toString());
             for (int i = 0; i < getChildren().size(); i++) {
@@ -71,11 +71,11 @@ public class MComplexFormula extends Formula{
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o instanceof MComplexFormula) {
-            MComplexFormula other = (MComplexFormula) o;
+        if (o instanceof MComplexTerm) {
+            MComplexTerm other = (MComplexTerm) o;
 
             boolean equals = true;
-            if (!formulaSym.equals(other.formulaSym)) { equals = false; }
+            if (!pMTermSym.equals(other.pMTermSym)) { equals = false; }
             if (getChildren().size() != other.getChildren().size()) { equals = false; }
             else for (int i = 0; i < other.getChildren().size(); i++) {
                 if (!getChildren().get(i).equals(other.getChildren().get(i))) { equals = false; }
@@ -87,7 +87,7 @@ public class MComplexFormula extends Formula{
 
     @Override
     public int hashCode() {
-        int code = formulaSym.hashCode();
+        int code = pMTermSym.hashCode();
         for (Expression child : getChildren()) { code = code + child.hashCode(); }
         return code;
     }

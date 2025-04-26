@@ -66,6 +66,9 @@ public class Language implements Serializable {
     private List<String> mFormulaSymbols = new ArrayList();
     private List<String> arbitraryExpressionSymbols = new ArrayList();
 
+    private List<String> pMTermSymbols = new ArrayList();
+    private List<String> pMFormulaSymbols = new ArrayList();
+
     private String angleOpenBracket = "\u2039";
     private String angleCloseBracket = "\u203a";
     private String commaDivider = ",";
@@ -473,5 +476,21 @@ public class Language implements Serializable {
 
     public void setContradictionSymbol(String contradictionSymbol) {
         this.contradictionSymbol = contradictionSymbol;
+    }
+
+    public List<String> getpMTermSymbols() {
+        return pMTermSymbols;
+    }
+
+    public List<String> getpMFormulaSymbols() {
+        return pMFormulaSymbols;
+    }
+
+    public void setpMTermSymbols(List<String> pMTermSymbols) {
+        this.pMTermSymbols = pMTermSymbols;
+    }
+
+    public void setpMFormulaSymbols(List<String> pMFormulaSymbols) {
+        this.pMFormulaSymbols = pMFormulaSymbols;
     }
 }

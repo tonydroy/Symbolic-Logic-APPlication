@@ -296,9 +296,13 @@ public class MatchUtilities {
                     try {
                         findReplacements(sourceExp, targetExp, subTransform, objectL);
 
-             //           System.out.println("target: " + targetExp.toString() + " source: " + sourceExp + " transform: " + SyntacticalFns.substituteParticularTerms(sourceExp, subTransform.getExp2().getMatch(), matchedInstances));
+          //              System.out.println(" source: " + sourceExp + "target: " + targetExp.toString() + " transform: " + SyntacticalFns.substituteParticularTerms(sourceExp, subTransform.getExp2().getMatch(), matchedInstances));
+
+          //              System.out.println("target: " + targetExp + " sub: " + SyntacticalFns.substituteParticularTerms(sourceExp, subTransform.getExp2().getMatch(), matchedInstances));
+            //            System.out.println(matchedInstances);
 
                         if (!targetExp.equals(SyntacticalFns.substituteParticularTerms(sourceExp, subTransform.getExp2().getMatch(), matchedInstances))) {
+
                             badReplacements = true;
                         }
                     }
@@ -316,17 +320,19 @@ public class MatchUtilities {
 
                         if (subTransform.getExp2().getMatch() != null) {
                             list.addAll(targetExp.toTextList());
-                            list.add(new Text(" is not "));
+                            if (!objectL.equals("LM Obj")) list.add(ParseUtilities.newRegularText(" is not "));
+                            else list.add(ParseUtilities.newRegularText(" is not (known to be) "));
                             list.addAll(sourceExp.toTextList());
                             list.addAll(new SubstitutionTransform(exp1, subTransform.getExp2().getMatch(), subTransform.getType(), subTransform.getDividerSymbol()).toTextList());
                             list.add(new Text("."));
                         }
                         else {
                             list.addAll(targetExp.toTextList());
-                            list.add(new Text(" is not "));
+                            if (!objectL.equals("LM Obj")) list.add(ParseUtilities.newRegularText(" is not "));
+                            else list.add(ParseUtilities.newRegularText(" is not (known to be) "));
                             list.addAll(sourceExp.toTextList());
                             list.addAll(new SubstitutionTransform(exp1, subTransform.getExp2(), subTransform.getType(), subTransform.getDividerSymbol()).toTextList());
-                            list.add(new Text(" for some "));
+                            list.add(ParseUtilities.newRegularText(" for some "));
                             list.addAll(subTransform.getExp2().toTextList());
                             list.add(new Text("."));
                         }
@@ -366,9 +372,13 @@ public class MatchUtilities {
                                      List<Text> texts = new ArrayList<>();
                                      texts.add(ParseUtilities.newRegularText("Substituted instancess of "));
                                      texts.addAll(subTransform.getExp2().getMatch().toTextList());
-                                     texts.add(ParseUtilities.newRegularText(" not free for "));
+
+                                     if (!objectL.equals("LM Obj")) texts.add(ParseUtilities.newRegularText(" not free for "));
+
+                                   //  if (!Languages.getLanguage(objectL).isMetalanguage()) texts.add(ParseUtilities.newRegularText(" not free for "));
+                                     else texts.add(ParseUtilities.newRegularText(" not (known to be) free for "));
                                      texts.addAll(exp.toTextList());
-                                     texts.add(ParseUtilities.newRegularText(" in"));
+                                     texts.add(ParseUtilities.newRegularText(" in "));
                                      texts.addAll(sourceExp.toTextList());
                                      texts.add(ParseUtilities.newRegularText("."));
                                      throw new TextMessageException(texts);
@@ -404,10 +414,13 @@ public class MatchUtilities {
 
     private static void findReplacements(Expression sourceExp, Expression targetExp, SubstitutionTransform subTransform, String objectL) throws ReplacementTxtMsgException, TextMessageException {
 
-
+   //     System.out.println("source: " + sourceExp + " target: " + targetExp + " transform: " + subTransform);
 
         Expression exp1 = subTransform.getExp1().getMatch();
         Expression exp2 = subTransform.getExp2();
+
+    //    System.out.println("exp1: " + exp1 + " exp2: " + exp2);
+    //    System.out.println("exp1 free in source: " + SyntacticalFns.expTermFreeInFormula(sourceExp, exp1, objectL));
 
         if (sourceExp instanceof Formula && exp1 instanceof Term && !SyntacticalFns.expTermFreeInFormula(sourceExp, exp1, objectL)) return;
 
@@ -422,7 +435,9 @@ public class MatchUtilities {
         }
         else if (sourceExp instanceof Term && ((Term) sourceExp).getTermType() == TermType.VARIABLE && targetExp instanceof Term && ((Term) targetExp).getTermType() == TermType.VARIABLE) return;
         else if (sourceExp instanceof Term && ((Term) sourceExp).getTermType() == TermType.CONSTANT && targetExp instanceof Term && ((Term) targetExp).getTermType() == TermType.CONSTANT) return;
-        else if (sourceExp instanceof MTerm && sourceExp instanceof MTerm) return;
+        else if (sourceExp instanceof PseudoMTerm && targetExp instanceof PseudoMTerm) return;
+
+
         else if (sourceExp instanceof Term && ((Term) sourceExp).getTermType() == TermType.COMPLEX && targetExp instanceof Term && ((Term) targetExp).getTermType() == TermType.COMPLEX &&
                 sourceExp instanceof InfixTerm == targetExp instanceof InfixTerm &&
                 ((Term) sourceExp).getMainFnSymbol().equals(((Term) targetExp).getMainFnSymbol()) &&
@@ -513,6 +528,8 @@ public class MatchUtilities {
     }
 
     public static void setMatching(Expression metaExp, Expression objectExp) throws TextMessageException {
+     //   System.out.println("meta: " + metaExp + " object: " + objectExp);
+
         boolean skip = false;
 
         if ( (metaExp.getType() == ExpressionType.FORMULA && ((Formula) metaExp).getSubTransform() == null) || (metaExp.getType() == ExpressionType.TERM && ((Term) metaExp).getSubTransform() == null)) {

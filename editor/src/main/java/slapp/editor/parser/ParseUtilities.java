@@ -179,6 +179,15 @@ public class ParseUtilities {
                 continue;
             }
 
+            //mformula
+            if (expressions.get(i).getType() == ExpressionType.MFORMULA_SYM) {
+                MFormulaSym formulaSym = (MFormulaSym) expressions.get(i);
+                MFormula formula = MFormula.getInstance(formulaSym);
+                formula.setLevel(maxTermLevel + 1);
+                expressions.set(i, formula);
+            }
+
+
             //prefix atomic
             if (expressions.get(i).getType() == ExpressionType.RELATION_SYMBOL) {
                 RelationSymbol relationSymbol = (RelationSymbol) expressions.get(i);
@@ -330,9 +339,10 @@ public class ParseUtilities {
             }
 
             //treat meta formmula here
-            if (expressions.get(i).getType() == ExpressionType.MFORMULA_SYM) {
-                MFormulaSym formulaSym = (MFormulaSym) expressions.get(i);
 
+            if (expressions.get(i).getType() == ExpressionType.PMFORMULA_SYM) {
+
+                PseudoMFormulaSym formulaSym = (PseudoMFormulaSym) expressions.get(i);
 
                 if (i + 1 < expressions.size() && expressions.get(i + 1) instanceof OpenBracket) {
                     //complex
@@ -379,10 +389,11 @@ public class ParseUtilities {
                             k = k + 1;
                         }
                     }
+                    formula.setCombines(true);
                 }
                 else {
                     //simple
-                    MFormula formula = MFormula.getInstance(formulaSym);
+                    PseudoMFormula formula = new PseudoMFormula(formulaSym);
                     formula.setLevel(maxTermLevel + 1);
                     expressions.set(i, formula);
                 }
@@ -679,6 +690,22 @@ public class ParseUtilities {
             }
         }
 
+        //pseudo mFormula symbols
+        for (int i = 0; i < expressions.size(); i++) {
+            String elementStr = "";
+            String subString = "";
+            if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(i)).isNormal()) {
+                elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
+                if (language.getpMFormulaSymbols() != null && language.getpMFormulaSymbols().contains(elementStr)) {
+                    int j = i + 1;
+                    if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                            ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) subString = getSubString(j, expressions);
+                    PseudoMFormulaSym pMFormulaSym = new PseudoMFormulaSym(elementStr, subString);
+                    expressions.set(i, pMFormulaSym);
+                }
+            }
+        }
+
         return expressions;
     }
 
@@ -719,6 +746,19 @@ public class ParseUtilities {
                 term.setTermType(TermType.MTERM);
                 expressions.set(i, term);
             }
+
+            //pseudo MTerm
+            if (expressions.get(i).getType() == ExpressionType.PMTERM_SYM) {
+                PseudoMTerm term = new PseudoMTerm((PseudoMTermSym) expressions.get(i));
+                term.setLevel(0);
+                term.setCombines(true);
+                term.setTermType(TermType.PMTERM);
+                expressions.set(i, term);
+            }
+
+
+
+
 
             //meta any expression
             if (expressions.get(i).getType() == ExpressionType.MEXPRESSION_SYM) {
@@ -832,6 +872,72 @@ public class ParseUtilities {
                 }
             }
 
+            for (int i = expressions.size() - 1; i >= 0; i--) {
+
+                if (expressions.get(i) instanceof PseudoMTerm) {
+                    PseudoMTermSym termSym = ((PseudoMTerm) expressions.get(i)).getMainTermSym();
+
+                    if (i + 1 < expressions.size() && expressions.get(i + 1) instanceof OpenBracket) {
+                        //complex
+                        MComplexTerm term = new MComplexTerm(termSym);
+                        expressions.set(i, term);
+                        changes = true;
+
+                        ExpressionType openBracketType = ExpressionType.OPEN_BRACKET1;
+                        ExpressionType closeBracketType = ExpressionType.CLOSE_BRACKET1;
+                        if (expressions.get(i + 1).getType() == ExpressionType.OPEN_BRACKET2) {
+                            openBracketType = ExpressionType.OPEN_BRACKET2;
+                            closeBracketType = ExpressionType.CLOSE_BRACKET2;
+                        } else if (expressions.get(i + 1).getType() == ExpressionType.OPEN_BRACKET3) {
+                            openBracketType = ExpressionType.OPEN_BRACKET3;
+                            closeBracketType = ExpressionType.CLOSE_BRACKET3;
+                        }
+                        List<Expression> termList = new ArrayList<>();
+                        boolean ok = true;
+                        int j = 2;
+                        int bracketCount = 1;
+                        while (i + j < expressions.size() && bracketCount > 0) {
+                            if (expressions.get(i + j).getType() == openBracketType) {
+                                bracketCount++;
+                            } else if (expressions.get(i + j).getType() == closeBracketType) {
+                                bracketCount--;
+                            }
+                            if (bracketCount > 0) {
+                                if (j % 2 == 1 && expressions.get(i + j).getType() != ExpressionType.COMMA_DIVIDER) {
+                                    ok = false;
+                                    break;
+                                }
+                                if (j % 2 == 0) {
+                                    if (expressions.get(i + j).getType() != ExpressionType.TERM) {
+                                        ok = false;
+                                        break;
+                                    } else {
+                                        termList.add(expressions.get(i + j));
+                                        term.setLevel(Math.max(term.getLevel(), ((Term) expressions.get(i + j)).getLevel() + 1));
+                                        maxTermLevel = Math.max(maxTermLevel, term.getLevel());
+                                    }
+                                }
+                            }
+                            j = j + 1;
+                        }
+                        if (ok && bracketCount == 0) {
+                            term.setChildren(termList);
+                            term.setOpenBracket((OpenBracket) expressions.get(i + 1));
+                            term.setCloseBracket((CloseBracket) expressions.get(i + j - 1));
+                            int k = i + 1;
+                            while (k < i + j) {
+                                expressions.remove(i + 1);
+                                k = k + 1;
+                            }
+                        }
+                        term.setCombines(true);
+                        term.setTermType(TermType.COMPLEX);
+                    }
+                }
+            }
+
+
+
             //set sub transform for term
             if (language.isMetalanguage()) {
 
@@ -930,6 +1036,32 @@ public class ParseUtilities {
                         else functionSymbol = MFunctionSymbol.getInstance(elementStr, subString, supString, Integer.parseInt(supString), false);
                         expressions.set(i, functionSymbol);
                     }
+                }
+
+                //PseudoMTermSym
+                if (language.getpMTermSymbols() != null && language.getpMTermSymbols().contains(elementStr) ) {
+                    int j = i + 1;
+
+                    if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                            ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
+                        subString = getSubString(j, expressions);
+                        if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(j)).isSuperscript() &&
+                                (((OriginalElement) expressions.get(j)).getElementStr().equals("*") || language.getVariables().contains((OriginalElement) expressions.get(j)))) {
+                            supString = ((OriginalElement) expressions.get(j)).getElementStr();
+                            expressions.remove(j);
+                        }
+                    }
+                    else if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(j)).isSuperscript() &&
+                            (((OriginalElement) expressions.get(j)).getElementStr().equals("*") || language.getVariables().contains((OriginalElement) expressions.get(j)))) {
+                        supString = ((OriginalElement) expressions.get(j)).getElementStr();
+                        expressions.remove(j);
+                        if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                                ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
+                            subString = getSubString(j, expressions);
+                        }
+                    }
+                    PseudoMTermSym pMTermSym = new PseudoMTermSym(elementStr, subString, supString);
+                    expressions.set(i, pMTermSym);
                 }
             }
         }
@@ -1141,7 +1273,10 @@ public class ParseUtilities {
         boolean isFollowingSuperscript = false;
         while (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT) {
             OriginalElement originalElement = (OriginalElement) expressions.get(j);
-            if (originalElement.isSuperscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {isFollowingSuperscript = true; break;}
+            if (originalElement.isSuperscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
+                isFollowingSuperscript = true;
+                break;
+            }
             else if (originalElement.isSubscript()) {j = j + 1;}
             else break;
         }

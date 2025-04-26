@@ -1,8 +1,10 @@
 package slapp.editor.parser;
 
 import com.gluonhq.richtextarea.model.Document;
+import java.util.stream.Collectors;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import static java.util.Map.entry;
 
@@ -26,7 +28,8 @@ public class Languages {
         fixedLanguages.add(Lq_abv());
         fixedLanguages.add(Lnt());
         fixedLanguages.add(Lnt_lessthan());
-        fixedLanguages.add(Meta());
+        fixedLanguages.add(MetaO());
+        fixedLanguages.add(MetaL());
     }
 
     public static List<Language> getFixedLanguages() {
@@ -300,12 +303,13 @@ public class Languages {
         return lang;
     }
 
-    private static Language Meta() {
-        Language lang = new Language("Meta");
-        lang.setNameTexts("\u2112", "","meta");
+    private static Language MetaL() {
+        Language lang = new Language("LM Meta");
+        lang.setNameTexts("\u2112", "","Mmeta");
         lang.setMetalanguage(true);
 
         lang.setOpenBracket1("("); lang.setCloseBracket1(")");
+
         lang.setOpenBracket2("["); lang.setCloseBracket2("]");
         lang.setAllowDroppedBrackets(true);
 
@@ -358,6 +362,67 @@ public class Languages {
 
         return lang;
     }
+
+    private static Language MetaO() {
+        Language lang = new Language("LM Obj");
+        lang.setNameTexts("\u2112", "","Mobj");
+        lang.setMetalanguage(false);
+
+        lang.setOpenBracket1("("); lang.setCloseBracket1(")");
+
+        lang.setOpenBracket2("["); lang.setCloseBracket2("]");
+        lang.setAllowDroppedBrackets(true);
+
+        lang.setNegation("\u223c");
+        lang.setConditional("\u2192");
+        lang.setBiconditional("\u2194");
+        lang.setConjunction("\u2227");
+        lang.setDisjunction("\u2228");
+        lang.setUniversalQuant("\u2200");
+        lang.setExistentialQuant("\u2203");
+        lang.setContradictionSymbol("\u22a5");
+        lang.setNand("\u2191");
+        lang.setNor("\u2193");
+        lang.setDividerSymbol(":");
+        lang.setCommaDivider(",");
+        lang.setSlashDivider("/");
+        lang.setdSlashDivider("\u2afd");
+
+
+        lang.setVariables(Stream.concat(Alphabets.getCharacterRange("\ud835\udcca", "\ud835\udccf").stream(), Alphabets.getCharacterRange("\ud835\udc4e", "\ud835\udc67").stream()).collect(Collectors.toList()));
+        lang.setVariableSubs(true);
+
+
+        lang.setConstants(Alphabets.getCharacterRange("\ue886", "\u212f"));
+        lang.setConstantSubs(true);
+
+        lang.setOnePlaceFunctionSymbols(Collections.singletonList("\ud835\udc46"));
+        lang.setTwoPlaceFunctionSymbols(Arrays.asList("\ue8b8", "\ue8ba"));
+        lang.setAllowBinaryInfixFunctions(true);
+        lang.setXfunctionSymbols(Arrays.asList("\ud835\udcbb", "\u210a", "\ud835\udcbd"));
+        lang.setXfunctionSymbolSubs(true);
+        lang.setpMTermSymbols(Alphabets.getCharacterRange("\ud835\udcc2", "\ud835\udcc9"));
+
+        lang.setSentenceLetters(Collections.singletonList("\ud835\udcae"));
+        lang.setSentenceLetterSubs(true);
+        lang.setXrelationSymbols(Collections.singletonList("\u211b"));
+        lang.setXrelationSymbolSubs(true);
+        lang.setXrelationSymbolsRequireSuper(false);
+
+        lang.setAllowBinaryInfixRelations(true);
+        lang.setAllowBinaryInfixNegations(true);
+        lang.setInfixRelations( Map.ofEntries(
+                entry("\ue8ac", "\ue8ad"),  //equal
+                entry("\ue8a4", "\ue8a5"),  //less than
+                entry("\ue8a6", "\ue8a7")   //leq
+        ));
+
+        lang.setAllowBoundedQuantifiers(true);
+        lang.setpMFormulaSymbols(Alphabets.getCharacterRange("\ud835\udc9c", "\ud835\udcac"));
+
+        return lang;
+    }
+
 
 
 }

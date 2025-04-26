@@ -14,7 +14,9 @@ import slapp.editor.derivation.DerSystems.DerivationRuleset;
 import slapp.editor.derivation.DerSystems.DerivationRulesets;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.Languages;
+import slapp.editor.parser.OriginalElement;
 import slapp.editor.parser.ParseUtilities;
+import slapp.editor.parser.grammatical_parts.Formula;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,6 +47,7 @@ public class DerivationCheck {
         setRightControlBox();
 
         CheckSetup checkSetup = derivationExercise.getExerciseModel().getCheckSetup();
+        if (checkSetup == null) {checkSetup = new CheckSetup();}
 
 
         checkSuccess = checkSetup.isCheckSuccess();
@@ -367,14 +370,17 @@ public class DerivationCheck {
 
                 if (!lineDoc.getText().equals("")) {
                     boolean blankOK = false;
+
                     ViewLine priorLine = derivationExercise.getContentLineAbove(i);
                     if (!priorLine.equals(viewLine)) {
                         TextFlow priorJustificationFlow = priorLine.getJustificationFlow();
                         String priorJustificationString = derivationExercise.getStringFromJustificationFlow(priorJustificationFlow);
-                        if (derivationRuleset.getAsspRestrictedExisExploitCRule().matches(priorJustificationString) || derivationRuleset.getAsspRestrictedExisExploitGRule().matches(priorJustificationString)) {
+                        if ((derivationRuleset.getAsspRestrictedExisExploitCRule() != null && derivationRuleset.getAsspRestrictedExisExploitCRule().matches(priorJustificationString))
+                                || (derivationRuleset.getAsspRestrictedExisExploitGRule() != null) && derivationRuleset.getAsspRestrictedExisExploitGRule().matches(priorJustificationString)) {
                             blankOK = true;
                         }
                     }
+
 
                     if (justificationString.equals("")) {
                         if (blankOK) break;
@@ -429,7 +435,7 @@ public class DerivationCheck {
                 if (!lineDoc.getText().equals("")) {
 
                     List<Expression> parseExpressions = ParseUtilities.parseDoc(lineDoc, derivationRuleset.getObjectLanguage().getNameString());
-                    if (parseExpressions.size() == 1) {
+                    if (parseExpressions.size() == 1 && parseExpressions.get(0) instanceof Formula) {
                         continue;
                     }
                     else {
@@ -445,7 +451,7 @@ public class DerivationCheck {
                             texts.add(new Text("\n"));
                         }
                         highlightFormula(i);
-                        EditorAlerts.showSimpleTxtListAlert("Not a formula:", texts);
+                        EditorAlerts.showSimpleTxtListAlert("Not a formula of " + derivationRuleset.getObjectLanguage().getNameString() + ":", texts);
                         resetHighlights();
                         return false;
                     }

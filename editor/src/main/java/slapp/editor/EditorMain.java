@@ -25,6 +25,7 @@ import javafx.application.*;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.parser.ParserMain;
 import slapp.editor.simpleTests.RegexTest;
+import slapp.editor.simpleTests.SimpleEditor;
 
 import java.awt.*;
 import java.util.List;
@@ -127,8 +128,11 @@ public class EditorMain extends Application {
         Platform.runLater(() -> {
 
             mainWindow = new MainWindow(fileToOpen);
+
+
        //    new ParserMain(mainStage);
-       //     new RegexTest(mainStage);
+       //    new RegexTest(mainStage);
+       //     new SimpleEditor(mainStage);
 
         });
 

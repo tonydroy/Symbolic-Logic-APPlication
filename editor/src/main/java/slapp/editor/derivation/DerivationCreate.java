@@ -25,9 +25,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.collections.ObservableListBase;
+import javafx.collections.*;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -47,6 +45,7 @@ import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import javafx.util.Pair;
 import slapp.editor.DiskUtilities;
 import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
@@ -124,6 +123,15 @@ public class DerivationCreate {
     private Spinner<Double> statementHeightSpinner;
     private Spinner checkMaxSpinner;
     private Spinner helpMaxSpinner;
+    private Map<String, SimpleBooleanProperty> ruleMap;
+    private Map<String, SimpleBooleanProperty> langMap;
+    private Map<EmptyObject, SimpleBooleanProperty> thrmMap1;
+    private Map<EmptyObject, SimpleBooleanProperty> thrmMap2;
+    private ObservableList<String> theoremSetList;
+    private String defaultRulesetName = "\ud835\udc41\ud835\udc37+"; //ND+
+    private String defaultLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (w/abv)
+
+
 
 
     /**
@@ -142,6 +150,7 @@ public class DerivationCreate {
      */
     public DerivationCreate(MainWindow mainWindow, DerivationModel originalModel) {
         this(mainWindow);
+        if (originalModel.getCheckSetup() == null) originalModel.setCheckSetup(new CheckSetup());
 
         statementRTA.getActionFactory().open(originalModel.getExerciseStatement()).execute(new ActionEvent());
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
@@ -160,6 +169,44 @@ public class DerivationCreate {
         defaultShelfCheck.setSelected(originalModel.isDefaultShelf());
         widthSpinner.getValueFactory().setValue(((double) Math.round(originalModel.getGridWidth() * 100/2)) * 2);
 
+        CheckSetup checkSetup = originalModel.getCheckSetup();
+        checkMaxSpinner.getValueFactory().setValue(checkSetup.getCheckMax());
+        helpMaxSpinner.getValueFactory().setValue(checkSetup.getHelpMax());
+
+
+        for (String key : langMap.keySet()) {
+            if (key.equals(checkSetup.getObjLangName())) {
+                langMap.get(key).setValue(true);
+            }
+            else langMap.get(key).setValue(false);
+        }
+
+        for (String key : ruleMap.keySet()) {
+            if (key.equals(checkSetup.getRulesetName())) {
+                ruleMap.get(key).setValue(true);
+            }
+            else ruleMap.get(key).setValue(false);
+        }
+
+        List<SimpleBooleanProperty> thrmList1 = new ArrayList(thrmMap1.values());
+        List<SimpleBooleanProperty> thrmList2 = new ArrayList(thrmMap2.values());
+        boolean valueSet = false;
+        for (int i = 0; i < theoremSetList.size(); i++) {
+            for (int j = 0; j < checkSetup.getTheoremSets().size(); j++) {
+                Pair<String, Boolean> thrmSetPair = checkSetup.getTheoremSets().get(j);
+                if (theoremSetList.get(i).equals(thrmSetPair.getKey())) {
+                    thrmList1.get(i).set(true);
+                    thrmList2.get(i).set(thrmSetPair.getValue());
+                    valueSet = true;
+                    break;
+                }
+            }
+            if (!valueSet) {
+                thrmList1.get(i).set(false);
+                thrmList2.get(i).set(false);
+            }
+        }
+
         updateSetupLinesFromModel(originalModel);
         updateGridFromSetupLines();
         fieldModified = false;
@@ -169,6 +216,7 @@ public class DerivationCreate {
      * Set up the create window
      */
     private void setupWindow() {
+
         borderPane = new BorderPane();
 
         //empty bar for consistent look
@@ -374,29 +422,22 @@ public class DerivationCreate {
 
         //check controls
 
-        checkMaxSpinner = new Spinner<>(-1, 99, 0);
+        checkMaxSpinner = new Spinner<>(-1, 99, 10);
         checkMaxSpinner.setPrefWidth(60);
         Label checkMaxLabel = new Label("Check Max:");
 
-        helpMaxSpinner = new Spinner<>(-1, 99, 0);
+        helpMaxSpinner = new Spinner<>(-1, 99, 3);
         helpMaxSpinner.setPrefWidth(60);
         Label helpMaxLabel = new Label("   Help Max:");
 
         //language list view
         Label languageLabel = new Label("   Language:");
-        Map<String, SimpleBooleanProperty> langMap = new LinkedHashMap<>();
-        for (int i = 0; i < Languages.getFixedLanguages().size(); i++) {
+        langMap = new LinkedHashMap<>();
+        for (int i = 0; i < Languages.getFixedLanguages().size() - 1; i++) {
             Language language = Languages.getFixedLanguages().get(i);
             SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
-            booleanProperty.addListener((ob, ov, nv) -> {
-                if (nv) {
-                    for (SimpleBooleanProperty prop : langMap.values()) {
-                        if (prop != booleanProperty) {
-                            prop.set(false);
-                        }
-                    }
-                }
-            });
+            if (language.getNameString().equals(defaultLangName)) booleanProperty.setValue(true); //default check
+            setSingleSelection(booleanProperty, langMap);
             langMap.put(language.getNameString(), booleanProperty);
         }
         ListView<String> languageListView = new ListView<>();
@@ -408,21 +449,15 @@ public class DerivationCreate {
 
         //ruleset listview
         Label rulesetLabel = new Label("   Rule Set:");
-        Map<String, SimpleBooleanProperty> ruleMap = new LinkedHashMap<>();
+        ruleMap = new LinkedHashMap<>();
         for (int i = 0; i < DerivationRulesets.getRulesets().size(); i++) {
             DerivationRuleset ruleset = DerivationRulesets.getRulesets().get(i);
             SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
-            booleanProperty.addListener((ob, ov, nv) -> {
-                if (nv) {
-                    for (SimpleBooleanProperty prop : ruleMap.values()) {
-                        if (prop != booleanProperty) {
-                            prop.set(false);
-                        }
-                    }
-                }
-            });
+            if (ruleset.getName().equals(defaultRulesetName)) booleanProperty.set(true);  //default check
+            setSingleSelection(booleanProperty, ruleMap);
             ruleMap.put(ruleset.getName(), booleanProperty);
         }
+
         ListView<String> rulesetListView = new ListView<>();
         rulesetListView.setPrefSize(120, 95);
 
@@ -432,10 +467,11 @@ public class DerivationCreate {
 
         //empty list view 1
         Label theoremSetLabel = new Label("   Theorem Set(s):");
-        Map<EmptyObject, SimpleBooleanProperty> thrmMap1 = new LinkedHashMap<>();
+        thrmMap1 = new LinkedHashMap<>();
         for (int i = 0; i < TheoremSets.getTheoremSets().size(); i++) {
             EmptyObject emptyObject = new EmptyObject();
             SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
+            setModificationListener(booleanProperty);
             thrmMap1.put(emptyObject, booleanProperty);
         }
         ListView<EmptyObject> thrmSet1ListView = new ListView<>();
@@ -449,10 +485,12 @@ public class DerivationCreate {
 
 
         //empty list view 2
-        Map<EmptyObject, SimpleBooleanProperty> thrmMap2 = new LinkedHashMap<>();
+        thrmMap2 = new LinkedHashMap<>();
         for (int i = 0; i < TheoremSets.getTheoremSets().size(); i++) {
             EmptyObject emptyObject = new EmptyObject();
             SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
+     //       setModificationListener(booleanProperty);
+            setSingleSelection2(booleanProperty, thrmMap2);
             thrmMap2.put(emptyObject, booleanProperty);
         }
         ListView<EmptyObject> thrmSet2ListView = new ListView<>();
@@ -464,54 +502,49 @@ public class DerivationCreate {
         thrmSet2ListView.getStylesheets().add("EmptyListView.css");
         thrmSet2ListView.setStyle("-fx-background-color: transparent");
 
-        //thrm list view
-        ObservableList<TheoremSet> theoremSetList = FXCollections.observableList(TheoremSets.getTheoremSets());
-        ListView thrmListView = new ListView<>(theoremSetList);
+       theoremSetList = FXCollections.observableArrayList();
+        for (TheoremSet theoremSet : TheoremSets.getTheoremSets()) {
+            theoremSetList.add(theoremSet.toString());
+        }
+        ListView<String> thrmListView = new ListView<>(theoremSetList);
         thrmListView.setPrefSize(95, 95);
         thrmListView.setStyle("-fx-background-color: transparent");
 
-        thrmListView.setCellFactory(lv -> new ListCell<TheoremSet>() {
+        thrmListView.setCellFactory(lv -> new ListCell<String>() {
             @Override
-            public void updateItem(TheoremSet item, boolean empty) {
+            public void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty) {
                     setText(null);
                     setGraphic(null);
                 } else {
-                    setText(item.toString());
+                    setText(item);
                     setGraphic(null);
                     setOnMouseClicked(mouseClickedEvent -> {
                         if (mouseClickedEvent.getButton().equals(MouseButton.PRIMARY) && mouseClickedEvent.getClickCount() == 2) {
-                            System.out.println(item.toString());
+                            System.out.println(item);
                         }
                     });
                 }
             }
         });
 
+/*
 
-
-
-
-       /*
         Button testButton = new Button("Test");
         testButton.setOnAction(e -> {
-            for (String key : ruleMap.keySet()) {
-                ObservableValue<Boolean> value = ruleMap.get(key);
-                if (value.getValue()) {
-                    System.out.println(key);
-                }
+            DerivationModel mod = extractModelFromWindow();
+            for (Pair<String, Boolean> thrmPair : mod.getCheckSetup().getTheoremSets()) {
+                System.out.println("key: " + thrmPair.getKey() + " value: " + thrmPair.getValue());
             }
         });
 
-        */
+ */
 
         HBox thrmBox = new HBox(thrmSet1ListView, thrmSet2ListView, thrmListView);
         thrmBox.setStyle("-fx-border-color: lightgray; -fx-border-width: 1");
 
-        HBox checkerBox = new HBox(10, checkMaxLabel, checkMaxSpinner, helpMaxLabel, helpMaxSpinner, languageLabel, languageListView, rulesetLabel, rulesetListView,
-                //       theoremSetLabel, thrmSet1ListView, thrmSet2ListView,thrmListView, new Label ("     test:"), testButton);
-                theoremSetLabel, thrmBox);
+        HBox checkerBox = new HBox(10, checkMaxLabel, checkMaxSpinner, helpMaxLabel, helpMaxSpinner, languageLabel, languageListView, rulesetLabel, rulesetListView,  theoremSetLabel, thrmBox);
         checkerBox.setMargin(thrmSet2ListView, new Insets(0, 0, 0, -10));
         checkerBox.setMargin(thrmListView, new Insets(0, 0, 0, -10));
 
@@ -738,6 +771,43 @@ public class DerivationCreate {
         Platform.runLater(() -> nameField.requestFocus());
     }
 
+
+    private void setSingleSelection(SimpleBooleanProperty booleanProperty, Map<String, SimpleBooleanProperty> map) {
+
+        booleanProperty.addListener((ob, ov, nv) -> {
+
+            if (nv.booleanValue() != ov.booleanValue()) fieldModified = true;
+            if (nv) {
+                for (SimpleBooleanProperty prop : map.values()) {
+                    if (prop != booleanProperty) {
+                        prop.set(false);
+                    }
+                }
+            }
+
+        });
+    }
+
+    private void setSingleSelection2(SimpleBooleanProperty booleanProperty, Map<EmptyObject, SimpleBooleanProperty> map) {
+        booleanProperty.addListener((ob, ov, nv) -> {
+            if (nv.booleanValue() != ov.booleanValue()) fieldModified = true;
+            if (nv) {
+                for (SimpleBooleanProperty prop : map.values()) {
+                    if (prop != booleanProperty) {
+                        prop.set(false);
+                    }
+                }
+            }
+        });
+    }
+
+
+    private void setModificationListener(SimpleBooleanProperty booleanProperty) {
+        booleanProperty.addListener((ob, ov, nv) -> {
+            if (nv.booleanValue() != ov.booleanValue()) fieldModified = true;
+        });
+    }
+
     /*
      * Update list of setup lines from derivation model
      * @param originalModel the derivation model
@@ -829,22 +899,6 @@ public class DerivationCreate {
         spacerPane.getTransforms().clear();
         spacerPane.getTransforms().add(new Scale(scale, scale));
 
-    }
-
-    /*
-     *  Bind vertical height of statement field to window size
-     */
-    private void setCenterVgrow() {
-        double fixedHeight = 600;
-   //     double fixedHeight = helpArea.getHeight() * scale + 400;
-        DoubleProperty fixedValueProperty = new SimpleDoubleProperty(fixedHeight);
-        DoubleProperty externalHeightProperty = new SimpleDoubleProperty();
-        externalHeightProperty.bind(fixedValueProperty.add(setupLinesPane.heightProperty()));
-        DoubleProperty maximumHeightProperty = new SimpleDoubleProperty(PrintUtilities.getPageHeight() );
-        DoubleProperty scaleProperty = new SimpleDoubleProperty(scale);
-        centerHeightProperty = new SimpleDoubleProperty();
-        centerHeightProperty.bind(Bindings.min(maximumHeightProperty, (stage.heightProperty().subtract(externalHeightProperty)).divide(scaleProperty)));
-        statementRTA.prefHeightProperty().bind(centerHeightProperty);
     }
 
     /*
@@ -985,6 +1039,54 @@ public class DerivationCreate {
 
         DerivationModel model = new DerivationModel(name, false, statementPrefHeight, gridWidth, leftmostScope, defaultShelf, keyboardSelector, statementDocument, commentDocument, modelLines);
         model.setStatementTextHeight(statementTextHeight);
+
+        //
+        CheckSetup checkSetup = model.getCheckSetup();
+        checkSetup.setCheckMax((Integer) checkMaxSpinner.getValue());
+        checkSetup.setHelpMax((Integer) helpMaxSpinner.getValue());
+
+        String rulesetName = null;
+        for (String key : ruleMap.keySet()) {
+            ObservableValue<Boolean> value = ruleMap.get(key);
+            if (value.getValue()) {
+                rulesetName = key;
+                break;
+            }
+        }
+        if (rulesetName != null) {
+            checkSetup.setRulesetName(rulesetName);
+        }
+        else {
+            EditorAlerts.showSimpleAlert("No ruleset selected:", "Without a ruleset selection, SLAPP will revert to the default, \ud835\udc41\ud835\udc37+.");
+        }
+
+        String langName = null;
+        for (String key : langMap.keySet()) {
+            ObservableValue<Boolean> value = langMap.get(key);
+            if (value.getValue()) {
+                langName = key;
+                break;
+            }
+        }
+        if (langName != null) {
+            checkSetup.setObjLangName(langName);
+        }
+        else {
+            EditorAlerts.showSimpleAlert("No language selected:", "Without a language selection, SLAPP will revert to the default, \u2112\ud835\udcc6 (w/abv).");
+        }
+
+        checkSetup.getTheoremSets().clear();
+        List<SimpleBooleanProperty> thrmList1 = new ArrayList(thrmMap1.values());
+        List<SimpleBooleanProperty> thrmList2 = new ArrayList(thrmMap2.values());
+        for (int i = 0; i < theoremSetList.size(); i++) {
+            if (thrmList1.get(i).getValue()) {
+                checkSetup.getTheoremSets().add(new Pair(theoremSetList.get(i), thrmList2.get(i).getValue()));
+            }
+        }
+
+
+
+
         return model;
     }
 

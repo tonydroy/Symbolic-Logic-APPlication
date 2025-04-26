@@ -24,6 +24,8 @@ public enum ExpressionType {
     MTERM_SYM("Mterm Sym"),
     MFORMULA_SYM("Mformula Sym"),
     MEXPRESSION_SYM("Mexpression Sym"),
+    PMTERM_SYM("Pseudo Mterm Sym"),
+    PMFORMULA_SYM("Pseudo Mformula Sym"),
 
     OPERATOR(""),
     NEG_OP("Neg Op"),

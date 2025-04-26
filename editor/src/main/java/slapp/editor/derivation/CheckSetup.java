@@ -1,6 +1,7 @@
 package slapp.editor.derivation;
 
 import com.gluonhq.richtextarea.model.Document;
+import javafx.util.Pair;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -22,14 +23,13 @@ public class CheckSetup implements Serializable {
     int helpTries;
     boolean contextualHelp;
     Document staticHelpDoc;
-
-    List<TheoremSet> theoremSets;
+    List<Pair<String, Boolean>> theoremSets;
 
 
     public CheckSetup() {
-        rulesetName = "ND+";
-        objLangName = "Lq_abv";
-        metLangName = "Meta";
+        rulesetName = "\ud835\udc41\ud835\udc37+";  //ND+
+        objLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (abv)
+        metLangName = "LM Meta";
 
         checkSuccess = false;
         checkFinal = false;
@@ -45,6 +45,7 @@ public class CheckSetup implements Serializable {
 
 
     }
+
 
 
     public String getObjLangName() {
@@ -137,11 +138,11 @@ public class CheckSetup implements Serializable {
         this.staticHelpDoc = staticHelpDoc;
     }
 
-    public List<TheoremSet> getTheoremSets() {
+    public List<Pair<String, Boolean>> getTheoremSets() {
         return theoremSets;
     }
 
-    public void setTheoremSets(List<TheoremSet> theoremSets) {
+    public void setTheoremSets(List<Pair<String, Boolean>> theoremSets) {
         this.theoremSets = theoremSets;
     }
 }

@@ -139,7 +139,8 @@ public class Formula implements Expression {
         if (o instanceof Formula) {
             Formula other = (Formula) o;
             boolean equals = true;
-            if (!mainOperator.equals(other.mainOperator)) { equals = false;}
+            if (mainOperator == null && other.mainOperator != null) return false;
+            if (mainOperator != null && !mainOperator.equals(other.mainOperator)) { equals = false;}
 
 
  //           if (!getOpenBracket().equals(other.getOpenBracket())) { equals = false;}
