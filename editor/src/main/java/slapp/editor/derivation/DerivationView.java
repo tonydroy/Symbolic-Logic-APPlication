@@ -17,16 +17,20 @@ package slapp.editor.derivation;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
+import com.gluonhq.richtextarea.model.Document;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.animation.ParallelTransition;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
@@ -35,11 +39,15 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.util.Duration;
+import slapp.editor.EditorMain;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.ExerciseView;
 import slapp.editor.main_window.MainWindowView;
+import slapp.editor.main_window.TextHelpPopup;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,13 +100,12 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
     private Label helpTriesLabel;
     private Label checkTriesLabel;
     private boolean checkSuccess;
-
     private Color checkColor;
     private Color checkElementsColor;
-
-
-
     private boolean checkShowing = false;
+    private Button showMetaLangButton;
+    private boolean showMetaLang;
+    private Stage stage;
 
 
 
@@ -172,6 +179,21 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         controlBox.setMinWidth(150); controlBox.setMaxWidth(150);
         exerciseControlNode = controlBox;
 
+        showMetaLangButton = new Button("\u2133");
+        showMetaLangButton.setPrefWidth(25);
+        showMetaLangButton.setMaxHeight(40);
+        showMetaLangButton.setPadding(new Insets(2));
+        showMetaLangButton.setTooltip(new Tooltip("Show metalanguage information."));
+        showMetaLangButton.setStyle("-fx-background-color: rgb(" + 0xF0 + "," + 0xF0 + "," + 0xF0 + "); ");
+
+
+        showMetaLangButton.setOnAction(e -> {
+    //        TextHelpPopup.helpMetalanguage();
+
+
+        });
+
+
     }
 
     /**
@@ -197,12 +219,22 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
 
-        statementRTA.maxWidthProperty().bind(mainView.scalePageWidthProperty());
+        if (!showMetaLang) statementRTA.maxWidthProperty().bind(mainView.scalePageWidthProperty());
+        else statementRTA.minWidthProperty().bind(mainView.scalePageWidthProperty());
         statementWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         statementWidthSpinner.setPrefWidth(65);
         statementWidthSpinner.setDisable(true);
         statementWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
 
+
+        /*
+        showMetaLangButton.setOnAction(e -> {
+            //        TextHelpPopup.helpMetalanguage();
+            statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
+                    });
+
+         */
         /*
         statementRTA.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
             if (currentSpinnerNode != statementRTA) {
@@ -516,6 +548,39 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         checkedElements.setOpacity(0.0);
     }
 
+    public void showMetalanguageHelp(Document doc) {
+
+        if (stage == null || !stage.isShowing()) {
+            RichTextArea mrta = new RichTextArea(EditorMain.mainStage);
+            mrta.getActionFactory().open(doc).execute(new ActionEvent());
+            mrta.setPadding(new Insets(20, 0, 20, 20));
+            mrta.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
+            mrta.setPrefWidth(800);
+            mrta.setPrefHeight(700);
+            mrta.setEditable(false);
+
+
+            Scene scene = new Scene(mrta);
+            scene.getStylesheets().add(RichTextArea.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
+            mrta.applyCss();
+            stage = new Stage();
+            stage.setScene(scene);
+            stage.setTitle("SLAPP Text Help");
+            stage.initModality(Modality.NONE);
+            stage.getIcons().addAll(EditorMain.icons);
+            stage.initOwner(EditorMain.mainStage);
+            Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
+            stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 800));
+            stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 700));
+
+            stage.show();
+        }
+
+
+
+
+    }
+
     /**
      * Set justification flow from a single view line on grid
      * @param index the line index
@@ -705,6 +770,14 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         return checkMessage;
     }
 
+    public void setShowMetaLang(boolean showMetaLang) {
+        this.showMetaLang = showMetaLang;
+    }
+
+    public Button getShowMetaLangButton() {
+        return showMetaLangButton;
+    }
+
     /**
      * The comment decoratedRTA
      * @return comment DecoratedRTA
@@ -738,7 +811,22 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
      * @return the statement node
      */
     @Override
-    public Node getExerciseStatementNode() { return exerciseStatement.getEditor(); }
+    public Node getExerciseStatementNode() {
+        Node statementNode;
+        if (!showMetaLang) {
+            statementNode =exerciseStatement.getEditor();
+        }
+        else {
+            AnchorPane anchorPane = new AnchorPane(exerciseStatement.getEditor(), showMetaLangButton);
+            anchorPane.setTopAnchor(exerciseStatement.getEditor(), 0.0);
+            anchorPane.setLeftAnchor(exerciseStatement.getEditor(), 0.0);
+            anchorPane.setRightAnchor(showMetaLangButton, 3.0);
+            anchorPane.setBottomAnchor(showMetaLangButton, 3.0);
+            anchorPane.maxWidthProperty().bind(mainView.scalePageWidthProperty());
+            statementNode = anchorPane;
+        }
+        return statementNode;
+        }
 
     /**
      * The preferred height of the statement window

@@ -24,6 +24,7 @@ public class CheckSetup implements Serializable {
     boolean contextualHelp;
     Document staticHelpDoc;
     List<Pair<String, Boolean>> theoremSets;
+    boolean showMetalanguageButton;
 
 
     public CheckSetup() {
@@ -42,6 +43,7 @@ public class CheckSetup implements Serializable {
         staticHelpDoc = new Document();
 
         theoremSets = new ArrayList();
+        showMetalanguageButton = false;
 
 
     }
@@ -144,5 +146,13 @@ public class CheckSetup implements Serializable {
 
     public void setTheoremSets(List<Pair<String, Boolean>> theoremSets) {
         this.theoremSets = theoremSets;
+    }
+
+    public boolean isShowMetalanguageButton() {
+        return showMetalanguageButton;
+    }
+
+    public void setShowMetalanguageButton(boolean showMetalanguageButton) {
+        this.showMetalanguageButton = showMetalanguageButton;
     }
 }

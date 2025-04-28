@@ -1046,13 +1046,13 @@ public class ParseUtilities {
                             ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
                         subString = getSubString(j, expressions);
                         if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(j)).isSuperscript() &&
-                                (((OriginalElement) expressions.get(j)).getElementStr().equals("*") || language.getVariables().contains((OriginalElement) expressions.get(j)))) {
+                                (((OriginalElement) expressions.get(j)).getElementStr().equals("\u22c6") || language.getVariables().contains(((OriginalElement) expressions.get(j)).getElementStr()))) {
                             supString = ((OriginalElement) expressions.get(j)).getElementStr();
                             expressions.remove(j);
                         }
                     }
                     else if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(j)).isSuperscript() &&
-                            (((OriginalElement) expressions.get(j)).getElementStr().equals("*") || language.getVariables().contains((OriginalElement) expressions.get(j)))) {
+                            (((OriginalElement) expressions.get(j)).getElementStr().equals("\u22c6") || language.getVariables().contains(((OriginalElement) expressions.get(j)).getElementStr()))) {
                         supString = ((OriginalElement) expressions.get(j)).getElementStr();
                         expressions.remove(j);
                         if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&

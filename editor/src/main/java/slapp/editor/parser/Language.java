@@ -61,6 +61,7 @@ public class Language implements Serializable {
 
     //for metalanguage
     private boolean metalanguage = false;
+    private boolean objectMetalanguage = false;
 
     private List<String> mTermSymbols = new ArrayList();
     private List<String> mFormulaSymbols = new ArrayList();
@@ -468,6 +469,14 @@ public class Language implements Serializable {
 
     public void setMetalanguage(boolean metalanguage) {
         this.metalanguage = metalanguage;
+    }
+
+    public boolean isObjectMetalanguage() {
+        return objectMetalanguage;
+    }
+
+    public void setObjectMetalanguage(boolean objectMetalanguage) {
+        this.objectMetalanguage = objectMetalanguage;
     }
 
     public String getContradictionSymbol() {

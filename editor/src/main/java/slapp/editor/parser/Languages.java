@@ -364,9 +364,9 @@ public class Languages {
     }
 
     private static Language MetaO() {
-        Language lang = new Language("LM Obj");
-        lang.setNameTexts("\u2112", "","Mobj");
-        lang.setMetalanguage(false);
+        Language lang = new Language("\u2133\u2112");
+        lang.setNameTexts("\u2133\u2112", "","");
+        lang.setObjectMetalanguage(true);
 
         lang.setOpenBracket1("("); lang.setCloseBracket1(")");
 

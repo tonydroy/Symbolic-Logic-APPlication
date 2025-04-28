@@ -33,6 +33,45 @@ public class DiskUtilities {
     private static File exerciseDirectory = null;
     private static File assignmentDirectory = null;
     private static File userHomeFile = new File(System.getProperty("user.home"));
+    private static String slappDataFile = "slapp.dat";
+
+    public static boolean saveDataFile(SLAPPdata data) {
+        boolean success = false;
+        try {
+            File dataFile = new File(userHomeFile, slappDataFile);
+            FileOutputStream fileOutputStream = new FileOutputStream(dataFile);
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+            objectOutputStream.writeObject(data);
+            objectOutputStream.close();
+            success = true;
+        }
+        catch (IOException e) {
+       //     e.printStackTrace();
+            EditorAlerts.showSimpleAlert("Error saving data file", e.getClass().getCanonicalName());
+            return success;
+        }
+        return success;
+    }
+
+    public static SLAPPdata openDataFile() {
+
+        try {
+            File dataFile = new File(userHomeFile, slappDataFile);
+            if (dataFile.exists()) {
+                FileInputStream fileInputStream = new FileInputStream(dataFile);
+                ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+                SLAPPdata data = (SLAPPdata) objectInputStream.readObject();
+                objectInputStream.close();
+                return data;
+            }
+            else return null;
+        }
+        catch (Exception e) {
+       //     e.printStackTrace();
+            EditorAlerts.showSimpleAlert("Error opening data file", e.getClass().getCanonicalName());
+            return null;
+        }
+    }
 
     /**
      * Save exercise

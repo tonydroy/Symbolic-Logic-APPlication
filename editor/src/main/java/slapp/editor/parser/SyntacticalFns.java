@@ -68,7 +68,7 @@ public class SyntacticalFns {
 
 
 
-                    if (vListContains(term1Exp, quantifiedVariable)) {
+                    if (vListContains(term1Exp, quantifiedVariable, variableList)) {
                         removeTreeFromList(sortedSubformulas, formula.getChildren().get(0));
                         i = listIndexParticular(sortedSubformulas, formula);
                     }
@@ -105,19 +105,27 @@ public class SyntacticalFns {
                 variableList2 = new ArrayList<>();
                 setTermVariableList2(term2Exp);
 
+                Term dummyVar = new Term();
+                dummyVar.setLevel(0);
+                ArrayList children = new ArrayList();
+                children.add(new Variable(Languages.getLanguage(langName).getDummyVariableSym(), ""));
+                dummyVar.setChildren(children);
+                dummyVar.setCombines(true);
+                dummyVar.setTermType(TermType.VARIABLE);
+
                 //term2 has a variable not in term1
                 boolean extraVariable = false;
+
+                if (vListContains(term2Exp, dummyVar, variableList2)) extraVariable = true;
+
                 for (Expression exp : variableList2) {
-
-
-                    if (!vListContains(term1Exp, exp)) {
+                    if (!vListContains(term1Exp, exp, variableList)) {
                         extraVariable = true;
                     }
                 }
                 if (extraVariable) {
                     freeFor = false;
                 }
-
                 index++;
                 continue;
             }
@@ -144,7 +152,7 @@ public class SyntacticalFns {
 
                 //term1 is bound so no substitution
 
-                if (vListContains(term1Exp, variable)) {
+                if (vListContains(term1Exp, variable, variableList)) {
                     index++;
                     continue;
                 }
@@ -162,7 +170,7 @@ public class SyntacticalFns {
                 Term variable = mainOperator.getVariableTerm();
 
 
-                if (vListContains(term1Exp, variable)) {
+                if (vListContains(term1Exp, variable, variableList)) {
                     index++;
                     continue;
                 }
@@ -367,7 +375,7 @@ public class SyntacticalFns {
             else if (exp.getType() == ExpressionType.FORMULA) {
 
                 Formula formula = (Formula) exp;
-                if (formula instanceof SentenceAtomic || formula instanceof MFormula || formula instanceof ContradictionSimple) {
+                if (formula instanceof SentenceAtomic || formula instanceof MFormula || formula instanceof PseudoMFormula || formula instanceof ContradictionSimple) {
                     parallelList.add(exp);
                 }
                 else if (formula.isAtomic()) {
@@ -407,14 +415,14 @@ public class SyntacticalFns {
                     parallelList.add(newComplexFormula);
                 }
 
-                else if (formula.getMainOperator().getType() == ExpressionType.UNIVERSAL_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
-                else if (formula.getMainOperator().getType() == ExpressionType.EXISTENTIAL_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
+                else if (formula.getMainOperator().getType() == ExpressionType.UNIVERSAL_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm(), variableList)) parallelList.add(formula);
+                else if (formula.getMainOperator().getType() == ExpressionType.EXISTENTIAL_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm(), variableList)) parallelList.add(formula);
 
-                else if (formula.getMainOperator().getType() == ExpressionType.UNIV_BOUNDED_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
-                else if (formula.getMainOperator().getType() == ExpressionType.EXIS_BOUNDED_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
+                else if (formula.getMainOperator().getType() == ExpressionType.UNIV_BOUNDED_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm(), variableList)) parallelList.add(formula);
+                else if (formula.getMainOperator().getType() == ExpressionType.EXIS_BOUNDED_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm(), variableList)) parallelList.add(formula);
 
-                else if (formula.getMainOperator().getType() == ExpressionType.UNIV_RESTRICTED_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
-                else if (formula.getMainOperator().getType() == ExpressionType.EXIS_RESTRICTED_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
+                else if (formula.getMainOperator().getType() == ExpressionType.UNIV_RESTRICTED_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm(), variableList)) parallelList.add(formula);
+                else if (formula.getMainOperator().getType() == ExpressionType.EXIS_RESTRICTED_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm(), variableList)) parallelList.add(formula);
 
                 else {
                     Operator newMainOperator = null;
@@ -549,7 +557,7 @@ public class SyntacticalFns {
             else if (exp.getType() == ExpressionType.FORMULA) {
 
                 Formula formula = (Formula) exp;
-                if (formula instanceof SentenceAtomic || formula instanceof MFormula) {
+                if (formula instanceof SentenceAtomic || formula instanceof MFormula || formula instanceof PseudoMFormula) {
                     parallelList.add(exp);
                 }
                 else if (formula.isAtomic()) {
@@ -589,14 +597,14 @@ public class SyntacticalFns {
                     parallelList.add(newComplexFormula);
                 }
 
-                else if (formula.getMainOperator().getType() == ExpressionType.UNIVERSAL_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
-                else if (formula.getMainOperator().getType() == ExpressionType.EXISTENTIAL_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
+                else if (formula.getMainOperator().getType() == ExpressionType.UNIVERSAL_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm(), variableList)) parallelList.add(formula);
+                else if (formula.getMainOperator().getType() == ExpressionType.EXISTENTIAL_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm(), variableList)) parallelList.add(formula);
 
-                else if (formula.getMainOperator().getType() == ExpressionType.UNIV_BOUNDED_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
-                else if (formula.getMainOperator().getType() == ExpressionType.EXIS_BOUNDED_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
+                else if (formula.getMainOperator().getType() == ExpressionType.UNIV_BOUNDED_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm(), variableList)) parallelList.add(formula);
+                else if (formula.getMainOperator().getType() == ExpressionType.EXIS_BOUNDED_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm(), variableList)) parallelList.add(formula);
 
-                else if (formula.getMainOperator().getType() == ExpressionType.UNIV_RESTRICTED_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
-                else if (formula.getMainOperator().getType() == ExpressionType.EXIS_RESTRICTED_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm())) parallelList.add(formula);
+                else if (formula.getMainOperator().getType() == ExpressionType.UNIV_RESTRICTED_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm(), variableList)) parallelList.add(formula);
+                else if (formula.getMainOperator().getType() == ExpressionType.EXIS_RESTRICTED_OP && vListContains(term1Exp, formula.getMainOperator().getVariableTerm(), variableList)) parallelList.add(formula);
 
                 else {
                     Operator newMainOperator = null;
@@ -668,7 +676,7 @@ public class SyntacticalFns {
         return binds;
     }
 
-    private static boolean vListContains(Expression term, Expression variable) {
+    private static boolean vListContains(Expression term, Expression variable, List<Expression> vList) {
      //   System.out.println("term: " + term + "vlist: " + variableList + " variable: " + variable);
 
         if (term != null) {
@@ -679,13 +687,13 @@ public class SyntacticalFns {
                     PseudoMTerm pTerm = (PseudoMTerm) term;
                     String supString = ((PseudoMTermSym) pTerm.getMainTermSym()).getSuperscriptStr();
                     if (supString.equals("")) return true;
-                    if (supString.equals("*") || ((Variable) variable.getChildren().get(0)).getBaseStr().equals(supString)) {
+                    if (supString.equals("\u22c6") || ((Variable) variable.getChildren().get(0)).getBaseStr().equals(supString)) {
                         return false;
                     } else {
-                        System.out.println("bad superscript on PseudoMTerm");
+                        return true;
                     }
                 } else {
-                    return variableList.contains(variable);
+                    return vList.contains(variable);
                 }
             } else {
                 System.out.println("bad inputs to vListContains");

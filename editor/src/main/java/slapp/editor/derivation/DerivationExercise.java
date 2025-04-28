@@ -83,6 +83,8 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         this.mainWindow = mainWindow;
         this.derivationModel = model;
         if (model.getOriginalModel() == null) {model.setOriginalModel(model); }
+        if (derivationModel.getCheckSetup() == null) derivationModel.setCheckSetup(new CheckSetup());  //in case SLAPP v2 model
+
         this.mainView = mainWindow.getMainView();
         this.derivationView = new DerivationView(mainView);
 
@@ -93,6 +95,8 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         DerivationModel deepCopy = (DerivationModel) SerializationUtils.clone(derivationModel);
         undoRedoList.push(deepCopy);
         updateUndoRedoButtons();
+
+
     }
 
     /*
@@ -105,6 +109,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         derivationView.setStatementPrefHeight(derivationModel.getStatementPrefHeight());
         derivationView.setCommentPrefHeight(derivationModel.getCommentPrefHeight());
         derivationView.setSplitPanePrefWidth(derivationModel.getSplitPanePrefWidth());
+        derivationView.setShowMetaLang(derivationModel.getCheckSetup().isShowMetalanguageButton());
 
         //statement
         DecoratedRTA statementDRTA = new DecoratedRTA();
@@ -162,8 +167,28 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
 
         derivationView.setRightControlBox();
 
+        /*
+        This is a kludge.  Metalanguage help should work with the regular TextHelpPopup by the first commented line
+        below.  But the JavaFX WebView puts an empty box after supplemental unicode characters
+        (see https://bugs.openjdk.org/browse/JDK-8343963).  This is quite ugly.  So using an RTA and Document.
 
+        To edit this document, uncomment the second group of lines below and open metHelp.sle.  The help Document opens
+        into the comment field.  After edit there, press the metalanguage help button so that the Document is sent to
+        SLAPPdata.  Close the program, re-comment the lines, and the revised file should open with the help button.
+         */
+        derivationView.getShowMetaLangButton().setOnAction(e -> {
+         //   TextHelpPopup.helpMetalanguage();
+
+            /*
+            derivationView.getExerciseComment().getEditor().getActionFactory().saveNow().execute(new ActionEvent());
+            Document doc = derivationView.getExerciseComment().getEditor().getDocument();
+            mainWindow.getSlappData().setMetalanguageHelp(doc);
+            */
+            derivationView.showMetalanguageHelp(mainWindow.getSlappData().getMetalanguageHelp());
+        });
     }
+
+
 
 
     /*

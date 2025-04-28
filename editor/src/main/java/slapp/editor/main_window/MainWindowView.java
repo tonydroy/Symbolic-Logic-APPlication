@@ -37,6 +37,7 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Scale;
 import javafx.stage.*;
+import slapp.editor.DiskUtilities;
 import slapp.editor.EditorMain;
 import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.DecoratedRTA;
@@ -634,6 +635,7 @@ public class MainWindowView {
             dummyStage.close();
             mainWindow.closeVideoHelp();
 //            if (mainWindow.getMediaViewer() != null) {  mainWindow.getMediaViewer().stopPlay();    }
+            DiskUtilities.saveDataFile(mainWindow.getSlappData());
             stage.close();
             System.exit(0);
         }

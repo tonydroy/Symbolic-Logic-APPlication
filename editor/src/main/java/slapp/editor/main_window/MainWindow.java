@@ -77,6 +77,7 @@ public class MainWindow {
     private WebEngine videoWebEngine;
     private WebView videoWebView;
     private Stage videoStage;
+    private SLAPPdata slappData = new SLAPPdata();
 
 
 
@@ -101,6 +102,16 @@ public class MainWindow {
         };
         setUpExercise(new FrontPageExercise(this));
         mainView.getMainScene().focusOwnerProperty().addListener(focusListener);
+
+        SLAPPdata data = DiskUtilities.openDataFile();
+        if (data != null) {
+            slappData = data;
+        }
+        else {
+            System.out.println("no data file");
+        }
+
+
 
         //install4j
         UpdateScheduleRegistry.setUpdateSchedule(UpdateSchedule.WEEKLY);
@@ -1001,8 +1012,9 @@ public class MainWindow {
      */
 
 
-
-
+    public SLAPPdata getSlappData() {
+        return slappData;
+    }
 
     /*
      * Open native mail client to report an issue

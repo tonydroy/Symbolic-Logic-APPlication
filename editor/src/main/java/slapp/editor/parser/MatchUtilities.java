@@ -328,7 +328,7 @@ public class MatchUtilities {
                         }
                         else {
                             list.addAll(targetExp.toTextList());
-                            if (!objectL.equals("LM Obj")) list.add(ParseUtilities.newRegularText(" is not "));
+                            if (!Languages.getLanguage(objectL).isObjectMetalanguage()) list.add(ParseUtilities.newRegularText(" is not "));
                             else list.add(ParseUtilities.newRegularText(" is not (known to be) "));
                             list.addAll(sourceExp.toTextList());
                             list.addAll(new SubstitutionTransform(exp1, subTransform.getExp2(), subTransform.getType(), subTransform.getDividerSymbol()).toTextList());
@@ -373,9 +373,7 @@ public class MatchUtilities {
                                      texts.add(ParseUtilities.newRegularText("Substituted instancess of "));
                                      texts.addAll(subTransform.getExp2().getMatch().toTextList());
 
-                                     if (!objectL.equals("LM Obj")) texts.add(ParseUtilities.newRegularText(" not free for "));
-
-                                   //  if (!Languages.getLanguage(objectL).isMetalanguage()) texts.add(ParseUtilities.newRegularText(" not free for "));
+                                     if (!Languages.getLanguage(objectL).isObjectMetalanguage()) texts.add(ParseUtilities.newRegularText(" not free for "));
                                      else texts.add(ParseUtilities.newRegularText(" not (known to be) free for "));
                                      texts.addAll(exp.toTextList());
                                      texts.add(ParseUtilities.newRegularText(" in "));

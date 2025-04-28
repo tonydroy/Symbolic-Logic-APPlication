@@ -34,6 +34,13 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
@@ -61,7 +68,9 @@ import slapp.editor.main_window.MainWindowView;
 import slapp.editor.parser.Language;
 import slapp.editor.parser.Languages;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 import static com.gluonhq.richtextarea.RichTextAreaSkin.KeyMapValue.*;
 import static javafx.scene.control.ButtonType.OK;
@@ -130,6 +139,7 @@ public class DerivationCreate {
     private ObservableList<String> theoremSetList;
     private String defaultRulesetName = "\ud835\udc41\ud835\udc37+"; //ND+
     private String defaultLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (w/abv)
+    private CheckBox showMetalanguageCheck;
 
 
 
@@ -170,8 +180,10 @@ public class DerivationCreate {
         widthSpinner.getValueFactory().setValue(((double) Math.round(originalModel.getGridWidth() * 100/2)) * 2);
 
         CheckSetup checkSetup = originalModel.getCheckSetup();
+        showMetalanguageCheck.setSelected(checkSetup.showMetalanguageButton);
         checkMaxSpinner.getValueFactory().setValue(checkSetup.getCheckMax());
         helpMaxSpinner.getValueFactory().setValue(checkSetup.getHelpMax());
+
 
 
         for (String key : langMap.keySet()) {
@@ -553,6 +565,19 @@ public class DerivationCreate {
 
         //////////////////
 
+        showMetalanguageCheck = new CheckBox();
+        showMetalanguageCheck.setSelected(false);
+
+        ChangeListener metalanguageCheckListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                fieldModified = true;
+            }
+        };
+        italicAndSansCheck.selectedProperty().addListener(italicAndSansListener);
+        Label metalangCheckLabel = new Label("Show \u2133\u2112 Button:");
+
+
 
         //setup lines control
         Label setupLinesLabel = new Label("Setup Lines: ");
@@ -591,11 +616,13 @@ public class DerivationCreate {
         Label widthLabel = new Label("Width: ");
         HBox topFields = new HBox(30, scopeLineCheck, defaultShelfCheck, widthLabel, widthSpinner);
         topFields.setAlignment(Pos.CENTER_LEFT);
-        topFields.setMargin(widthLabel, new Insets(0, -20, 0, 0));
-        topFields.setMargin(setupLinesLabel, new Insets(0, -20, 0, 0));
+        topFields.setMargin(widthLabel, new Insets(0, -10, 0, 0));
 
-        HBox setupLineButtons = new HBox(30, setupLinesLabel, addSetupLineButton, removeSetupLineButton);
+
+        HBox setupLineButtons = new HBox(30, metalangCheckLabel, showMetalanguageCheck, setupLinesLabel, addSetupLineButton, removeSetupLineButton);
         setupLineButtons.setAlignment(Pos.CENTER_LEFT);
+        setupLineButtons.setMargin(showMetalanguageCheck, new Insets(0, 20, 0, -15));
+        setupLineButtons.setMargin(setupLinesLabel, new Insets(0, -20, 0, 10));
 
         //setup lines pane
         setupLines = new ArrayList<>();
@@ -1044,6 +1071,7 @@ public class DerivationCreate {
         CheckSetup checkSetup = model.getCheckSetup();
         checkSetup.setCheckMax((Integer) checkMaxSpinner.getValue());
         checkSetup.setHelpMax((Integer) helpMaxSpinner.getValue());
+        checkSetup.setShowMetalanguageButton(showMetalanguageCheck.isSelected());
 
         String rulesetName = null;
         for (String key : ruleMap.keySet()) {
