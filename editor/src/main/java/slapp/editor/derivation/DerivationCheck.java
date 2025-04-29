@@ -9,12 +9,11 @@ import javafx.scene.text.*;
 import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
-import slapp.editor.derivation.DerSystems.DerivationRule;
-import slapp.editor.derivation.DerSystems.DerivationRuleset;
-import slapp.editor.derivation.DerSystems.DerivationRulesets;
+import slapp.editor.derivation.der_systems.DerivationRule;
+import slapp.editor.derivation.der_systems.DerivationRuleset;
+import slapp.editor.derivation.der_systems.DerivationRulesets;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.Languages;
-import slapp.editor.parser.OriginalElement;
 import slapp.editor.parser.ParseUtilities;
 import slapp.editor.parser.grammatical_parts.Formula;
 

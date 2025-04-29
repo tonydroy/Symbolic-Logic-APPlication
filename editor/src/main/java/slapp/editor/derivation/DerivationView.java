@@ -570,8 +570,8 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
             stage.getIcons().addAll(EditorMain.icons);
             stage.initOwner(EditorMain.mainStage);
             Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-            stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 800));
-            stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 700));
+            stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 820));
+            stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 720));
 
             stage.show();
         }

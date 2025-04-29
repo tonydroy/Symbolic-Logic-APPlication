@@ -49,7 +49,6 @@ import slapp.editor.EditorAlerts;
 import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
-import slapp.editor.derivation.DerSystems.DerivationRulesets;
 import slapp.editor.main_window.*;
 
 import java.util.ArrayList;
@@ -1155,6 +1154,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         CheckSetup setup = originalModel.getCheckSetup();
         setup.setHelpTries(derivationCheck.getHelpTries());
         setup.setCheckTries(derivationCheck.getCheckTries());
+        setup.setCheckSuccess(false);
         originalModel.setCheckSetup(setup);
 
         DerivationExercise clearExercise = new DerivationExercise(originalModel, mainWindow);

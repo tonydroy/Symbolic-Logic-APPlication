@@ -239,19 +239,20 @@ static {
                 "<ul>" +
                 "<li><p>Punctuation: ( ) &nbsp [ ] &nbsp : &nbsp ,</p></li>" +
                 "<li><p>Operator: \u223c, \u2192, \u2194, \u2227, \u2228, \u2191, \u2193, \u2200, \u2203 </p></li>" +
-                "<li><p>Variables: script &#x1d4ca;&#8194;. . . &#x1d4cf;&#8194; and italic &#x1d44e;&#8194; . . . &#x1d467&#8194; with or without positive integer subscripts. </p></li>" +
-                "<li><p>Constants:  \ue886 and script &#x1d4b6;&#8194; . . . \u212f with or without positive integer subscripts.</p></li>" +
-                "<li><p>Function symbols: &#x1d446;&#8194;, \ue8b8, \ue8ba, and for positive <em>n:</em>, script &#x1d4bb;&#8194;<sup><em>n</em></sup>, \u210a<sup><em>n</em></sup>, and &#x1d4bd;&#8194;<sup><em>n</em></sup> with or without positive integer subscripts.   </p></li>" +
-                "<li><p>Sentence Letters: \u22a5 and script &#x1d4ae;&#8194; with or without positive integer subscripts. </p></li>" +
+                "<li><p>Variables: script &#x1d4ca;. . . &#x1d4cf; and italic &#x1d44e; . . . &#x1d467 with or without positive integer subscripts. </p></li>" +
+                "<li><p>Constants:  \ue886 and script &#x1d4b6; . . . \u212f with or without positive integer subscripts.</p></li>" +
+                "<li><p>Function symbols: &#x1d446;, \ue8b8, \ue8ba, and for positive <em>n:</em>, script &#x1d4bb;<sup><em>n</em></sup>, \u210a<sup><em>n</em></sup>, and &#x1d4bd;<sup><em>n</em></sup> with or without positive integer subscripts.   </p></li>" +
+                "<li><p>Sentence Letters: \u22a5 and script &#x1d4ae; with or without positive integer subscripts. </p></li>" +
                 "<li><p>Relation Symbols: \ue8ac, \ue8a4, \ue8a6, \ue8ad, \ue8a5, \ue8a7 and for positive <em>n,</em> script \u211b<sup><em>n</em></sup> with or without integer subscripts. </p></li>" +
-                "<li><p>Term Symbols: script &#x1d4c2;&#8194; . . . &#x1d4c9;&#8194;.</p></li>" +
-                "<li><p>Formula Symbols: script &#x1d49c;&#8194; . . . &#x1d4ac;&#8194;.  </p></li>" +
+                "<li><p>Term Symbols: script &#x1d4c2; . . . &#x1d4c9;.</p></li>" +
+                "<li><p>Formula Symbols: script &#x1d49c; . . . &#x1d4ac;.  </p></li>" +
                 "</ul>" +
             "<li><h4>Special Notations:</h4></li>" +
                 "<ul>" +
-                "<li><p>As described at the end of <em>Symbolic Logic</em> section 6.3.3, &#x1d4ac;&#8194;(&#x1d4cd;&#8194;), &#x1d4ac;&#8194;(&#x1d4cd;&#8194;, &#x1d4ce;&#8194;) and such indicate that &#x1d4ac;&#8194; " +
-                "may have instances of the indicated variables free -- and, in context, &#x1d4ac;&#8194; without the parenthetical notation that the variables are not free.  Then substitutions work in the usual way.</p></li>" +
-                "<li><p>&#x1d4c9;&#8194;<sup>&#x1d4cd;&#8194;</sup> indicates that term &#x1d4c9;&#8194; does not include variable &#x1d4cd;&#8194;.  And &#x1d4c9;&#8194<sup>\u22c6</sup> (superscript star, not asterisk) behaves as if it is variable free " +
+                "<li><p>As described at the end of <em>Symbolic Logic</em> section 6.3.3, &#x1d4ac;(&#x1d4cd;), &#x1d4ac;(&#x1d4cd;, &#x1d4ce;) and such indicate that &#x1d4ac; " +
+                "may have instances of the indicated variables free -- and, in context, &#x1d4ac; without the parenthetical notation that the variables are not free." +
+                "Then &#x1d4ac;(&#x1d4c9;) is &#x1d4ac; with &#x1d4cd; replaced by &#x1d4c9;.</p></li>" +
+                "<li><p>In SLAPP, &#x1d4c9;<sup>&#x1d4cd;</sup> (with superscript variable) indicates that term &#x1d4c9; does not include that variable.  And &#x1d4c9;&#8194<sup>\u22c6</sup> (superscript star, not asterisk) behaves as if it is variable free " +
                 "-- so that it is sure to satisfy \"free for\" constraints.  You should not use these designations unless the conditions are stated as a condition of the exercise.</p></li> "+
                 "</ul>" +
 

@@ -60,15 +60,16 @@ import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.decorated_rta.KeyboardDiagram;
-import slapp.editor.derivation.DerSystems.DerivationRuleset;
-import slapp.editor.derivation.DerSystems.DerivationRulesets;
+import slapp.editor.derivation.der_systems.DerivationRuleset;
+import slapp.editor.derivation.der_systems.DerivationRulesets;
+import slapp.editor.derivation.theorems.TheoremSet;
+import slapp.editor.derivation.theorems.TheoremSets;
 import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
 import slapp.editor.parser.Language;
 import slapp.editor.parser.Languages;
 
-import java.awt.*;
 import java.util.*;
 import java.util.List;
 
