@@ -2,6 +2,7 @@ package slapp.editor.derivation;
 
 import com.gluonhq.richtextarea.model.Document;
 import javafx.util.Pair;
+import slapp.editor.derivation.theorems.ThrmSetElement;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ public class CheckSetup implements Serializable {
     String rulesetName;
     String objLangName;
     String metLangName;
+    List<ThrmSetElement> thrmSetElements;
 
     boolean checkSuccess;
     boolean checkFinal;
@@ -43,6 +45,7 @@ public class CheckSetup implements Serializable {
         staticHelpDoc = new Document();
 
         theoremSets = new ArrayList();
+        thrmSetElements = new ArrayList();
         showMetalanguageButton = false;
 
 
@@ -154,5 +157,9 @@ public class CheckSetup implements Serializable {
 
     public void setShowMetalanguageButton(boolean showMetalanguageButton) {
         this.showMetalanguageButton = showMetalanguageButton;
+    }
+
+    public void setThrmSetElements(List<ThrmSetElement> thrmSetElements) {
+        this.thrmSetElements = thrmSetElements;
     }
 }

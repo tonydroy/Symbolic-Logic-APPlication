@@ -1,6 +1,10 @@
 package slapp.editor.derivation.theorems;
 
-public class ThrmSetElement {
+import slapp.editor.AlphanumStringComparator;
+
+import java.io.Serializable;
+
+public class ThrmSetElement  implements Serializable {
 
     TheoremType type;
     String name;
@@ -13,5 +17,15 @@ public class ThrmSetElement {
         this.forms = forms;
     }
 
+    public boolean isPriorTo(String name) {
+        boolean result = false;
+        AlphanumStringComparator cmp = new AlphanumStringComparator();
+        int compare = cmp.compare(this.name, name);
+        if (compare < 0) result = true;
+        return result;
+    }
 
+    public String getName() {
+        return name;
+    }
 }

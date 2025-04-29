@@ -64,6 +64,7 @@ import slapp.editor.derivation.der_systems.DerivationRuleset;
 import slapp.editor.derivation.der_systems.DerivationRulesets;
 import slapp.editor.derivation.theorems.TheoremSet;
 import slapp.editor.derivation.theorems.TheoremSets;
+import slapp.editor.derivation.theorems.ThrmSetElement;
 import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
@@ -72,6 +73,8 @@ import slapp.editor.parser.Languages;
 
 import java.util.*;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.gluonhq.richtextarea.RichTextAreaSkin.KeyMapValue.*;
 import static javafx.scene.control.ButtonType.OK;
@@ -651,7 +654,9 @@ public class DerivationCreate {
 
         String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
                 "<p>Derivation Exercise is appropriate for any exercise that calls for a derivation as response.<p>" +
+                "<p> require underline for axiom or theorem</p>" +
                 "<ul>" +
+
                 "<li><p>Supply the exercise name.  Then select the default keyboard for derivation content lines, and select whether there is to be a leftmost scope line, and/or a \"shelf\" beneath the top line of an automatically generated subderivation. " +
                 "A typical natural derivation system (as chapter 6 of <em>Symbolic Logic</em>) selects 'italic and sans', 'leftmost scope line' and 'default shelf'.  The width is the (default) percentage of the window's width allocated to this derivation.</p></li>" +
                 "<li><p>For the check and help functions: A 'max value' of -1 corresponds to 'unlimited', 0 to 'none', and otherwise to the maximum number of check or help tries allotted for the exercise.  " +
@@ -1017,6 +1022,11 @@ public class DerivationCreate {
 
     }
 
+
+
+
+
+
     /*
      * Get the derivation model for the currently constructed exercise
      * @return the derivation model
@@ -1114,6 +1124,39 @@ public class DerivationCreate {
         }
 
 
+        //this lets through non-names, but has reasonable flexibility for names ending with '_' then 'A' or 'T' something
+        Pattern pattern = Pattern.compile("\\s*_(A|T)\\d+\\.?\\d*\\D*$");
+        Matcher matcher = pattern.matcher(name);
+        boolean goodThrmName = matcher.find();
+ //       System.out.println(goodThrmName);
+
+        List<ThrmSetElement> modelThrmSetElements = new ArrayList();
+        for (int i = 0; i < theoremSetList.size(); i++) {
+            if (thrmList1.get(i).getValue()) {
+                TheoremSet theoremSet = TheoremSets.getTheoremSet(theoremSetList.get(i));
+                List<ThrmSetElement> thrmSetElements = theoremSet.getElements();
+                for (int j = 0; j < thrmSetElements.size(); j++ ) {
+
+                    ThrmSetElement thrmSetElement = thrmSetElements.get(j);
+
+                    boolean numberOK = false;
+                    if (goodThrmName) {
+                        int lastIndex = name.lastIndexOf("_");
+                        String thisThrmName = name.substring(lastIndex + 1);
+                        numberOK = thrmSetElement.isPriorTo(thisThrmName);
+                    }
+                    if (!thrmList2.get(i).getValue() || (thrmList2.get(i).getValue() && numberOK)) {
+                        modelThrmSetElements.add(thrmSetElement);
+                    }
+                }
+            }
+        }
+        checkSetup.setThrmSetElements(modelThrmSetElements);
+/*
+        for (ThrmSetElement thrmSetElement : modelThrmSetElements) {
+            System.out.println(thrmSetElement.getName());
+        }
+ */
 
 
         return model;

@@ -41,6 +41,17 @@ public class DerivationRulesets implements Serializable {
 
     private static DerivationRuleset getADs() {
         DerivationRuleset ADs = new DerivationRuleset("\ud835\udc34\ud835\udc37\ud835\udc60", Collections.singletonList(ParseUtilities.newItalicText("ADs")));
+
+        DerivationRule premiseRule = new Premise("prem","^\\s*prem\\s*$");
+        ADs.setPremiseRule(premiseRule);
+
+        List<DerivationRule> rules = new ArrayList<>();
+        rules.add(premiseRule);
+        rules.add(new ConditionalExploit("MP","^\\s*\\d+\\s*,\\s*\\d+\\s*MP\\s*$"));
+        rules.add(new Abb_ADs("abv", "^\\s*\\d+\\s*abv\\s*$" ));
+        ADs.setRules(rules);
+        ADs.setRequirePremisesAtTop(false);
+
         return ADs;
     }
 
@@ -149,14 +160,6 @@ public class DerivationRulesets implements Serializable {
         rules.add(new RestrictedExisIntro("(\u2203I)","^\\s*\\d+\\s*,\\s*\\d+\\s*\\(\\u2203I\\)\\s*$"));
         rules.add(new RestrictedUnivIntro("(\u2200I)", "^\\s*\\d+\\s*-\\s*\\d+\\s*\\(\\u2200I\\)\\s*$"));
         rules.add(new RestrictedExisExploit("(\u2203E)", "^\\s*\\d+\\s*,\\s*\\d+\\s*-\\s*\\d+\\s*\\(\\u2203E\\)\\s*$"));
-
-
-
-
-
-
-
-
 
         ND_p.setRules(rules);
 
