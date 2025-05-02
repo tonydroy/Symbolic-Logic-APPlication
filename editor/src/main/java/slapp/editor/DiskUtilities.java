@@ -199,7 +199,7 @@ public class DiskUtilities {
             try (FileInputStream fi = new FileInputStream(fileToOpen); ObjectInputStream oi = new ObjectInputStream(fi);) {
                 exerciseModelObject = oi.readObject();
             } catch (IOException | ClassNotFoundException  e) {
-                //               e.printStackTrace();
+   //                            e.printStackTrace();
                 EditorAlerts.showSimpleAlert("Error opening file", fileToOpen.getName() + " is not compatible with this version of SLAPP.\nCannot open.");
             }
         }

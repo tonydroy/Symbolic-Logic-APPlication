@@ -5,6 +5,7 @@ import slapp.editor.AlphanumStringComparator;
 import java.io.Serializable;
 
 public class ThrmSetElement  implements Serializable {
+    private static final long serialVersionUID = 100L;
 
     TheoremType type;
     String name;
@@ -27,5 +28,13 @@ public class ThrmSetElement  implements Serializable {
 
     public String getName() {
         return name;
+    }
+
+    public TheoremType getType() {
+        return type;
+    }
+
+    public String[] getForms() {
+        return forms;
     }
 }

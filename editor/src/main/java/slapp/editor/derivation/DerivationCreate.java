@@ -1124,11 +1124,11 @@ public class DerivationCreate {
         }
 
 
-        //this lets through non-names, but has reasonable flexibility for names ending with '_' then 'A' or 'T' something
-        Pattern pattern = Pattern.compile("\\s*_(A|T)\\d+\\.?\\d*\\D*$");
+        //was trying a serious filter, but too many options (as for A*).  So just look for non-empty part after underscore.
+        Pattern pattern = Pattern.compile("^.+_.+$");
         Matcher matcher = pattern.matcher(name);
         boolean goodThrmName = matcher.find();
- //       System.out.println(goodThrmName);
+     //   System.out.println(goodThrmName);
 
         List<ThrmSetElement> modelThrmSetElements = new ArrayList();
         for (int i = 0; i < theoremSetList.size(); i++) {
@@ -1152,11 +1152,14 @@ public class DerivationCreate {
             }
         }
         checkSetup.setThrmSetElements(modelThrmSetElements);
-/*
+
+        /*
         for (ThrmSetElement thrmSetElement : modelThrmSetElements) {
             System.out.println(thrmSetElement.getName());
         }
- */
+
+         */
+
 
 
         return model;

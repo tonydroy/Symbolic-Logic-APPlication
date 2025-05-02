@@ -18,6 +18,7 @@ package slapp.editor.derivation;
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.model.Document;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -49,6 +50,7 @@ import slapp.editor.EditorAlerts;
 import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
+import slapp.editor.derivation.theorems.*;
 import slapp.editor.main_window.*;
 
 import java.util.ArrayList;
@@ -70,6 +72,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
     private RichTextArea lastJustificationRTA;
     private int lastJustificationRow;
     private UndoRedoList<DerivationModel> undoRedoList = new UndoRedoList<>(20);
+    private List<Theorem> theorems = new ArrayList<>();
 
 
 
@@ -83,12 +86,34 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         this.derivationModel = model;
         if (model.getOriginalModel() == null) {model.setOriginalModel(model); }
         if (derivationModel.getCheckSetup() == null) derivationModel.setCheckSetup(new CheckSetup());  //in case SLAPP v2 model
+        List<ThrmSetElement> thrmSetElements = derivationModel.getCheckSetup().getThrmSetElements();
+        for (ThrmSetElement thrmSetElement : thrmSetElements) {
+            switch(thrmSetElement.getType()) {
+                case ZERO_INPUT:
+                    theorems.add(new ZeroInputTheorem(thrmSetElement.getName(), thrmSetElement.getForms()));
+                    break;
+                case SINGLE_INPUT:
+                    theorems.add(new SingleInputTheorem(thrmSetElement.getName(), thrmSetElement.getForms()));
+                    break;
+                case DOUBLE_INPUT:
+                    theorems.add(new DoubleInputTheorem(thrmSetElement.getName(), thrmSetElement.getForms()));
+                    break;
+                case TRIPLE_INPUT:
+                    theorems.add(new TripleInputTheorem(thrmSetElement.getName(), thrmSetElement.getForms()));
+                    break;
+                case ADQ_A4:
+                    theorems.add(new ADq_A4(thrmSetElement.getName(), ""));
+                case ADQ_A5:
+                    theorems.add(new ADq_A5(thrmSetElement.getName(), ""));
+            }
+        }
 
         this.mainView = mainWindow.getMainView();
         this.derivationView = new DerivationView(mainView);
 
         setDerivationView();
         derivationCheck = new DerivationCheck(this);
+
 
         //cannot depend on pushUndoRedo because documents can't yet be extracted from view
         DerivationModel deepCopy = (DerivationModel) SerializationUtils.clone(derivationModel);
@@ -171,18 +196,25 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         below.  But the JavaFX WebView puts an empty box after supplemental unicode characters
         (see https://bugs.openjdk.org/browse/JDK-8343963).  This is quite ugly.  So using an RTA and Document.
 
-        To edit this document, uncomment the second group of lines below and open metHelp.sle.  The help Document opens
+        To edit this document, uncomment the second group of lines below and open metalanguageHelp.sle.  The help Document opens
         into the comment field.  After edit there, press the metalanguage help button so that the Document is sent to
         SLAPPdata.  Close the program, re-comment the lines, and the revised file should open with the help button.
          */
         derivationView.getShowMetaLangButton().setOnAction(e -> {
          //   TextHelpPopup.helpMetalanguage();
 
-            /*
+/*
             derivationView.getExerciseComment().getEditor().getActionFactory().saveNow().execute(new ActionEvent());
             Document doc = derivationView.getExerciseComment().getEditor().getDocument();
             mainWindow.getSlappData().setMetalanguageHelp(doc);
-            */
+
+
+ */
+
+
+
+
+
             derivationView.showMetalanguageHelp(mainWindow.getSlappData().getMetalanguageHelp());
         });
     }
@@ -1029,8 +1061,12 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
      */
     @Override
     public void saveExercise(boolean saveAs) {
-        boolean success = DiskUtilities.saveExercise(saveAs, getDerivationModelFromView());
-        if (success) exerciseModified = false;
+
+        //run later added to allow justification set -- ok???
+        Platform.runLater(() -> {
+            boolean success = DiskUtilities.saveExercise(saveAs, getDerivationModelFromView());
+            if (success) exerciseModified = false;
+        });
     }
 
     /**
@@ -1318,7 +1354,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         return lastJustificationRow;
     }
 
-
-
-
+    public List<Theorem> getTheorems() {
+        return theorems;
+    }
 }

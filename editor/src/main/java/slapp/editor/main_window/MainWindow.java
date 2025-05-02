@@ -19,6 +19,7 @@ import com.gluonhq.richtextarea.model.Document;
 import com.install4j.api.launcher.ApplicationLauncher;
 import com.install4j.api.update.UpdateSchedule;
 import com.install4j.api.update.UpdateScheduleRegistry;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -541,18 +542,21 @@ public class MainWindow {
         if (currentAssignment == null) {
             EditorAlerts.fleetingRedPopup("There is no open assignment to save.");
         } else {
-            if (currentExercise.isExerciseModified()) {
-                assignmentContentModified = true;
-                ExerciseModel model = currentExercise.getExerciseModelFromView();
-                currentAssignment.replaceExerciseModel(assignmentIndex, model);
-                currentExercise.setExerciseModified(false);
-            }
-            currentAssignment.setBaseScale(getBaseScale());
-            currentAssignment.setFitToPage(fitToPage);
-            currentAssignment.setPageLayout(PrintUtilities.getPageLayout());
-            boolean saved = DiskUtilities.saveAssignment(saveAs, currentAssignment);
+                //run later to allow derivation justifications to set ok???
+                Platform.runLater(() -> {
+                if (currentExercise.isExerciseModified()) {
+                    assignmentContentModified = true;
+                    ExerciseModel model = currentExercise.getExerciseModelFromView();
+                    currentAssignment.replaceExerciseModel(assignmentIndex, model);
+                    currentExercise.setExerciseModified(false);
+                }
+                currentAssignment.setBaseScale(getBaseScale());
+                currentAssignment.setFitToPage(fitToPage);
+                currentAssignment.setPageLayout(PrintUtilities.getPageLayout());
+                boolean saved = DiskUtilities.saveAssignment(saveAs, currentAssignment);
 
-            if (saved) assignmentContentModified = false;
+                if (saved) assignmentContentModified = false;
+            });
         }
     }
 

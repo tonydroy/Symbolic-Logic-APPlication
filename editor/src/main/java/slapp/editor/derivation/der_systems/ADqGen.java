@@ -16,9 +16,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class UniversalIntro extends DerivationRule {
+public class ADqGen extends DerivationRule {
 
-    public UniversalIntro(String name, String rgexTemplate) {
+    public ADqGen(String name, String rgexTemplate) {
         super(name, rgexTemplate);
         this.premAssp = false;
     }
@@ -53,7 +53,7 @@ public class UniversalIntro extends DerivationRule {
 
 
 
-        Document inputForm = new Document("\ud835\udcab\u2039\ud835\udccd" + commaDividerString + "\ud835\udccb\u203a" );
+        Document inputForm = new Document("\ud835\udcab" );
         Document outputForm = new Document("\u2200\ud835\udccd\ud835\udcab");
 
         boolean resultGood = false;
@@ -71,52 +71,7 @@ public class UniversalIntro extends DerivationRule {
             Pair<Boolean, Boolean> outputMatch = MatchUtilities.simpleFormMatch(inputForm, inputDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
             if (outputMatch.getKey() == true && outputMatch.getValue() == true ) resultGood = true;
         }
-        catch (TextMessageException e) {
-            return new Pair(false, e.getMessageList());
-        }
-
-
-        Expression variableExp = ((Formula) MatchUtilities.getTransformList().get(0).getKey()).getSubTransform().getExp2().getMatch();
-
-        //check variable free in undischarged assumption
-        List<String> asspList = line.getAssumptionList();
-        for (String asspLabel : asspList) {
-            ViewLine asspLine;
-            Pair<ViewLine, List<Text>> asspLinePair = checker.getLineFromLabel(asspLabel);
-            if (asspLinePair.getKey() != null) asspLine = asspLinePair.getKey();
-            else return new Pair(false, asspLinePair.getValue());
-
-            TextFlow asspJustificationFlow = asspLine.getJustificationFlow();
-            String asspJustificationString = checker.getDerivationExercise().getStringFromJustificationFlow(asspJustificationFlow);
-            if (!checker.getDerivationRuleset().getPremiseRule().matches(asspJustificationString)) {
-
-                BoxedDRTA asspLineBDRTA = asspLine.getLineContentBoxedDRTA();
-                RichTextArea asspLineRTA = asspLineBDRTA.getRTA();
-                asspLineRTA.getActionFactory().saveNow().execute(new ActionEvent());
-                Document asspLineDoc = asspLineRTA.getDocument();
-                Expression asspLineExp = ParseUtilities.parseDoc(asspLineDoc, objectLanguage.getNameString()).get(0);
-
-                if (SyntacticalFns.expTermFreeInFormula(asspLineExp, variableExp, objectLanguage.getNameString())) {
-                    List<Text> list = new ArrayList<>();
-                    list.add(new Text("Variable "));
-                    list.addAll(variableExp.toTextList());
-                    list.add(new Text(" is free in an undischarged assumption."));
-                    return new Pair(false, list);
-                }
-            }
-        }
-
-        //check variable free in universal
-        Expression lineExp = ParseUtilities.parseDoc(lineDoc, objectLanguage.getNameString()).get(0);
-        if (SyntacticalFns.expTermFreeInFormula(lineExp, variableExp, objectLanguage.getNameString())) {
-            List<Text> list = new ArrayList<>();
-            list.add(new Text("Variable "));
-            list.addAll(variableExp.toTextList());
-            list.add(new Text(" is free in "));
-            list.addAll(lineExp.toTextList());
-            return new Pair(false, list);
-        }
-
+        catch (TextMessageException e) {  }
 
         if (resultGood) return new Pair(true, null);
 

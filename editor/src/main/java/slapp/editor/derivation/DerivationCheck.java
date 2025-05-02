@@ -12,6 +12,7 @@ import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.derivation.der_systems.DerivationRule;
 import slapp.editor.derivation.der_systems.DerivationRuleset;
 import slapp.editor.derivation.der_systems.DerivationRulesets;
+import slapp.editor.derivation.theorems.Theorem;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.Languages;
 import slapp.editor.parser.ParseUtilities;
@@ -162,12 +163,28 @@ public class DerivationCheck {
             if (LineType.isContentLine(viewLine.getLineType())) {
                 TextFlow justificationFlow = viewLine.getJustificationFlow();
                 String justificationString = derivationExercise.getStringFromJustificationFlow(justificationFlow);
+
                 for (DerivationRule rule : derivationRuleset.getRules()) {
                     if (rule.matches(justificationString)) {
                         List<String> lineLabels = derivationExercise.getLineLabelsFromJustificationFlow(justificationFlow);
                         String[] labelArray = new String[lineLabels.size()];
                         lineLabels.toArray(labelArray);
                         Pair<Boolean, List<Text>> resultPair = rule.applies(this, viewLines.get(i), labelArray);
+                        if (!resultPair.getKey()) {
+                            highlightLine(i);
+                            EditorAlerts.showSimpleTxtListAlert("Justification Issue:", resultPair.getValue());
+                            resetHighlights();
+                            return false;
+                        }
+                        break;
+                    }
+                }
+                for (Theorem theorem : derivationExercise.getTheorems()) {
+                    if (theorem.matches(justificationString)) {
+                        List<String> lineLabels = derivationExercise.getLineLabelsFromJustificationFlow(justificationFlow);
+                        String[] labelArray = new String[lineLabels.size()];
+                        lineLabels.toArray(labelArray);
+                        Pair<Boolean, List<Text>> resultPair = theorem.applies(this, viewLines.get(i), labelArray);
                         if (!resultPair.getKey()) {
                             highlightLine(i);
                             EditorAlerts.showSimpleTxtListAlert("Justification Issue:", resultPair.getValue());
@@ -329,6 +346,7 @@ public class DerivationCheck {
                 TextFlow justificationFlow = viewLine.getJustificationFlow();
                 justificationString = derivationExercise.getStringFromJustificationFlow(justificationFlow);
             }
+
             Matcher matcher = derivationRuleset.getGenericAssumption().matcher(justificationString);
             if (viewLine.realDepth() == currentDepth + 1 && !matcher.matches()) {
                 highlightLine(i);
@@ -380,7 +398,6 @@ public class DerivationCheck {
                         }
                     }
 
-
                     if (justificationString.equals("")) {
                         if (blankOK) break;
                         if (checkFinal) {
@@ -397,6 +414,13 @@ public class DerivationCheck {
                                 break;
                             }
                         }
+
+                        for (Theorem theorem : derivationExercise.getTheorems()) {
+                            if (theorem.matches(justificationString)) {
+                                ok = true;
+                                break;
+                            }
+                        }
                         if (!ok) {
                             for (Pair<Pattern, String> dummyPair : derivationRuleset.getDummyRules()) {
                                 Matcher matcher = dummyPair.getKey().matcher(justificationString);
@@ -407,9 +431,12 @@ public class DerivationCheck {
                                     return false;
                                 }
                             }
+                            String message = "I do not recognize this as a(n) ";
+                            if (!derivationExercise.getTheorems().isEmpty()) message = "I do not recognize this as an (available) ";
                             highlightJustification(i);
                             List<Text> texts = new ArrayList<>();
-                            texts.add(new Text("I do not recognize this as a(n) "));
+                  //          texts.add(new Text("I do not recognize this as a(n) "));
+                            texts.add(new Text(message));
                             texts.addAll(derivationRuleset.getTextName());
                             texts.add(new Text(" justification."));
                             EditorAlerts.showSimpleTxtListAlert("Justification Issue:", texts);
@@ -505,6 +532,13 @@ public class DerivationCheck {
         for (int i = 0; i < viewLines.size(); i++) {
             ViewLine currentLine = viewLines.get(i);
             int currentDepth = currentLine.realDepth();
+
+            if (currentDepth != 1 && !derivationRuleset.isPermitSubderivations()) {
+                highlightLine(i);
+                EditorAlerts.showSimpleTxtListAlert("Scope Increase:", Collections.singletonList(ParseUtilities.newRegularText("Basic " + derivationRuleset.getName() + " does not permit subderivations.")));
+                resetHighlights();
+                return false;
+            }
 
             if (LineType.isGapLine(currentLine.getLineType())) {
                 if (currentDepth + 1 != viewLines.get(i - 1).realDepth() ) {

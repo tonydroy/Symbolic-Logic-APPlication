@@ -4,6 +4,7 @@ import javafx.scene.text.Text;
 import javafx.util.Pair;
 import slapp.editor.parser.Language;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -30,8 +31,9 @@ public class DerivationRuleset {
 
     Pattern genericAssumption;
     boolean requirePremisesAtTop = true;
+    boolean permitSubderivations = true;
 
-    List<Pair<Pattern, String>> dummyRules;
+    List<Pair<Pattern, String>> dummyRules = new ArrayList<>();
 
     DerivationRuleset(String name, List<Text> textName) {
         this.name = name;
@@ -190,6 +192,14 @@ public class DerivationRuleset {
 
     public void setMetaLanguage(Language metaLanguage) {
         this.metaLanguage = metaLanguage;
+    }
+
+    public boolean isPermitSubderivations() {
+        return permitSubderivations;
+    }
+
+    public void setPermitSubderivations(boolean permitSubderivations) {
+        this.permitSubderivations = permitSubderivations;
     }
 }
 

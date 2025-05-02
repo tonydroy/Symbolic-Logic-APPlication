@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class DerivationRulesets implements Serializable {
+    private static final long serialVersionUID = 100L;
     private static List<DerivationRuleset> rulesets = new ArrayList<>();
 
     static {
@@ -26,6 +27,7 @@ public class DerivationRulesets implements Serializable {
         rulesets.add(getADs());
         rulesets.add(getADq());
         rulesets.add(getAD());
+        rulesets.add(getAstar());
     }
 
     public static List<DerivationRuleset> getRulesets() {
@@ -39,24 +41,79 @@ public class DerivationRulesets implements Serializable {
         return null;
     }
 
+
+
+    public static DerivationRuleset getAstar() {
+        DerivationRuleset Astar = new DerivationRuleset("\uD835\uDC34*", Collections.singletonList(ParseUtilities.newItalicText("A*")));
+        DerivationRule premiseRule = new Premise("prem","^\\s*prem\\s*$");
+        Astar.setPremiseRule(premiseRule);
+        Astar.setGenericAssumption(Pattern.compile("^\\s*assp.*$"));
+
+        List<Pair<Pattern, String>> dummyRules = new ArrayList<>();
+        dummyRules.add(new Pair(Pattern.compile("^[^\\(]*[a-z][^\\)]*$"), "Appeal to \uD835\uDC34* theorem by letter in parentheses (as '(a)')."));
+        dummyRules.add(new Pair(Pattern.compile("^\\s*A\\d+\\s*$"), "Insert dot prior to axiom number (as 'A.1')."));
+        Astar.setDummyRules(dummyRules);
+
+        List<DerivationRule> rules = new ArrayList<>();
+        rules.add(premiseRule);
+        rules.add(new AstarMP("MP", "^\\s*\\d+\\s*,\\s*\\d+\\s*MP\\s*$"));
+        rules.add(new Abb_Astar("abv", "^\\s*\\d+\\s*abv\\s*$" ));
+        Astar.setRules(rules);
+
+        Astar.setRequirePremisesAtTop(false);
+        Astar.setPermitSubderivations(false);
+
+        return Astar;
+    }
+
     private static DerivationRuleset getADs() {
         DerivationRuleset ADs = new DerivationRuleset("\ud835\udc34\ud835\udc37\ud835\udc60", Collections.singletonList(ParseUtilities.newItalicText("ADs")));
 
         DerivationRule premiseRule = new Premise("prem","^\\s*prem\\s*$");
         ADs.setPremiseRule(premiseRule);
+        ADs.setGenericAssumption(Pattern.compile("^\\s*assp.*$"));
+
+        List<Pair<Pattern, String>> dummyRules = new ArrayList<>();
+        dummyRules.add(new Pair(Pattern.compile("^\\s*A\\d+\\s*$"), "Insert dot prior to axiom number (as 'A.1')."));
+        ADs.setDummyRules(dummyRules);
 
         List<DerivationRule> rules = new ArrayList<>();
         rules.add(premiseRule);
         rules.add(new ConditionalExploit("MP","^\\s*\\d+\\s*,\\s*\\d+\\s*MP\\s*$"));
         rules.add(new Abb_ADs("abv", "^\\s*\\d+\\s*abv\\s*$" ));
         ADs.setRules(rules);
+
         ADs.setRequirePremisesAtTop(false);
+        ADs.setPermitSubderivations(false);
 
         return ADs;
     }
 
     private static DerivationRuleset getADq() {
         DerivationRuleset ADq = new DerivationRuleset("\ud835\udc34\ud835\udc37\ud835\udc5e", Collections.singletonList(ParseUtilities.newItalicText("ADq")));
+        DerivationRule premiseRule = new Premise("prem","^\\s*prem\\s*$");
+        ADq.setPremiseRule(premiseRule);
+        ADq.setGenericAssumption(Pattern.compile("^\\s*assp.*$"));
+
+        List<Pair<Pattern, String>> dummyRules = new ArrayList<>();
+        dummyRules.add(new Pair(Pattern.compile("^\\s*A\\d+\\s*$"), "Insert dot prior to axiom number (as 'A.1')."));
+        ADq.setDummyRules(dummyRules);
+
+
+        List<DerivationRule> rules = new ArrayList<>();
+        rules.add(new ADqGen("Gen", "^\\s*\\d+\\s*Gen\\s*$"));
+        rules.add(premiseRule);
+        rules.add(new ConditionalExploit("MP","^\\s*\\d+\\s*,\\s*\\d+\\s*MP\\s*$"));
+
+        rules.add(new Abb_ADq("abv", "^\\s*\\d+\\s*abv\\s*$" ));
+        ADq.setRules(rules);
+
+        ADq.setRequirePremisesAtTop(false);
+        ADq.setPermitSubderivations(false);
+
+
+        ADq.setRules(rules);
+
         return ADq;
     }
 

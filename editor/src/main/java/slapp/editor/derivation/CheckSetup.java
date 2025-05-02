@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CheckSetup implements Serializable {
-
+    private static final long serialVersionUID = 100L;
     String rulesetName;
     String objLangName;
     String metLangName;
@@ -161,5 +161,9 @@ public class CheckSetup implements Serializable {
 
     public void setThrmSetElements(List<ThrmSetElement> thrmSetElements) {
         this.thrmSetElements = thrmSetElements;
+    }
+
+    public List<ThrmSetElement> getThrmSetElements() {
+        return thrmSetElements;
     }
 }
