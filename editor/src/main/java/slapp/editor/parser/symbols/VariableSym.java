@@ -9,42 +9,41 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class PseudoMTermSym implements Expression {
 
-    private ExpressionType type = ExpressionType.PMTERM_SYM;
+public class VariableSym implements Expression {
+
+    private ExpressionType type = ExpressionType.VARIABLE_SYM;
     private String baseStr;
-    private String subscriptStr;
-    private String superscriptStr;
+    private String subscriptStr = "";
+    private String superscriptStr = "";
 
-    public PseudoMTermSym(String baseStr, String subscriptStr, String superscriptStr) {
-        this.baseStr = baseStr;
+
+    public VariableSym(String baseSymbol, String subscriptStr) {
+        this.baseStr = baseSymbol;
         this.subscriptStr = subscriptStr;
-        this.superscriptStr = superscriptStr;
-    }
-
-    public String getSuperscriptStr() {
-        return superscriptStr;
-    }
-
-    public String getSubscriptStr() {
-        return subscriptStr;
     }
 
     public String getBaseStr() {
         return baseStr;
     }
 
-    public void setType(ExpressionType type) {
-        this.type = type;
+    public String getSuperscriptStr() {
+        return superscriptStr;
     }
 
+    public void setSuperscriptStr(String superscriptStr) {
+        this.superscriptStr = superscriptStr;
+    }
 
+    public String getSubscriptStr() {
+        return subscriptStr;
+    }
 
     @Override
     public ExpressionType getType() { return type; }
 
-    @Override
-    public PseudoMTermSym getMatch() {return this;}
+    @Override 
+    public Expression getMatch() { return this; }
 
     @Override
     public List<Text> toTextList() {
@@ -68,16 +67,17 @@ public class PseudoMTermSym implements Expression {
     @Override
     public boolean equals(Object o) {
         if (o == this) return true;
-        if (o instanceof PseudoMTermSym) {
-            PseudoMTermSym other = (PseudoMTermSym) o;
-            return baseStr.equals(other.baseStr) && subscriptStr.equals(other.subscriptStr)  && superscriptStr.equals(other.superscriptStr);
+        if ((o instanceof VariableSym)) {
+            VariableSym other = (VariableSym) o;
+            return baseStr.equals(other.baseStr) && subscriptStr.equals(other.subscriptStr) && superscriptStr.equals(other.superscriptStr);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return baseStr.hashCode() + subscriptStr.hashCode() + superscriptStr.hashCode() ;
+        return baseStr.hashCode() + subscriptStr.hashCode() + superscriptStr.hashCode();
     }
+
 
 }

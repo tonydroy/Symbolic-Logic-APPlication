@@ -3,7 +3,6 @@ package slapp.editor.parser;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
-import slapp.editor.EditorAlerts;
 import slapp.editor.ReplacementTxtMsgException;
 import slapp.editor.parser.grammatical_parts.*;
 import slapp.editor.parser.symbols.*;
@@ -296,10 +295,11 @@ public class MatchUtilities {
                     try {
                         findReplacements(sourceExp, targetExp, subTransform, objectL);
 
-          //              System.out.println(" source: " + sourceExp + "target: " + targetExp.toString() + " transform: " + SyntacticalFns.substituteParticularTerms(sourceExp, subTransform.getExp2().getMatch(), matchedInstances));
+             //           System.out.println(" source: " + sourceExp + "target: " + targetExp.toString() + " transform: " + SyntacticalFns.substituteParticularTerms(sourceExp, subTransform.getExp2().getMatch(), matchedInstances));
 
-          //              System.out.println("target: " + targetExp + " sub: " + SyntacticalFns.substituteParticularTerms(sourceExp, subTransform.getExp2().getMatch(), matchedInstances));
+            //            System.out.println("target: " + targetExp + " sub: " + SyntacticalFns.substituteParticularTerms(sourceExp, subTransform.getExp2().getMatch(), matchedInstances));
             //            System.out.println(matchedInstances);
+
 
                         if (!targetExp.equals(SyntacticalFns.substituteParticularTerms(sourceExp, subTransform.getExp2().getMatch(), matchedInstances))) {
 
@@ -367,6 +367,9 @@ public class MatchUtilities {
 
                          for (Expression exp : matchedInstances) {
                              if (SyntacticalFns.particularTermsFreeInFormula(sourceExp, Collections.singletonList(exp), objectL)) {
+
+
+
                                  if (!SyntacticalFns.freeForExp(sourceExp, exp, subTransform.getExp2().getMatch(), objectL)) {
                                      subFreeFor = false;
                                      List<Text> texts = new ArrayList<>();
@@ -412,7 +415,7 @@ public class MatchUtilities {
 
     private static void findReplacements(Expression sourceExp, Expression targetExp, SubstitutionTransform subTransform, String objectL) throws ReplacementTxtMsgException, TextMessageException {
 
-   //     System.out.println("source: " + sourceExp + " target: " + targetExp + " transform: " + subTransform);
+     //   System.out.println("source: " + sourceExp + " target: " + targetExp + " transform: " + subTransform);
 
         Expression exp1 = subTransform.getExp1().getMatch();
         Expression exp2 = subTransform.getExp2();
@@ -490,24 +493,22 @@ public class MatchUtilities {
             Formula sourceFormula = (Formula) sourceExp;
             Formula targetFormula = (Formula) targetExp;
             boolean good = false;
-            if (sourceFormula.getMainOperator() instanceof UnivBoundedQuantOp && targetFormula.getMainOperator() instanceof UnivBoundedQuantOp) {
-                findReplacements(((UnivBoundedQuantOp) sourceFormula.getMainOperator()).getBoundingTerm(), ((UnivBoundedQuantOp) targetFormula.getMainOperator()).getBoundingTerm(), subTransform, objectL);
-                good = true;
-            }
-            else if (sourceFormula.getMainOperator() instanceof ExisBoundedQuantOp && targetFormula.getMainOperator() instanceof ExisBoundedQuantOp) {
-                findReplacements(((ExisBoundedQuantOp) sourceFormula.getMainOperator()).getBoundingTerm(), ((ExisBoundedQuantOp) targetFormula.getMainOperator()).getBoundingTerm(), subTransform, objectL);
-                good = true;
-            }
-            else if (sourceFormula.getMainOperator() instanceof UnivRestrictedQuantOp && targetFormula.getMainOperator() instanceof UnivRestrictedQuantOp) {
-                findReplacements(((UnivRestrictedQuantOp) sourceFormula.getMainOperator()).getRestrictingFormula(), ((UnivRestrictedQuantOp) targetFormula.getMainOperator()).getRestrictingFormula(), subTransform, objectL);
-                good = true;
-            }
-            else if (sourceFormula.getMainOperator() instanceof ExisRestrictedQuantOp && targetFormula.getMainOperator() instanceof ExisRestrictedQuantOp) {
-                findReplacements(((ExisRestrictedQuantOp) sourceFormula.getMainOperator()).getRestrictingFormula(), ((ExisRestrictedQuantOp) targetFormula.getMainOperator()).getRestrictingFormula(), subTransform, objectL);
-                good = true;
-            }
-            else if (sourceFormula.getMainOperator().equals(targetFormula.getMainOperator())) {
-                good = true;
+            if (sourceFormula.getMainOperator() != null & targetFormula.getMainOperator() != null) {
+                if (sourceFormula.getMainOperator() instanceof UnivBoundedQuantOp && targetFormula.getMainOperator() instanceof UnivBoundedQuantOp) {
+                    findReplacements(((UnivBoundedQuantOp) sourceFormula.getMainOperator()).getBoundingTerm(), ((UnivBoundedQuantOp) targetFormula.getMainOperator()).getBoundingTerm(), subTransform, objectL);
+                    good = true;
+                } else if (sourceFormula.getMainOperator() instanceof ExisBoundedQuantOp && targetFormula.getMainOperator() instanceof ExisBoundedQuantOp) {
+                    findReplacements(((ExisBoundedQuantOp) sourceFormula.getMainOperator()).getBoundingTerm(), ((ExisBoundedQuantOp) targetFormula.getMainOperator()).getBoundingTerm(), subTransform, objectL);
+                    good = true;
+                } else if (sourceFormula.getMainOperator() instanceof UnivRestrictedQuantOp && targetFormula.getMainOperator() instanceof UnivRestrictedQuantOp) {
+                    findReplacements(((UnivRestrictedQuantOp) sourceFormula.getMainOperator()).getRestrictingFormula(), ((UnivRestrictedQuantOp) targetFormula.getMainOperator()).getRestrictingFormula(), subTransform, objectL);
+                    good = true;
+                } else if (sourceFormula.getMainOperator() instanceof ExisRestrictedQuantOp && targetFormula.getMainOperator() instanceof ExisRestrictedQuantOp) {
+                    findReplacements(((ExisRestrictedQuantOp) sourceFormula.getMainOperator()).getRestrictingFormula(), ((ExisRestrictedQuantOp) targetFormula.getMainOperator()).getRestrictingFormula(), subTransform, objectL);
+                    good = true;
+                } else if (sourceFormula.getMainOperator().equals(targetFormula.getMainOperator())) {
+                    good = true;
+                }
             }
             if (good) {
                 for (int i = 0; i < sourceExp.getChildren().size(); i++) {
@@ -533,7 +534,7 @@ public class MatchUtilities {
         if ( (metaExp.getType() == ExpressionType.FORMULA && ((Formula) metaExp).getSubTransform() == null) || (metaExp.getType() == ExpressionType.TERM && ((Term) metaExp).getSubTransform() == null)) {
 
             if (metaExp instanceof Term && ((Term) metaExp).getTermType() == TermType.VARIABLE && objectExp instanceof Term && ((Term) objectExp).getTermType() == TermType.VARIABLE)
-                ((MVariable) ((Term) metaExp).getChildren().get(0)).setMatch(((Variable) ((Term) objectExp).getChildren().get(0)));
+                ((MVariable) ((Term) metaExp).getChildren().get(0)).setMatch(((VariableSym) ((Term) objectExp).getChildren().get(0)));
 
             else if (metaExp instanceof Term && ((Term) metaExp).getTermType() == TermType.CONSTANT && objectExp instanceof Term && ((Term) objectExp).getTermType() == TermType.CONSTANT)
                 ((MConstant) ((Term) metaExp).getChildren().get(0)).setMatch(((Constant) ((Term) objectExp).getChildren().get(0)));
@@ -577,6 +578,8 @@ public class MatchUtilities {
                 //    bracketMatch(((InfixAtomic) metaExp).getOpenBracket(), ((InfixAtomic) metaExp).getCloseBracket(), ((InfixAtomic) objectExp).getOpenBracket(), ((InfixAtomic) objectExp).getCloseBracket())) {
                 InfixAtomic metaAtomic = (InfixAtomic) metaExp;
                 InfixAtomic objectAtomic = (InfixAtomic) objectExp;
+                if (metaAtomic.getMainRelation() instanceof MRelationSymbol)
+                    ((MRelationSymbol) metaAtomic.getMainRelation()).setMatch(objectAtomic.getMainRelation());
                 if (!metaAtomic.getMainRelation().getMatch().equals(objectAtomic.getMainRelation())) {
                     throw new TextMessageException(getMessageTexts(metaExp, objectExp, "", " does not map to ", "."));
                 }
@@ -586,25 +589,25 @@ public class MatchUtilities {
                 ((Formula) metaExp).setOpenBracket(((Formula) objectExp).getOpenBracket());
                 ((Formula) metaExp).setCloseBracket(((Formula) objectExp).getCloseBracket());
                 if (((Formula) metaExp).getMainOperator() instanceof UniversalOp && ((Formula) objectExp).getMainOperator() instanceof UniversalOp) {
-                    ((MVariable) ((Formula) metaExp).getMainOperator().getVariableTerm().getChildren().get(0)).setMatch((Variable) ((Formula) objectExp).getMainOperator().getVariableTerm().getChildren().get(0));
+                    ((MVariable) ((Formula) metaExp).getMainOperator().getVariableTerm().getChildren().get(0)).setMatch((VariableSym) ((Formula) objectExp).getMainOperator().getVariableTerm().getChildren().get(0));
                 }
                 if (((Formula) metaExp).getMainOperator() instanceof ExistentialOp && ((Formula) objectExp).getMainOperator() instanceof ExistentialOp) {
-                    ((MVariable) ((Formula) metaExp).getMainOperator().getVariableTerm().getChildren().get(0)).setMatch((Variable) ((Formula) objectExp).getMainOperator().getVariableTerm().getChildren().get(0));
+                    ((MVariable) ((Formula) metaExp).getMainOperator().getVariableTerm().getChildren().get(0)).setMatch((VariableSym) ((Formula) objectExp).getMainOperator().getVariableTerm().getChildren().get(0));
                 }
                 if (((Formula) metaExp).getMainOperator() instanceof UnivBoundedQuantOp && ((Formula) objectExp).getMainOperator() instanceof UnivBoundedQuantOp ) {
-                    ((MVariable) ((Formula) metaExp).getMainOperator().getVariableTerm().getChildren().get(0)).setMatch((Variable) ((Formula) objectExp).getMainOperator().getVariableTerm().getChildren().get(0));
+                    ((MVariable) ((Formula) metaExp).getMainOperator().getVariableTerm().getChildren().get(0)).setMatch((VariableSym) ((Formula) objectExp).getMainOperator().getVariableTerm().getChildren().get(0));
                     setMatching( ((UnivBoundedQuantOp) ((Formula) metaExp).getMainOperator()).getBoundingTerm(), ((UnivBoundedQuantOp) ((Formula) objectExp).getMainOperator()).getBoundingTerm());
                 }
                 if (((Formula) metaExp).getMainOperator() instanceof ExisBoundedQuantOp && ((Formula) objectExp).getMainOperator() instanceof ExisBoundedQuantOp ) {
-                    ((MVariable) ((Formula) metaExp).getMainOperator().getVariableTerm().getChildren().get(0)).setMatch((Variable) ((Formula) objectExp).getMainOperator().getVariableTerm().getChildren().get(0));
+                    ((MVariable) ((Formula) metaExp).getMainOperator().getVariableTerm().getChildren().get(0)).setMatch((VariableSym) ((Formula) objectExp).getMainOperator().getVariableTerm().getChildren().get(0));
                     setMatching( ((ExisBoundedQuantOp) ((Formula) metaExp).getMainOperator()).getBoundingTerm(), ((ExisBoundedQuantOp) ((Formula) objectExp).getMainOperator()).getBoundingTerm());
                 }
                 if (((Formula) metaExp).getMainOperator() instanceof UnivRestrictedQuantOp && ((Formula) objectExp).getMainOperator() instanceof UnivRestrictedQuantOp ) {
-                    ((MVariable) ((Formula) metaExp).getMainOperator().getVariableTerm().getChildren().get(0)).setMatch((Variable) ((Formula) objectExp).getMainOperator().getVariableTerm().getChildren().get(0));
+                    ((MVariable) ((Formula) metaExp).getMainOperator().getVariableTerm().getChildren().get(0)).setMatch((VariableSym) ((Formula) objectExp).getMainOperator().getVariableTerm().getChildren().get(0));
                     setMatching( ((UnivRestrictedQuantOp) ((Formula) metaExp).getMainOperator()).getRestrictingFormula(), ((UnivRestrictedQuantOp) ((Formula) objectExp).getMainOperator()).getRestrictingFormula());
                 }
                 if (((Formula) metaExp).getMainOperator() instanceof ExisRestrictedQuantOp && ((Formula) objectExp).getMainOperator() instanceof ExisRestrictedQuantOp ) {
-                    ((MVariable) ((Formula) metaExp).getMainOperator().getVariableTerm().getChildren().get(0)).setMatch((Variable) ((Formula) objectExp).getMainOperator().getVariableTerm().getChildren().get(0));
+                    ((MVariable) ((Formula) metaExp).getMainOperator().getVariableTerm().getChildren().get(0)).setMatch((VariableSym) ((Formula) objectExp).getMainOperator().getVariableTerm().getChildren().get(0));
                     setMatching( ((ExisRestrictedQuantOp) ((Formula) metaExp).getMainOperator()).getRestrictingFormula(), ((ExisRestrictedQuantOp) ((Formula) objectExp).getMainOperator()).getRestrictingFormula());
                 }
                 if (!((Formula) metaExp).getMainOperator().getMatch().equals(((Formula) objectExp).getMainOperator())) {

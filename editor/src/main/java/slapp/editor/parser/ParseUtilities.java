@@ -53,6 +53,19 @@ public class ParseUtilities {
         while (changes) {
             changes = false;
 
+            //substitution
+            for (int i = 0; i < expressions.size() - 1; i++) {
+                if (expressions.get(i+1) instanceof SubstitutionTransform && expressions.get(i).getType() == ExpressionType.FORMULA && ((Formula) expressions.get(i)).isCombines()) {
+                    Formula f = new Formula();
+                    f.getChildren().add((Formula) expressions.get(i));
+                    f.setSubTransform((SubstitutionTransform) expressions.get(i+1));
+                    f.setLevel(expressions.get(i).getLevel() + 1);
+                    expressions.set(i, f);
+                    expressions.remove(i+1);
+                    changes = true;
+                }
+            }
+
             //unary
             boolean unaryChanges = true;
             while (unaryChanges) {
@@ -75,18 +88,7 @@ public class ParseUtilities {
                 }
             }
 
-            //substitution
-            for (int i = 0; i < expressions.size() - 1; i++) {
-                if (expressions.get(i+1) instanceof SubstitutionTransform && expressions.get(i).getType() == ExpressionType.FORMULA && ((Formula) expressions.get(i)).isCombines()) {
-                    Formula f = new Formula();
-                    f.getChildren().add((Formula) expressions.get(i));
-                    f.setSubTransform((SubstitutionTransform) expressions.get(i+1));
-                    f.setLevel(expressions.get(i).getLevel() + 1);
-                    expressions.set(i, f);
-                    expressions.remove(i+1);
-                    changes = true;
-                }
-            }
+
 
 
             //binary
@@ -1070,15 +1072,34 @@ public class ParseUtilities {
         for (int i = 0; i < expressions.size(); i++) {
             String elementStr = "";
             String subString = "";
+            String supString = "";
             if (expressions.get(i).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(i)).isNormal()) {
                 elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
                 if (language.getVariables() != null && language.getVariables().contains(elementStr)) {
                     int j = i + 1;
-                    if (language.isVariableSubs() && j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
-                            ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) subString = getSubString(j, expressions);
-                    Variable variable;
-                    if (!language.isMetalanguage()) variable = new Variable(elementStr, subString);
-                    else variable = MVariable.getInstance(elementStr, subString);
+                    if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                            ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
+                        subString = getSubString(j, expressions);
+                        if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(j)).isSuperscript() &&
+                                ((OriginalElement) expressions.get(j)).getElementStr().equals("\u22c6") ) {
+                            supString = ((OriginalElement) expressions.get(j)).getElementStr();
+                            expressions.remove(j);
+                        }
+                    }
+                    else if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(j)).isSuperscript() &&
+                            ((OriginalElement) expressions.get(j)).getElementStr().equals("\u22c6")) {
+                        supString = ((OriginalElement) expressions.get(j)).getElementStr();
+                        expressions.remove(j);
+                        if (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT &&
+                                ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[1-9]")) {
+                            subString = getSubString(j, expressions);
+                        }
+                    }
+
+                    VariableSym variable;
+                    if (language.isMetalanguage()) variable = MVariable.getInstance(elementStr, subString);
+                    else variable = new VariableSym(elementStr, subString);
+                    if (language.isObjectMetalanguage()) variable.setSuperscriptStr(supString);
 
                     expressions.set(i, variable);
                 }

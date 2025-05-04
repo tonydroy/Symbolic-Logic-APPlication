@@ -106,7 +106,11 @@ public class UniversalIntro extends DerivationRule {
             }
         }
 
+
+
         //check variable free in universal
+
+
         Expression lineExp = ParseUtilities.parseDoc(lineDoc, objectLanguage.getNameString()).get(0);
         if (SyntacticalFns.expTermFreeInFormula(lineExp, variableExp, objectLanguage.getNameString())) {
             List<Text> list = new ArrayList<>();

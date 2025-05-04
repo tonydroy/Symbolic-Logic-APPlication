@@ -40,8 +40,8 @@ public class UniversalOp extends Operator implements Expression {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(getMainSymbol().toString());
-        sb.append(variableTerm.toString());
+        if (getMainSymbol() != null) sb.append(getMainSymbol().toString());
+        if (variableTerm != null) sb.append(variableTerm.toString());
         return sb.toString();
     }
 

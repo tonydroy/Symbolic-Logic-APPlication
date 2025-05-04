@@ -8,10 +8,10 @@ import java.util.List;
 
 //just one instance for each base/subscript combination
 
-public class MVariable extends Variable {
+public class MVariable extends VariableSym {
 
     private static List<MVariable> variables = new ArrayList<MVariable>();
-    private Variable matchVar = null;
+    private VariableSym matchVar = null;
 
     private MVariable(String baseSymbol, String subscriptStr) {
         super(baseSymbol, subscriptStr);
@@ -31,11 +31,11 @@ public class MVariable extends Variable {
     }
 
     @Override
-    public Variable getMatch() {
+    public VariableSym getMatch() {
         return matchVar;
     }
 
-    public void setMatch (Variable match) throws TextMessageException {
+    public void setMatch (VariableSym match) throws TextMessageException {
         if (matchVar == null) {
             matchVar = match; }
         else if (!matchVar.equals(match)) {

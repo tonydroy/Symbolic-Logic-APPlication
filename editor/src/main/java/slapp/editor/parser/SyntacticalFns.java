@@ -3,7 +3,6 @@ package slapp.editor.parser;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
 import slapp.editor.parser.grammatical_parts.*;
 import slapp.editor.parser.symbols.*;
@@ -19,8 +18,11 @@ public class SyntacticalFns {
     private static List<Expression> variableList;
     private static List<Expression> variableList2;
     private static List<Expression> removalList;
+    private static String langName;
+
 
     public SyntacticalFns() {}
+
 
     public static boolean freeForDoc(Document formulaDoc, Document term1Doc, Document term2Doc, String langName) {
 
@@ -80,7 +82,8 @@ public class SyntacticalFns {
     }
 
     //formula P has term term2 free for term1  (so term1 is the replaced term)
-    public static boolean freeForExp(Expression formulaExp, Expression term1Exp, Expression term2Exp, String langName) {
+    public static boolean freeForExp(Expression formulaExp, Expression term1Exp, Expression term2Exp, String languageName) {
+        langName = languageName;
 
         List<Expression> sortedSubformulas = subsWithTermFree(formulaExp, term1Exp);
 
@@ -105,26 +108,31 @@ public class SyntacticalFns {
                 variableList2 = new ArrayList<>();
                 setTermVariableList2(term2Exp);
 
+                /*
                 Term dummyVar = new Term();
                 dummyVar.setLevel(0);
                 ArrayList children = new ArrayList();
-                children.add(new Variable(Languages.getLanguage(langName).getDummyVariableSym(), ""));
+                children.add(new VariableSym(Languages.getLanguage(langName).getDummyVariableSym(), ""));
                 dummyVar.setChildren(children);
                 dummyVar.setCombines(true);
                 dummyVar.setTermType(TermType.VARIABLE);
 
                 //term2 has a variable not in term1
-                boolean extraVariable = false;
 
-                if (vListContains(term2Exp, dummyVar, variableList2)) extraVariable = true;
+
+
+                if (term2Exp instanceof PseudoMTerm) {
+                    PseudoMTerm pTerm = (PseudoMTerm) term2Exp;
+                    String supString = ((PseudoMTermSym) pTerm.getMainTermSym()).getSuperscriptStr();
+                    if (!supString.equals("\u22c6")) freeFor = false;
+                }
+                */
 
                 for (Expression exp : variableList2) {
                     if (!vListContains(term1Exp, exp, variableList)) {
-                        extraVariable = true;
+                        freeFor = false;
+                        break;
                     }
-                }
-                if (extraVariable) {
-                    freeFor = false;
                 }
                 index++;
                 continue;
@@ -677,7 +685,7 @@ public class SyntacticalFns {
     }
 
     private static boolean vListContains(Expression term, Expression variable, List<Expression> vList) {
-     //   System.out.println("term: " + term + "vlist: " + variableList + " variable: " + variable);
+    //    System.out.println("term: " + term + "vlist: " + variableList + " variable: " + variable);
 
         if (term != null) {
 
@@ -687,7 +695,7 @@ public class SyntacticalFns {
                     PseudoMTerm pTerm = (PseudoMTerm) term;
                     String supString = ((PseudoMTermSym) pTerm.getMainTermSym()).getSuperscriptStr();
                     if (supString.equals("")) return true;
-                    if (supString.equals("\u22c6") || ((Variable) variable.getChildren().get(0)).getBaseStr().equals(supString)) {
+                    if (supString.equals("\u22c6") || ((VariableSym) variable.getChildren().get(0)).getBaseStr().equals(supString)) {
                         return false;
                     } else {
                         return true;
@@ -715,9 +723,24 @@ public class SyntacticalFns {
         }
     }
 
+    //add variables to list so long as they lack the superscript star
     public static void setTermVariableList2(Expression exp) {
-        if (exp.getType() == ExpressionType.TERM && ((Term) exp).getTermType() == TermType.VARIABLE && !variableList2.contains(exp)) {
-            variableList2.add(exp);
+        if (exp.getType() == ExpressionType.TERM) {
+            Term term = (Term) exp;
+            if (term.getTermType() == TermType.PMTERM) {
+                PseudoMTerm pTerm = (PseudoMTerm) exp;
+                if (!pTerm.getMainTermSym().getSuperscriptStr().equals("\u22c6") && !variableList2.contains(getDummyVariable())) {
+                    variableList2.add(getDummyVariable());
+                }
+            }
+
+            if (term.getTermType() == TermType.VARIABLE) {
+                Term varTerm = (Term) exp;
+                String supString = ((VariableSym) varTerm.getChildren().get(0)).getSuperscriptStr();
+                if (!supString.equals("\u22c6") && !variableList.contains(exp)) {
+                    variableList2.add(exp);
+                }
+            }
         }
         if (exp.getChildren() != null && exp.getLevel() >=0) {
             for (int i = 0; i < exp.getChildren().size(); i++) {
@@ -1082,12 +1105,25 @@ public class SyntacticalFns {
         EditorAlerts.showSimpleTxtFlowAlert("Parser Content", new TextFlow(txt));
     }
 
+    private static Term getDummyVariable() {
+        Term dummyVar = new Term();
+        dummyVar.setLevel(0);
+        ArrayList children = new ArrayList();
+        children.add(new VariableSym(Languages.getLanguage(langName).getDummyVariableSym(), ""));
+        dummyVar.setChildren(children);
+        dummyVar.setCombines(true);
+        dummyVar.setTermType(TermType.VARIABLE);
+        return dummyVar;
+    }
+
     static class SortByLevel implements Comparator<Expression> {
         @Override
         public int compare(Expression o1, Expression o2) {
             return Integer.compare(o1.getLevel(), o2.getLevel());
         }
     }
+
+
 
 
 

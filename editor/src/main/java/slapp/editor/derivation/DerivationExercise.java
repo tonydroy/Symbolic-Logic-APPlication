@@ -103,8 +103,31 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
                     break;
                 case ADQ_A4:
                     theorems.add(new ADq_A4(thrmSetElement.getName(), ""));
+                    break;
                 case ADQ_A5:
                     theorems.add(new ADq_A5(thrmSetElement.getName(), ""));
+                    break;
+                case ADQT3_28:
+                    theorems.add(new ADqT3_28(thrmSetElement.getName(), ""));
+                    break;
+                case ADQT3_29:
+                    theorems.add(new ADqT3_29(thrmSetElement.getName(), ""));
+                    break;
+                case ADQT3_30:
+                    theorems.add(new ADqT3_30(thrmSetElement.getName(), ""));
+                    break;
+                case ADQT3_31:
+                    theorems.add(new ADqT3_31(thrmSetElement.getName(), ""));
+                    break;
+                case ADQT3_32:
+                    theorems.add(new ADqT3_32(thrmSetElement.getName(), ""));
+                    break;
+                case AD_A7:
+                    theorems.add(new AD_A7(thrmSetElement.getName(), ""));
+                    break;
+                case AD_A8:
+                    theorems.add(new AD_A8(thrmSetElement.getName(), ""));
+
             }
         }
 

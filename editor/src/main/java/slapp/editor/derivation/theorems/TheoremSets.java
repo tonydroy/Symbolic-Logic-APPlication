@@ -16,8 +16,8 @@ public class TheoremSets implements Serializable {
         theoremSets.add(getADs_ax());
         theoremSets.add(getADs_th());
         theoremSets.add(getADq_ax());
-        theoremSets.add(new TheoremSet("\ud835\udc34\ud835\udc37\ud835\udc5e th"));
-        theoremSets.add(new TheoremSet("\ud835\udc34\ud835\udc37 ax"));
+        theoremSets.add(getADq_th());
+        theoremSets.add(getAD_ax());
         theoremSets.add(new TheoremSet("\ud835\udc34\ud835\udc37 th"));
         theoremSets.add(getAstar_ax());
         theoremSets.add(getAstar_th());
@@ -42,10 +42,20 @@ public class TheoremSets implements Serializable {
         return theoremSets;
     }
 
+    public static TheoremSet getAD_ax() {
+        TheoremSet AD_ax = new TheoremSet("\ud835\udc34\ud835\udc37 ax");
+        List<ThrmSetElement> elements = AD_ax.getElements();
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "A.6", "(\uD835\uDCCD \uE8AC \uD835\uDCCD)"));
+        elements.add(new ThrmSetElement(TheoremType.AD_A7,"A.7", "" ));
+        elements.add(new ThrmSetElement(TheoremType.AD_A8,"A.8", ""));
+        return AD_ax;
+    }
+
+
     public static TheoremSet getADq_ax() {
         TheoremSet ADq_ax = new TheoremSet("\ud835\udc34\ud835\udc37\ud835\udc5e ax");
         List<ThrmSetElement> elements = ADq_ax.getElements();
-        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "A.4", "(\u2200\ud835\udccd\ud835\udcab \u2192  \ud835\udcab\u2039\ud835\udccd\" + commaDividerString + \ud835\udcc9\u203a)"));
+        elements.add(new ThrmSetElement(TheoremType.ADQ_A4, "A.4", ""));
         elements.add(new ThrmSetElement(TheoremType.ADQ_A5, "A.5", ""));
         return ADq_ax;
     }
@@ -53,9 +63,11 @@ public class TheoremSets implements Serializable {
     public static TheoremSet getADq_th() {
         TheoremSet ADq_th = new TheoremSet("\ud835\udc34\ud835\udc37\ud835\udc5e th");
         List<ThrmSetElement> elements = ADq_th.getElements();
-
-
-
+        elements.add(new ThrmSetElement(TheoremType.ADQT3_28, "T3.28", ""));
+        elements.add(new ThrmSetElement(TheoremType.ADQT3_29, "T3.29", ""));
+        elements.add(new ThrmSetElement(TheoremType.ADQT3_30, "T3.30", ""));
+        elements.add(new ThrmSetElement(TheoremType.ADQT3_31, "T3.31", ""));
+        elements.add(new ThrmSetElement(TheoremType.ADQT3_32, "T3.32", ""));
         return ADq_th;
     }
 

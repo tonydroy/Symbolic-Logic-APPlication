@@ -132,7 +132,7 @@ public class EditorMain extends Application {
 
        //    new ParserMain(mainStage);
        //    new RegexTest(mainStage);
-        //    new SimpleEditor(mainStage);
+       //    new SimpleEditor(mainStage);
 
         });
 

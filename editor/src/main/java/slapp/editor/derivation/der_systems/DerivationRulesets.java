@@ -75,6 +75,7 @@ public class DerivationRulesets implements Serializable {
 
         List<Pair<Pattern, String>> dummyRules = new ArrayList<>();
         dummyRules.add(new Pair(Pattern.compile("^\\s*A\\d+\\s*$"), "Insert dot prior to axiom number (as 'A.1')."));
+        dummyRules.add(new Pair(Pattern.compile("^\\s*P\\s*$"), "Justification for \ud835\udc34\ud835\udc37\ud835\udc60 premise is 'prem'."));
         ADs.setDummyRules(dummyRules);
 
         List<DerivationRule> rules = new ArrayList<>();
@@ -97,6 +98,7 @@ public class DerivationRulesets implements Serializable {
 
         List<Pair<Pattern, String>> dummyRules = new ArrayList<>();
         dummyRules.add(new Pair(Pattern.compile("^\\s*A\\d+\\s*$"), "Insert dot prior to axiom number (as 'A.1')."));
+        dummyRules.add(new Pair(Pattern.compile("^\\s*P\\s*$"), "Justification for \ud835\udc34\ud835\udc37\ud835\udc5e premise is 'prem'."));
         ADq.setDummyRules(dummyRules);
 
 
@@ -117,8 +119,33 @@ public class DerivationRulesets implements Serializable {
         return ADq;
     }
 
+
+
     private static DerivationRuleset getAD() {
         DerivationRuleset AD = new DerivationRuleset("\ud835\udc34\ud835\udc37", Collections.singletonList(ParseUtilities.newItalicText("AD")));
+
+        DerivationRule premiseRule = new Premise("prem","^\\s*prem\\s*$");
+        AD.setPremiseRule(premiseRule);
+        AD.setGenericAssumption(Pattern.compile("^\\s*assp.*$"));
+
+        List<Pair<Pattern, String>> dummyRules = new ArrayList<>();
+        dummyRules.add(new Pair(Pattern.compile("^\\s*A\\d+\\s*$"), "Insert dot prior to axiom number (as 'A.1')."));
+        dummyRules.add(new Pair(Pattern.compile("^\\s*P\\s*$"), "Justification for \ud835\udc34\ud835\udc37\ud835\udc5e premise is 'prem'."));
+        AD.setDummyRules(dummyRules);
+
+
+        List<DerivationRule> rules = new ArrayList<>();
+        rules.add(new ADqGen("Gen", "^\\s*\\d+\\s*Gen\\s*$"));
+        rules.add(premiseRule);
+        rules.add(new ConditionalExploit("MP","^\\s*\\d+\\s*,\\s*\\d+\\s*MP\\s*$"));
+
+        rules.add(new Abb_ADq("abv", "^\\s*\\d+\\s*abv\\s*$" ));
+        AD.setRules(rules);
+
+        AD.setRequirePremisesAtTop(false);
+        AD.setPermitSubderivations(false);
+
+        AD.setRules(rules);
         return AD;
     }
 

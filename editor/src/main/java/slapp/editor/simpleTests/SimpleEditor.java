@@ -32,6 +32,7 @@ public class SimpleEditor {
             rta.getActionFactory().saveNow().execute(new ActionEvent());
             Document document = rta.getDocument();
             System.out.println(document.getText());
+            System.out.println(document);
 
             /*
             for (char c : document.getText().toCharArray()) {
