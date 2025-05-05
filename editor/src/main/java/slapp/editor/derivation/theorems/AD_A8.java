@@ -45,35 +45,38 @@ public class AD_A8 extends Theorem {
         TextDecoration sup = TextDecoration.builder().presets().superscript(true).build();
         ParagraphDecoration par = ParagraphDecoration.builder().presets().build();
 
+        //one place
         List<DecorationModel> dec1List = List.of(
-                new DecorationModel(0, 15, base, par),
-                new DecorationModel(15, 1, sup, par),
-                new DecorationModel(16, 6, base, par),
-                new DecorationModel(22, 1, sup, par),
-                new DecorationModel(23, 4, base, par)
+                new DecorationModel(0, 11, base, par),
+                new DecorationModel(11, 1, sup, par),
+                new DecorationModel(12, 6, base, par),
+                new DecorationModel(18, 1, sup, par),
+                new DecorationModel(19, 4, base, par)
         );
-        Document form1Doc = new Document("((\uD835\uDCCD \uE8AC \uD835\udccb) → (ℛ1\uD835\uDCCD → ℛ1\uD835\uDCCE))", dec1List, 27);
+        Document form1Doc = new Document("(\uE8AC\uD835\uDCCD\uD835\uDCCC → (ℛ1\uD835\uDCCD → ℛ1\uD835\uDCCC))", dec1List, 23);
 
+        //two place (metalanguage uses unabbreviated prefix form)
         List<DecorationModel> dec2List = List.of(
-                new DecorationModel(0, 15, base, par),
-                new DecorationModel(15, 1, sup, par),
-                new DecorationModel(16, 8, base, par),
-                new DecorationModel(24, 1, sup, par),
-                new DecorationModel(25, 6, base, par)
+                new DecorationModel(0, 11, base, par),
+                new DecorationModel(11, 1, sup, par),
+                new DecorationModel(12, 8, base, par),
+                new DecorationModel(20, 1, sup, par),
+                new DecorationModel(21, 6, base, par)
         );
-        Document form2aDoc = new Document("((\uD835\uDCCD \uE8AC \uD835\udccb) → (ℛ2\uD835\uDCCD\uD835\uDCCE → ℛ2\uD835\udccb\uD835\uDCCE))", dec2List, 31);
-        Document form2bDoc = new Document("((\uD835\uDCCE \uE8AC \uD835\udccb) → (ℛ2\uD835\uDCCD\uD835\uDCCE → ℛ2\uD835\uDCCD\uD835\udccb))", dec2List, 31);
+        Document form2aDoc = new Document("(\uE8AC\uD835\uDCCD\uD835\uDCCB → (ℛ2\uD835\uDCCD\uD835\uDCCE → ℛ2\uD835\uDCCB\uD835\uDCCE))", dec2List, 27);
+        Document form2bDoc = new Document("(\uE8AC\uD835\uDCCE\uD835\uDCCB → (ℛ2\uD835\uDCCD\uD835\uDCCE → ℛ2\uD835\uDCCD\uD835\uDCCB))", dec2List, 27);
 
+        //three place
         List<DecorationModel> dec3List = List.of(
-                new DecorationModel(0, 15, base, par),
-                new DecorationModel(15, 1, sup, par),
-                new DecorationModel(16, 10, base, par),
-                new DecorationModel(26, 1, sup, par),
-                new DecorationModel(27, 8, base, par)
+                new DecorationModel(0, 11, base, par),
+                new DecorationModel(11, 1, sup, par),
+                new DecorationModel(12, 10, base, par),
+                new DecorationModel(22, 1, sup, par),
+                new DecorationModel(23, 8, base, par)
         );
-        Document form3aDoc = new Document("((\uD835\uDCCD \uE8AC \uD835\udccb) → (ℛ3\uD835\uDCCD\uD835\uDCCE\uD835\uDCCF → ℛ3\uD835\udccb\uD835\uDCCE\uD835\uDCCF))", dec3List, 35);
-        Document form3bDoc = new Document("((\uD835\uDCCE \uE8AC \uD835\udccb) → (ℛ3\uD835\uDCCD\uD835\uDCCE\uD835\uDCCF → ℛ3\uD835\uDCCD\uD835\udccb\uD835\uDCCF))", dec3List, 35);
-        Document form3cDoc = new Document("((\uD835\uDCCF \uE8AC \uD835\udccb) → (ℛ3\uD835\uDCCD\uD835\uDCCE\uD835\uDCCF → ℛ3\uD835\uDCCD\uD835\uDCCE\uD835\udccb))", dec3List, 35);
+        Document form3aDoc = new Document("(\uE8AC\uD835\uDCCD\uD835\uDCCC → (ℛ3\uD835\uDCCD\uD835\uDCCE\uD835\uDCCF → ℛ3\uD835\uDCCC\uD835\uDCCE\uD835\uDCCF))", dec3List, 31);
+        Document form3bDoc = new Document("(\uE8AC\uD835\uDCCE\uD835\uDCCC → (ℛ3\uD835\uDCCD\uD835\uDCCE\uD835\uDCCF → ℛ3\uD835\uDCCD\uD835\uDCCC\uD835\uDCCF))", dec3List, 31);
+        Document form3cDoc = new Document("(\uE8AC\uD835\uDCCF\uD835\uDCCC → (ℛ3\uD835\uDCCD\uD835\uDCCE\uD835\uDCCF → ℛ3\uD835\uDCCD\uD835\uDCCE\uD835\uDCCC))", dec3List, 31);
 
 
 
@@ -119,7 +122,7 @@ public class AD_A8 extends Theorem {
         }
         catch (TextMessageException e) {}
 
-        return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("Line (" + line.getLineNumberLabel().getText() + ") is not an instance of " + getName() + ".\n (SLAPP recognizes " + getName() + " only for 1- to 3-place relation symbols).")));
+        return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("Line (" + line.getLineNumberLabel().getText() + ") is not an instance of " + getName() + ".\n (SLAPP recognizes " + getName() + " only for 1-, 2- and 3-place relation symbols).")));
 
 
     }

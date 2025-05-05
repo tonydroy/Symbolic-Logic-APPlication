@@ -108,26 +108,6 @@ public class SyntacticalFns {
                 variableList2 = new ArrayList<>();
                 setTermVariableList2(term2Exp);
 
-                /*
-                Term dummyVar = new Term();
-                dummyVar.setLevel(0);
-                ArrayList children = new ArrayList();
-                children.add(new VariableSym(Languages.getLanguage(langName).getDummyVariableSym(), ""));
-                dummyVar.setChildren(children);
-                dummyVar.setCombines(true);
-                dummyVar.setTermType(TermType.VARIABLE);
-
-                //term2 has a variable not in term1
-
-
-
-                if (term2Exp instanceof PseudoMTerm) {
-                    PseudoMTerm pTerm = (PseudoMTerm) term2Exp;
-                    String supString = ((PseudoMTermSym) pTerm.getMainTermSym()).getSuperscriptStr();
-                    if (!supString.equals("\u22c6")) freeFor = false;
-                }
-                */
-
                 for (Expression exp : variableList2) {
                     if (!vListContains(term1Exp, exp, variableList)) {
                         freeFor = false;
@@ -166,6 +146,7 @@ public class SyntacticalFns {
                 }
                 else {
                     Expression childExp = formula.getChildren().get(0);
+
                     if (expTermFreeInFormula(term2Exp, variable, langName) && particularTermsFreeInFormula(childExp, Collections.singletonList(term1Exp), langName)) { //expTermFreeInFormula(childExp, term1Exp, langName)
                         freeFor = false;
                         index++;

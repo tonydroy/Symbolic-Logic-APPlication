@@ -20,9 +20,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class AD_A7 extends Theorem {
+public class ADT3_37 extends Theorem {
 
-    public AD_A7(String name, String... forms) {
+    public ADT3_37(String name, String... forms) {
         super(name, forms);
         String regName = name.replace(".", "\\.");
         regName = regName.replace("(", "\\(").replace(")", "\\)");
@@ -53,7 +53,7 @@ public class AD_A7 extends Theorem {
                 new DecorationModel(17, 1, sup, par),
                 new DecorationModel(18, 3, base, par)
         );
-        Document form1Doc = new Document("(\uE8AC\uD835\uDCCD\uD835\uDCCC → \uE8AC\uD835\uDCBD1\uD835\uDCCD\uD835\uDCBD1\uD835\uDCCC)", dec1List, 21);
+        Document form1Doc = new Document("(\uE8AC\uD835\uDCC2\uD835\uDCC8 → \uE8AC\uD835\uDCBD1\uD835\uDCC2\uD835\uDCBD1\uD835\uDCC8)", dec1List, 21);
 
         //two place (metalanguage uses unabbreviated prefix form)
         List<DecorationModel> dec2List = List.of(
@@ -63,20 +63,29 @@ public class AD_A7 extends Theorem {
                 new DecorationModel(19, 1, sup, par),
                 new DecorationModel(20, 5, base, par)
         );
-        Document form2aDoc = new Document("(\uE8AC\uD835\uDCCD\uD835\uDCCB → \uE8AC\uD835\uDCBB2\uD835\uDCCD\uD835\uDCCE\uD835\uDCBB2\uD835\uDCCB\uD835\uDCCE)", dec2List, 25);
-        Document form2bDoc = new Document("(\uE8AC\uD835\uDCCE\uD835\uDCCB → \uE8AC\uD835\uDCBB2\uD835\uDCCD\uD835\uDCCE\uD835\uDCBB2\uD835\uDCCD\uD835\uDCCB)", dec2List, 25);
+        Document form2aDoc = new Document("(\uE8AC\uD835\uDCC2\uD835\uDCC8 → \uE8AC\uD835\uDCBD2\uD835\uDCC2\uD835\uDCC3\uD835\uDCBD2\uD835\uDCC8\uD835\uDCC3)", dec2List, 25);
+        Document form2bDoc = new Document("(\uE8AC\uD835\uDCC3\uD835\uDCC8 → \uE8AC\uD835\uDCBD2\uD835\uDCC2\uD835\uDCC3\uD835\uDCBD2\uD835\uDCC2\uD835\uDCC8)", dec2List, 25);
 
         //three place
         List<DecorationModel> dec3List = List.of(
-                new DecorationModel(0, 12, base, par),
-                new DecorationModel(12, 1, sup, par),
-                new DecorationModel(13, 8, base, par),
-                new DecorationModel(21, 1, sup, par),
-                new DecorationModel(22, 7, base, par)
+                new DecorationModel(0, 11, base, par),
+                new DecorationModel(11, 1, sup, par),
+                new DecorationModel(12, 7, base, par),
+                new DecorationModel(19, 1, sup, par),
+                new DecorationModel(20, 6, base, par)
         );
-        Document form3aDoc = new Document("(\uE8AC\uD835\uDCCD\uD835\uDCCC → \uE8AC\uD835\uDCBD3\uD835\uDCCD\uD835\uDCCE\uD835\uDCCF\uD835\uDCBD3\uD835\uDCCC\uD835\uDCCE\uD835\uDCCF)", dec3List, 29);
-        Document form3bDoc = new Document("(\uE8AC\uD835\uDCCE\uD835\uDCCC → \uE8AC\uD835\uDCBD3\uD835\uDCCD\uD835\uDCCE\uD835\uDCCF\uD835\uDCBD3\uD835\uDCCD\uD835\uDCCC\uD835\uDCCF)", dec3List, 29);
-        Document form3cDoc = new Document("(\uE8AC\uD835\uDCCF\uD835\uDCCC → \uE8AC\uD835\uDCBD3\uD835\uDCCD\uD835\uDCCE\uD835\uDCCF\uD835\uDCBD3\uD835\uDCCD\uD835\uDCCE\uD835\uDCCC)", dec3List, 29);
+        //different becaus script 'o' takes just one word.
+        List<DecorationModel> dec3aList = List.of(
+                new DecorationModel(0, 10, base, par),
+                new DecorationModel(10, 1, sup, par),
+                new DecorationModel(11, 7, base, par),
+                new DecorationModel(18, 1, sup, par),
+                new DecorationModel(19, 7, base, par)
+        );
+
+        Document form3aDoc = new Document("(\uE8AC\uD835\uDCC2\uD835\uDCC8 → \uD835\uDCBD3\uD835\uDCC2\uD835\uDCC3ℴ\uD835\uDCBD3\uD835\uDCC8\uD835\uDCC3ℴ)", dec3List, 26);
+        Document form3bDoc = new Document("(\uE8AC\uD835\uDCC3\uD835\uDCC8 → \uD835\uDCBD3\uD835\uDCC2\uD835\uDCC3ℴ\uD835\uDCBD3\uD835\uDCC2\uD835\uDCC8ℴ)", dec3List, 26);
+        Document form3cDoc = new Document("(\uE8ACℴ\uD835\uDCC8 → \uD835\uDCBD3\uD835\uDCC2\uD835\uDCC3ℴ\uD835\uDCBD3\uD835\uDCC2\uD835\uDCC3\uD835\uDCC8)", dec3aList, 26);
 
         boolean resultGood = false;
 

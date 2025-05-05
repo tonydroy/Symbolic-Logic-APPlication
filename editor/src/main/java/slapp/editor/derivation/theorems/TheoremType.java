@@ -14,6 +14,8 @@ public enum TheoremType {
     ADQT3_31,
     ADQT3_32,
     AD_A7,
-    AD_A8;
+    AD_A8,
+    ADT3_37,
+    ADT3_38;
 
 }

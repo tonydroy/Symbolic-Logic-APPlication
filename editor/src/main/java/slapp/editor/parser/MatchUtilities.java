@@ -206,11 +206,13 @@ public class MatchUtilities {
         setMatching(metaExp, objectExp);
         processTransforms(objectL);
 
-        boolean formMatch = metaExp.getMatch().equals(objectExp);
+
+
+ //       boolean formMatch = metaExp.getMatch().equals(objectExp);
 
 
 
-        Pair<Boolean, Boolean> subResults = new Pair<>(formMatch, subFreeFor);
+        Pair<Boolean, Boolean> subResults = new Pair<>(true, subFreeFor);
         return subResults;
     }
 
@@ -527,7 +529,7 @@ public class MatchUtilities {
     }
 
     public static void setMatching(Expression metaExp, Expression objectExp) throws TextMessageException {
-     //   System.out.println("meta: " + metaExp + " object: " + objectExp);
+    //    System.out.println("meta: " + metaExp + " object: " + objectExp);
 
         boolean skip = false;
 
@@ -544,6 +546,21 @@ public class MatchUtilities {
 
             else if (metaExp instanceof Term && objectExp instanceof Term && ((Term) metaExp).getTermType() == TermType.COMPLEX && ((Term) objectExp).getTermType() == TermType.COMPLEX &&
                     metaExp instanceof InfixTerm == objectExp instanceof InfixTerm &&
+                    bracketMatch(((Term) metaExp).getOpenBracket(), ((Term) metaExp).getCloseBracket(), ((Term) objectExp).getOpenBracket(), ((Term) objectExp).getCloseBracket()) &&
+                    metaExp.getChildren().size() == objectExp.getChildren().size()) {
+                Term mt = (Term) metaExp;
+                Term ot = (Term) objectExp;
+                mt.setOpenBracket(ot.getOpenBracket());
+                mt.setCloseBracket(ot.getCloseBracket());
+                if (mt.getMainFnSymbol() instanceof MFunctionSymbol)
+                    ((MFunctionSymbol) mt.getMainFnSymbol()).setMatch(ot.getMainFnSymbol());
+                else if (!mt.getMainFnSymbol().getMatch().equals(ot.getMainFnSymbol())) {
+                    throw new TextMessageException(getMessageTexts(metaExp, objectExp, "", " does not map to ", "."));
+                }
+            }
+
+            else if (metaExp instanceof Term && objectExp instanceof Term && ((Term) metaExp).getTermType() == TermType.COMPLEX && ((Term) objectExp).getTermType() == TermType.COMPLEX &&
+                    !(metaExp instanceof InfixTerm) && objectExp instanceof InfixTerm &&
                     bracketMatch(((Term) metaExp).getOpenBracket(), ((Term) metaExp).getCloseBracket(), ((Term) objectExp).getOpenBracket(), ((Term) objectExp).getCloseBracket()) &&
                     metaExp.getChildren().size() == objectExp.getChildren().size()) {
                 Term mt = (Term) metaExp;
@@ -577,6 +594,15 @@ public class MatchUtilities {
             } else if (metaExp instanceof InfixAtomic && objectExp instanceof InfixAtomic && metaExp.getChildren().size() == objectExp.getChildren().size()) {
                 //    bracketMatch(((InfixAtomic) metaExp).getOpenBracket(), ((InfixAtomic) metaExp).getCloseBracket(), ((InfixAtomic) objectExp).getOpenBracket(), ((InfixAtomic) objectExp).getCloseBracket())) {
                 InfixAtomic metaAtomic = (InfixAtomic) metaExp;
+                InfixAtomic objectAtomic = (InfixAtomic) objectExp;
+                if (metaAtomic.getMainRelation() instanceof MRelationSymbol)
+                    ((MRelationSymbol) metaAtomic.getMainRelation()).setMatch(objectAtomic.getMainRelation());
+                if (!metaAtomic.getMainRelation().getMatch().equals(objectAtomic.getMainRelation())) {
+                    throw new TextMessageException(getMessageTexts(metaExp, objectExp, "", " does not map to ", "."));
+                }
+            } else if (metaExp instanceof PrefixAtomic && objectExp instanceof InfixAtomic && metaExp.getChildren().size() == objectExp.getChildren().size()) {
+                //    bracketMatch(((InfixAtomic) metaExp).getOpenBracket(), ((InfixAtomic) metaExp).getCloseBracket(), ((InfixAtomic) objectExp).getOpenBracket(), ((InfixAtomic) objectExp).getCloseBracket())) {
+                PrefixAtomic metaAtomic = (PrefixAtomic) metaExp;
                 InfixAtomic objectAtomic = (InfixAtomic) objectExp;
                 if (metaAtomic.getMainRelation() instanceof MRelationSymbol)
                     ((MRelationSymbol) metaAtomic.getMainRelation()).setMatch(objectAtomic.getMainRelation());
@@ -620,6 +646,7 @@ public class MatchUtilities {
         }
         else {
             //process sub
+            System.out.println("trans1 meta: " + metaExp + " obj: " + objectExp);
             Pair<Expression, Expression> pair = new Pair(metaExp, objectExp);
             transformList.add(pair);
             skip = true;

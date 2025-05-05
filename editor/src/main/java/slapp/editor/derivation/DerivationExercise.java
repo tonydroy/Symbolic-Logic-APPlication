@@ -127,6 +127,12 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
                     break;
                 case AD_A8:
                     theorems.add(new AD_A8(thrmSetElement.getName(), ""));
+                    break;
+                case ADT3_37:
+                    theorems.add(new ADT3_37(thrmSetElement.getName(), ""));
+                    break;
+                case ADT3_38:
+                    theorems.add(new ADT3_38(thrmSetElement.getName(), ""));
 
             }
         }

@@ -18,7 +18,7 @@ public class TheoremSets implements Serializable {
         theoremSets.add(getADq_ax());
         theoremSets.add(getADq_th());
         theoremSets.add(getAD_ax());
-        theoremSets.add(new TheoremSet("\ud835\udc34\ud835\udc37 th"));
+        theoremSets.add(getAD_th());
         theoremSets.add(getAstar_ax());
         theoremSets.add(getAstar_th());
         theoremSets.add(new TheoremSet("Q(\ud835\udc41\ud835\udc37) ax"));
@@ -49,6 +49,18 @@ public class TheoremSets implements Serializable {
         elements.add(new ThrmSetElement(TheoremType.AD_A7,"A.7", "" ));
         elements.add(new ThrmSetElement(TheoremType.AD_A8,"A.8", ""));
         return AD_ax;
+    }
+
+    public static TheoremSet getAD_th() {
+        TheoremSet AD_th = new TheoremSet("\ud835\udc34\ud835\udc37 th");
+        List<ThrmSetElement> elements = AD_th.getElements();
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT,"T3.33", "\uE8AC\uD835\uDCC9\uD835\uDCC9" ));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "T3.34", "(\uE8AC\uD835\uDCC9\uD835\uDCC8 → \uE8AC\uD835\uDCC8\uD835\uDCC9)"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "T3.35", "(\uE8AC\uD835\uDCC7\uD835\uDCC8 → (\uE8AC\uD835\uDCC8\uD835\uDCC9 → \uE8AC\uD835\uDCC7\uD835\uDCC9))"));
+        elements.add(new ThrmSetElement(TheoremType.DOUBLE_INPUT, "T3.36", "\uE8AC\uD835\uDCC7\uD835\uDCC8", "\uE8AC\uD835\uDCC8\uD835\uDCC9", "\uE8AC\uD835\uDCC7\uD835\uDCC9"));
+        elements.add(new ThrmSetElement(TheoremType.ADT3_37, "T3.37", ""));
+        elements.add(new ThrmSetElement(TheoremType.ADT3_38, "T3.38", ""));
+        return AD_th;
     }
 
 
