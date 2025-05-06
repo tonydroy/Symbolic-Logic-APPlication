@@ -20,10 +20,13 @@ public class DerivationRulesets implements Serializable {
     public DerivationRulesets() {}
 
     private static void loadRulesets() {
+        rulesets.add(getNP134());
+        rulesets.add(getNP1234());
         rulesets.add(getNDs());
         rulesets.add(getNDs_p());
         rulesets.add(getND());
         rulesets.add(getND_p());
+        rulesets.add(getAP());
         rulesets.add(getADs());
         rulesets.add(getADq());
         rulesets.add(getAD());
@@ -41,6 +44,74 @@ public class DerivationRulesets implements Serializable {
         return null;
     }
 
+    public static DerivationRuleset getNP134() {
+        DerivationRuleset NP = new DerivationRuleset("\uD835\uDC41\uD835\uDC43 (134)", Collections.singletonList(ParseUtilities.newItalicText("NP 134")));
+        DerivationRule premiseRule = new Premise("P","^\\s*P\\s*$");
+        NP.setPremiseRule(premiseRule);
+        NP.setGenericAssumption(Pattern.compile("^\\s*A.*$"));
+
+        List<Pair<Pattern, String>> dummyRules = new ArrayList<>();
+        dummyRules.add(new Pair(Pattern.compile("^.*R\\d+\\s*$"), "Insert dot prior to rule number (as 'R.1')."));
+        NP.setDummyRules(dummyRules);
+
+        List<DerivationRule> rules = new ArrayList<>();
+        rules.add(premiseRule);
+        rules.add(new NPRule1("R.1", "^\\s*\\d+\\s*,\\s*\\d+\\s*R\\.1\\s*$"));
+        rules.add(new NPRule3("R.3", "\\s*\\d+\\s*R\\.3\\s*$"));
+        rules.add(new NPRule4("R.4", "\\s*\\d+\\s*R\\.4\\s*$"));
+        NP.setRules(rules);
+
+        NP.setRequirePremisesAtTop(true);
+        NP.setPermitSubderivations(false);
+
+
+        return NP;
+    }
+
+    public static DerivationRuleset getNP1234() {
+        DerivationRuleset NP = new DerivationRuleset("\uD835\uDC41\uD835\uDC43 (1234)", Collections.singletonList(ParseUtilities.newItalicText("NP 1234")));
+        DerivationRule premiseRule = new Premise("P","^\\s*P\\s*$");
+        NP.setPremiseRule(premiseRule);
+        NP.setGenericAssumption(Pattern.compile("^\\s*A.*$"));
+
+        List<Pair<Pattern, String>> dummyRules = new ArrayList<>();
+        dummyRules.add(new Pair(Pattern.compile(".*R\\d+\\s*$"), "Insert dot prior to rule number (as 'R.1')."));
+        NP.setDummyRules(dummyRules);
+
+        List<DerivationRule> rules = new ArrayList<>();
+        rules.add(premiseRule);
+        rules.add(new NPRule1("R.1", "^\\s*\\d+\\s*,\\s*\\d+\\s*R\\.1\\s*$"));
+        rules.add(new NPRule2("R.2", "\\s*\\d+\\s*R\\.2\\s*$"));
+        rules.add(new NPRule3("R.3", "\\s*\\d+\\s*R\\.3\\s*$"));
+        rules.add(new NPRule4("R.4", "\\s*\\d+\\s*R\\.4\\s*$"));
+        NP.setRules(rules);
+
+        NP.setRequirePremisesAtTop(true);
+        NP.setPermitSubderivations(false);
+
+
+        return NP;
+    }
+
+    public static DerivationRuleset getAP() {
+        DerivationRuleset AP = new DerivationRuleset("\uD835\uDC34\uD835\uDC43", Collections.singletonList(ParseUtilities.newItalicText("AP")));
+        DerivationRule premiseRule = new Premise("prem","^\\s*prem\\s*$");
+        AP.setPremiseRule(premiseRule);
+        AP.setGenericAssumption(Pattern.compile("^\\s*assp.*$"));
+
+        List<Pair<Pattern, String>> dummyRules = new ArrayList<>();
+        dummyRules.add(new Pair(Pattern.compile("^\\s*∧\\d+\\s*$"), "Insert dot prior to axiom number (as '∧.1')."));
+        AP.setDummyRules(dummyRules);
+
+        List<DerivationRule> rules = new ArrayList<>();
+        rules.add(premiseRule);
+        rules.add(new ConditionalExploit("MP","^\\s*\\d+\\s*,\\s*\\d+\\s*MP\\s*$"));
+        AP.setRules(rules);
+
+        AP.setRequirePremisesAtTop(false);
+        AP.setPermitSubderivations(false);
+        return AP;
+    }
 
 
     public static DerivationRuleset getAstar() {
