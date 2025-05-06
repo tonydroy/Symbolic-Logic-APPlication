@@ -171,6 +171,8 @@ public class MatchUtilities {
         Expression metaExp = ParseUtilities.parseDoc(metaDoc, metaL).get(0);
         Expression objectExp = ParseUtilities.parseDoc(objectDoc, objectL).get(0);
 
+//       System.out.println(ParseUtilities.parseDoc(metaDoc, metaL));
+
         transformList.clear();
         matchedInstances.clear();
         allInstances.clear();
@@ -561,12 +563,12 @@ public class MatchUtilities {
 
             else if (metaExp instanceof Term && objectExp instanceof Term && ((Term) metaExp).getTermType() == TermType.COMPLEX && ((Term) objectExp).getTermType() == TermType.COMPLEX &&
                     !(metaExp instanceof InfixTerm) && objectExp instanceof InfixTerm &&
-                    bracketMatch(((Term) metaExp).getOpenBracket(), ((Term) metaExp).getCloseBracket(), ((Term) objectExp).getOpenBracket(), ((Term) objectExp).getCloseBracket()) &&
+    //                bracketMatch(((Term) metaExp).getOpenBracket(), ((Term) metaExp).getCloseBracket(), ((Term) objectExp).getOpenBracket(), ((Term) objectExp).getCloseBracket()) &&
                     metaExp.getChildren().size() == objectExp.getChildren().size()) {
                 Term mt = (Term) metaExp;
                 Term ot = (Term) objectExp;
-                mt.setOpenBracket(ot.getOpenBracket());
-                mt.setCloseBracket(ot.getCloseBracket());
+  //              mt.setOpenBracket(ot.getOpenBracket());
+ //               mt.setCloseBracket(ot.getCloseBracket());
                 if (mt.getMainFnSymbol() instanceof MFunctionSymbol)
                     ((MFunctionSymbol) mt.getMainFnSymbol()).setMatch(ot.getMainFnSymbol());
                 else if (!mt.getMainFnSymbol().getMatch().equals(ot.getMainFnSymbol())) {
@@ -646,7 +648,7 @@ public class MatchUtilities {
         }
         else {
             //process sub
-            System.out.println("trans1 meta: " + metaExp + " obj: " + objectExp);
+   //         System.out.println("trans1 meta: " + metaExp + " obj: " + objectExp);
             Pair<Expression, Expression> pair = new Pair(metaExp, objectExp);
             transformList.add(pair);
             skip = true;

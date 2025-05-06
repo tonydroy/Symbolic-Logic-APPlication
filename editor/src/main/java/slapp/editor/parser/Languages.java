@@ -328,7 +328,8 @@ public class Languages {
         lang.setSlashDivider("/");
         lang.setdSlashDivider("\u2afd");
 
-        lang.setVariables(Alphabets.getCharacterRange("\ud835\udcca", "\ud835\udccf"));
+        lang.setVariables(Stream.concat(Alphabets.getCharacterRange("\ud835\udcca", "\ud835\udccf").stream(), Alphabets.getCharacterRange("\ud835\udc4e", "\ud835\udc67").stream()).collect(Collectors.toList()));
+        lang.setNoMatchVariables(Alphabets.getCharacterRange("\ud835\udc4e", "\ud835\udc67"));
         lang.setVariableSubs(true);
 
 

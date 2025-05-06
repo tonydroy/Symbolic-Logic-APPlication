@@ -21,12 +21,12 @@ public class TheoremSets implements Serializable {
         theoremSets.add(getAD_th());
         theoremSets.add(getAstar_ax());
         theoremSets.add(getAstar_th());
-        theoremSets.add(new TheoremSet("Q(\ud835\udc41\ud835\udc37) ax"));
-        theoremSets.add(new TheoremSet("Q(\ud835\udc41\ud835\udc37) th"));
-        theoremSets.add(new TheoremSet("PA(\ud835\udc34\ud835\udc37) ax"));
-        theoremSets.add(new TheoremSet("PA(\ud835\udc34\ud835\udc37) th"));
-        theoremSets.add(new TheoremSet("PA(\ud835\udc41\ud835\udc37) ax"));
-        theoremSets.add(new TheoremSet("PA(\ud835\udc41\ud835\udc37) th"));
+        theoremSets.add(new TheoremSet("Q(\ud835\udc41\ud835\udc37+) ax"));   //ND+
+        theoremSets.add(new TheoremSet("Q(\ud835\udc41\ud835\udc37+) th"));  //ND+
+        theoremSets.add(getADPA_ax());
+        theoremSets.add(getADPA_th());
+        theoremSets.add(new TheoremSet("PA(\ud835\udc41\ud835\udc37+) ax"));
+        theoremSets.add(new TheoremSet("PA(\ud835\udc41\ud835\udc37+) th"));
     }
 
     public static TheoremSet getTheoremSet(String name)  {
@@ -40,6 +40,56 @@ public class TheoremSets implements Serializable {
 
     public static List<TheoremSet> getTheoremSets() {
         return theoremSets;
+    }
+
+    public static TheoremSet getADPA_th() {
+        TheoremSet ADPA_th = new TheoremSet("PA(\ud835\udc34\ud835\udc37) th");
+        List<ThrmSetElement> elements = ADPA_th.getElements();
+        elements.add(new ThrmSetElement(TheoremType.DOUBLE_INPUT, "Ind", "\uD835\uDCAB‹\uD835\uDCCD, \uE886›", "∀\uD835\uDCCD(\uD835\uDCAB → \uD835\uDCAB‹\uD835\uDCCD, \uD835\uDC46\uD835\uDCCD›)", "∀\uD835\uDCCD\uD835\uDCAB" ));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "T3.40", "∼\uE8AC\uD835\uDC46\uD835\uDCC9\uE886"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "T3.41", "(\uE8AC\uD835\uDC46\uD835\uDCC9\uD835\uDC46\uD835\uDCC8 → \uE8AC\uD835\uDCC9\uD835\uDCC8)"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT2, "T3.42", "\uE8AC\uE8B8\uD835\uDCC9\uE886\uD835\uDCC9",
+                "\uE8AC\uD835\uDCC9\uE8B8\uD835\uDCC9\uE886"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT2, "T3.43", "\uE8AC\uE8B8\uD835\uDCC9\uD835\uDC46\uD835\uDCC8\uD835\uDC46\uE8B8\uD835\uDCC9\uD835\uDCC8",
+                "\uE8AC\uD835\uDC46\uE8B8\uD835\uDCC9\uD835\uDCC8\uE8B8\uD835\uDCC9\uD835\uDC46\uD835\uDCC8"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT2, "T3.44", "\uE8AC\uE8BA\uD835\uDCC9\uE886\uE886",
+                "\uE8AC\uE886\uE8BA\uD835\uDCC9\uE886"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT2, "T3.45", "\uE8AC\uE8BA\uD835\uDCC9\uD835\uDC46\uD835\uDCC8\uE8B8\uE8BA\uD835\uDCC9\uD835\uDCC8\uD835\uDCC9",
+                "\uE8AC\uE8B8\uE8BA\uD835\uDCC9\uD835\uDCC8\uD835\uDCC9\uE8BA\uD835\uDCC9\uD835\uDC46\uD835\uDCC8"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT2, "T3.46", "\uE8AC\uE8B8\uE886\uD835\uDCC9\uD835\uDCC9",
+                "\uE8AC\uD835\uDCC9\uE8B8\uE886\uD835\uDCC9"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT2, "T3.47", "\uE8AC\uE8B8\uD835\uDC46\uD835\uDCC9\uE886\uD835\uDC46\uE8B8\uD835\uDCC9\uE886",
+                "\uE8AC\uD835\uDC46\uE8B8\uD835\uDCC9\uE886\uE8B8\uD835\uDC46\uD835\uDCC9\uE886"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT2, "T3.48", "\uE8AC\uE8B8\uD835\uDC46\uD835\uDCC9\uD835\uDCC8\uD835\uDC46\uE8B8\uD835\uDCC9\uD835\uDCC8",
+                "\uE8AC\uD835\uDC46\uE8B8\uD835\uDCC9\uD835\uDCC8\uE8B8\uD835\uDC46\uD835\uDCC9\uD835\uDCC8"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "T3.49", "\uE8AC\uE8B8\uD835\uDCC9\uD835\uDCC8\uE8B8\uD835\uDCC8\uD835\uDCC9"));
+
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT2, "T3.50", "\uE8AC\uE8B8\uE8B8\uD835\uDCC7\uD835\uDCC8\uE886\uE8B8\uD835\uDCC7\uE8B8\uD835\uDCC8\uE886",
+                "\uE8AC\uE8B8\uD835\uDCC7\uE8B8\uD835\uDC46\uE886\uE8B8\uE8B8\uD835\uDCC7\uD835\uDCC8\uE886"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT2, "T3.51", "\uE8AC\uE8B8\uE8B8\uD835\uDCC7\uD835\uDCC8\uD835\uDCC9\uE8B8\uD835\uDCC7\uE8B8\uD835\uDCC8\uD835\uDCC9",
+                "\uE8AC\uE8B8\uD835\uDCC7\uE8B8\uD835\uDCC8\uD835\uDCC9\uE8B8\uE8B8\uD835\uDCC7\uD835\uDCC8\uD835\uDCC9"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT2, "T3.52", "\uE8AC\uE8BA\uE886\uD835\uDCC9\uE886",
+                "\uE8AC\uE886\uE8BA\uE886\uD835\uDCC9"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT2, "T3.53", "\uE8AC\uE8BA\uD835\uDC46\uD835\uDCC9\uE886\uE8B8\uE8BA\uD835\uDCC9\uE886\uE886",
+                "\uE8AC\uE8B8\uE8BA\uD835\uDCC9\uE886\uE886\uE8BA\uD835\uDC46\uD835\uDCC9\uE886"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT2, "T3.54", "\uE8AC\uE8BA\uD835\uDC46\uD835\uDCC9\uD835\uDCC8\uE8B8\uE8BA\uD835\uDCC9\uD835\uDCC8\uD835\uDCC8",
+                "\uE8AC\uE8B8\uE8BA\uD835\uDCC9\uD835\uDCC8\uD835\uDCC8\uE8BA\uD835\uDC46\uD835\uDCC9\uD835\uDCC8"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "T3.55", "\uE8AC\uE8BA\uD835\uDCC9\uD835\uDCC8\uE8BA\uD835\uDCC8\uD835\uDCC9"));
+        return ADPA_th;
+    }
+
+
+    public static TheoremSet getADPA_ax() {
+        TheoremSet ADPA_ax = new TheoremSet("PA(\ud835\udc34\ud835\udc37) ax");
+        List<ThrmSetElement> elements = ADPA_ax.getElements();
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "PA.1", "∼\uE8AC\uD835\uDC46\uD835\uDC65\uE886"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "PA.2", "(\uE8AC\uD835\uDC46\uD835\uDC65\uD835\uDC46\uD835\uDC66 → \uE8AC\uD835\uDC65\uD835\uDC66)"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "PA.3", "\uE8AC\uE8B8\uD835\uDC65\uE886\uD835\uDC65"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "PA.4", "\uE8AC\uE8B8\uD835\uDC65\uD835\uDC46\uD835\uDC66\uD835\uDC46\uE8B8\uD835\uDC65\uD835\uDC66" ));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "PA.5", "\uE8AC\uE8BA\uD835\uDC65\uE886\uE886"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "PA.6", "\uE8AC\uE8BA\uD835\uDC65\uD835\uDC46\uD835\uDC66\uE8B8\uE8BA\uD835\uDC65\uD835\uDC66\uD835\uDC65"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "PA.7", "((\uD835\uDCAB‹\uD835\uDCCD, \uE886› ∧ ∀\uD835\uDCCD(\uD835\uDCAB → \uD835\uDCAB‹\uD835\uDCCD, \uD835\uDC46\uD835\uDCCD›)) → ∀\uD835\uDCCD\uD835\uDCAB)"));
+        return ADPA_ax;
     }
 
     public static TheoremSet getAD_ax() {

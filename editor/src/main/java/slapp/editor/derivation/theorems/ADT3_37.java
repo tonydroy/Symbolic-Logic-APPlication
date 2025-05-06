@@ -68,24 +68,25 @@ public class ADT3_37 extends Theorem {
 
         //three place
         List<DecorationModel> dec3List = List.of(
+                new DecorationModel(0, 12, base, par),
+                new DecorationModel(12, 1, sup, par),
+                new DecorationModel(13, 7, base, par),
+                new DecorationModel(20, 1, sup, par),
+                new DecorationModel(21, 6, base, par)
+        );
+        //different becaus script 'o' takes just one word.
+        List<DecorationModel> dec3aList = List.of(
                 new DecorationModel(0, 11, base, par),
                 new DecorationModel(11, 1, sup, par),
                 new DecorationModel(12, 7, base, par),
                 new DecorationModel(19, 1, sup, par),
-                new DecorationModel(20, 6, base, par)
-        );
-        //different becaus script 'o' takes just one word.
-        List<DecorationModel> dec3aList = List.of(
-                new DecorationModel(0, 10, base, par),
-                new DecorationModel(10, 1, sup, par),
-                new DecorationModel(11, 7, base, par),
-                new DecorationModel(18, 1, sup, par),
-                new DecorationModel(19, 7, base, par)
+                new DecorationModel(20, 7, base, par)
         );
 
-        Document form3aDoc = new Document("(\uE8AC\uD835\uDCC2\uD835\uDCC8 → \uD835\uDCBD3\uD835\uDCC2\uD835\uDCC3ℴ\uD835\uDCBD3\uD835\uDCC8\uD835\uDCC3ℴ)", dec3List, 26);
-        Document form3bDoc = new Document("(\uE8AC\uD835\uDCC3\uD835\uDCC8 → \uD835\uDCBD3\uD835\uDCC2\uD835\uDCC3ℴ\uD835\uDCBD3\uD835\uDCC2\uD835\uDCC8ℴ)", dec3List, 26);
-        Document form3cDoc = new Document("(\uE8ACℴ\uD835\uDCC8 → \uD835\uDCBD3\uD835\uDCC2\uD835\uDCC3ℴ\uD835\uDCBD3\uD835\uDCC2\uD835\uDCC3\uD835\uDCC8)", dec3aList, 26);
+
+        Document form3aDoc = new Document("(\uE8AC\uD835\uDCC2\uD835\uDCC8 → \uE8AC\uD835\uDCBD3\uD835\uDCC2\uD835\uDCC3ℴ\uD835\uDCBD3\uD835\uDCC8\uD835\uDCC3ℴ)", dec3List, 26);
+        Document form3bDoc = new Document("(\uE8AC\uD835\uDCC3\uD835\uDCC8 → \uE8AC\uD835\uDCBD3\uD835\uDCC2\uD835\uDCC3ℴ\uD835\uDCBD3\uD835\uDCC3\uD835\uDCC8ℴ)", dec3List, 26);
+        Document form3cDoc = new Document("(\uE8ACℴ\uD835\uDCC8 → \uE8AC\uD835\uDCBD3\uD835\uDCC2\uD835\uDCC3ℴ\uD835\uDCBD3\uD835\uDCC2\uD835\uDCC3\uD835\uDCC8)", dec3aList, 26);
 
         boolean resultGood = false;
 

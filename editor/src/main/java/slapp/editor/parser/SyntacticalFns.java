@@ -269,6 +269,14 @@ public class SyntacticalFns {
     public static boolean expTermFreeInFormula(Expression formulaExp, Expression termExp, String langName) {
         boolean free = true;
 
+        if (formulaExp instanceof PseudoMTerm && termExp instanceof Term && ((Term) termExp).getTermType() == TermType.VARIABLE) {
+            PseudoMTerm term = (PseudoMTerm) formulaExp;
+            String supString = ((PseudoMTermSym) term.getMainTermSym()).getSuperscriptStr();
+            if (supString.equals("")) return true;
+            if (supString.equals("\u22c6") || ((VariableSym) termExp.getChildren().get(0)).getBaseStr().equals(supString)) return false;
+            else return true;
+        }
+
         Expression dummyVariable = ParseUtilities.parseDoc(new Document(Languages.getLanguage(langName).getDummyVariableSym()), langName).get(0);
         Expression subExp = substituteExpTerms(formulaExp, termExp, dummyVariable);
 

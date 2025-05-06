@@ -1097,7 +1097,10 @@ public class ParseUtilities {
                     }
 
                     VariableSym variable;
-                    if (language.isMetalanguage()) variable = MVariable.getInstance(elementStr, subString);
+                    if (language.isMetalanguage()) {
+                        boolean matching = !language.getNoMatchVariables().contains(elementStr);
+                        variable = MVariable.getInstance(elementStr, subString, matching);
+                    }
                     else variable = new VariableSym(elementStr, subString);
                     if (language.isObjectMetalanguage()) variable.setSuperscriptStr(supString);
 

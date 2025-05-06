@@ -3,6 +3,7 @@ package slapp.editor.derivation.theorems;
 public enum TheoremType {
 
     ZERO_INPUT,
+    ZERO_INPUT2,
     SINGLE_INPUT,
     DOUBLE_INPUT,
     TRIPLE_INPUT,

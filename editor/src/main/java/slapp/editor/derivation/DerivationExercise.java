@@ -92,6 +92,8 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
                 case ZERO_INPUT:
                     theorems.add(new ZeroInputTheorem(thrmSetElement.getName(), thrmSetElement.getForms()));
                     break;
+                case ZERO_INPUT2:
+                    theorems.add(new ZeroInputTheorem2(thrmSetElement.getName(), thrmSetElement.getForms()));
                 case SINGLE_INPUT:
                     theorems.add(new SingleInputTheorem(thrmSetElement.getName(), thrmSetElement.getForms()));
                     break;

@@ -62,6 +62,7 @@ public class Language implements Serializable {
     //for metalanguage
     private boolean metalanguage = false;
     private boolean objectMetalanguage = false;
+    private List<String> noMatchVariables = new ArrayList();
 
     private List<String> mTermSymbols = new ArrayList();
     private List<String> mFormulaSymbols = new ArrayList();
@@ -501,5 +502,13 @@ public class Language implements Serializable {
 
     public void setpMFormulaSymbols(List<String> pMFormulaSymbols) {
         this.pMFormulaSymbols = pMFormulaSymbols;
+    }
+
+    public List<String> getNoMatchVariables() {
+        return noMatchVariables;
+    }
+
+    public void setNoMatchVariables(List<String> noMatchVariables) {
+        this.noMatchVariables = noMatchVariables;
     }
 }
