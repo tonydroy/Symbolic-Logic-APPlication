@@ -94,6 +94,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
                     break;
                 case ZERO_INPUT2:
                     theorems.add(new ZeroInputTheorem2(thrmSetElement.getName(), thrmSetElement.getForms()));
+                    break;
                 case SINGLE_INPUT:
                     theorems.add(new SingleInputTheorem(thrmSetElement.getName(), thrmSetElement.getForms()));
                     break;
@@ -122,7 +123,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
                     theorems.add(new ADqT3_31(thrmSetElement.getName(), ""));
                     break;
                 case ADQT3_32:
-                    theorems.add(new ADqT3_32(thrmSetElement.getName(), ""));
+                    theorems.add(new QND_T51(thrmSetElement.getName(), ""));
                     break;
                 case AD_A7:
                     theorems.add(new AD_A7(thrmSetElement.getName(), ""));
@@ -135,7 +136,9 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
                     break;
                 case ADT3_38:
                     theorems.add(new ADT3_38(thrmSetElement.getName(), ""));
-
+                    break;
+                case QND_T51:
+                    theorems.add(new QND_T51(thrmSetElement.getName(), ""));
             }
         }
 

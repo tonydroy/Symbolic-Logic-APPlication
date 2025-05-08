@@ -38,14 +38,18 @@ public class ADqT3_30 extends Theorem {
         Language objectLanguage = checker.getDerivationRuleset().getObjectLanguage();
         Language metaLanguage = checker.getDerivationRuleset().getMetaLanguage();
 
+        String form = "(\uD835\uDCAB‹\uD835\uDCCD, \uD835\uDCC9› → ∃\uD835\uDCCD\uD835\uDCAB)";
+
         boolean resultGood = false;
 
         MatchUtilities.clearFormMatch();
         try {
-            Pair<Boolean, Boolean> match = MatchUtilities.simpleFormMatch(new Document(getForms()[0]), lineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
+            Pair<Boolean, Boolean> match = MatchUtilities.simpleFormMatch(new Document(form), lineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
             if (match.getKey()) resultGood = true;
         }
-        catch (TextMessageException e) {}
+        catch (TextMessageException e) {
+            return new Pair(false, e.getMessageList());
+        }
 
         if (resultGood) return new Pair(true, null);
         else {

@@ -10,6 +10,7 @@ import slapp.editor.derivation.DerivationCheck;
 import slapp.editor.derivation.ViewLine;
 import slapp.editor.parser.*;
 import slapp.editor.parser.grammatical_parts.MFormula;
+import slapp.editor.parser.grammatical_parts.MTerm;
 import slapp.editor.parser.grammatical_parts.Term;
 import slapp.editor.parser.grammatical_parts.TermType;
 import slapp.editor.parser.symbols.MVariable;
@@ -19,11 +20,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class ADqT3_31 extends Theorem {
+public class QND_T51 extends Theorem {
     Language objectLanguage;
     List<Text> freeVariableFailure;
 
-    public ADqT3_31(String name, String... forms) {
+    public QND_T51(String name, String... forms) {
         super(name, forms);
         String regName = name.replace(".", "\\.");
         regName = regName.replace("(", "\\(").replace(")", "\\)");
@@ -33,7 +34,6 @@ public class ADqT3_31 extends Theorem {
     }
 
     public Pair<Boolean, List<Text>> applies(DerivationCheck checker, ViewLine line, String... inputs) {
-
         BoxedDRTA lineBDRTA = line.getLineContentBoxedDRTA();
         RichTextArea lineRTA = lineBDRTA.getRTA();
         lineRTA.getActionFactory().saveNow().execute(new ActionEvent());
@@ -42,7 +42,7 @@ public class ADqT3_31 extends Theorem {
         objectLanguage = checker.getDerivationRuleset().getObjectLanguage();
         Language metaLanguage = checker.getDerivationRuleset().getMetaLanguage();
 
-        String form = "(∀\uD835\uDCCD(\uD835\uDCAC → \uD835\uDCAB) → (∃\uD835\uDCCD\uD835\uDCAC → \uD835\uDCAB))";
+        String form = "(∼\uE8AC\uD835\uDCC9\uE886 → ∃\uD835\uDCCD\uE8AC\uD835\uDCC9\uD835\uDC46\uD835\uDCCD)";
 
         boolean resultGood = false;
 
@@ -50,21 +50,22 @@ public class ADqT3_31 extends Theorem {
         try {
             Pair<Boolean, Boolean> match = MatchUtilities.simpleFormMatch(new Document(form), lineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
             if (match.getKey()) resultGood = true;
+        } catch (TextMessageException e) {
         }
-        catch (TextMessageException e) {}
 
-        boolean xFree = xFreeInP();
+        boolean xFree = xFreeInT();
         if (xFree) return new Pair(false, freeVariableFailure);
         if (resultGood) return new Pair(true, null);
         else {
             return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("Line (" + line.getLineNumberLabel().getText() + ") is not an instance of " + getName() + ".")));
         }
-
     }
 
-    private boolean xFreeInP() {
+
+
+    private boolean xFreeInT() {
         Term variableMatch = null;
-        Expression formulaMatch = null;
+        Expression matchTerm = null;
 
 
         List<MVariable> mVariables = MVariable.getVariables();
@@ -82,36 +83,35 @@ public class ADqT3_31 extends Theorem {
         }
         //       System.out.println("var: " + variableMatch);
 
-        List<MFormula> mFormulas = MFormula.getmFormulas();
-        for (MFormula mFormula : mFormulas) {
-            if (mFormula.getFormulaSym().getBaseStr().equals("\ud835\udcab")) {
-                formulaMatch = mFormula.getMatch();
+        List<MTerm> mTerms = MTerm.getmTerms();
+        for (MTerm mTerm : mTerms) {
+            if (mTerm.getmTermSym().getBaseStr().equals("\ud835\udcc9")) {
+                matchTerm = mTerm.getMatch();
             }
         }
 
-        //       System.out.println("formula: " + formulaMatch);
+       //        System.out.println("term: " + matchTerm);
 
-        if (variableMatch != null && formulaMatch != null) {
+        if (variableMatch != null && matchTerm != null) {
 
-            boolean freeInFormula = SyntacticalFns.expTermFreeInFormula(formulaMatch, variableMatch, objectLanguage.getNameString());
+            boolean freeInTerm = SyntacticalFns.expTermFreeInFormula(matchTerm, variableMatch, objectLanguage.getNameString());
 
-            if (freeInFormula) {
+            if (freeInTerm) {
                 List<Text> texts = new ArrayList<>();
                 texts.add(ParseUtilities.newRegularText("Variable "));
                 texts.addAll(variableMatch.toTextList());
-                texts.add(ParseUtilities.newRegularText(" is free in formula "));
-                texts.addAll(formulaMatch.toTextList());
+                if (!objectLanguage.getNameString().equals("LM Obj")) texts.add(ParseUtilities.newRegularText(" is free in term "));
+                else texts.add(ParseUtilities.newRegularText(" (possibly) free in term "));
+                texts.addAll(matchTerm.toTextList());
                 texts.add(ParseUtilities.newRegularText(". Cannot apply " + getName() + "."));
                 freeVariableFailure = texts;
             }
 
-            return freeInFormula;
+            return freeInTerm;
         } else {
-            System.out.println("problem with 'free in formula' check");
+            System.out.println("problem with 'free in term' check");
             return false;
         }
-
     }
-
 
 }

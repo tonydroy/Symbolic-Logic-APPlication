@@ -17,6 +17,7 @@ public class SyntacticalFns {
     private static Language lang;
     private static List<Expression> variableList;
     private static List<Expression> variableList2;
+    private static List<Expression> variableList3;
     private static List<Expression> removalList;
     private static String langName;
 
@@ -269,12 +270,17 @@ public class SyntacticalFns {
     public static boolean expTermFreeInFormula(Expression formulaExp, Expression termExp, String langName) {
         boolean free = true;
 
-        if (formulaExp instanceof PseudoMTerm && termExp instanceof Term && ((Term) termExp).getTermType() == TermType.VARIABLE) {
+        if (formulaExp instanceof Term && termExp instanceof Term && ((Term) termExp).getTermType() == TermType.VARIABLE) {
+            variableList3 = new ArrayList<>();
+            setTermVariableList3(formulaExp, termExp);
+            return variableList3.contains(termExp);
+            /*
             PseudoMTerm term = (PseudoMTerm) formulaExp;
             String supString = ((PseudoMTermSym) term.getMainTermSym()).getSuperscriptStr();
             if (supString.equals("")) return true;
             if (supString.equals("\u22c6") || ((VariableSym) termExp.getChildren().get(0)).getBaseStr().equals(supString)) return false;
             else return true;
+             */
         }
 
         Expression dummyVariable = ParseUtilities.parseDoc(new Document(Languages.getLanguage(langName).getDummyVariableSym()), langName).get(0);
@@ -702,6 +708,7 @@ public class SyntacticalFns {
 
 
     public static void setTermVariableList(Expression exp) {
+        if (exp == null) return;
         if (exp.getType() == ExpressionType.TERM && ((Term) exp).getTermType() == TermType.VARIABLE && !variableList.contains(exp)) {
             variableList.add(exp);
         }
@@ -734,6 +741,32 @@ public class SyntacticalFns {
         if (exp.getChildren() != null && exp.getLevel() >=0) {
             for (int i = 0; i < exp.getChildren().size(); i++) {
                 setTermVariableList2(exp.getChildren().get(i));
+            }
+        }
+    }
+
+    public static void setTermVariableList3(Expression termExp, Expression variableExp) {
+        if (termExp.getType() == ExpressionType.TERM && variableExp.getType() == ExpressionType.TERM && ((Term) variableExp).getTermType() == TermType.VARIABLE) {
+            Term term = (Term) termExp;
+            Term varTerm = (Term) variableExp;
+
+            if (term.getTermType() == TermType.PMTERM) {
+                PseudoMTerm pTerm = (PseudoMTerm) term;
+                String pSupString = pTerm.getMainTermSym().getSuperscriptStr();
+                String varStr = ((VariableSym) varTerm.getChildren().get(0)).getBaseStr();
+                if (!pSupString.equals("\u22c6") && !pSupString.equals(varStr)) {
+                    variableList3.add(variableExp);
+                }
+            }
+
+            if (term.getTermType() == TermType.VARIABLE) {
+               variableList3.add(term);
+            }
+
+            if (termExp.getChildren() != null && termExp.getLevel() >=0) {
+                for (int i = 0; i < termExp.getChildren().size(); i++) {
+                    setTermVariableList3(termExp.getChildren().get(i), variableExp);
+                }
             }
         }
     }

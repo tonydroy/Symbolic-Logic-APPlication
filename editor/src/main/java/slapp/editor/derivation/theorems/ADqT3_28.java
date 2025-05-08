@@ -55,11 +55,13 @@ public class ADqT3_28 extends Theorem {
             return new Pair(false, e.getMessageList());
         }
 
-        Expression variableExp = ((Formula) MatchUtilities.getTransformList().get(0).getKey()).getSubTransform().getExp2().getMatch();
-        System.out.println(variableExp);
+
 
 
         //check variable free in universal
+        Expression variableExp = ((Formula) MatchUtilities.getTransformList().get(0).getKey()).getSubTransform().getExp2().getMatch();
+  //      System.out.println(variableExp);
+
         List<Expression> immediateSubs = SyntacticalFns.immediateSubformulas(lineDoc, objectLanguage.getNameString());
 
         Expression antecedent = immediateSubs.get(0);
