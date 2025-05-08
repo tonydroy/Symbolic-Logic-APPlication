@@ -62,38 +62,59 @@ public class RestrictedQuantifierNegation extends DerivationRule {
         Document leftForm2 = new Document("\u223c" + openBracketString + "\u2203\ud835\udccd" + dividerString + "\u212c" + closeBracketString + "\ud835\udcab" );
         Document rightForm2 = new Document(openBracketString + "\u2200\ud835\udccd" + dividerString + "\u212c" + closeBracketString + "\u223c\ud835\udcab");
 
-        Expression leftFormExp = null;
-        Expression rightFormExp = null;
-        Expression leftFormExp2 = null;
-        Expression rightFormExp2 = null;
+        Document leftFormA = new Document("∼(∀\uD835\uDCCD \uE8A4 \uD835\uDCC9)\uD835\uDCAB");
+        Document rightFormA = new Document("(∃\uD835\uDCCD \uE8A4 \uD835\uDCC9)∼\uD835\uDCAB");
+
+        Document leftFormA2 = new Document("∼(∃\uD835\uDCCD \uE8A4 \uD835\uDCC9)\uD835\uDCAB");
+        Document rightFormA2 = new Document("(∀\uD835\uDCCD \uE8A4 \uD835\uDCC9)∼\uD835\uDCAB");
+
+        Document leftFormB = new Document("∼(∀\uD835\uDCCD \uE8A6 \uD835\uDCC9)\uD835\uDCAB");
+        Document rightFormB = new Document("(∃\uD835\uDCCD \uE8A6 \uD835\uDCC9)∼\uD835\uDCAB");
+
+        Document leftFormB2 = new Document("∼(∃\uD835\uDCCD \uE8A6 \uD835\uDCC9)\uD835\uDCAB");
+        Document rightFormB2 = new Document("(∀\uD835\uDCCD \uE8A6 \uD835\uDCC9)∼\uD835\uDCAB");
+
+        //
 
         List<Expression> leftExpressions = ParseUtilities.parseDoc(leftForm, metaLanguage.getNameString());
-        if (leftExpressions == null || leftExpressions.size() != 1) {
-            System.out.println("problem parsing left meta form");
-            return new Pair(false, "problem parsing left meta form");
-        }
-        else leftFormExp = leftExpressions.get(0);
+        Expression leftFormExp = leftExpressions.get(0);
 
         List<Expression> rightExpressions = ParseUtilities.parseDoc(rightForm, metaLanguage.getNameString());
-        if (rightExpressions == null || rightExpressions.size() != 1) {
-            System.out.println("problem parsing right meta form");
-            return new Pair(false, "problem parsing right meta form");
-        }
-        else rightFormExp = rightExpressions.get(0);
+        Expression rightFormExp = rightExpressions.get(0);
 
         List<Expression> leftExpressions2 = ParseUtilities.parseDoc(leftForm2, metaLanguage.getNameString());
-        if (leftExpressions2 == null || leftExpressions2.size() != 1) {
-            System.out.println("problem parsing left meta form");
-            return new Pair(false, "problem parsing left meta form");
-        }
-        else leftFormExp2 = leftExpressions2.get(0);
+        Expression leftFormExp2 = leftExpressions2.get(0);
 
         List<Expression> rightExpressions2 = ParseUtilities.parseDoc(rightForm2, metaLanguage.getNameString());
-        if (rightExpressions2 == null || rightExpressions2.size() != 1) {
-            System.out.println("problem parsing right meta form");
-            return new Pair(false, "problem parsing right meta form");
-        }
-        else rightFormExp2 = rightExpressions2.get(0);
+        Expression rightFormExp2 = rightExpressions2.get(0);
+
+        //
+        List<Expression> leftExpressionsA = ParseUtilities.parseDoc(leftFormA, metaLanguage.getNameString());
+        Expression leftFormExpA = leftExpressionsA.get(0);
+
+        List<Expression> rightExpressionsA = ParseUtilities.parseDoc(rightFormA, metaLanguage.getNameString());
+        Expression rightFormExpA = rightExpressionsA.get(0);
+
+        List<Expression> leftExpressionsA2 = ParseUtilities.parseDoc(leftFormA2, metaLanguage.getNameString());
+        Expression leftFormExpA2 = leftExpressionsA2.get(0);
+
+        List<Expression> rightExpressionsA2 = ParseUtilities.parseDoc(rightFormA2, metaLanguage.getNameString());
+        Expression rightFormExpA2 = rightExpressionsA2.get(0);
+
+        //
+
+        List<Expression> leftExpressionsB = ParseUtilities.parseDoc(leftFormB, metaLanguage.getNameString());
+        Expression leftFormExpB = leftExpressionsB.get(0);
+
+        List<Expression> rightExpressionsB = ParseUtilities.parseDoc(rightFormB, metaLanguage.getNameString());
+        Expression rightFormExpB = rightExpressionsB.get(0);
+
+        List<Expression> leftExpressionsB2 = ParseUtilities.parseDoc(leftFormB2, metaLanguage.getNameString());
+        Expression leftFormExpB2 = leftExpressionsB2.get(0);
+
+        List<Expression> rightExpressionsB2 = ParseUtilities.parseDoc(rightFormB2, metaLanguage.getNameString());
+        Expression rightFormExpB2 = rightExpressionsB2.get(0);
+
 
 
 
@@ -126,6 +147,70 @@ public class RestrictedQuantifierNegation extends DerivationRule {
             if (resultGood2) return new Pair(true, null);
         }
         catch (TextMessageException e) {  }
+
+        //A forms
+        //first form
+        MatchUtilities.clearFormMatch();
+        try {
+            boolean resultGood1 = MatchUtilities.replacementCheck(leftFormExpA, rightFormExpA, inputExpression, lineExpression);
+            if (resultGood1) return new Pair(true, null);
+        }
+        catch (TextMessageException e) {  }
+
+        MatchUtilities.clearFormMatch();
+        try {
+            boolean resultGood1 = MatchUtilities.replacementCheck(rightFormExpA, leftFormExpA, inputExpression, lineExpression);
+            if (resultGood1) return new Pair(true, null);
+        }
+        catch (TextMessageException e) {  }
+
+        //second form
+        MatchUtilities.clearFormMatch();
+        try {
+            boolean resultGood2 = MatchUtilities.replacementCheck(leftFormExpA2, rightFormExpA2, inputExpression, lineExpression);
+            if (resultGood2) return new Pair(true, null);
+        }
+        catch (TextMessageException e) {  }
+
+        MatchUtilities.clearFormMatch();
+        try {
+            boolean resultGood2 = MatchUtilities.replacementCheck(rightFormExpA2, leftFormExpA2, inputExpression, lineExpression);
+            if (resultGood2) return new Pair(true, null);
+        }
+        catch (TextMessageException e) {  }
+
+        //B forms
+        //first form
+        MatchUtilities.clearFormMatch();
+        try {
+            boolean resultGood1 = MatchUtilities.replacementCheck(leftFormExpB, rightFormExpB, inputExpression, lineExpression);
+            if (resultGood1) return new Pair(true, null);
+        }
+        catch (TextMessageException e) {  }
+
+        MatchUtilities.clearFormMatch();
+        try {
+            boolean resultGood1 = MatchUtilities.replacementCheck(rightFormExpB, leftFormExpB, inputExpression, lineExpression);
+            if (resultGood1) return new Pair(true, null);
+        }
+        catch (TextMessageException e) {  }
+
+        //second form
+        MatchUtilities.clearFormMatch();
+        try {
+            boolean resultGood2 = MatchUtilities.replacementCheck(leftFormExpB2, rightFormExpB2, inputExpression, lineExpression);
+            if (resultGood2) return new Pair(true, null);
+        }
+        catch (TextMessageException e) {  }
+
+        MatchUtilities.clearFormMatch();
+        try {
+            boolean resultGood2 = MatchUtilities.replacementCheck(rightFormExpB2, leftFormExpB2, inputExpression, lineExpression);
+            if (resultGood2) return new Pair(true, null);
+        }
+        catch (TextMessageException e) {  }
+
+
 
 
         return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText(("Lines (" + inputLine1.getLineNumberLabel().getText() + ") and (" + line.getLineNumberLabel().getText() + ") are not of the right form for application of " + getName() + "."))));

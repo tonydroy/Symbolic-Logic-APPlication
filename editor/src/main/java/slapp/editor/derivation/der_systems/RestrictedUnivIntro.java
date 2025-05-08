@@ -83,31 +83,104 @@ public class RestrictedUnivIntro extends DerivationRule {
         Document topLineForm = new Document("\u212c \u2039 \ud835\udccd" + commaDividerString + "\ud835\udccb \u203a"  );
         Document bottomLineForm = new Document("\ud835\udcab \u2039 \ud835\udccd" + commaDividerString + "\ud835\udccb \u203a" );
 
+        Document outputForm1 = new Document( "(∀\uD835\uDCCD \uE8A4 \uD835\uDCC9)\uD835\uDCAB");
+        Document topLineForm1 = new Document( "(\uD835\uDCCB \uE8A4 \uD835\uDCC9)");
+        Document bottomLineForm1 = new Document("\ud835\udcab \u2039 \ud835\udccd" + commaDividerString + "\ud835\udccb \u203a");
 
-        //try correct
+        Document outputForm2 = new Document("(∀\uD835\uDCCD \uE8A6 \uD835\uDCC9)\uD835\uDCAB");
+        Document topLineForm2 = new Document("\uD835\uDCCB \uE8A6 \uD835\uDCC9");
+        Document bottomLineForm2 = new Document("\ud835\udcab \u2039 \ud835\udccd" + commaDividerString + "\ud835\udccb \u203a");
+
+
+        boolean resultGoodA = false;
+        boolean resultGoodB = false;
+        boolean resultGoodC = false;
+        boolean resultGoodA1 = false;
+        boolean resultGoodB1 = false;
+        boolean resultGoodC1 = false;
+        boolean resultGoodA2 = false;
+        boolean resultGoodB2 = false;
+        boolean resultGoodC2 = false;
+
+
+        //try unabb
         MatchUtilities.clearFormMatch();
-        boolean resultGood1 = false;
-        boolean resultGood2 = false;
         try {
             Pair<Boolean, Boolean> outputMatch = MatchUtilities.simpleFormMatch(outputForm, lineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
+            if (outputMatch.getKey() && outputMatch.getValue()) resultGoodA = true;
         }
         catch (TextMessageException e) {
-            return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("Line (" + line.getLineNumberLabel().getText() + ") is not of the right form to result by " + getName() + ".")));
+  //          return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("Line (" + line.getLineNumberLabel().getText() + ") is not of the right form to result by " + getName() + ".")));
         }
-        try {
-            Pair<Boolean, Boolean> topLineMatch = MatchUtilities.simpleFormMatch(topLineForm, topLineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
-            if (topLineMatch.getKey() == true && topLineMatch.getValue() == true) resultGood1 = true;
-        }
-        catch (TextMessageException e) {
-            return new Pair(false, e.getMessageList());
+        if (resultGoodA) {
+            try {
+                Pair<Boolean, Boolean> topLineMatch = MatchUtilities.simpleFormMatch(topLineForm, topLineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
+                if (topLineMatch.getKey() && topLineMatch.getValue()) resultGoodB = true;
+            } catch (TextMessageException e) {
+                return new Pair(false, e.getMessageList());
+            }
+            try {
+                Pair<Boolean, Boolean> bottomLineMatch = MatchUtilities.simpleFormMatch(bottomLineForm, bottomLineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
+                if (bottomLineMatch.getKey() && bottomLineMatch.getValue()) resultGoodC = true;
+            } catch (TextMessageException e) {
+                return new Pair(false, e.getMessageList());
+            }
+     //       if (resultGoodB && resultGoodC) return new Pair(true, null);
         }
 
-        try {
-            Pair<Boolean, Boolean> bottomLineMatch = MatchUtilities.simpleFormMatch(bottomLineForm, bottomLineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
-            if (bottomLineMatch.getKey() == true && bottomLineMatch.getValue() == true) resultGood2 = true;
-        } catch (TextMessageException e) {
-            return new Pair(false, e.getMessageList());
+        //try bounded 1
+        if (!resultGoodA || !resultGoodB || !resultGoodC) {
+            MatchUtilities.clearFormMatch();
+            try {
+                Pair<Boolean, Boolean> outputMatch = MatchUtilities.simpleFormMatch(outputForm1, lineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
+                if (outputMatch.getKey() && outputMatch.getValue()) resultGoodA1 = true;
+            }
+            catch (TextMessageException e) { }
+            if (resultGoodA1) {
+                try {
+                    Pair<Boolean, Boolean> topLineMatch = MatchUtilities.simpleFormMatch(topLineForm1, topLineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
+                    if (topLineMatch.getKey() && topLineMatch.getValue()) resultGoodB1 = true;
+                } catch (TextMessageException e) {
+                    return new Pair(false, e.getMessageList());
+                }
+                try {
+                    Pair<Boolean, Boolean> bottomLineMatch = MatchUtilities.simpleFormMatch(bottomLineForm1, bottomLineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
+                    if (bottomLineMatch.getKey() && bottomLineMatch.getValue()) resultGoodC1 = true;
+                } catch (TextMessageException e) {
+                    return new Pair(false, e.getMessageList());
+                }
+            }
+
+            //try bounded 2
+            if (!resultGoodA1 || !resultGoodB1 || !resultGoodC1) {
+                MatchUtilities.clearFormMatch();
+                try {
+                    Pair<Boolean, Boolean> outputMatch = MatchUtilities.simpleFormMatch(outputForm2, lineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
+                    if (outputMatch.getKey() && outputMatch.getValue()) resultGoodA2 = true;
+                }
+                catch (TextMessageException e) { }
+                if (resultGoodA2) {
+                    try {
+                        Pair<Boolean, Boolean> topLineMatch = MatchUtilities.simpleFormMatch(topLineForm2, topLineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
+                        if (topLineMatch.getKey() && topLineMatch.getValue()) resultGoodB2 = true;
+                    } catch (TextMessageException e) {
+                        return new Pair(false, e.getMessageList());
+                    }
+                    try {
+                        Pair<Boolean, Boolean> bottomLineMatch = MatchUtilities.simpleFormMatch(bottomLineForm2, bottomLineDoc, objectLanguage.getNameString(), metaLanguage.getNameString());
+                        if (bottomLineMatch.getKey() && bottomLineMatch.getValue()) resultGoodC2 = true;
+                    } catch (TextMessageException e) {
+                        return new Pair(false, e.getMessageList());
+                    }
+                }
+            }
         }
+
+        if (!resultGoodA && !resultGoodA1 && !resultGoodA2) {
+            return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("Line (" + line.getLineNumberLabel().getText() + ") is not of the right form to result by " + getName() + ".")));
+        }
+
+
 
         Expression variableExp = ((Formula) MatchUtilities.getTransformList().get(0).getKey()).getSubTransform().getExp2().getMatch();
 
@@ -151,7 +224,7 @@ public class RestrictedUnivIntro extends DerivationRule {
         }
 
 
-        if (resultGood1 && resultGood2 && asspOK) {
+        if (((resultGoodA && resultGoodB && resultGoodC) || (resultGoodA1 && resultGoodB1 && resultGoodC1) || (resultGoodA2 && resultGoodB2 && resultGoodC2))  && asspOK) {
             return new Pair(true, null);
         }
 
