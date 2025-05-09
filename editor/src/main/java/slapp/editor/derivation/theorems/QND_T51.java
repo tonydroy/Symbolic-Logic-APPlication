@@ -100,8 +100,8 @@ public class QND_T51 extends Theorem {
                 List<Text> texts = new ArrayList<>();
                 texts.add(ParseUtilities.newRegularText("Variable "));
                 texts.addAll(variableMatch.toTextList());
-                if (!objectLanguage.getNameString().equals("LM Obj")) texts.add(ParseUtilities.newRegularText(" is free in term "));
-                else texts.add(ParseUtilities.newRegularText(" (possibly) free in term "));
+                if (!objectLanguage.isObjectMetalanguage()) texts.add(ParseUtilities.newRegularText(" is free in term "));
+                else texts.add(ParseUtilities.newRegularText(" is (possibly) free in term "));
                 texts.addAll(matchTerm.toTextList());
                 texts.add(ParseUtilities.newRegularText(". Cannot apply " + getName() + "."));
                 freeVariableFailure = texts;

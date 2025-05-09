@@ -330,7 +330,7 @@ public class MatchUtilities {
 
                         if (subTransform.getExp2().getMatch() != null) {
                             list.addAll(targetExp.toTextList());
-                            if (!objectL.equals("LM Obj")) list.add(ParseUtilities.newRegularText(" is not "));
+                            if (!Languages.getLanguage(objectL).isObjectMetalanguage()) list.add(ParseUtilities.newRegularText(" is not "));
                             else list.add(ParseUtilities.newRegularText(" is not (known to be) "));
                             list.addAll(sourceExp.toTextList());
                             list.addAll(new SubstitutionTransform(exp1, subTransform.getExp2().getMatch(), subTransform.getType(), subTransform.getDividerSymbol()).toTextList());
