@@ -9,20 +9,28 @@ import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.derivation.DerivationCheck;
 import slapp.editor.derivation.ViewLine;
 import slapp.editor.parser.*;
+import slapp.editor.parser.grammatical_parts.MTerm;
+import slapp.editor.parser.grammatical_parts.Term;
+import slapp.editor.parser.grammatical_parts.TermType;
+import slapp.editor.parser.symbols.MVariable;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class Abb_NDpnt extends DerivationRule {
+    Language objectLanguage;
+    List<Text> freeVariableFailure;
 
     public Abb_NDpnt(String name, String rgexTemplate) {
         super(name, rgexTemplate);
         this.premAssp = false;
+
     }
 
     public Pair<Boolean, List<Text>> applies(DerivationCheck checker, ViewLine line, String... inputs) {
 
-        Language objectLanguage = checker.getDerivationRuleset().getObjectLanguage();
+        objectLanguage = checker.getDerivationRuleset().getObjectLanguage();
         Language metaLanguage = checker.getDerivationRuleset().getMetaLanguage();
 
         BoxedDRTA lineBDRTA = line.getLineContentBoxedDRTA();
@@ -73,6 +81,10 @@ public class Abb_NDpnt extends DerivationRule {
         Document boundedLssExis2 = new Document("(∃\uD835\uDCCD : \uD835\uDCCD \uE8A4 \uD835\uDCC9)\uD835\uDCAB");
         Document boundedLssExis3 = new Document("∃\uD835\uDCCD(\uD835\uDCCD \uE8A4 \uD835\uDCC9 ∧ \uD835\uDCAB)");
 
+        //leq
+        Document leq = new Document("(\uD835\uDCC8 \uE8A6 \uD835\uDCC9)");
+        Document leqAbb = new Document("∃\uD835\uDC62(\uD835\uDC62 \uE8B8 \uD835\uDCC8 \uE8AC \uD835\uDCC9)");
+
         List<Expression> boundedLeqUniv1Expressions = ParseUtilities.parseDoc(boundedLeqUniv1, metaLanguage.getNameString());
         Expression boundedLeqUniv1Exp = boundedLeqUniv1Expressions.get(0);
         List<Expression> boundedLeqUniv2Expressions = ParseUtilities.parseDoc(boundedLeqUniv2, metaLanguage.getNameString());
@@ -100,6 +112,11 @@ public class Abb_NDpnt extends DerivationRule {
         Expression boundedLssExis2Exp = boundedLssExis2Expressions.get(0);
         List<Expression> boundedLssExis3Expressions = ParseUtilities.parseDoc(boundedLssExis3, metaLanguage.getNameString());
         Expression boundedLssExis3Exp = boundedLssExis3Expressions.get(0);
+
+        List<Expression> leqExpressions = ParseUtilities.parseDoc(leq, metaLanguage.getNameString());
+        Expression leqExp = leqExpressions.get(0);
+        List<Expression> leqAbbExpressions = ParseUtilities.parseDoc(leqAbb, metaLanguage.getNameString());
+        Expression leqAbbExp = leqAbbExpressions.get(0);
 
 
         //for each group of three need 1:2, 1:3, 2:3 (each with both directions)
@@ -228,11 +245,81 @@ public class Abb_NDpnt extends DerivationRule {
             if (resultGood) return new Pair(true, null);
         } catch (TextMessageException e) {}
 
+        //inequalities
+        MatchUtilities.clearFormMatch();
+        try{
+            boolean resultGood = MatchUtilities.replacementCheck(leqExp, leqAbbExp, inputExpression, lineExpression);
+            if (resultGood && (varFreeInTerm("\ud835\udc62", "\ud835\udcc8") || varFreeInTerm("\ud835\udc62", "\ud835\udcc9"))) return new Pair(false, freeVariableFailure);
+            if (resultGood) return new Pair(true, null);
+        }
+        catch (TextMessageException e){}
+
+        try {
+            boolean resultGood = MatchUtilities.replacementCheck(leqAbbExp, leqExp, inputExpression, lineExpression);
+            if (resultGood && (varFreeInTerm("\ud835\udc62", "\ud835\udcc8") || varFreeInTerm("\ud835\udc62", "\ud835\udcc9"))) return new Pair(false, freeVariableFailure);
+            if (resultGood) return new Pair(true, null);
+        }
+        catch (TextMessageException e){}
+
 
 
         return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText(("Lines (" + inputLine1.getLineNumberLabel().getText() + ") and (" + line.getLineNumberLabel().getText() + ") are not of the right form for application of " + getName() + "."))));
 
     }
+
+    private boolean varFreeInTerm(String varString, String termString) {
+        Term variableMatch = null;
+        Expression matchTerm = null;
+
+
+        List<MVariable> mVariables = MVariable.getVariables();
+        for (MVariable mVariable : mVariables) {
+            if (mVariable.getBaseStr().equals(varString)) {
+                Term term = new Term();
+                term.setLevel(0);
+                ArrayList children = new ArrayList();
+                children.add(mVariable.getMatch());
+                term.setChildren(children);
+                term.setCombines(true);
+                term.setTermType(TermType.VARIABLE);
+                variableMatch = term;
+            }
+        }
+        //       System.out.println("var: " + variableMatch);
+
+        List<MTerm> mTerms = MTerm.getmTerms();
+        for (MTerm mTerm : mTerms) {
+            if (mTerm.getmTermSym().getBaseStr().equals(termString)) {
+                matchTerm = mTerm.getMatch();
+            }
+        }
+
+        //        System.out.println("term: " + matchTerm);
+
+        if (variableMatch != null && matchTerm != null) {
+
+       //     System.out.println("varMatch: " + variableMatch + " matchTerm: " + matchTerm);
+
+            boolean freeInTerm = SyntacticalFns.expTermFreeInFormula(matchTerm, variableMatch, objectLanguage.getNameString());
+
+            if (freeInTerm) {
+                List<Text> texts = new ArrayList<>();
+                texts.add(ParseUtilities.newRegularText("Variable "));
+                texts.addAll(variableMatch.toTextList());
+                if (!objectLanguage.getNameString().equals("LM Obj")) texts.add(ParseUtilities.newRegularText(" is free in term "));
+                else texts.add(ParseUtilities.newRegularText(" (possibly) free in term "));
+                texts.addAll(matchTerm.toTextList());
+                texts.add(ParseUtilities.newRegularText(". Cannot apply " + getName() + "."));
+                freeVariableFailure = texts;
+            }
+
+            return freeInTerm;
+        } else {
+            System.out.println("problem with 'free in term' check");
+            return false;
+        }
+    }
+
 
 
 }

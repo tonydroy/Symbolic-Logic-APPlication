@@ -76,7 +76,9 @@ public class DoubleNegation extends DerivationRule {
             boolean resultGood1 = MatchUtilities.replacementCheck(leftFormExp, rightFormExp, inputExpression, lineExpression);
             if (resultGood1) return new Pair(true, null);
         }
-        catch (TextMessageException e) {  }
+        catch (TextMessageException e) {
+   //         return new Pair(false, e.getMessageList());
+        }
 
 
         //try right to left

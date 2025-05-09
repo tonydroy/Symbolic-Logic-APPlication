@@ -19,6 +19,7 @@ public class ParseUtilities {
     private static int maxTermLevel;
     private static double baseFontSize = 12;
     private static boolean matchVal = false;
+    private static List<Text> alternateMessage = new ArrayList<>();
 
     public ParseUtilities() {}
 
@@ -462,6 +463,8 @@ public class ParseUtilities {
 
         if (language.isAllowBoundedQuantifiers()) {
             matchVal = false;
+            alternateMessage = new ArrayList<>();
+
             for (int i = 0; i < expressions.size(); i++) {
                 if (i + 4 < expressions.size() &&
                         ((expressions.get(i).getType() == ExpressionType.OPEN_BRACKET1 && expressions.get(i + 4).getType() == ExpressionType.CLOSE_BRACKET1) ||
@@ -471,28 +474,41 @@ public class ParseUtilities {
                     if (expressions.get(i + 1).getType() == ExpressionType.UNIVERSAL_OP && expressions.get(i + 2).getType() == ExpressionType.RELATION_SYMBOL && ((RelationSymbol) expressions.get(i + 2)).isPermitInfix()
                             && expressions.get(i + 3).getType() == ExpressionType.TERM) {
                         isTreeNode(expressions.get(i + 3), ((UniversalOp) expressions.get(i + 1)).getVariableTerm());
-                        if (!matchVal) {
-                            UnivBoundedQuantOp op = new UnivBoundedQuantOp((OpenBracket) expressions.get(i), (CloseBracket) expressions.get(i + 4), (UniversalOp) expressions.get(i + 1),
-                                    (RelationSymbol) expressions.get(i + 2), (Term) expressions.get(i + 3));
-                            expressions.set(i, op);
-                            expressions.remove(i + 1);
-                            expressions.remove(i + 1);
-                            expressions.remove(i + 1);
-                            expressions.remove(i + 1);
+                        if (matchVal) {
+                            alternateMessage.add(ParseUtilities.newRegularText("Variable "));
+                            alternateMessage.addAll(((UniversalOp) expressions.get(i + 1)).getVariableTerm().toTextList());
+                            alternateMessage.add(ParseUtilities.newRegularText(" is free in bounding term "));
+                            alternateMessage.addAll(expressions.get(i + 3).toTextList());
+                            alternateMessage.add(ParseUtilities.newRegularText("."));
                         }
+                        UnivBoundedQuantOp op = new UnivBoundedQuantOp((OpenBracket) expressions.get(i), (CloseBracket) expressions.get(i + 4), (UniversalOp) expressions.get(i + 1),
+                                (RelationSymbol) expressions.get(i + 2), (Term) expressions.get(i + 3));
+                        expressions.set(i, op);
+                        expressions.remove(i + 1);
+                        expressions.remove(i + 1);
+                        expressions.remove(i + 1);
+                        expressions.remove(i + 1);
+
                     } else if (expressions.get(i + 1).getType() == ExpressionType.EXISTENTIAL_OP && expressions.get(i + 2).getType() == ExpressionType.RELATION_SYMBOL && ((RelationSymbol) expressions.get(i + 2)).isPermitInfix()
                             && expressions.get(i + 3).getType() == ExpressionType.TERM) {
                         isTreeNode(expressions.get(i + 3), ((ExistentialOp) expressions.get(i + 1)).getVariableTerm());
                         if (!matchVal) {
-                            ExisBoundedQuantOp op = new ExisBoundedQuantOp((OpenBracket) expressions.get(i), (CloseBracket) expressions.get(i + 4), (ExistentialOp) expressions.get(i + 1),
-                                    (RelationSymbol) expressions.get(i + 2), (Term) expressions.get(i + 3));
-                            expressions.set(i, op);
-                            expressions.remove(i + 1);
-                            expressions.remove(i + 1);
-                            expressions.remove(i + 1);
-                            expressions.remove(i + 1);
+                            alternateMessage.add(ParseUtilities.newRegularText("Variable "));
+                            alternateMessage.addAll(((ExistentialOp) expressions.get(i + 1)).getVariableTerm().toTextList());
+                            alternateMessage.add(ParseUtilities.newRegularText(" is free in bounding term "));
+                            alternateMessage.addAll(expressions.get(i + 3).toTextList());
+                            alternateMessage.add(ParseUtilities.newRegularText("."));
                         }
+                        ExisBoundedQuantOp op = new ExisBoundedQuantOp((OpenBracket) expressions.get(i), (CloseBracket) expressions.get(i + 4), (ExistentialOp) expressions.get(i + 1),
+                                (RelationSymbol) expressions.get(i + 2), (Term) expressions.get(i + 3));
+                        expressions.set(i, op);
+                        expressions.remove(i + 1);
+                        expressions.remove(i + 1);
+                        expressions.remove(i + 1);
+                        expressions.remove(i + 1);
+
                     }
+
                 }
             }
 
@@ -1005,15 +1021,23 @@ public class ParseUtilities {
                 elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
                 if (language.getOnePlaceFunctionSymbols() != null && language.getOnePlaceFunctionSymbols().contains(elementStr)) {
                     FunctionSymbol functionSymbol;
-                    if (!language.isMetalanguage()) functionSymbol = new FunctionSymbol(elementStr, "", "", 1, false);
-                    else functionSymbol = MFunctionSymbol.getInstance(elementStr, "", "", 1, false);
+
+              //      if (!language.isMetalanguage()) functionSymbol = new FunctionSymbol(elementStr, "", "", 1, false);
+              //      else functionSymbol = MFunctionSymbol.getInstance(elementStr, "", "", 1, false);
+
+                    functionSymbol = new FunctionSymbol(elementStr, "", "", 1, false);
+
                     expressions.set(i, functionSymbol);
                     continue;
                 }
                 if (language.getTwoPlaceFunctionSymbols() != null && language.getTwoPlaceFunctionSymbols().contains(elementStr)) {
                     FunctionSymbol functionSymbol;
-                    if (!language.isMetalanguage()) functionSymbol = new FunctionSymbol(elementStr, "", "", 2, language.isAllowBinaryInfixFunctions());
-                    else functionSymbol = MFunctionSymbol.getInstance(elementStr, "", "", 2, language.isAllowBinaryInfixFunctions());
+
+               //     if (!language.isMetalanguage()) functionSymbol = new FunctionSymbol(elementStr, "", "", 2, language.isAllowBinaryInfixFunctions());
+               //     else functionSymbol = MFunctionSymbol.getInstance(elementStr, "", "", 2, language.isAllowBinaryInfixFunctions());
+
+                    functionSymbol = new FunctionSymbol(elementStr, "", "", 2, language.isAllowBinaryInfixFunctions());
+
                     expressions.set(i, functionSymbol);
                     continue;
                 }
@@ -1441,5 +1465,9 @@ public class ParseUtilities {
 
     public static void setLanguage(Language language) {
         ParseUtilities.language = language;
+    }
+
+    public static List<Text> getAlternateMessage() {
+        return alternateMessage;
     }
 }

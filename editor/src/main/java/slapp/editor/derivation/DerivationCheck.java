@@ -145,7 +145,7 @@ public class DerivationCheck {
 
         if (!checkFormulas()) return false;
         if (!checkScopeStructure()) return false;
-        if (!checkFormulas()) return false;
+ //       if (!checkFormulas()) return false;
         if (!checkAssumptionScopes()) return false;
         if (!checkJustificationForms()) return false;
         setScopeLists();
@@ -462,6 +462,12 @@ public class DerivationCheck {
 
                     List<Expression> parseExpressions = ParseUtilities.parseDoc(lineDoc, derivationRuleset.getObjectLanguage().getNameString());
                     if (parseExpressions.size() == 1 && parseExpressions.get(0) instanceof Formula) {
+                        if (!ParseUtilities.getAlternateMessage().isEmpty()) {
+                            highlightFormula(i);
+                            EditorAlerts.showSimpleTxtListAlert("Problem in bounded quantifier:", ParseUtilities.getAlternateMessage());
+                            resetHighlights();
+                            return false;
+                        }
                         continue;
                     }
                     else {

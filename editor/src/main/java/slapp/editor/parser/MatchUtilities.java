@@ -103,9 +103,13 @@ public class MatchUtilities {
 
         clearMatching();
         try {
+      //      System.out.println("form1: " + form1 + " form2: " + form2 + " source: " + source + " target: " + target);
             setMatching(form1, source);
+
         }
-        catch (TextMessageException e) {     }
+        catch (TextMessageException e) {    }
+
+  //      System.out.println("1: " + form1.getMatch() + " 2: " + form2.getMatch());
 
 
         if (form2.getMatch() != null && form2.getMatch().equals(target)) {
@@ -116,6 +120,8 @@ public class MatchUtilities {
         else if (source instanceof SentenceAtomic && target instanceof SentenceAtomic && source.equals(target)) { return;  }
 
         else if (source instanceof MFormula && target instanceof MFormula && source.equals(target)) { return; }
+
+        else if (source instanceof PseudoMFormula && target instanceof PseudoMFormula && source.equals(target)) { return; }
 
         else if (source instanceof PrefixAtomic && target instanceof PrefixAtomic && source.equals(target)) { return; }
 
@@ -531,7 +537,7 @@ public class MatchUtilities {
     }
 
     public static void setMatching(Expression metaExp, Expression objectExp) throws TextMessageException {
-    //    System.out.println("meta: " + metaExp + " object: " + objectExp);
+   //     System.out.println("meta: " + metaExp + " object: " + objectExp);
 
         boolean skip = false;
 
@@ -567,8 +573,8 @@ public class MatchUtilities {
                     metaExp.getChildren().size() == objectExp.getChildren().size()) {
                 Term mt = (Term) metaExp;
                 Term ot = (Term) objectExp;
-  //              mt.setOpenBracket(ot.getOpenBracket());
- //               mt.setCloseBracket(ot.getCloseBracket());
+    //            mt.setOpenBracket(ot.getOpenBracket());
+    //            mt.setCloseBracket(ot.getCloseBracket());
                 if (mt.getMainFnSymbol() instanceof MFunctionSymbol)
                     ((MFunctionSymbol) mt.getMainFnSymbol()).setMatch(ot.getMainFnSymbol());
                 else if (!mt.getMainFnSymbol().getMatch().equals(ot.getMainFnSymbol())) {

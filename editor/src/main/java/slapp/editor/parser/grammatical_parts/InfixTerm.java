@@ -55,7 +55,7 @@ public class InfixTerm extends Term implements Expression {
         sb.append(getOpenBracket().toString());
         sb.append(getChildren().get(0).toString());
         sb.append(" ");
-        sb.append(getMainFnSymbol().toString());
+        if (getMainFnSymbol() != null) sb.append(getMainFnSymbol().toString());
         sb.append(" ");
         sb.append(getChildren().get(1).toString());
         sb.append(getCloseBracket().toString());
@@ -69,7 +69,8 @@ public class InfixTerm extends Term implements Expression {
         if (o instanceof InfixTerm) {
             InfixTerm other = (InfixTerm) o;
             boolean equals = true;
-            if (!getMainFnSymbol().equals(other.getMainFnSymbol())) { equals = false;}
+            if (getMainFnSymbol() == null && other.getMainFnSymbol() != null) return false;
+            if (getMainFnSymbol() != null && !getMainFnSymbol().equals(other.getMainFnSymbol())) { equals = false;}
             if (getChildren().size() != other.getChildren().size()) { equals = false; }
             for (int i = 0; i < getChildren().size(); i++) {
                 if (!getChildren().get(i).equals(other.getChildren().get(i))) { equals = false; }
