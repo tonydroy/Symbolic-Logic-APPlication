@@ -1,5 +1,6 @@
 package slapp.editor.derivation.der_systems;
 
+import javafx.scene.text.Text;
 import javafx.util.Pair;
 import slapp.editor.parser.ParseUtilities;
 
@@ -223,7 +224,10 @@ public class DerivationRulesets implements Serializable {
 
 
     private static DerivationRuleset getND_pnt() {
-        DerivationRuleset ND_pnt = new DerivationRuleset("\ud835\udc41\ud835\udc37+ (nt)", Collections.singletonList(ParseUtilities.newItalicText("ND+ (nt)")));
+        List<Text> nameTxts = new ArrayList<>();
+        nameTxts.add(ParseUtilities.newItalicText("ND+"));
+        nameTxts.add(ParseUtilities.newRegularText(" (nt)"));
+        DerivationRuleset ND_pnt = new DerivationRuleset("\ud835\udc41\ud835\udc37+ (nt)",nameTxts);
 
         DerivationRule premiseRule = new Premise("P","^\\s*P\\s*$");
         ND_pnt.setPremiseRule(premiseRule);
@@ -304,6 +308,7 @@ public class DerivationRulesets implements Serializable {
         rules.add(new Distribution("Dist", "^\\s*\\d+\\s*Dist\\s*$"));  //Dist
         rules.add(new Equivalence("Equiv", "^\\s*\\d+\\s*Equiv\\s*$"));  //Equiv
 
+        rules.add(new SymmetryRepRule("Sym", "^\\s*\\d+\\s*Sym\\s*$"));
         rules.add(new QuantifierSwitch("QS", "^\\s*\\d+\\s*QS\\s*$"));  //QS
         rules.add(new QuantifierDistribution("QD", "^\\s*\\d+\\s*QD\\s*$"));  //QD
         rules.add(new QuantifierNegation("QN", "^\\s*\\d+\\s*QN\\s*$"));
@@ -420,6 +425,7 @@ public class DerivationRulesets implements Serializable {
         rules.add(new Distribution("Dist", "^\\s*\\d+\\s*Dist\\s*$"));  //Dist
         rules.add(new Equivalence("Equiv", "^\\s*\\d+\\s*Equiv\\s*$"));  //Equiv
 
+        rules.add(new SymmetryRepRule("Sym", "^\\s*\\d+\\s*Sym\\s*$"));
         rules.add(new QuantifierSwitch("QS", "^\\s*\\d+\\s*QS\\s*$"));  //QS
         rules.add(new QuantifierDistribution("QD", "^\\s*\\d+\\s*QD\\s*$"));  //QD
         rules.add(new QuantifierNegation("QN", "^\\s*\\d+\\s*QN\\s*$"));

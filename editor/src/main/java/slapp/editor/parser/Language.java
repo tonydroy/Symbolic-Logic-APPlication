@@ -236,7 +236,8 @@ public class Language implements Serializable {
     public List<String> getVariables() {
         List<String> newVars = new ArrayList<>();
         newVars.addAll(variables);
-        newVars.add("\u1d76");
+        newVars.add("\u1e8f");
+        newVars.add("\ue89b");
         return newVars;
     }
 
@@ -245,7 +246,7 @@ public class Language implements Serializable {
     }
 
     public static String getDummyVariableSym() {
-        return "\u1d76";
+        return "\u1e8f";
     }
 
     public boolean isVariableSubs() {
@@ -505,7 +506,11 @@ public class Language implements Serializable {
     }
 
     public List<String> getNoMatchVariables() {
-        return noMatchVariables;
+        List<String> newVars = new ArrayList<>();
+        newVars.addAll(noMatchVariables);
+        newVars.add("\ue89b");
+
+        return newVars;
     }
 
     public void setNoMatchVariables(List<String> noMatchVariables) {

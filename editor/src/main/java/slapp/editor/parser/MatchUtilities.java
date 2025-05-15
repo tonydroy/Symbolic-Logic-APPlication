@@ -333,7 +333,11 @@ public class MatchUtilities {
                             if (!Languages.getLanguage(objectL).isObjectMetalanguage()) list.add(ParseUtilities.newRegularText(" is not "));
                             else list.add(ParseUtilities.newRegularText(" is not (known to be) "));
                             list.addAll(sourceExp.toTextList());
-                            list.addAll(new SubstitutionTransform(exp1, subTransform.getExp2().getMatch(), subTransform.getType(), subTransform.getDividerSymbol()).toTextList());
+                            list.add(ParseUtilities.newRegularText(" with "));
+                            list.addAll(exp1.toTextList());
+                            list.add(ParseUtilities.newRegularText(" replaced by "));
+                            list.addAll(subTransform.getExp2().getMatch().toTextList());
+                 //           list.addAll(new SubstitutionTransform(exp1, subTransform.getExp2().getMatch(), subTransform.getType(), subTransform.getDividerSymbol()).toTextList());
                             list.add(new Text("."));
                         }
                         else {
@@ -341,8 +345,12 @@ public class MatchUtilities {
                             if (!Languages.getLanguage(objectL).isObjectMetalanguage()) list.add(ParseUtilities.newRegularText(" is not "));
                             else list.add(ParseUtilities.newRegularText(" is not (known to be) "));
                             list.addAll(sourceExp.toTextList());
-                            list.addAll(new SubstitutionTransform(exp1, subTransform.getExp2(), subTransform.getType(), subTransform.getDividerSymbol()).toTextList());
-                            list.add(ParseUtilities.newRegularText(" for some "));
+                            list.add(ParseUtilities.newRegularText(" with "));
+                            list.addAll(exp1.toTextList());
+                            list.add(ParseUtilities.newRegularText(" replaced by some "));
+
+                      //      list.addAll(new SubstitutionTransform(exp1, subTransform.getExp2(), subTransform.getType(), subTransform.getDividerSymbol()).toTextList());
+                      //      list.add(ParseUtilities.newRegularText(" for some "));
                             list.addAll(subTransform.getExp2().toTextList());
                             list.add(new Text("."));
                         }

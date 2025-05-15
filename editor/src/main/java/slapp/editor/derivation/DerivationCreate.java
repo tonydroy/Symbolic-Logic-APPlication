@@ -523,7 +523,7 @@ public class DerivationCreate {
             theoremSetList.add(theoremSet.toString());
         }
         ListView<String> thrmListView = new ListView<>(theoremSetList);
-        thrmListView.setPrefSize(95, 95);
+        thrmListView.setPrefSize(120, 95);
         thrmListView.setStyle("-fx-background-color: transparent");
 
         thrmListView.setCellFactory(lv -> new ListCell<String>() {
@@ -654,16 +654,15 @@ public class DerivationCreate {
 
         String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
                 "<p>Derivation Exercise is appropriate for any exercise that calls for a derivation as response.<p>" +
-                "<p> require underline for axiom or theorem</p>" +
                 "<ul>" +
 
-                "<li><p>Supply the exercise name.  Then select the default keyboard for derivation content lines, and select whether there is to be a leftmost scope line, and/or a \"shelf\" beneath the top line of an automatically generated subderivation. " +
+                "<li><p>Supply the exercise name.  The name for a theorem exercise should end with underscore and then the name (as '_T3.14') as the check feature uses the name to identify 'prior' theorems available in a derivation.  Then select the default keyboard for derivation content lines, and select whether there is to be a leftmost scope line, and/or a \"shelf\" beneath the top line of an automatically generated subderivation. " +
                 "A typical natural derivation system (as chapter 6 of <em>Symbolic Logic</em>) selects 'italic and sans', 'leftmost scope line' and 'default shelf'.  The width is the (default) percentage of the window's width allocated to this derivation.</p></li>" +
                 "<li><p>For the check and help functions: A 'max value' of -1 corresponds to 'unlimited', 0 to 'none', and otherwise to the maximum number of check or help tries allotted for the exercise.  " +
                 "Then there are checkboxes to select the formal (object) language and ruleset.  Notice that a given keyboard selection may be compatible with multiple formal languages, but a given formal language will typically have some preferred default keyboard. </p>" +
                 "<p>The Theorem Set option is relevant only to exercises which appeal to axiom or theorem lists.  Multiple selections are possible, though behavior is unpredictable in case members of selected sets have the same name. " +
-                "The first checkbox selects the set; the second whether its members are \"cumulative\" -- in the sense that one member depends just on ones before. (Ordinarily, then, an axiom set leaves the second box unchecked, but exercises that generate sequenced theorems have the check.) " +
-                "Double-clicking a theorem set name opens the set for editing.  Double clicking 'Add New' at the bottom of the list initiates a new set.</p></li>" +
+                "The first checkbox selects the set; the second whether its members are \"cumulative\" -- in the sense that one member depends just on ones before. (Ordinarily, then, an axiom set leaves the second box unchecked, but exercises that generate sequenced theorems have the second check.) " +
+                "</p></li>" +
                 "<li><p>After that, insert setup derivation lines as appropriate.  In the ordinary case, setup lines will include some premise lines with justification 'P' (the last sitting on a shelf), a blank line, and a conclusion line (without justification), all at scope depth 1. " +
                 "A line identified as a premise cannot have either its formula or justification modified; one identified as a conclusion cannot have its formula modified.  Different arrangements (as, e.g. \"fill in the justification\" exercises) are possible.</p></li>" +
                 "<li><p>Finally, fill in the exercise statement.</p></li>" +

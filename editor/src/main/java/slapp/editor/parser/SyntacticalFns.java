@@ -754,7 +754,8 @@ public class SyntacticalFns {
                 PseudoMTerm pTerm = (PseudoMTerm) term;
                 String pSupString = pTerm.getMainTermSym().getSuperscriptStr();
                 String varStr = ((VariableSym) varTerm.getChildren().get(0)).getBaseStr();
-                if (!pSupString.equals("\u22c6") && !pSupString.equals(varStr)) {
+
+                if (!pSupString.equals("\u22c6") && !pSupString.equals(varStr) && !varStr.equals("\ue89b")) {
                     variableList3.add(variableExp);
                 }
             }

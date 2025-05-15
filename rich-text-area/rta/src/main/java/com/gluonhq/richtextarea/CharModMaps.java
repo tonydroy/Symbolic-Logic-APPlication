@@ -1844,6 +1844,7 @@ public class CharModMaps {
                 entry("m", "\uf8b5"),
                 entry("n","\u03bc"),
                 entry("s", "\ue843"), //
+                entry("t", "\u22a4"),
                 entry("u", "\ue847"),  //
                 entry("v", "\u03b2"),
                 entry("A", "\u2135"), //
@@ -1924,6 +1925,7 @@ public class CharModMaps {
                 entry("m", "\uf8b5"),
                 entry("n","\u03bc"),
                 entry("s", "\ue843"), //
+                entry("t", "\u22a4"),
                 entry("u", "\ue847"),  //
                 entry("v", "\u03b2"),
                 entry("A", "\u2135"), //
@@ -2003,6 +2005,7 @@ public class CharModMaps {
                 entry("m", "\uf8b5"),
                 entry("n","\u03bc"),
                 entry("s", "\ue843"), //
+                entry("t", "\u22a4"),
                 entry("u", "\ue847"),  //
                 entry("v", "\u03b2"),
                 entry("A", "\u2135"), //
@@ -2081,6 +2084,7 @@ public class CharModMaps {
                 entry("\ud835\udc5a", "\uf8b5"),
                 entry("\ud835\udc5b", "\u03bc"),
                 entry("\ud835\udc60", "\ue843"), //s
+                entry("\ud835\udc61", "\u22a4"),  //t top
                 entry("\ud835\udc62", "\ue847"),  //u
                 entry("\ud835\udc63", "\u03b2"),
 
@@ -2161,6 +2165,7 @@ public class CharModMaps {
                 entry("\ud835\udc5a", "\uf8b5"),
                 entry("\ud835\udc5b", "\u03bc"),
                 entry("\ud835\udc60", "\ue843"), //s
+                entry("\ud835\udc61", "\u22a4"), //t top
                 entry("\ud835\udc62", "\ue847"),  //u
                 entry("\ud835\udc63", "\u03b2"),
                 entry("\ud835\udc34", "\u2135"), //A
@@ -2240,6 +2245,7 @@ public class CharModMaps {
                 entry("\ud835\udcc2", "\uf8b5"),  //m
                 entry("\ud835\udcc3", "\u03bc"), //n
                 entry("\ud835\udcc8", "\ue843"), //s
+                entry("\ud835\udcc9", "\u22a4"), //t
                 entry("\ud835\udcca", "\ue847"),  //u
                 entry("\ud835\udccb", "\u03b2"), //v
                 entry("\ud835\udc9c", "\u2135"), // A
@@ -2319,6 +2325,7 @@ public class CharModMaps {
                 entry("\ud835\udcc2", "\uf8b5"),  //m
                 entry("\ud835\udcc3", "\u03bc"), //n
                 entry("\ud835\udcc8", "\ue843"), //s
+                entry("\ud835\udcc9", "\u22a4"), //t
                 entry("\ud835\udcca", "\ue847"),  //u
                 entry("\ud835\udccb", "\u03b2"), //v
                 entry("\ud835\udc9c", "\u2135"), //
@@ -2397,6 +2404,7 @@ public class CharModMaps {
                 entry("\u03bd", "\u03bc"),  //n
                 entry("\u03bc", "\uf8b5"),  //m
                 entry("\u03c3", "\ue843"), //s
+                entry("\u03c4", "\u22a4"),  //t
                 entry("\u03b8", "\ue847"),  //u
                 entry("\u03c9", "\u03b2"),  //v
                 entry("\u0391", "\u2135"), //A

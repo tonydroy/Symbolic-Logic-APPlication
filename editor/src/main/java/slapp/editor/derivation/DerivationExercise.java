@@ -139,6 +139,9 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
                     break;
                 case QND_T51:
                     theorems.add(new QND_T51(thrmSetElement.getName(), ""));
+                    break;
+                case PANDT13_11i:
+                    theorems.add(new PANDT13_11i(thrmSetElement.getName(), ""));
             }
         }
 
@@ -241,11 +244,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
             derivationView.getExerciseComment().getEditor().getActionFactory().saveNow().execute(new ActionEvent());
             Document doc = derivationView.getExerciseComment().getEditor().getDocument();
             mainWindow.getSlappData().setMetalanguageHelp(doc);
-
-
- */
-
-
+             */
 
 
 
