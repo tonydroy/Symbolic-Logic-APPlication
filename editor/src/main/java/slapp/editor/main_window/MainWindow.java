@@ -282,6 +282,8 @@ public class MainWindow {
     private void createNewExercise() {
         if (checkContinueAssignment("Confirm Create", "This assignment appears to have unsaved changes, and will be overwritten in the create process.\n\nContinue to create exercise?")) {
             if (checkContinueExercise("Confirm Create", "This exercise appears to have unsaved changes, and will be overwritten by the new one.\n\nContinue to create exercise?")) {
+                if (currentExercise != null) ((ExerciseView) currentExercise.getExerciseView()).clearStandingPopups();
+
                 ExerciseType exerciseType = ExerciseTypePopup.getType(mainView);
                 if (exerciseType != null) {
                     TypeSelectorFactories typeFactories = new TypeSelectorFactories(this);
@@ -299,6 +301,8 @@ public class MainWindow {
     private void createRevisedExercise() {
         if (checkContinueAssignment("Confirm Create", "This assignment appears to have unsaved changes, and will be overwritten in the create process.\n\nContinue to create exercise?")) {
             if (checkContinueExercise("Confirm Create", "This exercise appears to have unsaved changes, and will be overwritten by the new one.\n\nContinue to create exercise?")) {
+                if (currentExercise != null) ((ExerciseView) currentExercise.getExerciseView()).clearStandingPopups();
+
                 Object exerciseModelObject = DiskUtilities.openExerciseModelObject();
                 if (exerciseModelObject != null) {
                     TypeSelectorFactories typeFactories = new TypeSelectorFactories(this);
@@ -348,6 +352,8 @@ public class MainWindow {
         Alert confirm = EditorAlerts.confirmationAlert("Confirm Reset", "This will undo all your work on this exercise.  Continue to reset?");
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.get() == OK) {
+            if (currentExercise != null) ((ExerciseView) currentExercise.getExerciseView()).clearStandingPopups();
+
             Exercise clearExercise = currentExercise.resetExercise();
             setUpExercise(clearExercise);
         }
@@ -372,6 +378,8 @@ public class MainWindow {
     public void closeExercise() {
         if (currentAssignment == null) {
             if (checkContinueExercise("Confirm Close", "This exercise appears to have unsaved changes.\n\nContinue to close exercise?")) {
+                if (currentExercise != null) ((ExerciseView) currentExercise.getExerciseView()).clearStandingPopups();
+
                 setUpExercise(getEmptyExercise());
                 isExerciseOpen = false;
             }
@@ -387,6 +395,8 @@ public class MainWindow {
         Object exerciseModelObject = null;
         if (checkContinueAssignment("Confirm Open", "This assignment appears to have unsaved changes, and will be overwritten by the new exercise.  Continue to open exercise?")) {
             if (checkContinueExercise("Confirm Open", "This exercise appears to have unsaved changes, and will be overwritten by the new one.  Continue to open exercise?")) {
+
+                if (currentExercise != null) ((ExerciseView) currentExercise.getExerciseView()).clearStandingPopups();
                 if (exerciseFile == null)
                     exerciseModelObject = DiskUtilities.openExerciseModelObject();
                 else
@@ -567,6 +577,8 @@ public class MainWindow {
         Assignment assignment = null;
         if (checkContinueAssignment("Confirm Open", "The current assignment appears to have unsaved changes, and will be overwritten by the new one.\n\nContinue to open assignment?")) {
             if (checkContinueExercise("Confirm Open", "The current exercise appears to have unsaved changes, and will be overwritten by the new assignment.\n\nContinue to open assignment?")) {
+                if (currentExercise != null) ((ExerciseView) currentExercise.getExerciseView()).clearStandingPopups();
+
                 isExerciseOpen = false;
                 if (assignmentFile == null)
                     assignment = DiskUtilities.openAssignment();
@@ -586,7 +598,10 @@ public class MainWindow {
                         fitToPage = currentAssignment.isFitToPage();
                         PrintUtilities.setPageLayout(currentAssignment.getPageLayout());
 
+                        if (currentExercise != null) ((ExerciseView) currentExercise.getExerciseView()).clearStandingPopups();
                         currentExercise = typeFactory.getExerciseFromModelObject(currentAssignment.getExerciseModels().get(assignmentIndex));
+
+
                         mainView.setupExercise();
                         mainView.setUpLowerAssignmentBar();
                         assignmentContentModified = false;
@@ -607,6 +622,7 @@ public class MainWindow {
         } else {
             if (checkContinueAssignment("Confirm Close", "This assignment appears to have unsaved changes.\n\nContinue to close assignment?")) {
 
+                if (currentExercise != null) ((ExerciseView) currentExercise.getExerciseView()).clearStandingPopups();
                 setUpExercise(getEmptyExercise());
                 isExerciseOpen = false;
                 currentAssignment = null;
@@ -733,7 +749,9 @@ public class MainWindow {
     private void createRevisedAssignment() {
         if (checkContinueAssignment("Confirm Create", "The current assignment appears to have unsaved changes, and will be overwritten in the creation process.\n\nContinue to create assignment?")) {
              if (checkContinueExercise("Confirm Create", "The current exercise appears to have unsaved changes, and will be overwritten in the creation process.\n\nContinue to create assignment?")) {
-                isExerciseOpen = false;
+                 if (currentExercise != null) ((ExerciseView) currentExercise.getExerciseView()).clearStandingPopups();
+
+                 isExerciseOpen = false;
                 Assignment assignment = DiskUtilities.openAssignment();
                 if (assignment != null) {
                     if (!assignment.hasCompletedHeader()) {
@@ -754,6 +772,8 @@ public class MainWindow {
         if (checkContinueAssignment("Confirm Create", "The current assignment appears to have unsaved changes, and will be overwritten in the creation process.\n\nContinue to create assignment?")) {
             currentAssignment = null;
             if (checkContinueExercise("Confirm Create", "The current exercise appears to have unsaved changes, and will be overwritten in the creation process.\n\n Continue to create assignment?")) {
+                if (currentExercise != null) ((ExerciseView) currentExercise.getExerciseView()).clearStandingPopups();
+
                 isExerciseOpen = false;
                 new CreateAssignment(new Assignment(), this);
             }
@@ -770,6 +790,8 @@ public class MainWindow {
             if (currentExercise.isExerciseModified()) assignmentContentModified = true;
             int prevIndex = assignmentIndex - 1;
             if (prevIndex >= 0) {
+                if (currentExercise != null) ((ExerciseView) currentExercise.getExerciseView()).clearStandingPopups();
+
                 ExerciseModel model = currentExercise.getExerciseModelFromView();
                 currentAssignment.replaceExerciseModel(assignmentIndex, model);
 
@@ -793,6 +815,8 @@ public class MainWindow {
             if (currentExercise.isExerciseModified()) {assignmentContentModified = true; }
             int nextIndex = assignmentIndex + 1;
             if (nextIndex < currentAssignment.getExerciseModels().size()) {
+                if (currentExercise != null) ((ExerciseView) currentExercise.getExerciseView()).clearStandingPopups();
+
                 ExerciseModel model = currentExercise.getExerciseModelFromView();
                 currentAssignment.replaceExerciseModel(assignmentIndex, model);
                 assignmentIndex = nextIndex;
@@ -837,6 +861,8 @@ public class MainWindow {
                 @Override
                 public void changed(ObservableValue ob, ExerciseModel ov, ExerciseModel nv) {
                     if (nv != null) {
+                        if (currentExercise != null) ((ExerciseView) currentExercise.getExerciseView()).clearStandingPopups();
+
                         ExerciseModel model = currentExercise.getExerciseModelFromView();
                         currentAssignment.replaceExerciseModel(assignmentIndex, model);
                         assignmentIndex = exerciseList.getItems().indexOf(nv);

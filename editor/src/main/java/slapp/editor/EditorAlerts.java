@@ -89,7 +89,7 @@ public class EditorAlerts {
 
         message.setPrefWidth(400);
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        alert.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 350));
+        alert.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 420));
         alert.setY(mainStage.getY() + mainStage.getHeight()/4);
         alert.initOwner(mainStage);
         alert.showAndWait();

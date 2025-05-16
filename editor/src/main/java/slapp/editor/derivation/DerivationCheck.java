@@ -130,7 +130,11 @@ public class DerivationCheck {
         });
 
         derivationView.getHelpButton().setOnAction(e -> {
+        });
 
+        derivationView.getStaticHelpButton().setDisable(!derivationModel.getCheckSetup().isStaticHelpButton());
+        derivationView.getStaticHelpButton().setOnAction(e -> {
+            derivationView.showStaticHelp(derivationModel.getCheckSetup().getStaticHelpDoc());
         });
 
     }

@@ -144,7 +144,14 @@ public class DerivationCreate {
     private String defaultRulesetName = "\ud835\udc41\ud835\udc37+"; //ND+
     private String defaultLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (w/abv)
     private CheckBox showMetalanguageCheck;
+    private CheckBox staticHelpCheck;
+    private RichTextArea staticHelpRTA;
+    private DecoratedRTA staticHelpDRTA;
+    private double staticHelpTextHeight;
+    private Spinner<Double> staticHelpHeightSpinner;
 
+    private Spinner<Double> verticalSizeSpinner;
+    private RichTextArea currentSpinnerNode;
 
 
 
@@ -171,6 +178,8 @@ public class DerivationCreate {
         nameField.setText(originalModel.getExerciseName());
         statementTextHeight = originalModel.getStatementTextHeight();
 
+
+
         RichTextAreaSkin.KeyMapValue keyboardSelector = originalModel.getKeyboardSelector();
         if (keyboardSelector == ITALIC_AND_SANS) {italicAndSansCheck.setSelected(true); scriptAndItalicCheck.setSelected(false); scriptAndSansCheck.setSelected(false); italicAndBlackboardCheck.setSelected(false); greekAndFrakturCheck.setSelected(false);}
         if (keyboardSelector == SCRIPT_AND_ITALIC) {scriptAndItalicCheck.setSelected(true); italicAndSansCheck.setSelected(false); scriptAndSansCheck.setSelected(false); italicAndBlackboardCheck.setSelected(false); greekAndFrakturCheck.setSelected(false);}
@@ -185,6 +194,12 @@ public class DerivationCreate {
 
         CheckSetup checkSetup = originalModel.getCheckSetup();
         showMetalanguageCheck.setSelected(checkSetup.showMetalanguageButton);
+
+        staticHelpCheck.setSelected(checkSetup.staticHelpButton);
+        staticHelpRTA.getActionFactory().open(checkSetup.getStaticHelpDoc()).execute(new ActionEvent());
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
+
         checkMaxSpinner.getValueFactory().setValue(checkSetup.getCheckMax());
         helpMaxSpinner.getValueFactory().setValue(checkSetup.getHelpMax());
 
@@ -235,6 +250,11 @@ public class DerivationCreate {
 
         borderPane = new BorderPane();
 
+        verticalSizeSpinner = new Spinner<>(0.0, 999.0, 0.0, 5.0);
+        verticalSizeSpinner.setPrefWidth(65);
+        verticalSizeSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
+        verticalSizeSpinner.setDisable(true);
+
         //empty bar for consistent look
         Menu helpMenu = new Menu("");
         menuBar = new MenuBar(helpMenu);
@@ -247,8 +267,6 @@ public class DerivationCreate {
         statementRTA.setPrefWidth(PrintUtilities.getPageWidth());
         statementRTA.setMinWidth(PrintUtilities.getPageWidth());
         statementRTA.setMaxWidth(PrintUtilities.getPageWidth());
-        //      statementRTA.setContentAreaWidth(PrintUtilities.getPageWidth());
-        //       statementRTA.setPrefHeight(100);
         statementRTA.setMinHeight(100);
 
         double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
@@ -282,6 +300,52 @@ public class DerivationCreate {
                 editorInFocus(statementDRTA, ControlType.AREA);
             }
         });
+
+        //static help editor
+
+        staticHelpDRTA = new DecoratedRTA();
+        staticHelpDRTA.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.BASE_AND_SANS);
+        staticHelpRTA = staticHelpDRTA.getEditor();
+        staticHelpRTA.setPromptText("Static Help (complete if static help selected)");
+        staticHelpRTA.getStylesheets().add("slappTextArea.css");
+        staticHelpRTA.setPrefWidth(400);
+        staticHelpRTA.setMinWidth(400);
+        staticHelpRTA.setMaxWidth(400);
+        staticHelpRTA.setMinHeight(100);
+
+        double staticHelpInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
+
+
+        staticHelpHeightSpinner = new Spinner<>(0.0, 999.0, staticHelpInitialHeight, 1.0);
+        staticHelpHeightSpinner.setPrefWidth(60);
+        staticHelpHeightSpinner.setDisable(false);
+        staticHelpHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
+        staticHelpRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        staticHelpHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            Node increment = staticHelpHeightSpinner.lookup(".increment-arrow-button");
+            if (increment != null) increment.getOnMouseReleased().handle(null);
+            Node decrement = staticHelpHeightSpinner.lookup(".decrement-arrow-button");
+            if (decrement != null) decrement.getOnMouseReleased().handle(null);
+        });
+
+        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+            staticHelpRTA.prefHeightProperty().unbind();
+            staticHelpHeightSpinner.getValueFactory().setValue((double) Math.round(staticHelpHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
+            staticHelpRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+
+        });
+
+        staticHelpRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
+            fieldModified = true;
+            staticHelpTextHeight = mainWindow.getMainView().getRTATextHeight(staticHelpRTA);
+        });
+        staticHelpRTA.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) {
+                editorInFocus(staticHelpDRTA, ControlType.AREA);
+            }
+        });
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
 
         //top fields row
 
@@ -578,9 +642,21 @@ public class DerivationCreate {
                 fieldModified = true;
             }
         };
-        italicAndSansCheck.selectedProperty().addListener(italicAndSansListener);
+        showMetalanguageCheck.selectedProperty().addListener(metalanguageCheckListener);
         Label metalangCheckLabel = new Label("Show \u2133\u2112 Button:");
 
+
+        staticHelpCheck = new CheckBox();
+        staticHelpCheck.setSelected(false);
+
+        ChangeListener staticHelpCheckListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                fieldModified = true;
+            }
+        };
+        staticHelpCheck.selectedProperty().addListener(staticHelpCheckListener);
+        Label staticHelpCheckLabel = new Label("Static Help:");
 
 
         //setup lines control
@@ -623,9 +699,10 @@ public class DerivationCreate {
         topFields.setMargin(widthLabel, new Insets(0, -10, 0, 0));
 
 
-        HBox setupLineButtons = new HBox(30, metalangCheckLabel, showMetalanguageCheck, setupLinesLabel, addSetupLineButton, removeSetupLineButton);
+        HBox setupLineButtons = new HBox(30, metalangCheckLabel, showMetalanguageCheck, staticHelpCheckLabel, staticHelpCheck, setupLinesLabel, addSetupLineButton, removeSetupLineButton);
         setupLineButtons.setAlignment(Pos.CENTER_LEFT);
         setupLineButtons.setMargin(showMetalanguageCheck, new Insets(0, 20, 0, -15));
+        setupLineButtons.setMargin(staticHelpCheck, new Insets(0, 20, 0, -15));
         setupLineButtons.setMargin(setupLinesLabel, new Insets(0, -20, 0, 10));
 
         //setup lines pane
@@ -673,23 +750,12 @@ public class DerivationCreate {
         webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
         webEngine.loadContent(helpText);
         helpArea.setPrefHeight(230);
- /*
-        helpArea = new TextArea(helpText);
-        helpArea.setWrapText(true);
-        helpArea.setPrefHeight(270);
-        helpArea.setEditable(false);
-        helpArea.setFocusTraversable(false);
-        helpArea.setMouseTransparent(true);
-        helpArea.setStyle("-fx-text-fill: mediumslateblue");
-
-  */
 
 
-   //     HBox statementBox = new HBox(statementRTA);
-   //     statementBox.setAlignment(Pos.CENTER);
-   //     centerBox = new VBox(10, upperFieldsBox, statementBox, helpArea);
+        HBox textEntryRow = new HBox(20, statementRTA, staticHelpRTA);
 
-        centerBox = new VBox(10, upperFieldsBox, statementRTA, helpArea);
+
+        centerBox = new VBox(10, upperFieldsBox, textEntryRow, helpArea);
         centerBox.setPadding(new Insets(10, 0, 10, 20));
 
   //      centerBox.setVgrow(statementRTA, Priority.ALWAYS);
@@ -758,7 +824,9 @@ public class DerivationCreate {
 
         sizeToolBar = new ToolBar();
         sizeToolBar.setPrefHeight(38);
-        sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     V Sz:"), statementHeightSpinner);
+        sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     V Sz:"), verticalSizeSpinner);
+
+        setSizeSpinners();
 
         stage = new Stage();
         stage.initOwner(EditorMain.mainStage);
@@ -773,7 +841,7 @@ public class DerivationCreate {
         stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1035));
         stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 900));
 
-        stage.initModality(Modality.WINDOW_MODAL);
+        stage.initModality(Modality.NONE);
         stage.setOnCloseRequest(e-> {
             e.consume();
             closeWindow();
@@ -803,7 +871,7 @@ public class DerivationCreate {
         Platform.runLater(() -> nameField.requestFocus());
     }
 
-
+    //force single selection on list views
     private void setSingleSelection(SimpleBooleanProperty booleanProperty, Map<String, SimpleBooleanProperty> map) {
 
         booleanProperty.addListener((ob, ov, nv) -> {
@@ -959,6 +1027,7 @@ public class DerivationCreate {
             setupLines.add(firstLine);
             updateGridFromSetupLines();
             statementRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
+            staticHelpRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
             fieldModified = false;
             viewExercise();
         }
@@ -975,7 +1044,7 @@ public class DerivationCreate {
         for (SetupLine line : setupLines) {
             if (line.isModified()) fieldModified = true;
         }
-        if (fieldModified || statementRTA.isModified()) {
+        if (fieldModified || statementRTA.isModified() || staticHelpRTA.isModified()) {
             Alert confirm = EditorAlerts.confirmationAlert(title, content);
             Optional<ButtonType> result = confirm.showAndWait();
             if (result.get() != OK) okcontinue = false;
@@ -993,6 +1062,7 @@ public class DerivationCreate {
         rta.setEditable(false);
         rta.prefHeightProperty().unbind();
         exercise.getExerciseView().setStatementPrefHeight(Math.min(PrintUtilities.getPageHeight(), model.getStatementPrefHeight()));
+
         mainWindow.setUpExercise(exercise);
     }
 
@@ -1043,6 +1113,12 @@ public class DerivationCreate {
         double statementPrefHeight = statementTextHeight + 25;
         Document commentDocument = new Document();
 
+        if (staticHelpRTA.isModified()) fieldModified = true;
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+        Document staticHelpDocument = staticHelpRTA.getDocument();
+        double staticHelpPrefHeight = staticHelpTextHeight + 25;
+
+
         List<ModelLine> modelLines = new ArrayList<>();
         for (int i = 0; i < setupLines.size(); i++) {
             SetupLine setupLine = setupLines.get(i);
@@ -1082,6 +1158,8 @@ public class DerivationCreate {
         checkSetup.setCheckMax((Integer) checkMaxSpinner.getValue());
         checkSetup.setHelpMax((Integer) helpMaxSpinner.getValue());
         checkSetup.setShowMetalanguageButton(showMetalanguageCheck.isSelected());
+        checkSetup.setStaticHelpButton(staticHelpCheck.isSelected());
+        checkSetup.setStaticHelpDoc(staticHelpDocument);
 
         String rulesetName = null;
         for (String key : ruleMap.keySet()) {
@@ -1158,14 +1236,40 @@ public class DerivationCreate {
         }
 
  */
-
-
-
-
-
-
-
         return model;
+    }
+
+
+    private void setSizeSpinners() {
+
+        scene.focusOwnerProperty().addListener((ob, ov, nv) -> {
+
+            if (inHierarchy(nv, statementRTA) && currentSpinnerNode != statementRTA) {
+                currentSpinnerNode = statementRTA;
+                sizeToolBar.getItems().remove(3);
+                sizeToolBar.getItems().add(3, statementHeightSpinner);
+                return;
+            }
+            if (inHierarchy(nv, staticHelpRTA) && currentSpinnerNode != staticHelpRTA) {
+                currentSpinnerNode = staticHelpRTA;
+                sizeToolBar.getItems().remove(3);
+                sizeToolBar.getItems().add(3, staticHelpHeightSpinner);
+                return;
+            }
+        });
+    }
+
+    private static boolean inHierarchy(Node node, Node potentialHierarchyElement) {
+        if (potentialHierarchyElement == null) {
+            return true;
+        }
+        while (node != null) {
+            if (node == potentialHierarchyElement) {
+                return true;
+            }
+            node = node.getParent();
+        }
+        return false;
     }
 
     /*

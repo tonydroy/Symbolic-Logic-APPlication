@@ -24,9 +24,10 @@ public class CheckSetup implements Serializable {
     int helpMax;
     int helpTries;
     boolean contextualHelp;
-    Document staticHelpDoc;
     List<Pair<String, Boolean>> theoremSets;
     boolean showMetalanguageButton;
+    boolean staticHelpButton;
+    Document staticHelpDoc;
 
 
     public CheckSetup() {
@@ -47,8 +48,8 @@ public class CheckSetup implements Serializable {
         theoremSets = new ArrayList();
         thrmSetElements = new ArrayList();
         showMetalanguageButton = false;
-
-
+        staticHelpButton = false;
+        staticHelpDoc = new Document();
     }
 
 
@@ -157,6 +158,14 @@ public class CheckSetup implements Serializable {
 
     public void setShowMetalanguageButton(boolean showMetalanguageButton) {
         this.showMetalanguageButton = showMetalanguageButton;
+    }
+
+    public boolean isStaticHelpButton() {
+        return staticHelpButton;
+    }
+
+    public void setStaticHelpButton(boolean staticHelpButton) {
+        this.staticHelpButton = staticHelpButton;
     }
 
     public void setThrmSetElements(List<ThrmSetElement> thrmSetElements) {

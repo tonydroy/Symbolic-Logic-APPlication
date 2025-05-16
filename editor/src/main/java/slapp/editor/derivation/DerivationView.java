@@ -47,7 +47,6 @@ import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.ExerciseView;
 import slapp.editor.main_window.MainWindowView;
-import slapp.editor.main_window.TextHelpPopup;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -103,9 +102,14 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
     private Color checkColor;
     private Color checkElementsColor;
     private boolean checkShowing = false;
+    private Button staticHelpButton;
+
+
+
     private Button showMetaLangButton;
     private boolean showMetaLang;
-    private Stage stage;
+    private Stage metaLangStage;
+    private Stage staticHelpStage;
 
 
 
@@ -227,23 +231,7 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         statementWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
 
 
-        /*
-        showMetaLangButton.setOnAction(e -> {
-            //        TextHelpPopup.helpMetalanguage();
-            statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
 
-                    });
-
-         */
-        /*
-        statementRTA.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-            if (currentSpinnerNode != statementRTA) {
-                currentSpinnerNode = statementRTA;
-                mainView.updateSizeSpinners(statementHeightSpinner, statementWidthSpinner);
-            }
-        });
-
-         */
 
         //comment
         RichTextArea commentRTA = exerciseComment.getEditor();
@@ -271,15 +259,7 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         commentWidthSpinner.setDisable(true);
         commentWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
 
-        /*
-        commentRTA.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-            if (currentSpinnerNode != commentRTA) {
-                currentSpinnerNode = commentRTA;
-                mainView.updateSizeSpinners(commentHeightSpinner, commentWidthSpinner);
-            }
-        });
 
-         */
 
         //split pane
         double splitPaneInitialWidth = Math.round(splitPanePrefWidth / mainView.getScalePageWidth() * 20.0) * 5.0;
@@ -306,16 +286,7 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
             splitPaneHeightSpinner.getValueFactory().setValue((double) Math.round(contentSplitPane.getHeight() / mainView.getScalePageHeight() * 100));
         });
 
-        /*
-        contentSplitPane.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-//            if (currentSpinnerNode != contentSplitPane) {
-                currentSpinnerNode = contentSplitPane;
-                splitPaneHeightSpinner.getValueFactory().setValue((double) Math.round(contentSplitPane.getHeight()/mainView.getScalePageHeight() * 100.0));
-                mainView.updateSizeSpinners(splitPaneHeightSpinner, splitPaneWidthSpinner);
- //           }
-        });
 
-         */
 
         //page size listeners
         mainView.scalePageHeightProperty().addListener((ob, ov, nv) -> {
@@ -363,9 +334,7 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         checkButton.setPrefWidth(105);
         checkButton.setTooltip(new Tooltip("Check complete derivation for correctness."));
         checkTriesLabel = new Label();
- //       VBox checksBox = new VBox(10, checkButton, checkTriesLabel);
-  //      checksBox.setAlignment(Pos.CENTER);
-  //      checkTriesLabel.setAlignment(Pos.CENTER);
+
 
         checkProgButton = new Button("Check Progress");
         checkProgButton.setPrefWidth(105);
@@ -377,13 +346,22 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         checksBox.setMargin(checkProgButton, new Insets(0,0,10, 0));
 
 
-        helpButton = new Button("Help");
+        helpButton = new Button("Contextual Help");
         helpButton.setPrefWidth(105);
         helpButton.setTooltip(new Tooltip("Get help for selected goal"));
         helpTriesLabel = new Label();
-        VBox helpBox = new VBox(10, helpButton, helpTriesLabel);
+
+
+        staticHelpButton = new Button("Static Help");
+        staticHelpButton.setPrefWidth(105);
+        staticHelpButton.setTooltip(new Tooltip("Get static help text"));
+
+
+        VBox helpBox = new VBox(10, helpButton, helpTriesLabel, staticHelpButton );
         helpBox.setAlignment(Pos.CENTER);
         helpTriesLabel.setAlignment(Pos.CENTER);
+        helpBox.setMargin(staticHelpButton, new Insets(10,0,0,0));
+
 
         VBox rightControlBox = new VBox(40, bigCheckBox, checksBox, helpBox );
         rightControlBox.setAlignment(Pos.TOP_CENTER);
@@ -550,7 +528,7 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
 
     public void showMetalanguageHelp(Document doc) {
 
-        if (stage == null || !stage.isShowing()) {
+        if (metaLangStage == null || !metaLangStage.isShowing()) {
             RichTextArea mrta = new RichTextArea(EditorMain.mainStage);
             mrta.getActionFactory().open(doc).execute(new ActionEvent());
             mrta.setPadding(new Insets(20, 0, 20, 20));
@@ -563,23 +541,59 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
             Scene scene = new Scene(mrta);
             scene.getStylesheets().add(RichTextArea.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
             mrta.applyCss();
-            stage = new Stage();
-            stage.setScene(scene);
-            stage.setTitle("SLAPP Text Help");
-            stage.initModality(Modality.NONE);
-            stage.getIcons().addAll(EditorMain.icons);
-            stage.initOwner(EditorMain.mainStage);
+            metaLangStage = new Stage();
+            metaLangStage.setScene(scene);
+            metaLangStage.setTitle("SLAPP Text Help");
+            metaLangStage.initModality(Modality.NONE);
+            metaLangStage.getIcons().addAll(EditorMain.icons);
+            metaLangStage.initOwner(EditorMain.mainStage);
             Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-            stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 820));
-            stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 720));
+            metaLangStage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 820));
+            metaLangStage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 720));
 
-            stage.show();
+            metaLangStage.show();
         }
-
-
-
-
     }
+
+    public void showStaticHelp(Document doc) {
+
+        if (staticHelpStage == null || !staticHelpStage.isShowing()) {
+            RichTextArea hrta = new RichTextArea(EditorMain.mainStage);
+            hrta.getActionFactory().open(doc).execute(new ActionEvent());
+            hrta.setPadding(new Insets(20, 0, 20, 20));
+            hrta.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
+            hrta.setPrefWidth(400);
+            hrta.setPrefHeight(300);
+            hrta.setEditable(false);
+
+
+            Scene scene = new Scene(hrta);
+            scene.getStylesheets().add(RichTextArea.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
+            hrta.applyCss();
+            staticHelpStage = new Stage();
+            staticHelpStage.setScene(scene);
+            staticHelpStage.setTitle("SLAPP Text Help");
+            staticHelpStage.initModality(Modality.NONE);
+            staticHelpStage.getIcons().addAll(EditorMain.icons);
+            staticHelpStage.initOwner(EditorMain.mainStage);
+            Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
+            staticHelpStage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 420));
+            staticHelpStage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 320));
+
+            staticHelpStage.show();
+        }
+    }
+
+    public void clearStandingPopups() {
+        if (staticHelpStage != null) staticHelpStage.close();
+        if (metaLangStage != null) metaLangStage.close();
+    }
+
+
+
+
+
+
 
     /**
      * Set justification flow from a single view line on grid
@@ -776,6 +790,10 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
 
     public Button getShowMetaLangButton() {
         return showMetaLangButton;
+    }
+
+    public Button getStaticHelpButton() {
+        return staticHelpButton;
     }
 
     /**

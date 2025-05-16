@@ -444,7 +444,9 @@ public class MainWindowView {
      * Set an exercise on the main view
      */
     public void setupExercise() {
+
         this.currentExerciseView = (ExerciseView) mainWindow.getCurrentExercise().getExerciseView();
+
         this.statementNode = currentExerciseView.getExerciseStatementNode();
         this.contentNode = currentExerciseView.getExerciseContentNode();
         this.commentDecoratedRTA = currentExerciseView.getExerciseComment();

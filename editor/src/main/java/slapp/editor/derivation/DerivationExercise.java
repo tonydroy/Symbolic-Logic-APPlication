@@ -231,7 +231,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         /*
         This is a kludge.  Metalanguage help should work with the regular TextHelpPopup by the first commented line
         below.  But the JavaFX WebView puts an empty box after supplemental unicode characters
-        (see https://bugs.openjdk.org/browse/JDK-8343963).  This is quite ugly.  So using an RTA and Document.
+        (see https://bugs.openjdk.org/browse/JDK-8343963).  This is ugly.  So using an RTA and Document.
 
         To edit this document, uncomment the second group of lines below and open metalanguageHelp.sle.  The help Document opens
         into the comment field.  After edit there, press the metalanguage help button so that the Document is sent to
@@ -250,7 +250,18 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
 
             derivationView.showMetalanguageHelp(mainWindow.getSlappData().getMetalanguageHelp());
         });
+
+        /*
+        derivationView.getStaticHelpButton().setDisable(!derivationModel.getCheckSetup().isStaticHelpButton());
+        derivationView.getStaticHelpButton().setOnAction(e -> {
+            derivationView.showStaticHelp(derivationModel.getCheckSetup().getStaticHelpDoc());
+        });
+
+         */
+
     }
+
+
 
 
 
