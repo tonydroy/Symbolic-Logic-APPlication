@@ -84,7 +84,7 @@ public interface ExerciseView<T> {
      */
     Node getRightControl();
 
-    default void clearStandingPopups() {};
+
 
 
 

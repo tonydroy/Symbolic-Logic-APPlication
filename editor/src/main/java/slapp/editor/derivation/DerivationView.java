@@ -584,16 +584,14 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         }
     }
 
-    public void clearStandingPopups() {
-        if (staticHelpStage != null) staticHelpStage.close();
-        if (metaLangStage != null) metaLangStage.close();
+
+    public Stage getMetaLangStage() {
+        return metaLangStage;
     }
 
-
-
-
-
-
+    public Stage getStaticHelpStage() {
+        return staticHelpStage;
+    }
 
     /**
      * Set justification flow from a single view line on grid

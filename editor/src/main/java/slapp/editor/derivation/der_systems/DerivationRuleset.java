@@ -32,6 +32,7 @@ public class DerivationRuleset {
     Pattern genericAssumption;
     boolean requirePremisesAtTop = true;
     boolean permitSubderivations = true;
+    boolean contextualHelpCompatible = false;
 
     List<Pair<Pattern, String>> dummyRules = new ArrayList<>();
 
@@ -200,6 +201,14 @@ public class DerivationRuleset {
 
     public void setPermitSubderivations(boolean permitSubderivations) {
         this.permitSubderivations = permitSubderivations;
+    }
+
+    public boolean isContextualHelpCompatible() {
+        return contextualHelpCompatible;
+    }
+
+    public void setContextualHelpCompatible(boolean contextualHelpCompatible) {
+        this.contextualHelpCompatible = contextualHelpCompatible;
     }
 }
 

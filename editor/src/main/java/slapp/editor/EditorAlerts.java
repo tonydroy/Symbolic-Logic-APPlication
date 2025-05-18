@@ -37,6 +37,9 @@ import java.util.List;
  */
 public class EditorAlerts {
 
+    static boolean showPreliminary = false;
+    static String prelimMessage = "";
+
     /**
      * Information alert with 'OK' to close
      * @param header alert header string
@@ -64,6 +67,11 @@ public class EditorAlerts {
      */
     //collects list of texts into text flow for showSimpleTxtFlowAlert
     public static void showSimpleTxtListAlert(String header, List<Text> messageTxts) {
+
+        if (showPreliminary) {
+            fleetingPopup(prelimMessage);
+        }
+
         TextFlow textFlow = new TextFlow();
         if (messageTxts != null) {
             Text[] resultArray = new Text[messageTxts.size()];
@@ -181,7 +189,7 @@ public class EditorAlerts {
         label.setMinHeight(100);
         popup.getContent().add(label);
 
-        PauseTransition delay = new PauseTransition(Duration.seconds(2));
+        PauseTransition delay = new PauseTransition(Duration.seconds(2.5));
         delay.setOnFinished(e -> popup.hide());
         popup.show(EditorMain.mainStage);
         delay.play();
@@ -213,7 +221,10 @@ public class EditorAlerts {
         delay.play();
     }
 
-
+    public static void setShowPreliminary(boolean showPrelim, String messageString) {
+        showPreliminary = showPrelim;
+        prelimMessage = messageString;
+    }
 
 
 

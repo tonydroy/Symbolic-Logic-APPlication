@@ -94,4 +94,6 @@ public interface Exercise<T,U> {
     Spinner getFFHeightSpinner();
     Spinner getFFWidthSpinner();
 
+    default void clearStandingPopups() {};
+
 }

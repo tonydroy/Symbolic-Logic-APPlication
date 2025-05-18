@@ -174,10 +174,17 @@ public class MatchUtilities {
     }
 
     public static Pair<Boolean, Boolean> simpleFormMatch(Document metaDoc, Document objectDoc, String objectL, String metaL) throws TextMessageException {
-        Expression metaExp = ParseUtilities.parseDoc(metaDoc, metaL).get(0);
+
         Expression objectExp = ParseUtilities.parseDoc(objectDoc, objectL).get(0);
 
-//       System.out.println(ParseUtilities.parseDoc(metaDoc, metaL));
+        return simpleExpFormMatch(metaDoc, objectExp, objectL, metaL);
+    }
+
+    public static Pair<Boolean, Boolean> simpleExpFormMatch(Document metaDoc, Expression objectExp, String objectL, String metaL) throws TextMessageException {
+        Expression metaExp = ParseUtilities.parseDoc(metaDoc, metaL).get(0);
+
+      //  System.out.println("meta: " + metaExp + " object:" + objectExp);
+
 
         transformList.clear();
         matchedInstances.clear();

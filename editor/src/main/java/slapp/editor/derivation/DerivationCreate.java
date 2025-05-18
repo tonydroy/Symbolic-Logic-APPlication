@@ -1230,6 +1230,14 @@ public class DerivationCreate {
         }
         checkSetup.setThrmSetElements(modelThrmSetElements);
 
+        if (checkSetup.getHelpMax() != 0 && (!DerivationRulesets.getRuleset(checkSetup.getRulesetName()).isContextualHelpCompatible()  || !checkSetup.getTheoremSets().isEmpty())) {
+            checkSetup.setHelpMax(0);
+            helpMaxSpinner.getValueFactory().setValue(0);
+            String optionalStr = "";
+            if (!checkSetup.getTheoremSets().isEmpty()) optionalStr = " (with selected theorem sets)";
+            EditorAlerts.fleetingRedPopup(checkSetup.getRulesetName() + optionalStr + " is not compatible with contextual help.\n\nHelp Max reset to zero.");
+        }
+
 /*
         for (ThrmSetElement thrmSetElement : modelThrmSetElements) {
             System.out.println(thrmSetElement.getName());

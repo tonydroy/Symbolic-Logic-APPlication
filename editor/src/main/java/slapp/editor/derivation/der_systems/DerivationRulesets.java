@@ -13,12 +13,13 @@ import java.util.regex.Pattern;
 public class DerivationRulesets implements Serializable {
     private static final long serialVersionUID = 100L;
     private static List<DerivationRuleset> rulesets = new ArrayList<>();
+    private boolean contextualHelpComaatible;
 
     static {
         loadRulesets();
     }
 
-    public DerivationRulesets() {}
+    public DerivationRulesets() {      }
 
     private static void loadRulesets() {
         rulesets.add(getNP134());
@@ -534,6 +535,7 @@ public class DerivationRulesets implements Serializable {
 
         ND.setGenericAssumption(Pattern.compile("^\\s*A.*$"));
         ND.setRequirePremisesAtTop(true);
+        ND.setContextualHelpCompatible(true);
 
         return ND;
     }
@@ -598,6 +600,7 @@ public class DerivationRulesets implements Serializable {
 
         NDs.setGenericAssumption(Pattern.compile("^\\s*A.*$"));
         NDs.setRequirePremisesAtTop(true);
+        NDs.setContextualHelpCompatible(true);
 
         return NDs;
     }

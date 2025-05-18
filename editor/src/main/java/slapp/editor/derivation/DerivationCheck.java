@@ -99,7 +99,7 @@ public class DerivationCheck {
         derivationView.getCheckTriesLabel().setText(checkString);
     }
 
-    private void setHelpCounter() {
+    public void setHelpCounter() {
         if (helpMax != -1 && helpTries >= helpMax) {derivationView.getHelpButton().setDisable(true);}
 
         String helpString;
@@ -129,8 +129,7 @@ public class DerivationCheck {
             boolean check = runCheck();
         });
 
-        derivationView.getHelpButton().setOnAction(e -> {
-        });
+
 
         derivationView.getStaticHelpButton().setDisable(!derivationModel.getCheckSetup().isStaticHelpButton());
         derivationView.getStaticHelpButton().setOnAction(e -> {
@@ -144,6 +143,7 @@ public class DerivationCheck {
         derivationView.deactivateBigCheck();
         checkTries++;
         setChecksCounter();
+        derivationExercise.getDerivationHelp().closeHelpWindow();
 
         viewLines = derivationView.getViewLines();
 
@@ -157,9 +157,28 @@ public class DerivationCheck {
 
         checkSuccess = true;
         derivationView.activateBigCheck();
+
         //set check on model
         return true;
     }
+
+    public boolean backgroundProgressCheck() {
+        checkFinal = false;
+
+        viewLines = derivationView.getViewLines();
+
+        if (!checkFormulas()) return false;
+        if (!checkScopeStructure()) return false;
+        if (!checkAssumptionScopes()) return false;
+        if (!checkJustificationForms()) return false;
+        setScopeLists();
+        if (!checkJustifications()) return false;
+
+        return true;
+
+    }
+
+
 
     private boolean checkJustifications() {
         for (int i = 0; i < viewLines.size(); i++) {

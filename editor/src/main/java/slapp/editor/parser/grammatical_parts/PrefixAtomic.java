@@ -76,6 +76,30 @@ public class PrefixAtomic extends Formula implements Expression {
             }
             return equals;
         }
+
+        if (o instanceof InfixAtomic) {
+            InfixAtomic other = (InfixAtomic) o;
+            boolean equals = true;
+            if (!mainRelation.equals(other.getMainRelation())) { equals = false;}
+            if (getSubTransform() == null) {
+                if (other.getSubTransform() != null) equals = false;
+            }
+            else if (!getSubTransform().equals(other.getSubTransform())) {
+                equals = false;
+            }
+            if (getChildren().size() != other.getChildren().size()) { equals = false; }
+            else for (int i = 0; i < getChildren().size(); i++) {
+                if (getChildren().get(i) == null)  {
+                    if (other.getChildren().get(i) != null) equals = false;
+                }
+                else if (!getChildren().get(i).equals(other.getChildren().get(i))) { equals = false; }
+            }
+            return equals;
+        }
+
+
+
+
         return false;
     }
 

@@ -636,6 +636,8 @@ public class MainWindowView {
             KeyboardDiagram.getInstance().close();
             dummyStage.close();
             mainWindow.closeVideoHelp();
+            if (mainWindow.getCurrentExercise() != null) mainWindow.getCurrentExercise().clearStandingPopups();
+
 //            if (mainWindow.getMediaViewer() != null) {  mainWindow.getMediaViewer().stopPlay();    }
             DiskUtilities.saveDataFile(mainWindow.getSlappData());
             stage.close();

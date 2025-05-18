@@ -106,10 +106,32 @@ public class InfixAtomic extends Formula implements Expression {
         if (o instanceof InfixAtomic) {
             InfixAtomic other = (InfixAtomic) o;
 
+
             boolean equals = true;
             if (!mainRelation.equals(other.mainRelation)) { equals = false;}
  //           if (!getOpenBracket().equals(other.getOpenBracket())) { equals = false;}
  //           if (!getCloseBracket().equals(other.getCloseBracket())) { equals = false;}
+            if (getSubTransform() == null) {
+                if (other.getSubTransform() != null) equals = false;
+            }
+            else if (!getSubTransform().equals(other.getSubTransform())) {
+                equals = false;
+            }
+            if (getChildren().size() != other.getChildren().size()) { equals = false; }
+            else for (int i = 0; i < getChildren().size(); i++) {
+                if (!getChildren().get(i).equals(other.getChildren().get(i))) { equals = false; }
+            }
+            return equals;
+        }
+
+        if (o instanceof PrefixAtomic) {
+            PrefixAtomic other = (PrefixAtomic) o;
+
+
+            boolean equals = true;
+            if (!mainRelation.equals(other.mainRelation)) { equals = false;}
+            //           if (!getOpenBracket().equals(other.getOpenBracket())) { equals = false;}
+            //           if (!getCloseBracket().equals(other.getCloseBracket())) { equals = false;}
             if (getSubTransform() == null) {
                 if (other.getSubTransform() != null) equals = false;
             }
