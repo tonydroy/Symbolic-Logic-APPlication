@@ -143,7 +143,7 @@ public class DerivationCheck {
         derivationView.deactivateBigCheck();
         checkTries++;
         setChecksCounter();
-        derivationExercise.getDerivationHelp().closeHelpWindow();
+        derivationExercise.getDerivationHelp().closeHelpWindows();
 
         viewLines = derivationView.getViewLines();
 

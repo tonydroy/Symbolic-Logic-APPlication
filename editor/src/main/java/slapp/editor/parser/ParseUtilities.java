@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class ParseUtilities {
-    private static Language language;
+    private static Language language;    //delete this and uncomment in constructor
     private static int maxTermLevel;
     private static double baseFontSize = 12;
     private static boolean matchVal = false;
@@ -25,6 +25,7 @@ public class ParseUtilities {
 
     public static List<Expression> parseDoc(Document doc, String langName) {
         language = Languages.getLanguage(langName);
+
         List<OriginalElement> elements = getElements(doc);
         List<Expression> expressions = new ArrayList<>();
         for (OriginalElement element : elements) {

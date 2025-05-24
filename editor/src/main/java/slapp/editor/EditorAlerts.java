@@ -69,7 +69,7 @@ public class EditorAlerts {
     public static void showSimpleTxtListAlert(String header, List<Text> messageTxts) {
 
         if (showPreliminary) {
-            fleetingPopup(prelimMessage);
+            fleetingRedPopup(prelimMessage);
         }
 
         TextFlow textFlow = new TextFlow();

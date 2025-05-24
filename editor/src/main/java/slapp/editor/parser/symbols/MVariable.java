@@ -68,4 +68,8 @@ public class MVariable extends VariableSym {
     public static List<MVariable> getVariables() {
         return variables;
     }
+
+    public VariableSym getMatchVar() {
+        return matchVar;
+    }
 }

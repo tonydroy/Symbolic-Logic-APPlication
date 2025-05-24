@@ -25,7 +25,7 @@ import static javafx.application.Application.launch;
 public class ParserMain {
 
     //for now
-    String objectLangName = "Meta";
+    String objectLangName = "Lq_abv";
     String metaLangName = "Meta";
 
     public ParserMain(Stage stage) {

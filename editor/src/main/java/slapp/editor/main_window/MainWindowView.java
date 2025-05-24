@@ -1123,7 +1123,7 @@ public class MainWindowView {
 
     public Spinner getZoomSpinner() {return zoomSpinner; }
 
-
-
-
+    public BorderPane getBorderPane() {
+        return borderPane;
+    }
 }

@@ -14,7 +14,8 @@ import java.util.List;
 public class ExerciseHelpPopup {
     Stage helpStage;
 
-    public ExerciseHelpPopup(List<Text> messageTxts) {
+
+    public ExerciseHelpPopup(List<Text> messageTxts, double windowOffset) {
         TextFlow textFlow = new TextFlow();
         if (messageTxts != null) {
             Text[] resultArray = new Text[messageTxts.size()];
@@ -34,8 +35,8 @@ public class ExerciseHelpPopup {
             Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
 
 
-            helpStage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 420));
-            helpStage.setY(EditorMain.mainStage.getY() + EditorMain.mainStage.getHeight()/4);
+            helpStage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth() + windowOffset, bounds.getMaxX() - 420));
+            helpStage.setY(EditorMain.mainStage.getY() + EditorMain.mainStage.getHeight()/4 + windowOffset);
      //       helpStage.initOwner(EditorMain.mainStage);
         }
 

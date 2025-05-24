@@ -44,6 +44,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Stage;
 import org.apache.commons.lang3.SerializationUtils;
 import slapp.editor.DiskUtilities;
 import slapp.editor.EditorAlerts;
@@ -268,7 +269,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
     public void clearStandingPopups() {
         if (derivationView.getStaticHelpStage() != null) derivationView.getStaticHelpStage().close();
         if (derivationView.getMetaLangStage() != null) derivationView.getMetaLangStage().close();
-        if (derivationHelp.getHelpStage() != null) derivationHelp.getHelpStage().close();
+        derivationHelp.closeHelpWindows();
     }
 
 
@@ -1099,6 +1100,8 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
     public int currentRow() {
         int row = -1;
         Node lastFocusedNode = mainWindow.getLastFocusOwner();
+
+
         if (lastFocusedNode != null) {
             if (derivationView.getGrid().getChildren().contains(lastFocusedNode.getParent()))
                 row = derivationView.getGrid().getRowIndex(lastFocusedNode.getParent());

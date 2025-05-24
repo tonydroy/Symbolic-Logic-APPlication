@@ -203,6 +203,8 @@ public class SyntacticalFns {
         return freeFor;
     }
 
+
+
     public static void removeTreeFromList(List<Expression> subformulas, Expression formula) {
         removalList = new ArrayList<>();
         setRemovalList(subformulas, formula);
@@ -501,6 +503,8 @@ public class SyntacticalFns {
     //Formula (term) with T1 instances replaced by T2
     public static Expression substituteParticularTerms(Expression formulaExp, Expression term2Exp, List<Expression> term1List) {
 
+        //levels not being set right
+
         //get variables in term1
         variableList = new ArrayList();
         Expression term1Exp = null;
@@ -535,10 +539,12 @@ public class SyntacticalFns {
 
                     FunctionSymbol fnSymbol = term.getMainFnSymbol();
                     List<Expression> parallelChildList = new ArrayList();
+                    int level = 0;
                     for (int j = 0; j < term.getChildren().size(); j++) {
                         Expression childExp = term.getChildren().get(j);
                         int index = listIndexParticular(nodeList, childExp);
                         parallelChildList.add(parallelList.get(index));
+                        level = Math.max(level, parallelList.get(index).getLevel());
                     }
                     if (term instanceof InfixTerm) {
                         InfixTerm infixTerm = (InfixTerm) term;
@@ -547,12 +553,16 @@ public class SyntacticalFns {
                         newTerm.setCloseBracket(infixTerm.getCloseBracket());
                         newTerm.setMainFnSymbol(fnSymbol);
                         newTerm.setChildren(parallelChildList);
+                        level++;
+                        newTerm.setLevel(level);
                         parallelList.add(newTerm);
 
                     } else {
                         Term newTerm = new Term();
                         newTerm.setMainFnSymbol(fnSymbol);
                         newTerm.setChildren(parallelChildList);
+                        level++;
+                        newTerm.setLevel(level);
                         parallelList.add(newTerm);
                     }
                 }
@@ -564,16 +574,20 @@ public class SyntacticalFns {
                     parallelList.add(exp);
                 }
                 else if (formula.isAtomic()) {
+                    int level = 0;
                     List<Expression> parallelChildList = new ArrayList();
                     for (int j = 0; j < formula.getChildren().size(); j++) {
                         Expression childExp = formula.getChildren().get(j);
                         int index = listIndexParticular(nodeList, childExp);
                         parallelChildList.add(parallelList.get(index));
+                        level = Math.max(level, parallelList.get(index).getLevel());
                     }
                     if (formula instanceof PrefixAtomic) {
                         PrefixAtomic prefixAtomic = (PrefixAtomic) formula;
                         PrefixAtomic newPrefixAtomic = new PrefixAtomic(prefixAtomic.getMainRelation()) ;
                         newPrefixAtomic.setChildren(parallelChildList);
+                        level++;
+                        newPrefixAtomic.setLevel(level);
                         parallelList.add(newPrefixAtomic);
                     }
                     else if (formula instanceof InfixAtomic) {
@@ -582,21 +596,27 @@ public class SyntacticalFns {
                         newInfixAtomic.setOpenBracket(infixAtomic.getOpenBracket());
                         newInfixAtomic.setCloseBracket(infixAtomic.getCloseBracket());
                         newInfixAtomic.setChildren(parallelChildList);
+                        level++;
+                        newInfixAtomic.setLevel(level);
                         parallelList.add(newInfixAtomic);
                     }
                 }
                 else if (formula instanceof MComplexFormula) {
+                    int level = 0;
                     List<Expression> parallelChildList = new ArrayList();
                     for (int j = 0; j < formula.getChildren().size(); j++) {
                         Expression childExp = formula.getChildren().get(j);
                         int index = listIndexParticular(nodeList, childExp);
                         parallelChildList.add(parallelList.get(index));
+                        level = Math.max(level, parallelList.get(index).getLevel());
                     }
                     MComplexFormula complexFormula = (MComplexFormula) formula;
                     MComplexFormula newComplexFormula = new MComplexFormula(complexFormula.getFormulaSym());
                     newComplexFormula.setChildren(parallelChildList);
                     newComplexFormula.setOpenBracket(complexFormula.getOpenBracket());
                     newComplexFormula.setCloseBracket(complexFormula.getCloseBracket());
+                    level++;
+                    newComplexFormula.setLevel(level);
                     parallelList.add(newComplexFormula);
                 }
 
@@ -644,12 +664,13 @@ public class SyntacticalFns {
                     listNodes(formulaExp);
                     Collections.sort(nodeList, new SortByLevel());
 
-
+                    int level = 0;
                     List<Expression> parallelChildList = new ArrayList();
                     for (int j = 0; j < formula.getChildren().size(); j++) {
                         Expression childExp = formula.getChildren().get(j);
                         int index = listIndexParticular(nodeList, childExp);
                         parallelChildList.add(parallelList.get(index));
+                        level = Math.max(level, parallelList.get(index).getLevel());
                     }
                     Formula newFormula = new Formula();
                     newFormula.setChildren(parallelChildList);
@@ -658,6 +679,8 @@ public class SyntacticalFns {
                     newFormula.setOpenBracket(formula.getOpenBracket());
                     newFormula.setCloseBracket(formula.getCloseBracket());
                     newFormula.setNegatingInfix(formula.isNegatingInfix());
+                    level++;
+                    newFormula.setLevel(level);
                     parallelList.add(newFormula);
                 }
             }

@@ -27,6 +27,10 @@ public class DerivationRuleset {
     DerivationRule asspRestrictedExisExploitCRule;
     DerivationRule asspRestrictedExisExploitGRule;
 
+    DerivationRule disjunctionExploitRule;
+    DerivationRule disjunctionIntroRule;
+    DerivationRule contradictionIntroRule;
+
 
 
     Pattern genericAssumption;
@@ -129,6 +133,30 @@ public class DerivationRuleset {
 
     public void setAsspExisExploitGRule(DerivationRule asspExisExploitGRule) {
         this.asspExisExploitGRule = asspExisExploitGRule;
+    }
+
+    public DerivationRule getDisjunctionExploitRule() {
+        return disjunctionExploitRule;
+    }
+
+    public void setDisjunctionExploitRule(DerivationRule disjunctionExploitRule) {
+        this.disjunctionExploitRule = disjunctionExploitRule;
+    }
+
+    public DerivationRule getDisjunctionIntroRule() {
+        return disjunctionIntroRule;
+    }
+
+    public void setDisjunctionIntroRule(DerivationRule disjunctionIntroRule) {
+        this.disjunctionIntroRule = disjunctionIntroRule;
+    }
+
+    public DerivationRule getContradictionIntroRule() {
+        return contradictionIntroRule;
+    }
+
+    public void setContradictionIntroRule(DerivationRule contradictionIntroRule) {
+        this.contradictionIntroRule = contradictionIntroRule;
     }
 
     public DerivationRule getAsspNegIntroRule() {
