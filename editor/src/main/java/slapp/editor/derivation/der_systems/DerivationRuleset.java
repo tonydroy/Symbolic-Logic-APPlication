@@ -30,6 +30,11 @@ public class DerivationRuleset {
     DerivationRule disjunctionExploitRule;
     DerivationRule disjunctionIntroRule;
     DerivationRule contradictionIntroRule;
+    DerivationRule exisExploitRule;
+    DerivationRule exisIntroRule;
+
+
+
 
 
 
@@ -150,6 +155,26 @@ public class DerivationRuleset {
     public void setDisjunctionIntroRule(DerivationRule disjunctionIntroRule) {
         this.disjunctionIntroRule = disjunctionIntroRule;
     }
+
+    public DerivationRule getExisExploitRule() {
+        return exisExploitRule;
+    }
+
+    public void setExisExploitRule(DerivationRule exisExploitRule) {
+        this.exisExploitRule = exisExploitRule;
+    }
+
+    public DerivationRule getExisIntroRule() {
+        return exisIntroRule;
+    }
+
+    public void setExisIntroRule(DerivationRule exisIntroRule) {
+        this.exisIntroRule = exisIntroRule;
+    }
+
+
+
+
 
     public DerivationRule getContradictionIntroRule() {
         return contradictionIntroRule;

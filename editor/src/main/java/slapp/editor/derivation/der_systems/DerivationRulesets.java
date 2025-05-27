@@ -487,6 +487,10 @@ public class DerivationRulesets implements Serializable {
         ND.setContradictionIntroRule(contradictionIntroRule);
         DerivationRule disjIntroRule = new DisjunctionIntro("\u2228I", "^\\s*\\d+\\s*\\u2228I\\s*$");  //
         ND.setDisjunctionIntroRule(disjIntroRule);
+        DerivationRule existentialIntroRule = new ExistentialIntro("\u2203I", "^\\s*\\d+\\s*\\u2203I\\s*$");
+        ND.setExisIntroRule(existentialIntroRule);
+        DerivationRule existentialExploitRule = new ExistentialExploit("\u2203E", "^\\s*\\d+\\s*,\\s*\\d+\\s*-\\s*\\d+\\s*\\u2203E\\s*$");
+        ND.setExisExploitRule(existentialExploitRule);
 
         List<DerivationRule> rules = new ArrayList<>();
         rules.add(premiseRule);
@@ -501,6 +505,8 @@ public class DerivationRulesets implements Serializable {
         rules.add(disjExploitRule);
         rules.add(contradictionIntroRule);
         rules.add(disjIntroRule);
+        rules.add(existentialIntroRule);
+        rules.add(existentialExploitRule);
 
 
         rules.add(new Rieteration("R", "^\\s*\\d+\\s*R\\s*$"));  //reiteration
@@ -518,9 +524,9 @@ public class DerivationRulesets implements Serializable {
   //      rules.add(new DisjunctionExploit("\u2228E", "^\\s*\\d+\\s*,\\s*\\d+\\s*-\\s*\\d+,\\s*\\d+\\s*-\\s*\\d+\\s*\\u2228E\\s*$")); // wedge E
 
         rules.add(new UniversalExploit("\u2200E", "^\\s*\\d+\\s*\\u2200E\\s*$"));
-        rules.add(new ExistentialIntro("\u2203I", "^\\s*\\d+\\s*\\u2203I\\s*$"));
+ //       rules.add(new ExistentialIntro("\u2203I", "^\\s*\\d+\\s*\\u2203I\\s*$"));
         rules.add(new UniversalIntro("\u2200I", "^\\s*\\d+\\s*\\u2200I\\s*$"));
-        rules.add(new ExistentialExploit("\u2203E", "^\\s*\\d+\\s*,\\s*\\d+\\s*-\\s*\\d+\\s*\\u2203E\\s*$"));
+ //       rules.add(new ExistentialExploit("\u2203E", "^\\s*\\d+\\s*,\\s*\\d+\\s*-\\s*\\d+\\s*\\u2203E\\s*$"));
         rules.add(new EqualityIntro("\ue8acI", "^\\s*\\ue8acI\\s*$"));
         rules.add(new EqualityExploit("\ue8acE" ,"^\\s*\\d+\\s*,\\s*\\d+\\s*\\ue8acE\\s*$"));
 

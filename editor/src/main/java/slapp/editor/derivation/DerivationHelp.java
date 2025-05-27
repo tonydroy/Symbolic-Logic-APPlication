@@ -4,14 +4,15 @@ import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
-import javafx.scene.Node;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
 import slapp.editor.ExerciseHelpPopup;
 import slapp.editor.derivation.der_systems.DerivationRule;
-import slapp.editor.derivation.der_systems.DisjunctionExploit;
+import slapp.editor.main_window.MainWindow;
+import slapp.editor.main_window.MainWindowView;
 import slapp.editor.parser.*;
 import slapp.editor.parser.grammatical_parts.*;
 import slapp.editor.parser.symbols.MFormulaSym;
@@ -20,7 +21,6 @@ import slapp.editor.parser.symbols.MVariable;
 import slapp.editor.parser.symbols.VariableSym;
 
 import java.util.*;
-import java.util.logging.Handler;
 
 public class DerivationHelp {
     private DerivationExercise derivationExercise;
@@ -47,6 +47,8 @@ public class DerivationHelp {
 
     private List<Term> termList = new ArrayList<>();
     private List<Term> formulaVars = new ArrayList<>();
+    private List<Expression> termList2 = new ArrayList<>();
+    private boolean helpShowing;
 
 
 
@@ -59,13 +61,12 @@ public class DerivationHelp {
 
 
         derivationView.getHelpButton().setOnAction(e -> {
-            boolean helpShowing = false;
+            helpShowing = false;
             for (Stage stage : helpStages) { if (stage != null && stage.isShowing()) helpShowing = true; }
             closeHelpWindows();
-            if (helpShowing) {
-                try {Thread.sleep(250);}
-                catch (InterruptedException intexception) { }
-            }
+   //        MainWindowView.activateProgressIndicator("Help: ");
+
+
             runHelp();
         });
 
@@ -145,15 +146,21 @@ public class DerivationHelp {
             windowOffset = 0.0;
 
             setAccessibleFormulas();
-            findTermsInAccessibleFormulas();
+            findTermsInFormulas();
             setEObtainableFormulas();
             setEPotentialFormulas();
+
+            System.out.println("obtainable size: " + eObtainableFormulas.size() + " potential size: " + ePotentialFormulas.size());
 
             //start check chain
             SC1a();
 
+            if (helpShowing && ePotentialFormulas.size() < 75) {
+                try {Thread.sleep(250);}
+                catch (InterruptedException intexception) { }
+            }
 
-
+   //         MainWindowView.deactivateProgressIndicator();
             for (int i = helpStages.size() - 1; i >= 0; i--) {
                 Stage stage = helpStages.get(i);
                 stage.show();
@@ -167,17 +174,26 @@ public class DerivationHelp {
             windowOffset = 0.0;
 
             setAccessibleFormulas();
-            findTermsInAccessibleFormulas();
+            findTermsInFormulas();
             setEObtainableFormulas();
             setEPotentialFormulas();
 
-            System.out.println(eObtainableFormulas);
+            System.out.println("obtainable size: " + eObtainableFormulas.size() + " potential size: " + ePotentialFormulas.size());
+      //      System.out.println(eObtainableFormulas);
+     //       System.out.println(ePotentialFormulas);
 
             //start check chain
             SG0a();
 
 
 
+
+            if (helpShowing && ePotentialFormulas.size() <75) {
+                try {Thread.sleep(250);}
+                catch (InterruptedException intexception) { }
+            }
+
+ //           MainWindowView.deactivateProgressIndicator();
             for (int i = helpStages.size() - 1; i >= 0; i--) {
                 Stage stage = helpStages.get(i);
                 stage.show();
@@ -255,9 +271,17 @@ public class DerivationHelp {
         String lineLabel = availableDisjunction();
         if (!lineLabel.equals("0")) {
             List texts = new ArrayList();
-            texts.add(ParseUtilities.newRegularText("There is an available disjunction on line "));
-            texts.add(ParseUtilities.newRegularText(lineLabel));
-            texts.add(ParseUtilities.newRegularText(". Set up with subderivations to obtain goal by disjunction exploit."));
+            if (!variableScreen(lineLabel)) {
+                texts.add(ParseUtilities.newRegularText("There is an available disjunction on line "));
+                texts.add(ParseUtilities.newRegularText(lineLabel));
+                texts.add(ParseUtilities.newRegularText(". Set up with subderivations to obtain goal by disjunction exploit."));
+            }
+            else {
+                texts.add(ParseUtilities.newRegularText("There is an available disjunction on line "));
+                texts.add(ParseUtilities.newRegularText(lineLabel));
+                texts.add(ParseUtilities.newRegularText(". It is natural to set up assumptions to reach the goal by disjunction exploit.\n\n" +
+                        "But notice that this disjunction has a variable not free in any undischarged assumption that will be \"screened\" against universal introduction under the scope of an assumption for disjunction exploit." ));
+            }
             if (helpStages.isEmpty()) texts.addAll(footnotes);
             else windowOffset = windowOffset + offsetIncrement;
             ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
@@ -265,7 +289,37 @@ public class DerivationHelp {
             helpStages.add(helpStage);
             Operator mainOp = targetFormula.getMainOperator();
    //         if (mainOp != null && mainOp.getType() != ExpressionType.DISJ_OP && mainOp.getType() != ExpressionType.CONJ_OP)
-            SG4();
+            SG3();
+            return;
+        }
+        else {
+            SG2Ea();
+        }
+    }
+
+    private void SG2Ea() {
+        //existential
+        String lineLabel = availableExistential();
+        if (!lineLabel.equals("0")) {
+            List texts = new ArrayList();
+            if (!variableScreen(lineLabel)) {
+                texts.add(ParseUtilities.newRegularText("There is an available existential on line "));
+                texts.add(ParseUtilities.newRegularText(lineLabel));
+                texts.add(ParseUtilities.newRegularText(". Set up subderivation to obtain goal by existential exploit - usually starting with a new variable."));
+            }
+            else {
+                texts.add(ParseUtilities.newRegularText("There is an available existential on line "));
+                texts.add(ParseUtilities.newRegularText(lineLabel));
+                texts.add(ParseUtilities.newRegularText(". It is natural to set up subderivation to obtain goal by existential exploit.\n\n" +
+                        "But notice that this existential has a variable not free in any undischarged assumption that will be \"screened\" against universal introduction under the scope of the assumption for existential exploit."));
+            }
+            if (helpStages.isEmpty()) texts.addAll(footnotes);
+            else windowOffset = windowOffset + offsetIncrement;
+            ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
+            helpStage = popup.getHelpStage();
+            helpStages.add(helpStage);
+            Operator mainOp = targetFormula.getMainOperator();
+            SG3();
             return;
         }
         else {
@@ -276,40 +330,79 @@ public class DerivationHelp {
     private void SG2b() {
         if (disjunctionInList(eObtainableFormulas, accessibleFormulas)) {
             List texts = new ArrayList();
-            texts.add(ParseUtilities.newRegularText("A disjunction can be obtained (without subderivations) from accessible lines by exploitation rules.  Obtain the disjunction, and set up subderivations to obtain goal by disjunction exploit."));
+            texts.add(ParseUtilities.newRegularText("A disjunction can be obtained (without subderivations) from accessible lines by exploitation rules.  Obtain the disjunction, and set up subderivations to obtain goal by disjunction exploit.\n\n"+
+                    "\"This strategy, and others which suggest extracting a particular formula from accessible lines, is prone to \"false positives\".  Usually it will be obvious when this is so.\"));"));
             if (helpStages.isEmpty()) texts.addAll(footnotes);
             else windowOffset = windowOffset + offsetIncrement;
             ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
             helpStage = popup.getHelpStage();
             helpStages.add(helpStage);
             Operator mainOp = targetFormula.getMainOperator();
-            SG4();
+            SG3();
             return;
         }
         else {
-            footnotes.add(ParseUtilities.newRegularText("\n\u2022 No disjunction from accessible line."));
-       //         SG2c();
+            SG2Eb();
+        }
+    }
+
+    private void SG2Eb() {
+        if (existentialInList(eObtainableFormulas, accessibleFormulas)) {
+            List texts = new ArrayList();
+            texts.add(ParseUtilities.newRegularText("An existential can be obtained (without subderivations) from accessible lines by exploitation rules.  Obtain the existential, and set up subderivation to obtain goal by existential exploit.\n\n" +
+                    "This strategy, and others which suggest extracting a particular formula from accessible lines, is prone to \"false positives\".  Usually it will be obvious when this is so."));
+            if (helpStages.isEmpty()) texts.addAll(footnotes);
+            else windowOffset = windowOffset + offsetIncrement;
+            ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
+            helpStage = popup.getHelpStage();
+            helpStages.add(helpStage);
+            Operator mainOp = targetFormula.getMainOperator();
+            SG3();
+            return;
+        }
+        else {
+            String footnoteString;
+            //if ruleset is ND include existential
+            if (derivationCheck.getDerivationRuleset().getName().equals("\ud835\udc41\ud835\udc37")) footnoteString = "\n\u2022 No disjunction or existential from accessible lines";
+            else footnoteString = "\n\u2022 No disjunction from accessible line";
+            footnotes.add(ParseUtilities.newRegularText(footnoteString));
+            //         SG2c();
             SG3();
         }
     }
 
     private void SG2c() {
-        if (disjunctionInList(ePotentialFormulas, accessibleFormulas)) {
+        if (disjunctionInList(ePotentialFormulas, eObtainableFormulas)) {
             List texts = new ArrayList();
-            texts.add(ParseUtilities.newRegularText("A disjunction appears \"in\" accessible lines.  Setting new goal(s) as necessary; consider an attempt to obtain the disjunction; and set up subderivations to obtain goal by disjunction exploit.\n\n" +
-                    "*Weird but possible: if you get some \ud835\udc9c by goal \u212c, do not by this strategy get into a loop where you get \u212c by goal \ud835\udc9c, and then . . ."));
+            texts.add(ParseUtilities.newRegularText("A disjunction can be found \"in\" accessible lines.  Setting new goal(s) as necessary; consider an attempt to obtain the disjunction; and set up subderivations to obtain goal by disjunction exploit.\n\n" +
+                    "This strategy, and others which suggest extracting a particular formula from accessible lines, is prone to \"false positives\".  Usually it will be obvious when this is so."));
             if (helpStages.isEmpty()) texts.addAll(footnotes);
             else windowOffset = windowOffset + offsetIncrement;
             ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
             helpStage = popup.getHelpStage();
             helpStages.add(helpStage);
-            Operator mainOp = targetFormula.getMainOperator();
-            //          if (mainOp != null && mainOp.getType() != ExpressionType.DISJ_OP && mainOp.getType() != ExpressionType.CONJ_OP)
             SG5();
             return;
         }
         else {
-      //      footnotes.add(ParseUtilities.newRegularText("\n\u2022 No disjunction from accessible lines."));
+            SG2Ec();
+        }
+    }
+
+    private void SG2Ec() {
+        if (existentialInList(ePotentialFormulas, eObtainableFormulas) ) {
+            List texts = new ArrayList();
+            texts.add(ParseUtilities.newRegularText("An existential can be found \"in\" accessible lines.  Setting new goal(s) as necessary; consider an attempt to obtain the existential; and set up subderivation to obtain goal by existential exploit.\n\n" +
+                    "This strategy, and others which suggest extracting a particular formula from accessible lines, is prone to \"false positives\".  Usually it will be obvious when this is so."));
+            if (helpStages.isEmpty()) texts.addAll(footnotes);
+            else windowOffset = windowOffset + offsetIncrement;
+            ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
+            helpStage = popup.getHelpStage();
+            helpStages.add(helpStage);
+            SG5();
+            return;
+        }
+        else {
             SG5();
         }
     }
@@ -318,8 +411,8 @@ public class DerivationHelp {
         if (formulaInList(targetFormula, ePotentialFormulas)) {
             List texts = new ArrayList();
             texts.addAll(targetFormula.toTextList());
-            texts.add(ParseUtilities.newRegularText(" appears \"in\" accessible lines.  Setting new goal(s) as necessary consider an attempt to exploit it out.\n\n" +
-                    "*Weird but possible: if you get some \ud835\udc9c by goal \u212c, do not by this strategy get into a loop where you get \u212c by goal \ud835\udc9c, and then . . ."));
+            texts.add(ParseUtilities.newRegularText(" can be found \"in\" accessible lines.  Setting new goal(s) as necessary consider an attempt to exploit it out.\n\n" +
+                    "This strategy, and others which suggest extracting a particular formula from accessible lines, is prone to \"false positives\".  Usually it will be obvious when this is so."));
             if (helpStages.isEmpty()) texts.addAll(footnotes);
             else windowOffset = windowOffset + offsetIncrement;
             ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
@@ -401,21 +494,6 @@ public class DerivationHelp {
                 helpStages.add(helpStage);
                 return;
             }
-            else if (mainOperator.getType() == ExpressionType.UNIV_RESTRICTED_OP) {
-                List opSymTxts2 = ((UnivRestrictedQuantOp) mainOperator).getUniversalOp().getMainSymbol().toTextList();
-                List texts = new ArrayList();
-                texts.add(ParseUtilities.newRegularText("Goal has has main operator "));
-                texts.addAll(opTexts);
-                texts.add(ParseUtilities.newRegularText(".  Set up subderivation for application of ("));
-                texts.addAll(opSymTxts2);
-                texts.add(ParseUtilities.newRegularText("I) - usually with a new variable."));
-                if (helpStages.isEmpty()) texts.addAll(footnotes);
-                else windowOffset = windowOffset + offsetIncrement;
-                ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
-                helpStage = popup.getHelpStage();
-                helpStages.add(helpStage);
-                return;
-            }
 
             else if (mainOperator.getType() == ExpressionType.DISJ_OP) {
                 List texts = new ArrayList();
@@ -423,6 +501,23 @@ public class DerivationHelp {
                 texts.addAll(opTexts);
                 texts.add(ParseUtilities.newRegularText(".  If you do not already have it, set one side or the other as new goal to use "));
                 texts.addAll(opTexts2);
+                texts.add(ParseUtilities.newRegularText("I."));
+                if (helpStages.isEmpty()) texts.addAll(footnotes);
+                else windowOffset = windowOffset + offsetIncrement;
+                ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
+                helpStage = popup.getHelpStage();
+                helpStages.add(helpStage);
+                SG5();
+                return;
+            }
+
+            else if (mainOperator.getType() == ExpressionType.EXISTENTIAL_OP) {
+                List texts = new ArrayList();
+                List opSymTxts = mainOperator.getMainSymbol().toTextList();
+                texts.add(ParseUtilities.newRegularText("Goal has has main operator "));
+                texts.addAll(opTexts);
+                texts.add(ParseUtilities.newRegularText(".  If you do not already have it, set new goal to use "));
+                texts.addAll(opSymTxts);
                 texts.add(ParseUtilities.newRegularText("I."));
                 if (helpStages.isEmpty()) texts.addAll(footnotes);
                 else windowOffset = windowOffset + offsetIncrement;
@@ -443,7 +538,10 @@ public class DerivationHelp {
 
     private void SG5() {
         List texts = new ArrayList();
-        texts.add(ParseUtilities.newRegularText("Especially for an atomic or disjunction, set up to obtain goal by negation exploit."));
+        String helpString;
+        if (derivationCheck.getDerivationRuleset().getName().equals("\ud835\udc41\ud835\udc37")) helpString = "Especially for an atomic, disjunction, or existential, set up to obtain goal by negation exploit.";
+        else helpString = "Especially for an atomic or disjunction, set up to obtain goal by negation exploit.";
+        texts.add(ParseUtilities.newRegularText(helpString));
         if (helpStages.isEmpty()) texts.addAll(footnotes);
         else windowOffset = windowOffset + offsetIncrement;
         ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
@@ -481,7 +579,7 @@ public class DerivationHelp {
     private void SC1c() {
         if (atomicContradictionInList(ePotentialFormulas)) {
             List<Text> texts = Collections.singletonList(ParseUtilities.newRegularText("There is a contradiction \"in\" accessible lines.  Setting new goal(s) as necessary, consider an attempt to exploit it out.\n\n" +
-                    "*Weird but possible: if you get some \ud835\udc9c by goal \u212c, do not by this strategy get into a loop where you get \u212c by goal \ud835\udc9c, and then . . ."));
+                    "This strategy, and others which suggest extracting a particular formula from accessible lines, is prone to \"false positives\".  Usually it will be obvious when this is so."));
             ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
             helpStage = popup.getHelpStage();
             helpStages.add(helpStage);
@@ -497,9 +595,17 @@ public class DerivationHelp {
         String lineLabel = availableDisjunction();
         if (!lineLabel.equals("0")) {
             List texts = new ArrayList();
-            texts.add(ParseUtilities.newRegularText("There is an available disjunction on line "));
-            texts.add(ParseUtilities.newRegularText(lineLabel));
-            texts.add(ParseUtilities.newRegularText(". Set up with subderivations to obtain \u22a5 by disjunction exploit."));
+            if (!variableScreen(lineLabel)) {
+                texts.add(ParseUtilities.newRegularText("There is an available disjunction on line "));
+                texts.add(ParseUtilities.newRegularText(lineLabel));
+                texts.add(ParseUtilities.newRegularText(". Set up with subderivations to obtain \u22a5 by disjunction exploit."));
+            }
+            else {
+                texts.add(ParseUtilities.newRegularText("There is an available disjunction on line "));
+                texts.add(ParseUtilities.newRegularText(lineLabel));
+                texts.add(ParseUtilities.newRegularText(". It is natural to set up assumptions to reach the \u22a5 by disjunction exploit.\n\n" +
+                        "But notice that this disjunction has a variable not free in any undischarged assumption that will be \"screened\" against universal introduction under the scope of an assumption for disjunction exploit." ));
+            }
             if (helpStages.isEmpty()) texts.addAll(footnotes);
             else windowOffset = windowOffset + offsetIncrement;
             ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
@@ -507,34 +613,98 @@ public class DerivationHelp {
             helpStages.add(helpStage);
             return;
         }
-        else SC2b();
+        else SC2Ea();
+    }
+
+    private void SC2Ea() {
+        String lineLabel = availableExistential();
+        if (!lineLabel.equals("0")) {
+            List texts = new ArrayList();
+            if (!variableScreen(lineLabel)) {
+                texts.add(ParseUtilities.newRegularText("There is an available existential on line "));
+                texts.add(ParseUtilities.newRegularText(lineLabel));
+                texts.add(ParseUtilities.newRegularText(". Set up subderivation to obtain \u22a5 by existential exploit."));
+            }
+            else {
+                texts.add(ParseUtilities.newRegularText("There is an available existential on line "));
+                texts.add(ParseUtilities.newRegularText(lineLabel));
+                texts.add(ParseUtilities.newRegularText(". It is natural to set up subderivation to obtain \u22a5 by existential exploit.\n\n" +
+                        "But notice that this existential has a variable not free in any undischarged assumption that will be \"screened\" against universal introduction under the scope of the assumption for existential exploit."));
+            }
+            if (helpStages.isEmpty()) texts.addAll(footnotes);
+            else windowOffset = windowOffset + offsetIncrement;
+            ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
+            helpStage = popup.getHelpStage();
+            helpStages.add(helpStage);
+            return;
+        } else SC2b();
     }
 
     private void SC2b() {
 
         if (disjunctionInList(eObtainableFormulas, accessibleFormulas)) {
             List texts = new ArrayList();
-            texts.add(ParseUtilities.newRegularText("A disjunction can be obtained (without subderivations) from accessible lines by exploitation rules.  Obtain the disjunction, and set up subderivations to obtain \u22a5 by disjunction exploit."));
+            texts.add(ParseUtilities.newRegularText("A disjunction can be obtained (without subderivations) from accessible lines by exploitation rules.  Obtain the disjunction, and set up subderivations to obtain \u22a5 by disjunction exploit.\n\n"+
+                    "\"This strategy, and others which suggest extracting a particular formula from accessible lines, is prone to \"false positives\".  Usually it will be obvious when this is so.\"));"));
             if (helpStages.isEmpty()) texts.addAll(footnotes);
             else windowOffset = windowOffset + offsetIncrement;
             ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
             helpStage = popup.getHelpStage();
             helpStages.add(helpStage);
+            SC3a();
+        }
+        else {
+            SC2Eb();
+        }
+    }
+
+    private void SC2Eb() {
+
+        if (existentialInList(eObtainableFormulas, accessibleFormulas)) {
+            List texts = new ArrayList();
+            texts.add(ParseUtilities.newRegularText("An existential can be obtained (without subderivations) from accessible lines by exploitation rules.  Obtain the existential, and set up subderivation to obtain \u22a5 by existential exploit.\n\n"+
+                    "This strategy, and others which suggest extracting a particular formula from accessible lines, is prone to \"false positives\".  Usually it will be obvious when this is so."));
+            if (helpStages.isEmpty()) texts.addAll(footnotes);
+            else windowOffset = windowOffset + offsetIncrement;
+            ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
+            helpStage = popup.getHelpStage();
+            helpStages.add(helpStage);
+            SC3a();
             return;
         }
         else {
-            footnotes.add(ParseUtilities.newRegularText("\n\u2022 No disjunction from accessible lines."));
-        //    SC2c();
+            String footnoteString;
+            if (derivationCheck.getDerivationRuleset().getName().equals("\ud835\udc41\ud835\udc37")) footnoteString = "\n\u2022 No disjunction or existential from accessible lines.";
+            else footnoteString = "\n\u2022 No disjunction from accessible lines";
+            footnotes.add(ParseUtilities.newRegularText(footnoteString));
             SC3a();
         }
     }
 
     private void SC2c() {
 
-        if (disjunctionInList(ePotentialFormulas, accessibleFormulas)) {
+        if (disjunctionInList(ePotentialFormulas, eObtainableFormulas)) {
             List texts = new ArrayList();
-            texts.add(ParseUtilities.newRegularText("A disjunction appears \"in\" accessible lines.  Setting new goal(s) as necessary consider an attempt to obtain the disjunction; then set up subderivations to obtain \u22a5 by disjunction exploit.\n\n" +
-                    "*Weird but possible: if you get some \ud835\udc9c by goal \u212c, do not by this strategy get into a loop where you get \u212c by goal \ud835\udc9c, and then . . ."));
+            texts.add(ParseUtilities.newRegularText("A disjunction can be found \"in\" accessible lines.  Setting new goal(s) as necessary consider an attempt to obtain the disjunction; then set up subderivations to obtain \u22a5 by disjunction exploit.\n\n" +
+                    "This strategy, and others which suggest extracting a particular formula from accessible lines, is prone to \"false positives\".  Usually it will be obvious when this is so."));
+            if (helpStages.isEmpty()) texts.addAll(footnotes);
+            else windowOffset = windowOffset + offsetIncrement;
+            ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
+            helpStage = popup.getHelpStage();
+            helpStages.add(helpStage);
+            SC3a();
+        }
+        else {
+            SC2Ec();
+        }
+    }
+
+    private void SC2Ec() {
+
+        if (existentialInList(ePotentialFormulas, ePotentialFormulas)) {
+            List texts = new ArrayList();
+            texts.add(ParseUtilities.newRegularText("An existential can be found \"in\" accessible lines.  Setting new goal(s) as necessary consider an attempt to obtain the existential; then set up subderivation to obtain \u22a5 by existentialexploit.\n\n" +
+                    "This strategy, and others which suggest extracting a particular formula from accessible lines, is prone to \"false positives\".  Usually it will be obvious when this is so."));
             if (helpStages.isEmpty()) texts.addAll(footnotes);
             else windowOffset = windowOffset + offsetIncrement;
             ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
@@ -543,7 +713,6 @@ public class DerivationHelp {
             SC3d();
         }
         else {
-            footnotes.add(ParseUtilities.newRegularText("\n\u2022 No disjunction from accessible lines."));
             SC3d();
         }
     }
@@ -579,8 +748,27 @@ public class DerivationHelp {
             helpStages.add(helpStage);
             return;
         }
+        else SC3Eb();
+    }
+
+    private void SC3Eb() {
+        String lineLabel = availableNegatedExistential();
+        if (!lineLabel.equals("0")) {
+            List texts = new ArrayList();
+            texts.add(ParseUtilities.newRegularText("There is " + disjunctionStatus + " negated existential ∼\u2203\ud835\udccd\ud835\udcab on line "));
+            texts.add(ParseUtilities.newRegularText(lineLabel));
+            texts.add(ParseUtilities.newRegularText(".  Set its opposite \u2203\ud835\udccd\ud835\udcab as goal, and use the pair of them for contradiction."));
+            if (helpStages.isEmpty()) texts.addAll(footnotes);
+            else windowOffset = windowOffset + offsetIncrement;
+            ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
+            helpStage = popup.getHelpStage();
+            helpStages.add(helpStage);
+            return;
+        }
         else SC3c();
     }
+
+
 
     private void SC3c() {
         if (complexNegationInList(eObtainableFormulas, accessibleFormulas)) {
@@ -594,16 +782,16 @@ public class DerivationHelp {
             return;
         }
         else {
-        //   SC3d();
+            footnotes.add(ParseUtilities.newRegularText("\n\u2022 No available complex negation from accessible lines."));
             SC2c();
         }
     }
 
     private void SC3d() {
-        if (complexNegationInList(ePotentialFormulas, accessibleFormulas)) {
+        if (complexNegationInList(ePotentialFormulas, eObtainableFormulas)) {
             List texts = new ArrayList();
-            texts.add(ParseUtilities.newRegularText("A complex negation \u223c\ud835\udcab appears \"in\" accessible lines.   Setting new goal(s) as necessary consider an attempt to exploit it out.  Then set its opposite \uD835\uDCAB as a new goal, and then use the pair of them for contradiction.\n\n" +
-                    "*But if you get some \ud835\udc9c by goal \u212c, do not by this strategy get into a loop where you get \u212c by goal \ud835\udc9c, and then . . . "));
+            texts.add(ParseUtilities.newRegularText("A complex negation \u223c\ud835\udcab can be found \"in\" accessible lines.   Setting new goal(s) as necessary consider an attempt to exploit it out.  Then set its opposite \uD835\uDCAB as a new goal, and then use the pair of them for contradiction.\n\n" +
+                    "This strategy, and others which suggest extracting a particular formula from accessible lines, is prone to \"false positives\".  Usually it will be obvious when this is so."));
             if (helpStages.isEmpty()) texts.addAll(footnotes);
             else windowOffset = windowOffset + offsetIncrement;
             ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
@@ -612,7 +800,6 @@ public class DerivationHelp {
             SC4();
         }
         else {
-            footnotes.add(ParseUtilities.newRegularText("\n\u2022 No available complex negation."));
             SC4();
         }
     }
@@ -620,7 +807,7 @@ public class DerivationHelp {
     private void SC4() {
         List texts = new ArrayList();
         texts.add(ParseUtilities.newRegularText("For some \ud835\udcab such that both \ud835\udcab and \u223c\ud835\udcab lead to contradiction: " +
-                "Assume \ud835\udcab (\u223c\ud835\udcab), and obtain the first contradiction to conclude \u223c\ud835\udcab (\ud835\udcab); then from that obtain the second contradiction.\n\n  " +
+                "Assume \ud835\udcab (\u223c\ud835\udcab), and obtain the first contradiction to conclude \u223c\ud835\udcab (\ud835\udcab); then from that obtain the second contradiction.\n\n" +
                 "Note: This is the hardest strategy to apply because it can be difficult to identify a \ud835\udcab to do the job.  The best you can do is look for it!"));
         if (helpStages.isEmpty()) texts.addAll(footnotes);
         else windowOffset = windowOffset + offsetIncrement;
@@ -750,14 +937,80 @@ public class DerivationHelp {
                     for (Term term : termList) {
                         Formula subForm = substituteForTermInFormula(matchFormula, quantifiedVariable, term);
 
-                        if (!eObtainableFormulas.contains(subForm)) {
-                            eObtainableFormulas.add(subForm);
+                        if (!ePotentialFormulas.contains(subForm)) {
+                            ePotentialFormulas.add(subForm);
                             changes = true;
                             continue whileLoop;
                         }
                     }
                 }
                 catch (TextMessageException e) {}
+
+                //process equalities
+                Document equalityForm = new Document("\uE8AC\uD835\uDCC8\uD835\uDCC9");
+                try {
+                    MatchUtilities.clearFormMatch();
+                    MatchUtilities.simpleExpFormMatch(equalityForm, formula, objectLanguage.getNameString(), metaLanguage.getNameString());
+                    Term termS = null;
+                    Term termT = null;
+                    for (MTerm mTerm : MTerm.getmTerms()) {
+                        if (mTerm.getmTermSym().equals(new MTermSym("\ud835\udcc8", ""))) termS = mTerm.getMatch();
+                        if (mTerm.getmTermSym().equals(new MTermSym("\ud835\udcc9", ""))) termT = mTerm.getMatch();
+                    }
+                    if (!termS.equals(termT)) {
+                        List<Formula> candidateList = new ArrayList(ePotentialFormulas);
+                        for (Formula candidateForm : candidateList) {
+                            termList2.clear();
+                            addFreeInstancesToList(candidateForm, termS, candidateForm);
+                            if (!termList2.isEmpty()) {
+                                List<List<Expression>> freeTermSets = getAllSubsets(termList2);
+                                for (List<Expression> subset : freeTermSets) {
+                                    boolean allFreeFor = true;
+                                    for (Expression term : subset) {
+                                        if (!SyntacticalFns.freeForExp(candidateForm, term, termT, objectLanguage.getNameString())) {
+                                            allFreeFor = false;
+                                            break;
+                                        }
+                                    }
+                                    if (allFreeFor) {
+                                        Expression newFormula = SyntacticalFns.substituteParticularTerms(candidateForm, termT, subset);
+                                        if (!ePotentialFormulas.contains(newFormula)) {
+                                            ePotentialFormulas.add((Formula) newFormula);
+                                            changes = true;
+                                            continue whileLoop;
+                                        }
+                                    }
+                                }
+                            }
+
+                            termList2.clear();
+                            addFreeInstancesToList(candidateForm, termT, candidateForm);
+                            if (!termList2.isEmpty()) {
+                                List<List<Expression>> freeTermSets = getAllSubsets(termList2);
+                                for (List<Expression> subset : freeTermSets) {
+                                    boolean allFreeFor = true;
+                                    for (Expression term : subset) {
+                                        if (!SyntacticalFns.freeForExp(candidateForm, term, termS, objectLanguage.getNameString())) {
+                                            allFreeFor = false;
+                                            break;
+                                        }
+                                    }
+                                    if (allFreeFor) {
+                                        Expression newFormula = SyntacticalFns.substituteParticularTerms(candidateForm, termS, subset);
+                                        if (!ePotentialFormulas.contains(newFormula)) {
+                                            ePotentialFormulas.add((Formula) newFormula);
+                                            changes = true;
+                                            continue whileLoop;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                } catch (TextMessageException e) { }
+
+
             }
         }
     }
@@ -776,9 +1029,9 @@ public class DerivationHelp {
                 Document PandQform = new Document("(\ud835\udcab \u2227 \ud835\udcac)");
                 try {
                     MatchUtilities.clearFormMatch();
-                    MatchUtilities.simpleExpFormMatch(PandQform, formula, objectLanguage.getNameString(), metaLanguage.getNameString() );
+                    MatchUtilities.simpleExpFormMatch(PandQform, formula, objectLanguage.getNameString(), metaLanguage.getNameString());
                     for (MFormula mForm : MFormula.getmFormulas()) {
-                        if (mForm.getFormulaSym().equals(new MFormulaSym("\ud835\udcab", "")) ) {
+                        if (mForm.getFormulaSym().equals(new MFormulaSym("\ud835\udcab", ""))) {
                             Formula matchFormula = mForm.getMatch();
                             if (!formulaInList(matchFormula, eObtainableFormulas)) {
                                 eObtainableFormulas.add(matchFormula);
@@ -787,11 +1040,12 @@ public class DerivationHelp {
                             }
                         }
                     }
-                } catch (TextMessageException e) {}
+                } catch (TextMessageException e) {
+                }
 
                 try {
                     MatchUtilities.clearFormMatch();
-                    MatchUtilities.simpleExpFormMatch(PandQform, formula, objectLanguage.getNameString(), metaLanguage.getNameString() );
+                    MatchUtilities.simpleExpFormMatch(PandQform, formula, objectLanguage.getNameString(), metaLanguage.getNameString());
                     for (MFormula mForm : MFormula.getmFormulas()) {
                         if (mForm.getFormulaSym().equals(new MFormulaSym("\ud835\udcac", ""))) {
                             Formula matchFormula = mForm.getMatch();
@@ -802,18 +1056,21 @@ public class DerivationHelp {
                             }
                         }
                     }
-                } catch (TextMessageException e) {}
+                } catch (TextMessageException e) {
+                }
 
                 //process conditionals
                 Document PimpQform = new Document("(\ud835\udcab \u2192 \ud835\udcac)");
                 try {
                     MatchUtilities.clearFormMatch();
-                    MatchUtilities.simpleExpFormMatch(PimpQform, formula, objectLanguage.getNameString(), metaLanguage.getNameString() );
+                    MatchUtilities.simpleExpFormMatch(PimpQform, formula, objectLanguage.getNameString(), metaLanguage.getNameString());
                     Formula antecedent = null;
                     Formula consequent = null;
                     for (MFormula mForm : MFormula.getmFormulas()) {
-                        if (mForm.getFormulaSym().equals(new MFormulaSym("\ud835\udcab", "")))  antecedent = mForm.getMatch();
-                        if (mForm.getFormulaSym().equals(new MFormulaSym("\ud835\udcac", ""))) consequent = mForm.getMatch();
+                        if (mForm.getFormulaSym().equals(new MFormulaSym("\ud835\udcab", "")))
+                            antecedent = mForm.getMatch();
+                        if (mForm.getFormulaSym().equals(new MFormulaSym("\ud835\udcac", "")))
+                            consequent = mForm.getMatch();
                     }
                     if (antecedent != null && consequent != null && formulaInList(antecedent, eObtainableFormulas)) {
                         if (!formulaInList(consequent, eObtainableFormulas)) {
@@ -822,18 +1079,21 @@ public class DerivationHelp {
                             continue whileLoop;
                         }
                     }
-                } catch (TextMessageException e) {}
+                } catch (TextMessageException e) {
+                }
 
                 //process biconditionals
                 Document PbimpQform = new Document("(\ud835\udcab \u2194 \ud835\udcac)");
                 try {
                     MatchUtilities.clearFormMatch();
-                    MatchUtilities.simpleExpFormMatch(PbimpQform, formula, objectLanguage.getNameString(), metaLanguage.getNameString() );
+                    MatchUtilities.simpleExpFormMatch(PbimpQform, formula, objectLanguage.getNameString(), metaLanguage.getNameString());
                     Formula leftSide = null;
                     Formula rightSide = null;
                     for (MFormula mForm : MFormula.getmFormulas()) {
-                        if (mForm.getFormulaSym().equals(new MFormulaSym("\ud835\udcab", ""))) leftSide = mForm.getMatch();
-                        if (mForm.getFormulaSym().equals(new MFormulaSym("\ud835\udcac", ""))) rightSide = mForm.getMatch();
+                        if (mForm.getFormulaSym().equals(new MFormulaSym("\ud835\udcab", "")))
+                            leftSide = mForm.getMatch();
+                        if (mForm.getFormulaSym().equals(new MFormulaSym("\ud835\udcac", "")))
+                            rightSide = mForm.getMatch();
                     }
                     if (leftSide != null && rightSide != null && formulaInList(leftSide, eObtainableFormulas)) {
                         if (!formulaInList(rightSide, eObtainableFormulas)) {
@@ -849,7 +1109,8 @@ public class DerivationHelp {
                             continue whileLoop;
                         }
                     }
-                } catch (TextMessageException e) {}
+                } catch (TextMessageException e) {
+                }
 
                 //process universals
                 Document univForm = new Document("\u2200\ud835\udccd\ud835\udcab");
@@ -886,13 +1147,102 @@ public class DerivationHelp {
                             continue whileLoop;
                         }
                     }
-                }
-                catch (TextMessageException e) {}
+                } catch (TextMessageException e) {}
+
+                //process equalities
+                Document equalityForm = new Document("\uE8AC\uD835\uDCC8\uD835\uDCC9");
+                try {
+                    MatchUtilities.clearFormMatch();
+                    MatchUtilities.simpleExpFormMatch(equalityForm, formula, objectLanguage.getNameString(), metaLanguage.getNameString());
+                    Term termS = null;
+                    Term termT = null;
+                    for (MTerm mTerm : MTerm.getmTerms()) {
+                        if (mTerm.getmTermSym().equals(new MTermSym("\ud835\udcc8", ""))) termS = mTerm.getMatch();
+                        if (mTerm.getmTermSym().equals(new MTermSym("\ud835\udcc9", ""))) termT = mTerm.getMatch();
+                    }
+                    if (!termS.equals(termT)) {
+                        List<Formula> candidateList = new ArrayList(eObtainableFormulas);
+                        for (Formula candidateForm : candidateList) {
+                            termList2.clear();
+                            addFreeInstancesToList(candidateForm, termS, candidateForm);
+                            if (!termList2.isEmpty()) {
+                                List<List<Expression>> freeTermSets = getAllSubsets(termList2);
+                                for (List<Expression> subset : freeTermSets) {
+                                    boolean allFreeFor = true;
+                                    for (Expression term : subset) {
+                                        if (!SyntacticalFns.freeForExp(candidateForm, term, termT, objectLanguage.getNameString())) {
+                                            allFreeFor = false;
+                                            break;
+                                        }
+                                    }
+                                    if (allFreeFor) {
+                                        Expression newFormula = SyntacticalFns.substituteParticularTerms(candidateForm, termT, subset);
+                                        if (!eObtainableFormulas.contains(newFormula)) {
+                                            eObtainableFormulas.add((Formula) newFormula);
+                                            changes = true;
+                                            continue whileLoop;
+                                        }
+                                    }
+                                }
+                            }
+
+                            termList2.clear();
+                            addFreeInstancesToList(candidateForm, termT, candidateForm);
+                            if (!termList2.isEmpty()) {
+                                List<List<Expression>> freeTermSets = getAllSubsets(termList2);
+                                for (List<Expression> subset : freeTermSets) {
+                                    boolean allFreeFor = true;
+                                    for (Expression term : subset) {
+                                        if (!SyntacticalFns.freeForExp(candidateForm, term, termS, objectLanguage.getNameString())) {
+                                            allFreeFor = false;
+                                            break;
+                                        }
+                                    }
+                                    if (allFreeFor) {
+                                        Expression newFormula = SyntacticalFns.substituteParticularTerms(candidateForm, termS, subset);
+                                        if (!eObtainableFormulas.contains(newFormula)) {
+                                            eObtainableFormulas.add((Formula) newFormula);
+                                            changes = true;
+                                            continue whileLoop;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                } catch (TextMessageException e) { }
+
+
             }
         }
+    }
 
 
 
+    public static List<List<Expression>> getAllSubsets(List<Expression> input) {
+        int allMasks = 1 << input.size();
+        List<List<Expression>> output = new ArrayList<List<Expression>>();
+        for(int i = 1; i < allMasks; i++) {
+            List<Expression> sub = new ArrayList<Expression>();
+            for(int j = 0; j < input.size(); j++) {
+                if((i & (1 << j)) > 0) {
+                    sub.add(input.get(j));
+                }
+            }
+            output.add(sub);
+        }
+        return output;
+    }
+
+    private void addFreeInstancesToList(Expression processedExp, Term term, Formula formula) {
+        if (processedExp instanceof Term && processedExp.equals(term) && SyntacticalFns.particularTermsFreeInFormula(formula, Collections.singletonList(processedExp), objectLanguage.getNameString())) termList2.add((Term) processedExp);
+
+        if (processedExp.getChildren() != null && processedExp.getLevel() > 0) {
+            for (int i = 0; i < processedExp.getChildren().size(); i++) {
+                addFreeInstancesToList(processedExp.getChildren().get(i), term, formula);
+            }
+        }
     }
 
 
@@ -1041,8 +1391,51 @@ public class DerivationHelp {
             }
         }
         return negLabelString;
-
     }
+
+    private String availableNegatedExistential() {
+        String negLabelString = "0";
+        for (ViewLine line : viewLines) {
+            if (LineType.isContentLine(line.getLineType())) {
+                if (derivationCheck.lineIsAccessibleTo(line, targetLine).getKey()) {
+                    Formula lineFormula = getFormulaFromViewLine(line);
+                    if (lineFormula != null) {
+                        Document negationForm = new Document("∼\u2203\ud835\udccd\ud835\udcab");
+                        MatchUtilities.clearFormMatch();
+                        try {
+                            MatchUtilities.simpleExpFormMatch(negationForm, lineFormula, objectLanguage.getNameString(), metaLanguage.getNameString());
+                            Formula matchForm = (Formula) ParseUtilities.parseDoc(negationForm, metaLanguage.getNameString()).get(0).getMatch();
+
+                            String lineLabel = line.getLineNumberLabel().getText();
+                            DerivationRule contradictionIntroRule = derivationCheck.getDerivationRuleset().getContradictionIntroRule();
+                            int uses = 0;
+                            for (ViewLine checkLine : viewLines) {
+                                if (LineType.isContentLine(checkLine.getLineType())) {
+                                    String checkJustString = derivationExercise.getStringFromJustificationFlow(checkLine.getJustificationFlow());
+                                    if (contradictionIntroRule.matches(checkJustString)) {
+                                        List<String> checkLabels = derivationExercise.getLineLabelsFromJustificationFlow(checkLine.getJustificationFlow());
+                                        String checkLabelString = checkLabels.get(0);
+                                        if (checkLabels.get(0).equals(lineLabel) || checkLabels.get(1).equals(lineLabel)) {
+                                            if (targetLine.getAssumptionList().containsAll(checkLine.getAssumptionList()) || checkLine.getAssumptionList().containsAll(targetLine.getAssumptionList()) )
+                                                uses += 1;
+                                        }
+                                    }
+                                }
+                            }
+                            if (uses <= 1) {
+                                if (uses == 0) disjunctionStatus = "an available";
+                                if (uses == 1) disjunctionStatus = "a (still) available";
+                                negLabelString = lineLabel;
+                                break;
+                            }
+                        } catch (TextMessageException e) {}
+                    }
+                }
+            }
+        }
+        return negLabelString;
+    }
+
 
     private boolean negatedDisjunctionInList(List<Formula> formulaList, List<Formula> excludeList) {
         Document negatedDisjunctionForm = new Document("∼(\uD835\uDCAB ∨ \uD835\uDCAC)");
@@ -1073,6 +1466,22 @@ public class DerivationHelp {
         }
         return false;
     }
+
+    private boolean existentialInList(List<Formula> formulaList, List<Formula> excludeList) {
+        Document existentialForm = new Document("\u2203\ud835\udccd\ud835\udcab");
+        for (Formula formula : formulaList) {
+            MatchUtilities.clearFormMatch();
+            try {
+                MatchUtilities.simpleExpFormMatch(existentialForm, formula, objectLanguage.getNameString(), metaLanguage.getNameString());
+                Expression matchExp = ParseUtilities.parseDoc(existentialForm, metaLanguage.getNameString()).get(0).getMatch();
+                if (!excludeList.contains((Formula) matchExp)) return true;
+
+                //    return true;
+            } catch (TextMessageException e) {}
+        }
+        return false;
+    }
+
 
     //list assumed to be accessible formulas
     private String availableDisjunction() {
@@ -1119,6 +1528,52 @@ public class DerivationHelp {
         }
         return disjLabelString;
     }
+
+    private String availableExistential() {
+        String exisLabelString = "0";
+        for (ViewLine line : viewLines) {
+            if (LineType.isContentLine(line.getLineType())) {
+                if (derivationCheck.lineIsAccessibleTo(line, targetLine).getKey()) {
+                    Formula lineFormula = getFormulaFromViewLine(line);
+                    if (lineFormula != null) {
+                        Document existentialForm = new Document("\u2203\ud835\udccd\ud835\udcab");
+                        MatchUtilities.clearFormMatch();
+                        try {
+                            MatchUtilities.simpleExpFormMatch(existentialForm, lineFormula, objectLanguage.getNameString(), metaLanguage.getNameString());
+                            String justificationString = derivationExercise.getStringFromJustificationFlow(line.getJustificationFlow());
+                            DerivationRule exisIntroRule = derivationCheck.getDerivationRuleset().getExisIntroRule();
+                            if (!exisIntroRule.matches(justificationString)) {
+
+                                String lineLabel = line.getLineNumberLabel().getText();
+                                DerivationRule exisExpRule = derivationCheck.getDerivationRuleset().getExisExploitRule();
+                                boolean used = false;
+                                for (ViewLine checkLine : viewLines) {
+                                    if (LineType.isContentLine(checkLine.getLineType())) {
+                                        String checkJustString = derivationExercise.getStringFromJustificationFlow(checkLine.getJustificationFlow());
+                                        if (exisExpRule.matches(checkJustString)) {
+                                            List<String> checkLabels = derivationExercise.getLineLabelsFromJustificationFlow(checkLine.getJustificationFlow());
+                                            String checkLabelString = checkLabels.get(0);
+                                            if (checkLabelString.equals(lineLabel)) {
+                                                if (targetLine.getAssumptionList().containsAll(checkLine.getAssumptionList()) || checkLine.getAssumptionList().containsAll(targetLine.getAssumptionList()))
+                                                    used = true;
+                                            }
+                                        }
+                                    }
+                                }
+                                if (!used) {
+                                    exisLabelString = lineLabel;
+                                    break;
+                                }
+                            }
+
+                        } catch (TextMessageException e) {}
+                    }
+                }
+            }
+        }
+        return exisLabelString;
+    }
+
 
 
     private boolean contradictionInList(List<Formula> formulaList) {
@@ -1207,21 +1662,7 @@ public class DerivationHelp {
 
 
     private boolean formulaInList(Formula formula, List<Formula> formulaList) {
-
-        Document formDoc = new Document("\ud835\udcab");
-
-        MatchUtilities.clearFormMatch();
-        try {
-            MatchUtilities.simpleExpFormMatch(formDoc, formula, objectLanguage.getNameString(), metaLanguage.getNameString());
-        } catch (TextMessageException e) { }
-
-        for (Formula candidate : formulaList) {
-            try {
-                MatchUtilities.simpleExpFormMatch(formDoc, candidate, objectLanguage.getNameString(), metaLanguage.getNameString());
-                return true;
-            } catch (TextMessageException e) {  }
-        }
-        return false;
+        return formulaList.contains(formula);
     }
 
 
@@ -1231,8 +1672,6 @@ public class DerivationHelp {
         RichTextArea lineRTA = viewLine.getLineContentBoxedDRTA().getRTA();
         lineRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document lineDoc = lineRTA.getDocument();
-
-
         if (!lineDoc.getText().equals("")) {
             List<Expression> lineExpressions = ParseUtilities.parseDoc(lineDoc, objectLanguage.getNameString());
             lineFormula = (Formula) lineExpressions.get(0);
@@ -1241,10 +1680,14 @@ public class DerivationHelp {
     }
 
 
-    private void findTermsInAccessibleFormulas() {
+    private void findTermsInFormulas() {
         termList.clear();
-        for (Formula formula : accessibleFormulas) {
-            addTermsToList(formula);
+
+        for (ViewLine line : viewLines) {
+            if (LineType.isContentLine(line.getLineType())) {
+               Formula lineForm = getFormulaFromViewLine(line);
+               if (lineForm != null) addTermsToList(lineForm);
+            }
         }
     }
 
@@ -1258,13 +1701,24 @@ public class DerivationHelp {
         }
     }
 
-    private void addVarsToList(Expression exp, Term filterVar) {
+    private void addVarInstancesToList(Expression exp, Term filterVar) {
 
         if (exp instanceof Term && ((Term) exp).getTermType() == TermType.VARIABLE && ((Term) exp).equals(filterVar)) formulaVars.add((Term) exp);
 
         if (exp.getChildren() != null && exp.getLevel() > 0) {
             for (int i = 0; i < exp.getChildren().size(); i++) {
-                addVarsToList(exp.getChildren().get(i), filterVar);
+                addVarInstancesToList(exp.getChildren().get(i), filterVar);
+            }
+        }
+    }
+
+    private void addAllVarsToList(Expression exp) {
+
+        if (exp instanceof Term && ((Term) exp).getTermType() == TermType.VARIABLE && !formulaVars.contains(exp)) formulaVars.add((Term) exp);
+
+        if (exp.getChildren() != null && exp.getLevel() > 0) {
+            for (int i = 0; i < exp.getChildren().size(); i++) {
+                addAllVarsToList(exp.getChildren().get(i));
             }
         }
     }
@@ -1272,7 +1726,7 @@ public class DerivationHelp {
     private Formula substituteForTermInFormula(Formula formula, Term replacedTerm, Term replacingTerm) {
         Formula resultFormula = formula;
         formulaVars.clear();
-        addVarsToList(resultFormula, replacedTerm);
+        addVarInstancesToList(resultFormula, replacedTerm);
 
         List<Expression> goodVars = new ArrayList<>();
         for (Term var : formulaVars) {
@@ -1284,6 +1738,42 @@ public class DerivationHelp {
         return resultFormula;
     }
 
+    private boolean variableScreen(String candidateLineLabel) {
+        boolean screen = false;
+        ViewLine candidateLine = derivationCheck.getLineFromLabel(candidateLineLabel).getKey();
+        Formula candidateFormula = getFormulaFromViewLine(candidateLine);
+        formulaVars.clear();
+        addAllVarsToList(candidateFormula);
+
+        ArrayList<Expression> freeVars = new ArrayList<>();
+        for (Expression var : formulaVars) {
+            if (SyntacticalFns.expTermFreeInFormula(candidateFormula, var, objectLanguage.getNameString())) freeVars.add(var);
+        }
+        //for variables free in candidate
+        for (Expression var : freeVars) {
+            boolean freeInAssp = false;
+            List<String> asspList = targetLine.getAssumptionList();
+            for (String asspLabel : asspList) {
+                ViewLine asspLine = derivationCheck.getLineFromLabel(asspLabel).getKey();
+                TextFlow asspJustificationFlow = asspLine.getJustificationFlow();
+                String asspJustificationString = derivationCheck.getDerivationExercise().getStringFromJustificationFlow(asspJustificationFlow);
+                if (!derivationCheck.getDerivationRuleset().getPremiseRule().matches(asspJustificationString)) {
+                    Formula asspFormula = getFormulaFromViewLine(asspLine);
+                    if (SyntacticalFns.expTermFreeInFormula(asspFormula, var, objectLanguage.getNameString())) {
+                        freeInAssp = true;
+                        break;
+                    }
+                }
+            }
+            if (!freeInAssp) {
+                if (!SyntacticalFns.expTermFreeInFormula(targetFormula, var, objectLanguage.getNameString())) {
+                    screen = true;
+                    break;
+                }
+            }
+        }
+        return screen;
+    }
 
 
 

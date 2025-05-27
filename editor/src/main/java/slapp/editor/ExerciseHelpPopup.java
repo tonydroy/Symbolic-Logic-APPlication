@@ -22,8 +22,8 @@ public class ExerciseHelpPopup {
             messageTxts.toArray(resultArray);
             textFlow = new TextFlow(resultArray);
             textFlow.setPrefWidth(400);
-            textFlow.setPrefHeight(150);
-            textFlow.setMinHeight(175);
+            textFlow.setPrefHeight(200);
+            textFlow.setMinHeight(200);
             textFlow.setPadding(new Insets(10, 10, 10, 10));
 
             Scene scene = new Scene(textFlow);
