@@ -17,6 +17,8 @@ package slapp.editor.derivation_explain;
 
 import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.model.Document;
+import slapp.editor.PrintUtilities;
+import slapp.editor.derivation.CheckSetup;
 import slapp.editor.derivation.ModelLine;
 import slapp.editor.main_window.ExerciseModel;
 import slapp.editor.main_window.ExerciseType;
@@ -50,8 +52,9 @@ public class DrvtnExpModel implements ExerciseModel<Document>, Serializable {
     private Document explanationDocument = new Document();
     private double explanationPrefHeight = 120;
     private double explanationTextHeight = 0;
-
     private List<ModelLine> derivationLines = new ArrayList<>();
+
+    private CheckSetup checkSetup;
 
     /**
      * Construct derivation explain model
@@ -76,12 +79,14 @@ public class DrvtnExpModel implements ExerciseModel<Document>, Serializable {
         this.gridWidth = gridWidth;
         this.contentPrompt = contentPrompt;
         this.isLeftmostScopeLine = isLeftmostScopeLine;
-        this.keyboardSelector = keyboardSelector;
         this.defaultShelf = defaultShelf;
+        this.keyboardSelector = keyboardSelector;
         this.exerciseStatement = exerciseStatement;
         this.exerciseComment = exerciseComment;
         this.explanationDocument = explanationDocument;
         this.derivationLines = derivationLines;
+        this.splitPanePrefWidth = PrintUtilities.getPageWidth();
+        this.checkSetup = new CheckSetup();
     }
 
     /**
@@ -200,6 +205,14 @@ public class DrvtnExpModel implements ExerciseModel<Document>, Serializable {
      * @param explanationTextHeight the height value
      */
     void setExplanationTextHeight(double explanationTextHeight) {   this.explanationTextHeight = explanationTextHeight;   }
+
+    public CheckSetup getCheckSetup() {
+        return checkSetup;
+    }
+
+    public void setCheckSetup(CheckSetup checkSetup) {
+        this.checkSetup = checkSetup;
+    }
 
     /**
      * The exercise name (used also as file name)

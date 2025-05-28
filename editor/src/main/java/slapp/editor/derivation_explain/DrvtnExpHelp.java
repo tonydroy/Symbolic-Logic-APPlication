@@ -1,8 +1,7 @@
-package slapp.editor.derivation;
+package slapp.editor.derivation_explain;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -10,9 +9,8 @@ import javafx.stage.Stage;
 import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
 import slapp.editor.ExerciseHelpPopup;
+import slapp.editor.derivation.*;
 import slapp.editor.derivation.der_systems.DerivationRule;
-import slapp.editor.main_window.MainWindow;
-import slapp.editor.main_window.MainWindowView;
 import slapp.editor.parser.*;
 import slapp.editor.parser.grammatical_parts.*;
 import slapp.editor.parser.symbols.MFormulaSym;
@@ -23,7 +21,7 @@ import slapp.editor.parser.symbols.VariableSym;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
-public class DerivationHelp {
+public class DrvtnExpHelp {
     private DerivationExercise derivationExercise;
     private DerivationView derivationView;
     private DerivationModel derivationModel;
@@ -54,7 +52,7 @@ public class DerivationHelp {
 
 
 
-    public DerivationHelp(DerivationExercise derivationExercise) {
+    public DrvtnExpHelp(DerivationExercise derivationExercise) {
         this.derivationExercise = derivationExercise;
         this.derivationView = derivationExercise.getExerciseView();
         this.derivationModel= derivationExercise.getExerciseModel();

@@ -104,15 +104,10 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
     private boolean checkShowing = false;
     private Button staticHelpButton;
 
-
-
     private Button showMetaLangButton;
     private boolean showMetaLang;
     private Stage metaLangStage;
     private Stage staticHelpStage;
-
-
-
 
 
     /**
@@ -190,14 +185,6 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         showMetaLangButton.setTooltip(new Tooltip("Show metalanguage information."));
         showMetaLangButton.setStyle("-fx-background-color: rgb(" + 0xF0 + "," + 0xF0 + "," + 0xF0 + "); ");
 
-
-        showMetaLangButton.setOnAction(e -> {
-    //        TextHelpPopup.helpMetalanguage();
-
-
-        });
-
-
     }
 
     /**
@@ -230,9 +217,6 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         statementWidthSpinner.setDisable(true);
         statementWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
 
-
-
-
         //comment
         RichTextArea commentRTA = exerciseComment.getEditor();
         commentRTA.getStylesheets().add("slappTextArea.css");
@@ -258,8 +242,6 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         commentWidthSpinner.setPrefWidth(65);
         commentWidthSpinner.setDisable(true);
         commentWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
-
-
 
         //split pane
         double splitPaneInitialWidth = Math.round(splitPanePrefWidth / mainView.getScalePageWidth() * 20.0) * 5.0;
@@ -317,11 +299,9 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         //right control box
         bigCheck = new Text("\ue89a");
         bigCheck.setFont(Font.font("Noto Serif Combo", 72));
-     //   bigCheck.setFill(checkColor);
 
         checkedElements = new Text(checkMessage);
         checkedElements.setFont(Font.font("Noto Serif Combo", 11));
-     //   checkedElements.setFill(checkElementsColor);
         TextFlow checkedElementsFlow = new TextFlow(checkedElements);
         checkedElementsFlow.setMaxWidth(150);
 
@@ -335,33 +315,27 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         checkButton.setTooltip(new Tooltip("Check complete derivation for correctness."));
         checkTriesLabel = new Label();
 
-
         checkProgButton = new Button("Check Progress");
         checkProgButton.setPrefWidth(105);
         checkProgButton.setTooltip(new Tooltip("Check derivation progress so far."));
-   //    checkTriesLabel = new Label();
         VBox checksBox = new VBox(10, checkProgButton, checkButton, checkTriesLabel);
         checksBox.setAlignment(Pos.CENTER);
         checkTriesLabel.setAlignment(Pos.CENTER);
         checksBox.setMargin(checkProgButton, new Insets(0,0,10, 0));
-
 
         helpButton = new Button("Contextual Help");
         helpButton.setPrefWidth(105);
         helpButton.setTooltip(new Tooltip("Get help for selected goal"));
         helpTriesLabel = new Label();
 
-
         staticHelpButton = new Button("Static Help");
         staticHelpButton.setPrefWidth(105);
         staticHelpButton.setTooltip(new Tooltip("Get static help text"));
-
 
         VBox helpBox = new VBox(10, helpButton, helpTriesLabel, staticHelpButton );
         helpBox.setAlignment(Pos.CENTER);
         helpTriesLabel.setAlignment(Pos.CENTER);
         helpBox.setMargin(staticHelpButton, new Insets(10,0,0,0));
-
 
         VBox rightControlBox = new VBox(40, bigCheckBox, checksBox, helpBox );
         rightControlBox.setAlignment(Pos.TOP_CENTER);

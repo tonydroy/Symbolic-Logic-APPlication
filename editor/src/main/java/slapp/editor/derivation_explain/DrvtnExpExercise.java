@@ -48,10 +48,8 @@ import slapp.editor.EditorAlerts;
 import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
-import slapp.editor.derivation.DerivationModel;
-import slapp.editor.derivation.LineType;
-import slapp.editor.derivation.ModelLine;
-import slapp.editor.derivation.ViewLine;
+import slapp.editor.derivation.*;
+import slapp.editor.derivation.theorems.*;
 import slapp.editor.main_window.*;
 import slapp.editor.vertical_tree.VerticalTreeExercise;
 import slapp.editor.vertical_tree.VerticalTreeModel;
@@ -67,6 +65,8 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
     private DrvtnExpModel drvtnExpModel;
     private DrvtnExpView drvtnExpView;
     private MainWindowView mainView;
+    private DerivationCheck derivationCheck;
+    private DerivationHelp derivationHelp;
     private boolean exerciseModified = false;
     private Font labelFont = new Font("Noto Serif Combo", 11);
     private boolean editJustification;
@@ -74,6 +74,7 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
     private RichTextArea lastJustificationRTA;
     private int lastJustificationRow;
     private UndoRedoList<DrvtnExpModel> undoRedoList = new UndoRedoList<>(20);
+    private List<Theorem> theorems = new ArrayList<>();
 
     /**
      * Construct derivation explain exercise from model
@@ -84,9 +85,73 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         this.mainWindow = mainWindow;
         this.drvtnExpModel = model;
         if (model.getOriginalModel() == null) {model.setOriginalModel(model); }
+        if (drvtnExpModel.getCheckSetup() == null)
+            drvtnExpModel.setCheckSetup(new CheckSetup());  //in case SLAPP v2 model
+        List<ThrmSetElement> thrmSetElements = drvtnExpModel.getCheckSetup().getThrmSetElements();
+        for (ThrmSetElement thrmSetElement : thrmSetElements) {
+            switch (thrmSetElement.getType()) {
+                case ZERO_INPUT:
+                    theorems.add(new ZeroInputTheorem(thrmSetElement.getName(), thrmSetElement.getForms()));
+                    break;
+                case ZERO_INPUT2:
+                    theorems.add(new ZeroInputTheorem2(thrmSetElement.getName(), thrmSetElement.getForms()));
+                    break;
+                case SINGLE_INPUT:
+                    theorems.add(new SingleInputTheorem(thrmSetElement.getName(), thrmSetElement.getForms()));
+                    break;
+                case DOUBLE_INPUT:
+                    theorems.add(new DoubleInputTheorem(thrmSetElement.getName(), thrmSetElement.getForms()));
+                    break;
+                case TRIPLE_INPUT:
+                    theorems.add(new TripleInputTheorem(thrmSetElement.getName(), thrmSetElement.getForms()));
+                    break;
+                case ADQ_A4:
+                    theorems.add(new ADq_A4(thrmSetElement.getName(), ""));
+                    break;
+                case ADQ_A5:
+                    theorems.add(new ADq_A5(thrmSetElement.getName(), ""));
+                    break;
+                case ADQT3_28:
+                    theorems.add(new ADqT3_28(thrmSetElement.getName(), ""));
+                    break;
+                case ADQT3_29:
+                    theorems.add(new ADqT3_29(thrmSetElement.getName(), ""));
+                    break;
+                case ADQT3_30:
+                    theorems.add(new ADqT3_30(thrmSetElement.getName(), ""));
+                    break;
+                case ADQT3_31:
+                    theorems.add(new ADqT3_31(thrmSetElement.getName(), ""));
+                    break;
+                case ADQT3_32:
+                    theorems.add(new QND_T51(thrmSetElement.getName(), ""));
+                    break;
+                case AD_A7:
+                    theorems.add(new AD_A7(thrmSetElement.getName(), ""));
+                    break;
+                case AD_A8:
+                    theorems.add(new AD_A8(thrmSetElement.getName(), ""));
+                    break;
+                case ADT3_37:
+                    theorems.add(new ADT3_37(thrmSetElement.getName(), ""));
+                    break;
+                case ADT3_38:
+                    theorems.add(new ADT3_38(thrmSetElement.getName(), ""));
+                    break;
+                case QND_T51:
+                    theorems.add(new QND_T51(thrmSetElement.getName(), ""));
+                    break;
+                case PANDT13_11i:
+                    theorems.add(new PANDT13_11i(thrmSetElement.getName(), ""));
+            }
+        }
+
         this.mainView = mainWindow.getMainView();
         this.drvtnExpView = new DrvtnExpView(mainView);
         setDrvtnExpView();
+        derivationCheck = new DerivationCheck(this);
+        derivationHelp = new DerivationHelp(this);
+
 
         //cannot depend on pushUndoRedo because documents can't yet be extracted from view
         DrvtnExpModel deepCopy = (DrvtnExpModel) SerializationUtils.clone(drvtnExpModel);
@@ -107,6 +172,7 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         drvtnExpView.setCommentPrefHeight(drvtnExpModel.getCommentPrefHeight());
         drvtnExpView.setExplanationPrefHeight(drvtnExpModel.getExplanationPrefHeight());
         drvtnExpView.setSplitPanePrefWidth(drvtnExpModel.getSplitPanePrefWidth());
+        drvtnExpView.setShowMetaLang(drvtnExpModel.getCheckSetup().isShowMetalanguageButton());
 
         //statement
         DecoratedRTA statementDRTA = new DecoratedRTA();
@@ -178,6 +244,18 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         setViewLinesFromModel();
         drvtnExpView.setGridFromViewLines();
         setContentFocusListeners();
+        drvtnExpView.setRightControlBox();
+
+        //see comment in DerivationExericise to edit metalanguage help
+        drvtnExpView.getShowMetaLangButton().setOnAction(e -> {
+            drvtnExpView.showMetalanguageHelp(mainWindow.getSlappData().getMetalanguageHelp());
+        });
+    }
+
+    public void clearStandingPopups() {
+        if (drvtnExpView.getStaticHelpStage() != null) drvtnExpView.getStaticHelpStage().close();
+        if (drvtnExpView.getMetaLangStage() != null) drvtnExpView.getMetaLangStage().close();
+        derivationHelp.closeHelpWindows();
     }
 
     /*

@@ -162,8 +162,6 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         DerivationModel deepCopy = (DerivationModel) SerializationUtils.clone(derivationModel);
         undoRedoList.push(deepCopy);
         updateUndoRedoButtons();
-
-
     }
 
     /*
@@ -256,13 +254,6 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
             derivationView.showMetalanguageHelp(mainWindow.getSlappData().getMetalanguageHelp());
         });
 
-        /*
-        derivationView.getStaticHelpButton().setDisable(!derivationModel.getCheckSetup().isStaticHelpButton());
-        derivationView.getStaticHelpButton().setOnAction(e -> {
-            derivationView.showStaticHelp(derivationModel.getCheckSetup().getStaticHelpDoc());
-        });
-
-         */
 
     }
 
