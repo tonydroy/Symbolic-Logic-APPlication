@@ -13,10 +13,10 @@ import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.derivation.*;
-import slapp.editor.derivation.der_systems.DerivationRule;
-import slapp.editor.derivation.der_systems.DerivationRuleset;
-import slapp.editor.derivation.der_systems.DerivationRulesets;
+import slapp.editor.derivation.der_systems.*;
+import slapp.editor.derivation.der_systems.DerExpRule;
 import slapp.editor.derivation.theorems.Theorem;
+import slapp.editor.main_window.Exercise;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.Languages;
 import slapp.editor.parser.ParseUtilities;
@@ -28,11 +28,11 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class DrvtnExpCheck {
+public class DrvtnExpCheck implements DCheck {
 
-    private DerivationExercise derivationExercise;
-    private DerivationView derivationView;
-    private DerivationModel derivationModel;
+    private DrvtnExpExercise drvtnExpExercise;
+    private DrvtnExpView drvtnExpView;
+    private DrvtnExpModel drvtnExpModel;
     private DerivationRuleset derivationRuleset;
     private ViewLine markedLine;
     private List<ViewLine> viewLines;
@@ -44,30 +44,30 @@ public class DrvtnExpCheck {
     private boolean checkFinal;
     private boolean checkSuccess;
 
-    DrvtnExpCheck(DerivationExercise derivationExercise) {
-        this.derivationExercise = derivationExercise;
-        this.derivationView = derivationExercise.getExerciseView();
-        this.derivationModel = derivationExercise.getExerciseModel();
+    DrvtnExpCheck(DrvtnExpExercise drvtnExpExercise) {
+        this.drvtnExpExercise = drvtnExpExercise;
+        this.drvtnExpView = drvtnExpExercise.getExerciseView();
+        this.drvtnExpModel = drvtnExpExercise.getExerciseModel();
         setRightControlBox();
 
-        CheckSetup checkSetup = derivationExercise.getExerciseModel().getCheckSetup();
+        CheckSetup checkSetup = drvtnExpExercise.getExerciseModel().getCheckSetup();
         if (checkSetup == null) {checkSetup = new CheckSetup();}
 
 
         checkSuccess = checkSetup.isCheckSuccess();
         checkFinal = checkSetup.isCheckFinal();
         if (checkFinal) {
-            derivationView.setCheckColor(Color.LAWNGREEN);
-            derivationView.setCheckElementsColor(Color.GREEN);
-            derivationView.setCheckMessage("Derivation");
+            drvtnExpView.setCheckColor(Color.LAWNGREEN);
+            drvtnExpView.setCheckElementsColor(Color.GREEN);
+            drvtnExpView.setCheckMessage("Derivation");
         }
         else {
-            derivationView.setCheckColor(Color.ORCHID);
-            derivationView.setCheckElementsColor(Color.PURPLE);
-            derivationView.setCheckMessage("Checked Lines: Good");
+            drvtnExpView.setCheckColor(Color.ORCHID);
+            drvtnExpView.setCheckElementsColor(Color.PURPLE);
+            drvtnExpView.setCheckMessage("Checked Lines: Good");
         }
-        if (checkSuccess) derivationView.activateBigCheck();
-        else derivationView.deactivateBigCheck();
+        if (checkSuccess) drvtnExpView.activateBigCheck();
+        else drvtnExpView.deactivateBigCheck();
 
         derivationRuleset = DerivationRulesets.getRuleset(checkSetup.getRulesetName());
         derivationRuleset.setMetaLanguage(Languages.getLanguage(checkSetup.getMetLangName()));
@@ -92,64 +92,64 @@ public class DrvtnExpCheck {
 
     private void setChecksCounter() {
         if (checkMax != -1 && checkTries >= checkMax) {
-            derivationView.getCheckButton().setDisable(true);
-            derivationView.getCheckProgButton().setDisable(true);
+            drvtnExpView.getCheckButton().setDisable(true);
+            drvtnExpView.getCheckProgButton().setDisable(true);
         }
         String checkString;
         if (checkMax == -1) checkString = "(unlimited)";
         else if (checkMax == 0) checkString = "(none)";
         else checkString = "(" + String.valueOf(checkTries) + "/" + String.valueOf(checkMax) + ")";
 
-        derivationView.getCheckTriesLabel().setText(checkString);
+        drvtnExpView.getCheckTriesLabel().setText(checkString);
     }
 
     public void setHelpCounter() {
-        if (helpMax != -1 && helpTries >= helpMax) {derivationView.getHelpButton().setDisable(true);}
+        if (helpMax != -1 && helpTries >= helpMax) {drvtnExpView.getHelpButton().setDisable(true);}
 
         String helpString;
         if (helpMax == -1) helpString = "(unlimited)";
         else if (helpMax == 0) helpString = "(none)";
         else helpString = "(" + String.valueOf(helpTries) + "/" + String.valueOf(helpMax) + ")";
 
-        derivationView.getHelpTriesLabel().setText(helpString);
+        drvtnExpView.getHelpTriesLabel().setText(helpString);
     }
 
     private void setRightControlBox() {
 
-        derivationView.getCheckButton().setOnAction(e -> {
+        drvtnExpView.getCheckButton().setOnAction(e -> {
             checkFinal = true;
-            derivationView.setCheckColor(Color.LAWNGREEN);
-            derivationView.setCheckMessage("Derivation");
-            derivationView.setCheckElementsColor(Color.GREEN);
+            drvtnExpView.setCheckColor(Color.LAWNGREEN);
+            drvtnExpView.setCheckMessage("Derivation");
+            drvtnExpView.setCheckElementsColor(Color.GREEN);
             boolean check = runCheck();
         });
 
-        derivationView.getCheckProgButton().setOnAction(e -> {
+        drvtnExpView.getCheckProgButton().setOnAction(e -> {
             checkFinal = false;
-            derivationView.setCheckColor(Color.ORCHID);
-            derivationView.setCheckMessage("Checked Lines: Good");
-            derivationView.setCheckElementsColor(Color.PURPLE);
+            drvtnExpView.setCheckColor(Color.ORCHID);
+            drvtnExpView.setCheckMessage("Checked Lines: Good");
+            drvtnExpView.setCheckElementsColor(Color.PURPLE);
 
             boolean check = runCheck();
         });
 
 
 
-        derivationView.getStaticHelpButton().setDisable(!derivationModel.getCheckSetup().isStaticHelpButton());
-        derivationView.getStaticHelpButton().setOnAction(e -> {
-            derivationView.showStaticHelp(derivationModel.getCheckSetup().getStaticHelpDoc());
+        drvtnExpView.getStaticHelpButton().setDisable(!drvtnExpModel.getCheckSetup().isStaticHelpButton());
+        drvtnExpView.getStaticHelpButton().setOnAction(e -> {
+            drvtnExpView.showStaticHelp(drvtnExpModel.getCheckSetup().getStaticHelpDoc());
         });
 
     }
 
     private boolean runCheck() {
         checkSuccess = false;
-        derivationView.deactivateBigCheck();
+        drvtnExpView.deactivateBigCheck();
         checkTries++;
         setChecksCounter();
-        derivationExercise.getDerivationHelp().closeHelpWindows();
+        drvtnExpExercise.getDrvtnExpHelp().closeHelpWindows();
 
-        viewLines = derivationView.getViewLines();
+        viewLines = drvtnExpView.getViewLines();
 
         if (!checkFormulas()) return false;
         if (!checkScopeStructure()) return false;
@@ -160,7 +160,7 @@ public class DrvtnExpCheck {
         if (!checkJustifications()) return false;
 
         checkSuccess = true;
-        derivationView.activateBigCheck();
+        drvtnExpView.activateBigCheck();
 
         //set check on model
         return true;
@@ -169,7 +169,7 @@ public class DrvtnExpCheck {
     public boolean backgroundProgressCheck() {
         checkFinal = false;
 
-        viewLines = derivationView.getViewLines();
+        viewLines = drvtnExpView.getViewLines();
 
         if (!checkFormulas()) return false;
         if (!checkScopeStructure()) return false;
@@ -189,11 +189,11 @@ public class DrvtnExpCheck {
             ViewLine viewLine = viewLines.get(i);
             if (LineType.isContentLine(viewLine.getLineType())) {
                 TextFlow justificationFlow = viewLine.getJustificationFlow();
-                String justificationString = derivationExercise.getStringFromJustificationFlow(justificationFlow);
+                String justificationString = drvtnExpExercise.getStringFromJustificationFlow(justificationFlow);
 
                 for (DerivationRule rule : derivationRuleset.getRules()) {
                     if (rule.matches(justificationString)) {
-                        List<String> lineLabels = derivationExercise.getLineLabelsFromJustificationFlow(justificationFlow);
+                        List<String> lineLabels = drvtnExpExercise.getLineLabelsFromJustificationFlow(justificationFlow);
                         String[] labelArray = new String[lineLabels.size()];
                         lineLabels.toArray(labelArray);
                         Pair<Boolean, List<Text>> resultPair = rule.applies(this, viewLines.get(i), labelArray);
@@ -206,9 +206,9 @@ public class DrvtnExpCheck {
                         break;
                     }
                 }
-                for (Theorem theorem : derivationExercise.getTheorems()) {
+                for (Theorem theorem : drvtnExpExercise.getTheorems()) {
                     if (theorem.matches(justificationString)) {
-                        List<String> lineLabels = derivationExercise.getLineLabelsFromJustificationFlow(justificationFlow);
+                        List<String> lineLabels = drvtnExpExercise.getLineLabelsFromJustificationFlow(justificationFlow);
                         String[] labelArray = new String[lineLabels.size()];
                         lineLabels.toArray(labelArray);
                         Pair<Boolean, List<Text>> resultPair = theorem.applies(this, viewLines.get(i), labelArray);
@@ -282,7 +282,7 @@ public class DrvtnExpCheck {
         else return new Pair<>(false, startLinePair.getValue());
 
         TextFlow startJustificationFlow = startLine.getJustificationFlow();
-        String startJustificationString = derivationExercise.getStringFromJustificationFlow(startJustificationFlow);
+        String startJustificationString = drvtnExpExercise.getStringFromJustificationFlow(startJustificationFlow);
         Matcher matcher = derivationRuleset.getGenericAssumption().matcher(startJustificationString);
         if (!matcher.matches()) {
             return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("A subderivation " + label1 + "-" + label2 + " must start with an assumption.")));
@@ -342,7 +342,7 @@ public class DrvtnExpCheck {
             if (viewLine.realDepth() == currentDepth) {
                 if (LineType.isContentLine(viewLine.getLineType())) {
                     TextFlow justificationFlow = viewLine.getJustificationFlow();
-                    String justificationString = derivationExercise.getStringFromJustificationFlow(justificationFlow);
+                    String justificationString = drvtnExpExercise.getStringFromJustificationFlow(justificationFlow);
                     if (derivationRuleset.getPremiseRule().matches(justificationString)) {
                         premiseList.add(viewLine.getLineNumberLabel().getText());
                     }
@@ -371,7 +371,7 @@ public class DrvtnExpCheck {
             String justificationString = "";
             if (LineType.isContentLine(viewLine.getLineType())) {
                 TextFlow justificationFlow = viewLine.getJustificationFlow();
-                justificationString = derivationExercise.getStringFromJustificationFlow(justificationFlow);
+                justificationString = drvtnExpExercise.getStringFromJustificationFlow(justificationFlow);
             }
 
             Matcher matcher = derivationRuleset.getGenericAssumption().matcher(justificationString);
@@ -403,7 +403,7 @@ public class DrvtnExpCheck {
                 rta.getActionFactory().saveNow().execute(new ActionEvent());
                 Document lineDoc = rta.getDocument();
                 TextFlow justificationFlow = viewLine.getJustificationFlow();
-                String justificationString = derivationExercise.getStringFromJustificationFlow(justificationFlow);
+                String justificationString = drvtnExpExercise.getStringFromJustificationFlow(justificationFlow);
 
                 if (lineDoc.getText().equals("") && !justificationString.equals("")) {
                     highlightJustification(i);
@@ -415,10 +415,10 @@ public class DrvtnExpCheck {
                 if (!lineDoc.getText().equals("")) {
                     boolean blankOK = false;
 
-                    ViewLine priorLine = derivationExercise.getContentLineAbove(i);
+                    ViewLine priorLine = drvtnExpExercise.getContentLineAbove(i);
                     if (!priorLine.equals(viewLine)) {
                         TextFlow priorJustificationFlow = priorLine.getJustificationFlow();
-                        String priorJustificationString = derivationExercise.getStringFromJustificationFlow(priorJustificationFlow);
+                        String priorJustificationString = drvtnExpExercise.getStringFromJustificationFlow(priorJustificationFlow);
                         if ((derivationRuleset.getAsspRestrictedExisExploitCRule() != null && derivationRuleset.getAsspRestrictedExisExploitCRule().matches(priorJustificationString))
                                 || (derivationRuleset.getAsspRestrictedExisExploitGRule() != null) && derivationRuleset.getAsspRestrictedExisExploitGRule().matches(priorJustificationString)) {
                             blankOK = true;
@@ -442,7 +442,7 @@ public class DrvtnExpCheck {
                             }
                         }
 
-                        for (Theorem theorem : derivationExercise.getTheorems()) {
+                        for (Theorem theorem : drvtnExpExercise.getTheorems()) {
                             if (theorem.matches(justificationString)) {
                                 ok = true;
                                 break;
@@ -459,7 +459,7 @@ public class DrvtnExpCheck {
                                 }
                             }
                             String message = "I do not recognize this as a(n) ";
-                            if (!derivationExercise.getTheorems().isEmpty()) message = "I do not recognize this as an (available) ";
+                            if (!drvtnExpExercise.getTheorems().isEmpty()) message = "I do not recognize this as an (available) ";
                             highlightJustification(i);
                             List<Text> texts = new ArrayList<>();
                   //          texts.add(new Text("I do not recognize this as a(n) "));
@@ -633,9 +633,9 @@ public class DrvtnExpCheck {
 
     private int getCurrentLineNum() {
         int row = -1;
-        Node lastFocusedNode = derivationExercise.getMainWindow().getLastFocusOwner();
-        if (derivationView.getGrid().getChildren().contains(lastFocusedNode.getParent())) row = derivationView.getGrid().getRowIndex(lastFocusedNode.getParent());
-        else if (derivationExercise.getLastJustificationRTA() == lastFocusedNode) row = derivationExercise.getLastJustificationRow();
+        Node lastFocusedNode = drvtnExpExercise.getMainWindow().getLastFocusOwner();
+        if (drvtnExpView.getGrid().getChildren().contains(lastFocusedNode.getParent())) row = drvtnExpView.getGrid().getRowIndex(lastFocusedNode.getParent());
+        else if (drvtnExpExercise.getLastJustificationRTA() == lastFocusedNode) row = drvtnExpExercise.getLastJustificationRow();
         return row;
 
     }
@@ -666,8 +666,8 @@ public class DrvtnExpCheck {
         return derivationRuleset;
     }
 
-    public DerivationExercise getDerivationExercise() {
-        return derivationExercise;
+    public Exercise getExercise() {
+        return drvtnExpExercise;
     }
 
     public int getCheckMax() {

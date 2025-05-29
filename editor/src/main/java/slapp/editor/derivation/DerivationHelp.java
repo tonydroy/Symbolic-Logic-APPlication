@@ -11,6 +11,7 @@ import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
 import slapp.editor.ExerciseHelpPopup;
 import slapp.editor.derivation.der_systems.DerivationRule;
+import slapp.editor.derivation_explain.DrvtnExpExercise;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
 import slapp.editor.parser.*;
@@ -1790,7 +1791,8 @@ public class DerivationHelp {
             for (String asspLabel : asspList) {
                 ViewLine asspLine = derivationCheck.getLineFromLabel(asspLabel).getKey();
                 TextFlow asspJustificationFlow = asspLine.getJustificationFlow();
-                String asspJustificationString = derivationCheck.getDerivationExercise().getStringFromJustificationFlow(asspJustificationFlow);
+                String asspJustificationString = (derivationCheck instanceof DerivationCheck) ? ((DerivationExercise) derivationCheck.getExercise()).getStringFromJustificationFlow(asspJustificationFlow) :
+                        ((DerivationExercise) derivationCheck.getExercise()).getStringFromJustificationFlow(asspJustificationFlow);
                 if (!derivationCheck.getDerivationRuleset().getPremiseRule().matches(asspJustificationString)) {
                     Formula asspFormula = getFormulaFromViewLine(asspLine);
                     if (SyntacticalFns.expTermFreeInFormula(asspFormula, var, objectLanguage.getNameString())) {

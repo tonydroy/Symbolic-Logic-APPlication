@@ -21,9 +21,12 @@ import com.gluonhq.richtextarea.model.Document;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -32,7 +35,9 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.transform.Scale;
@@ -40,6 +45,8 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Callback;
+import javafx.util.Pair;
 import slapp.editor.DiskUtilities;
 import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
@@ -47,16 +54,25 @@ import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.decorated_rta.KeyboardDiagram;
+import slapp.editor.derivation.CheckSetup;
+import slapp.editor.derivation.EmptyObject;
 import slapp.editor.derivation.LineType;
 import slapp.editor.derivation.ModelLine;
 
+import slapp.editor.derivation.der_systems.DerivationRuleset;
+import slapp.editor.derivation.der_systems.DerivationRulesets;
+import slapp.editor.derivation.theorems.TheoremSet;
+import slapp.editor.derivation.theorems.TheoremSets;
+import slapp.editor.derivation.theorems.ThrmSetElement;
 import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
+import slapp.editor.parser.Language;
+import slapp.editor.parser.Languages;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.gluonhq.richtextarea.RichTextAreaSkin.KeyMapValue.*;
 import static javafx.scene.control.ButtonType.OK;
@@ -115,8 +131,28 @@ public class DrvtnExpCreate {
     private DecoratedRTA dummyDRTA = new DecoratedRTA();
 
     private Pane spacerPane;
-    private HBox namejBox;
+    private HBox nameBox;
     private Spinner<Double> statementHeightSpinner;
+
+    private Spinner checkMaxSpinner;
+    private Spinner helpMaxSpinner;
+    private Map<String, SimpleBooleanProperty> ruleMap;
+    private Map<String, SimpleBooleanProperty> langMap;
+    private Map<EmptyObject, SimpleBooleanProperty> thrmMap1;
+    private Map<EmptyObject, SimpleBooleanProperty> thrmMap2;
+    private ObservableList<String> theoremSetList;
+    private String defaultRulesetName = "\ud835\udc41\ud835\udc37+"; //ND+
+    private String defaultLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (w/abv)
+    private CheckBox showMetalanguageCheck;
+    private CheckBox staticHelpCheck;
+    private RichTextArea staticHelpRTA;
+    private DecoratedRTA staticHelpDRTA;
+    private double staticHelpTextHeight;
+    private Spinner<Double> staticHelpHeightSpinner;
+
+    private Spinner<Double> verticalSizeSpinner;
+    private RichTextArea currentSpinnerNode;
+
 
 
     /**
@@ -135,6 +171,8 @@ public class DrvtnExpCreate {
      */
     public DrvtnExpCreate(MainWindow mainWindow, DrvtnExpModel originalModel) {
         this(mainWindow);
+        if (originalModel.getCheckSetup() == null) originalModel.setCheckSetup(new CheckSetup());
+
 
         statementRTA.getActionFactory().open(originalModel.getExerciseStatement()).execute(new ActionEvent());
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
@@ -154,6 +192,49 @@ public class DrvtnExpCreate {
         defaultShelfCheck.setSelected(originalModel.isDefaultShelf());
         widthSpinner.getValueFactory().setValue(((double) Math.round(originalModel.getGridWidth() * 100/2)) * 2);
 
+        CheckSetup checkSetup = originalModel.getCheckSetup();
+        showMetalanguageCheck.setSelected(checkSetup.isShowMetalanguageButton());
+
+        staticHelpCheck.setSelected(checkSetup.isStaticHelpButton());
+        staticHelpRTA.getActionFactory().open(checkSetup.getStaticHelpDoc()).execute(new ActionEvent());
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
+        checkMaxSpinner.getValueFactory().setValue(checkSetup.getCheckMax());
+        helpMaxSpinner.getValueFactory().setValue(checkSetup.getHelpMax());
+
+        for (String key : langMap.keySet()) {
+            if (key.equals(checkSetup.getObjLangName())) {
+                langMap.get(key).setValue(true);
+            }
+            else langMap.get(key).setValue(false);
+        }
+
+        for (String key : ruleMap.keySet()) {
+            if (key.equals(checkSetup.getRulesetName())) {
+                ruleMap.get(key).setValue(true);
+            }
+            else ruleMap.get(key).setValue(false);
+        }
+
+        List<SimpleBooleanProperty> thrmList1 = new ArrayList(thrmMap1.values());
+        List<SimpleBooleanProperty> thrmList2 = new ArrayList(thrmMap2.values());
+        boolean valueSet = false;
+        for (int i = 0; i < theoremSetList.size(); i++) {
+            for (int j = 0; j < checkSetup.getTheoremSets().size(); j++) {
+                Pair<String, Boolean> thrmSetPair = checkSetup.getTheoremSets().get(j);
+                if (theoremSetList.get(i).equals(thrmSetPair.getKey())) {
+                    thrmList1.get(i).set(true);
+                    thrmList2.get(i).set(thrmSetPair.getValue());
+                    valueSet = true;
+                    break;
+                }
+            }
+            if (!valueSet) {
+                thrmList1.get(i).set(false);
+                thrmList2.get(i).set(false);
+            }
+        }
+
         updateSetupLinesFromModel(originalModel);
         updateGridFromSetupLines();
         fieldModified = false;
@@ -164,6 +245,11 @@ public class DrvtnExpCreate {
      */
     private void setupWindow() {
         borderPane = new BorderPane();
+
+        verticalSizeSpinner = new Spinner<>(0.0, 999.0, 0.0, 5.0);
+        verticalSizeSpinner.setPrefWidth(65);
+        verticalSizeSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
+        verticalSizeSpinner.setDisable(true);
 
         //empty bar for consistent look
         Menu helpMenu = new Menu("");
@@ -213,6 +299,52 @@ public class DrvtnExpCreate {
             }
         });
 
+        //static help editor
+
+        staticHelpDRTA = new DecoratedRTA();
+        staticHelpDRTA.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.BASE_AND_SANS);
+        staticHelpRTA = staticHelpDRTA.getEditor();
+        staticHelpRTA.setPromptText("Static Help (complete if static help selected)");
+        staticHelpRTA.getStylesheets().add("slappTextArea.css");
+        staticHelpRTA.setPrefWidth(400);
+        staticHelpRTA.setMinWidth(400);
+        staticHelpRTA.setMaxWidth(400);
+        staticHelpRTA.setMinHeight(100);
+
+        double staticHelpInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
+
+
+        staticHelpHeightSpinner = new Spinner<>(0.0, 999.0, staticHelpInitialHeight, 1.0);
+        staticHelpHeightSpinner.setPrefWidth(60);
+        staticHelpHeightSpinner.setDisable(false);
+        staticHelpHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
+        staticHelpRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        staticHelpHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            Node increment = staticHelpHeightSpinner.lookup(".increment-arrow-button");
+            if (increment != null) increment.getOnMouseReleased().handle(null);
+            Node decrement = staticHelpHeightSpinner.lookup(".decrement-arrow-button");
+            if (decrement != null) decrement.getOnMouseReleased().handle(null);
+        });
+
+        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+            staticHelpRTA.prefHeightProperty().unbind();
+            staticHelpHeightSpinner.getValueFactory().setValue((double) Math.round(staticHelpHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
+            staticHelpRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+
+        });
+
+        staticHelpRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
+            fieldModified = true;
+            staticHelpTextHeight = mainWindow.getMainView().getRTATextHeight(staticHelpRTA);
+        });
+        staticHelpRTA.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) {
+                editorInFocus(staticHelpDRTA, ControlType.AREA);
+            }
+        });
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
+
         //top fields row
 
         //name field
@@ -250,10 +382,6 @@ public class DrvtnExpCreate {
             if (nv) textFieldInFocus();
         });
 
-
-        HBox nameBox = new HBox(10, nameLabel, nameField, promptLabel, promptField);
-        nameBox.setAlignment(Pos.CENTER_LEFT);
-        nameBox.setMargin(promptLabel, new Insets(0,0,0,20));
 
         //check boxes
         scopeLineCheck = new CheckBox("Leftmost scope line");
@@ -386,6 +514,149 @@ public class DrvtnExpCreate {
         widthSpinner.valueProperty().addListener(defaultWidthListener);
         widthSpinner.setPrefWidth(65);
 
+        //check controls
+
+        checkMaxSpinner = new Spinner<>(-1, 99, 10);
+        checkMaxSpinner.setPrefWidth(60);
+        Label checkMaxLabel = new Label("Check Max:");
+
+        helpMaxSpinner = new Spinner<>(-1, 99, 3);
+        helpMaxSpinner.setPrefWidth(60);
+        Label helpMaxLabel = new Label("   Help Max:");
+
+        //language list view
+        Label languageLabel = new Label("   Language:");
+        langMap = new LinkedHashMap<>();
+        for (int i = 0; i < Languages.getFixedLanguages().size() - 1; i++) {
+            Language language = Languages.getFixedLanguages().get(i);
+            SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
+            if (language.getNameString().equals(defaultLangName)) booleanProperty.setValue(true); //default check
+            setSingleSelection(booleanProperty, langMap);
+            langMap.put(language.getNameString(), booleanProperty);
+        }
+        ListView<String> languageListView = new ListView<>();
+        languageListView.setPrefSize(120, 95);
+
+        languageListView.getItems().addAll(langMap.keySet());
+        Callback<String, ObservableValue<Boolean>> langToBoolean = (String item) -> langMap.get(item);
+        languageListView.setCellFactory(CheckBoxListCell.forListView(langToBoolean));
+
+        //ruleset listview
+        Label rulesetLabel = new Label("   Rule Set:");
+        ruleMap = new LinkedHashMap<>();
+        for (int i = 0; i < DerivationRulesets.getRulesets().size(); i++) {
+            DerivationRuleset ruleset = DerivationRulesets.getRulesets().get(i);
+            SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
+            if (ruleset.getName().equals(defaultRulesetName)) booleanProperty.set(true);  //default check
+            setSingleSelection(booleanProperty, ruleMap);
+            ruleMap.put(ruleset.getName(), booleanProperty);
+        }
+
+        ListView<String> rulesetListView = new ListView<>();
+        rulesetListView.setPrefSize(120, 95);
+
+        rulesetListView.getItems().addAll(ruleMap.keySet());
+        Callback<String, ObservableValue<Boolean>> rulesetToBoolean = (String item) -> ruleMap.get(item);
+        rulesetListView.setCellFactory(CheckBoxListCell.forListView(rulesetToBoolean));
+
+        //empty list view 1
+        Label theoremSetLabel = new Label("   Theorem Set(s):");
+        thrmMap1 = new LinkedHashMap<>();
+        for (int i = 0; i < TheoremSets.getTheoremSets().size(); i++) {
+            EmptyObject emptyObject = new EmptyObject();
+            SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
+            setModificationListener(booleanProperty);
+            thrmMap1.put(emptyObject, booleanProperty);
+        }
+        ListView<EmptyObject> thrmSet1ListView = new ListView<>();
+        thrmSet1ListView.setPrefSize(45, 95);
+
+        thrmSet1ListView.getItems().addAll(thrmMap1.keySet());
+        Callback<EmptyObject, ObservableValue<Boolean>> thrmSet1ToBoolean = (EmptyObject item) -> thrmMap1.get(item);
+        thrmSet1ListView.setCellFactory(CheckBoxListCell.forListView(thrmSet1ToBoolean));
+        thrmSet1ListView.getStylesheets().add("EmptyListView.css");
+        thrmSet1ListView.setStyle("-fx-background-color: transparent");
+
+        //empty list view 2
+        thrmMap2 = new LinkedHashMap<>();
+        for (int i = 0; i < TheoremSets.getTheoremSets().size(); i++) {
+            EmptyObject emptyObject = new EmptyObject();
+            SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
+            //       setModificationListener(booleanProperty);
+            setSingleSelection2(booleanProperty, thrmMap2);
+            thrmMap2.put(emptyObject, booleanProperty);
+        }
+        ListView<EmptyObject> thrmSet2ListView = new ListView<>();
+        thrmSet2ListView.setPrefSize(45, 95);
+
+        thrmSet2ListView.getItems().addAll(thrmMap2.keySet());
+        Callback<EmptyObject, ObservableValue<Boolean>> thrmSet2ToBoolean = (EmptyObject item) -> thrmMap2.get(item);
+        thrmSet2ListView.setCellFactory(CheckBoxListCell.forListView(thrmSet2ToBoolean));
+        thrmSet2ListView.getStylesheets().add("EmptyListView.css");
+        thrmSet2ListView.setStyle("-fx-background-color: transparent");
+
+        theoremSetList = FXCollections.observableArrayList();
+        for (TheoremSet theoremSet : TheoremSets.getTheoremSets()) {
+            theoremSetList.add(theoremSet.toString());
+        }
+        ListView<String> thrmListView = new ListView<>(theoremSetList);
+        thrmListView.setPrefSize(120, 95);
+        thrmListView.setStyle("-fx-background-color: transparent");
+
+        thrmListView.setCellFactory(lv -> new ListCell<String>() {
+            @Override
+            public void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(item);
+                    setGraphic(null);
+                    setOnMouseClicked(mouseClickedEvent -> {
+                        if (mouseClickedEvent.getButton().equals(MouseButton.PRIMARY) && mouseClickedEvent.getClickCount() == 2) {
+                            System.out.println(item);
+                        }
+                    });
+                }
+            }
+        });
+
+        HBox thrmBox = new HBox(thrmSet1ListView, thrmSet2ListView, thrmListView);
+        thrmBox.setStyle("-fx-border-color: lightgray; -fx-border-width: 1");
+
+        HBox checkerBox = new HBox(10, checkMaxLabel, checkMaxSpinner, helpMaxLabel, helpMaxSpinner, languageLabel, languageListView, rulesetLabel, rulesetListView,  theoremSetLabel, thrmBox);
+        checkerBox.setMargin(thrmSet2ListView, new Insets(0, 0, 0, -10));
+        checkerBox.setMargin(thrmListView, new Insets(0, 0, 0, -10));
+
+        checkerBox.setAlignment(Pos.CENTER_LEFT);
+
+        showMetalanguageCheck = new CheckBox();
+        showMetalanguageCheck.setSelected(false);
+
+        ChangeListener metalanguageCheckListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                fieldModified = true;
+            }
+        };
+        showMetalanguageCheck.selectedProperty().addListener(metalanguageCheckListener);
+        Label metalangCheckLabel = new Label("Show \u2133\u2112 Button:");
+
+
+        staticHelpCheck = new CheckBox();
+        staticHelpCheck.setSelected(false);
+
+        ChangeListener staticHelpCheckListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                fieldModified = true;
+            }
+        };
+        staticHelpCheck.selectedProperty().addListener(staticHelpCheckListener);
+        Label staticHelpCheckLabel = new Label("Static Help:");
+
+
         //setup lines control
         Label setupLinesLabel = new Label("Setup Lines: ");
         setupLinesLabel.setPrefWidth(75);
@@ -415,14 +686,24 @@ public class DrvtnExpCreate {
             }
         });
 
+        nameBox = new HBox(10, nameLabel, nameField, promptLabel, promptField);
+        nameBox.setAlignment(Pos.CENTER_LEFT);
+        nameBox.setMargin(promptLabel, new Insets(0,0,0,20));
+
 
         HBox keyboardBox = new HBox(10, keyboardLabel, italicAndSansCheck, scriptAndItalicCheck, scriptAndSansCheck, italicAndBlackboardCheck, greekAndFrakturCheck);
 
         Label widthLabel = new Label("Width: ");
-        HBox topFields = new HBox(30, scopeLineCheck, defaultShelfCheck, widthLabel, widthSpinner, setupLinesLabel, addSetupLineButton, removeSetupLineButton);
+        HBox topFields = new HBox(30, scopeLineCheck, defaultShelfCheck, widthLabel, widthSpinner);
         topFields.setAlignment(Pos.CENTER_LEFT);
-        topFields.setMargin(widthLabel, new Insets(0, -20, 0, 0));
-        topFields.setMargin(setupLinesLabel, new Insets(0,-20, 0, 0));
+        topFields.setMargin(widthLabel, new Insets(0, -10, 0, 0));
+
+
+        HBox setupLineButtons = new HBox(30, metalangCheckLabel, showMetalanguageCheck, staticHelpCheckLabel, staticHelpCheck, setupLinesLabel, addSetupLineButton, removeSetupLineButton);
+        setupLineButtons.setAlignment(Pos.CENTER_LEFT);
+        setupLineButtons.setMargin(showMetalanguageCheck, new Insets(0, 20, 0, -15));
+        setupLineButtons.setMargin(staticHelpCheck, new Insets(0, 20, 0, -15));
+        setupLineButtons.setMargin(setupLinesLabel, new Insets(0, -20, 0, 10));
 
         //setup lines pane
         setupLines = new ArrayList<>();
@@ -442,22 +723,29 @@ public class DrvtnExpCreate {
         setupLinesPane.setVgap(15);
         updateGridFromSetupLines();
 
-        upperFieldsBox = new VBox(15, nameBox, keyboardBox, topFields, setupLinesPane);
+        upperFieldsBox = new VBox(15, nameBox, keyboardBox, topFields, checkerBox, setupLineButtons, setupLinesPane);
         upperFieldsBox.setPadding(new Insets(20,0,20,0));
 
         String helpText = "<body style=\"margin-left:10; margin-right: 20\">"+
-                "<p>Derivation Explain is appropriate for any exercise that calls for a derivation together with an explanation.<p>" +
+                "<p>Derivation Explain is appropriate for any exercise that calls for a derivation together with an explanation.  Setup is the same as Derivation Exercise except that you may add a prompt to appear in the explanation area. <p>" +
                 "<ul>" +
-                "<li><p>Setup is the same as Derivation Exercise except that you may add a prompt to appear in the explanation area.  For the derivation explain exercise, provide the exercise name, and explanation prompt.  " +
-                "Then select the default keyboard and whether there is to be a leftmost scope line, and/or a \"shelf\" beneath the top line of automatically an generated subderivation; width is the (default) percentage of the window's width allocated to this derivation.</p></li>" +
-                "<li><p>After that, insert setup derivation lines as appropriate, and give the exercise statement.</p></li>" +
+                "<li><p>Supply the exercise name and explain prompt.  The name for a theorem exercise should end with underscore and then the name (as '_T3.14') as the check feature uses the name to identify 'prior' theorems available in a derivation.  Then select the default keyboard for derivation content lines, and select whether there is to be a leftmost scope line, and/or a \"shelf\" beneath the top line of an automatically generated subderivation. " +
+                "A typical natural derivation system (as chapter 6 of <em>Symbolic Logic</em>) selects 'italic and sans', 'leftmost scope line' and 'default shelf'.  The width is the (default) percentage of the window's width allocated to this derivation.</p></li>" +
+                "<li><p>For the check and help functions: A 'max value' of -1 corresponds to 'unlimited', 0 to 'none', and otherwise to the maximum number of check or help tries allotted for the exercise.  " +
+                "Then there are checkboxes to select the formal (object) language and ruleset.  Notice that a given keyboard selection may be compatible with multiple formal languages, but a given formal language will typically have some preferred default keyboard. </p>" +
+                "<p>The Theorem Set option is relevant only to exercises which appeal to axiom or theorem lists.  Multiple selections are possible, though behavior is unpredictable in case members of selected sets have the same name. " +
+                "The first checkbox selects the set; the second whether its members are \"cumulative\" -- in the sense that one member depends just on ones before. (Ordinarily, then, an axiom set leaves the second box unchecked, but exercises that generate sequenced theorems have the second check.) " +
+                "</p></li>" +
+                "<li><p>After that, insert setup derivation lines as appropriate.  In the ordinary case, setup lines will include some premise lines with justification 'P' (the last sitting on a shelf), a blank line, and a conclusion line (without justification), all at scope depth 1. " +
+                "A line identified as a premise cannot have either its formula or justification modified; one identified as a conclusion cannot have its formula modified.  Different arrangements (as, e.g. \"fill in the justification\" exercises) are possible.</p></li>" +
+                "<li><p>Finally, fill in the exercise statement.</p></li>" +
                 "</ul>";
 
         WebView helpArea = new WebView();
         WebEngine webEngine = helpArea.getEngine();
         webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
         webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(190);
+        helpArea.setPrefHeight(230);
 
 
 
@@ -521,7 +809,7 @@ public class DrvtnExpCreate {
         sizeToolBar.setPrefHeight(38);
         sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     V Sz:"), statementHeightSpinner);
 
-
+        setSizeSpinners();
 
         stage = new Stage();
         stage.initOwner(EditorMain.mainStage);
@@ -529,13 +817,13 @@ public class DrvtnExpCreate {
 
         stage.setTitle("Create Derivation Explain Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
-        stage.setWidth(1030);
-        stage.setHeight(850);
+        stage.setWidth(1035);
+        stage.setHeight(950);
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1030));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 850));
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1035));
+        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 900));
 
-        stage.initModality(Modality.WINDOW_MODAL);
+        stage.initModality(Modality.NONE);
         stage.setOnCloseRequest(e-> {
             e.consume();
             closeWindow();
@@ -544,7 +832,61 @@ public class DrvtnExpCreate {
         stage.show();
         statementRTA.getActionFactory().save().execute(new ActionEvent());
         centerBox.layout();
+
+        //lookup works only after showing the stage / scene
+        Node n1 = thrmSet1ListView.lookup(".scroll-bar");
+        if (n1 instanceof ScrollBar) {
+            ScrollBar scrollBar1 = (ScrollBar) n1;
+            Node n2 = thrmSet2ListView.lookup(".scroll-bar");
+            if (n2 instanceof ScrollBar) {
+                ScrollBar scrollBar2 = (ScrollBar) n2;
+                Node n3 = thrmListView.lookup(".scroll-bar");
+                if (n3 instanceof ScrollBar) {
+                    ScrollBar scrollBar3 = (ScrollBar) n3;
+                    scrollBar1.valueProperty().bindBidirectional(scrollBar2.valueProperty());
+                    scrollBar2.valueProperty().bindBidirectional(scrollBar3.valueProperty());
+                }
+            }
+        }
+
         Platform.runLater(() -> nameField.requestFocus());
+    }
+
+
+    //force single selection on list views
+    private void setSingleSelection(SimpleBooleanProperty booleanProperty, Map<String, SimpleBooleanProperty> map) {
+
+        booleanProperty.addListener((ob, ov, nv) -> {
+
+            if (nv.booleanValue() != ov.booleanValue()) fieldModified = true;
+            if (nv) {
+                for (SimpleBooleanProperty prop : map.values()) {
+                    if (prop != booleanProperty) {
+                        prop.set(false);
+                    }
+                }
+            }
+
+        });
+    }
+
+    private void setSingleSelection2(SimpleBooleanProperty booleanProperty, Map<EmptyObject, SimpleBooleanProperty> map) {
+        booleanProperty.addListener((ob, ov, nv) -> {
+            if (nv.booleanValue() != ov.booleanValue()) fieldModified = true;
+            if (nv) {
+                for (SimpleBooleanProperty prop : map.values()) {
+                    if (prop != booleanProperty) {
+                        prop.set(false);
+                    }
+                }
+            }
+        });
+    }
+
+    private void setModificationListener(SimpleBooleanProperty booleanProperty) {
+        booleanProperty.addListener((ob, ov, nv) -> {
+            if (nv.booleanValue() != ov.booleanValue()) fieldModified = true;
+        });
     }
 
     /*
@@ -670,8 +1012,8 @@ public class DrvtnExpCreate {
             updateGridFromSetupLines();
 
             statementRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
-            viewExercise();
             fieldModified = false;
+            viewExercise();
         }
     }
 
@@ -686,7 +1028,7 @@ public class DrvtnExpCreate {
         for (DrvtnExpSetupLine line : setupLines) {
             if (line.isModified()) fieldModified = true;
         }
-        if (fieldModified || statementRTA.isModified()) {
+        if (fieldModified || statementRTA.isModified() || staticHelpRTA.isModified()) {
             Alert confirm = EditorAlerts.confirmationAlert(title, content);
             Optional<ButtonType> result = confirm.showAndWait();
             if (result.get() != OK) okcontinue = false;
@@ -750,6 +1092,11 @@ public class DrvtnExpCreate {
         Document commentDocument = new Document();
         Document explainDocument = new Document();
 
+        if (staticHelpRTA.isModified()) fieldModified = true;
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+        Document staticHelpDocument = staticHelpRTA.getDocument();
+        double staticHelpPrefHeight = staticHelpTextHeight + 25;
+
 
         List<ModelLine> modelLines = new ArrayList<>();
         for (int i = 0; i < setupLines.size(); i++) {
@@ -783,9 +1130,127 @@ public class DrvtnExpCreate {
         }
 
 
-        DrvtnExpModel model = new DrvtnExpModel(name, false, statementPrefHeight, gridWidth, prompt, leftmostScope, defaultShelf, keyboardSelector, statementDocument, commentDocument, commentDocument, modelLines);
+        DrvtnExpModel model = new DrvtnExpModel(name, false, statementPrefHeight, gridWidth, prompt, leftmostScope, defaultShelf, keyboardSelector, statementDocument, commentDocument, explainDocument, modelLines);
         model.setStatementTextHeight(statementTextHeight);
+
+        CheckSetup checkSetup = model.getCheckSetup();
+        checkSetup.setCheckMax((Integer) checkMaxSpinner.getValue());
+        checkSetup.setHelpMax((Integer) helpMaxSpinner.getValue());
+        checkSetup.setShowMetalanguageButton(showMetalanguageCheck.isSelected());
+        checkSetup.setStaticHelpButton(staticHelpCheck.isSelected());
+        checkSetup.setStaticHelpDoc(staticHelpDocument);
+
+        String rulesetName = null;
+        for (String key : ruleMap.keySet()) {
+            ObservableValue<Boolean> value = ruleMap.get(key);
+            if (value.getValue()) {
+                rulesetName = key;
+                break;
+            }
+        }
+        if (rulesetName != null) {
+            checkSetup.setRulesetName(rulesetName);
+        }
+        else {
+            EditorAlerts.showSimpleAlert("No ruleset selected:", "Without a ruleset selection, SLAPP will revert to the default, \ud835\udc41\ud835\udc37+.");
+        }
+
+        String langName = null;
+        for (String key : langMap.keySet()) {
+            ObservableValue<Boolean> value = langMap.get(key);
+            if (value.getValue()) {
+                langName = key;
+                break;
+            }
+        }
+        if (langName != null) {
+            checkSetup.setObjLangName(langName);
+        }
+        else {
+            EditorAlerts.showSimpleAlert("No language selected:", "Without a language selection, SLAPP will revert to the default, \u2112\ud835\udcc6 (w/abv).");
+        }
+
+        checkSetup.getTheoremSets().clear();
+        List<SimpleBooleanProperty> thrmList1 = new ArrayList(thrmMap1.values());
+        List<SimpleBooleanProperty> thrmList2 = new ArrayList(thrmMap2.values());
+        for (int i = 0; i < theoremSetList.size(); i++) {
+            if (thrmList1.get(i).getValue()) {
+                checkSetup.getTheoremSets().add(new Pair(theoremSetList.get(i), thrmList2.get(i).getValue()));
+            }
+        }
+
+        //was trying a serious filter, but too many options (as for A*).  So just look for non-empty part after underscore.
+        Pattern pattern = Pattern.compile("^.+_.+$");
+        Matcher matcher = pattern.matcher(name);
+        boolean goodThrmName = matcher.find();
+        //   System.out.println(goodThrmName);
+
+        List<ThrmSetElement> modelThrmSetElements = new ArrayList();
+        for (int i = 0; i < theoremSetList.size(); i++) {
+            if (thrmList1.get(i).getValue()) {
+                TheoremSet theoremSet = TheoremSets.getTheoremSet(theoremSetList.get(i));
+                List<ThrmSetElement> thrmSetElements = theoremSet.getElements();
+                for (int j = 0; j < thrmSetElements.size(); j++ ) {
+
+                    ThrmSetElement thrmSetElement = thrmSetElements.get(j);
+
+                    boolean numberOK = false;
+                    if (goodThrmName) {
+                        int lastIndex = name.lastIndexOf("_");
+                        String thisThrmName = name.substring(lastIndex + 1);
+                        numberOK = thrmSetElement.isPriorTo(thisThrmName);
+                    }
+                    if (!thrmList2.get(i).getValue() || (thrmList2.get(i).getValue() && numberOK)) {
+                        modelThrmSetElements.add(thrmSetElement);
+                    }
+                }
+            }
+        }
+        checkSetup.setThrmSetElements(modelThrmSetElements);
+
+        if (checkSetup.getHelpMax() != 0 && (!DerivationRulesets.getRuleset(checkSetup.getRulesetName()).isContextualHelpCompatible()  || !checkSetup.getTheoremSets().isEmpty())) {
+            checkSetup.setHelpMax(0);
+            helpMaxSpinner.getValueFactory().setValue(0);
+            String optionalStr = "";
+            if (!checkSetup.getTheoremSets().isEmpty()) optionalStr = " (with selected theorem sets)";
+            EditorAlerts.fleetingRedPopup(checkSetup.getRulesetName() + optionalStr + " is not compatible with contextual help.\n\nHelp Max reset to zero.");
+        }
+
+
+
         return model;
+    }
+
+    private void setSizeSpinners() {
+
+        scene.focusOwnerProperty().addListener((ob, ov, nv) -> {
+
+            if (inHierarchy(nv, statementRTA) && currentSpinnerNode != statementRTA) {
+                currentSpinnerNode = statementRTA;
+                sizeToolBar.getItems().remove(3);
+                sizeToolBar.getItems().add(3, statementHeightSpinner);
+                return;
+            }
+            if (inHierarchy(nv, staticHelpRTA) && currentSpinnerNode != staticHelpRTA) {
+                currentSpinnerNode = staticHelpRTA;
+                sizeToolBar.getItems().remove(3);
+                sizeToolBar.getItems().add(3, staticHelpHeightSpinner);
+                return;
+            }
+        });
+    }
+
+    private static boolean inHierarchy(Node node, Node potentialHierarchyElement) {
+        if (potentialHierarchyElement == null) {
+            return true;
+        }
+        while (node != null) {
+            if (node == potentialHierarchyElement) {
+                return true;
+            }
+            node = node.getParent();
+        }
+        return false;
     }
 
     /*

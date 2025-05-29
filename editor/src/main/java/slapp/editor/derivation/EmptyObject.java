@@ -4,7 +4,7 @@ public class EmptyObject {
 
 
 
-    EmptyObject() {
+    public EmptyObject() {
 
     }
 

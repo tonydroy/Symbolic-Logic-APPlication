@@ -13,6 +13,7 @@ import slapp.editor.derivation.der_systems.DerivationRule;
 import slapp.editor.derivation.der_systems.DerivationRuleset;
 import slapp.editor.derivation.der_systems.DerivationRulesets;
 import slapp.editor.derivation.theorems.Theorem;
+import slapp.editor.main_window.Exercise;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.Languages;
 import slapp.editor.parser.ParseUtilities;
@@ -24,7 +25,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class DerivationCheck {
+public class DerivationCheck implements DCheck {
 
     private DerivationExercise derivationExercise;
     private DerivationView derivationView;
@@ -662,7 +663,7 @@ public class DerivationCheck {
         return derivationRuleset;
     }
 
-    public DerivationExercise getDerivationExercise() {
+    public Exercise getExercise() {
         return derivationExercise;
     }
 

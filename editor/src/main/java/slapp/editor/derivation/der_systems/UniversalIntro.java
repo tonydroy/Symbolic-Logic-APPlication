@@ -7,8 +7,11 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.Pair;
 import slapp.editor.decorated_rta.BoxedDRTA;
+import slapp.editor.derivation.DCheck;
 import slapp.editor.derivation.DerivationCheck;
+import slapp.editor.derivation.DerivationExercise;
 import slapp.editor.derivation.ViewLine;
+import slapp.editor.derivation_explain.DrvtnExpExercise;
 import slapp.editor.parser.*;
 import slapp.editor.parser.grammatical_parts.Formula;
 
@@ -23,7 +26,7 @@ public class UniversalIntro extends DerivationRule {
         this.premAssp = false;
     }
 
-    public Pair<Boolean, List<Text>> applies(DerivationCheck checker, ViewLine line, String... inputs) {
+    public Pair<Boolean, List<Text>> applies(DCheck checker, ViewLine line, String... inputs) {
 
         BoxedDRTA lineBDRTA = line.getLineContentBoxedDRTA();
         RichTextArea lineRTA = lineBDRTA.getRTA();
@@ -87,7 +90,12 @@ public class UniversalIntro extends DerivationRule {
             else return new Pair(false, asspLinePair.getValue());
 
             TextFlow asspJustificationFlow = asspLine.getJustificationFlow();
-            String asspJustificationString = checker.getDerivationExercise().getStringFromJustificationFlow(asspJustificationFlow);
+
+            String asspJustificationString = (checker instanceof DerivationCheck) ? ((DerivationExercise) checker.getExercise()).getStringFromJustificationFlow(asspJustificationFlow) :
+                    ((DrvtnExpExercise) checker.getExercise()).getStringFromJustificationFlow(asspJustificationFlow);
+
+
+   //         String asspJustificationString = checker.getDerivationExercise().getStringFromJustificationFlow(asspJustificationFlow);
             if (!checker.getDerivationRuleset().getPremiseRule().matches(asspJustificationString)) {
 
                 BoxedDRTA asspLineBDRTA = asspLine.getLineContentBoxedDRTA();

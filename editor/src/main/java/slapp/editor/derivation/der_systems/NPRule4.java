@@ -6,7 +6,7 @@ import javafx.event.ActionEvent;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
 import slapp.editor.decorated_rta.BoxedDRTA;
-import slapp.editor.derivation.DerivationCheck;
+import slapp.editor.derivation.DCheck;
 import slapp.editor.derivation.ViewLine;
 import slapp.editor.parser.Language;
 import slapp.editor.parser.MatchUtilities;
@@ -23,7 +23,7 @@ public class NPRule4 extends DerivationRule {
         this.premAssp = false;
     }
 
-    public Pair<Boolean, List<Text>> applies(DerivationCheck checker, ViewLine line, String... inputs) {
+    public Pair<Boolean, List<Text>> applies(DCheck checker, ViewLine line, String... inputs) {
 
         BoxedDRTA lineBDRTA = line.getLineContentBoxedDRTA();
         RichTextArea lineRTA = lineBDRTA.getRTA();

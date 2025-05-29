@@ -39,6 +39,9 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -65,8 +68,8 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
     private DrvtnExpModel drvtnExpModel;
     private DrvtnExpView drvtnExpView;
     private MainWindowView mainView;
-    private DerivationCheck derivationCheck;
-    private DerivationHelp derivationHelp;
+    private DrvtnExpCheck drvtnExpCheck;
+    private DrvtnExpHelp drvtnExpHelp;
     private boolean exerciseModified = false;
     private Font labelFont = new Font("Noto Serif Combo", 11);
     private boolean editJustification;
@@ -149,8 +152,8 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         this.mainView = mainWindow.getMainView();
         this.drvtnExpView = new DrvtnExpView(mainView);
         setDrvtnExpView();
-        derivationCheck = new DerivationCheck(this);
-        derivationHelp = new DerivationHelp(this);
+        drvtnExpCheck = new DrvtnExpCheck(this);
+        drvtnExpHelp = new DrvtnExpHelp(this);
 
 
         //cannot depend on pushUndoRedo because documents can't yet be extracted from view
@@ -255,7 +258,7 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
     public void clearStandingPopups() {
         if (drvtnExpView.getStaticHelpStage() != null) drvtnExpView.getStaticHelpStage().close();
         if (drvtnExpView.getMetaLangStage() != null) drvtnExpView.getMetaLangStage().close();
-        derivationHelp.closeHelpWindows();
+        drvtnExpHelp.closeHelpWindows();
     }
 
     /*
@@ -353,7 +356,7 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
     }
 
     //line below, or current if row is the last
-    private ViewLine getContentLineBelow(int row) {
+    public ViewLine getContentLineBelow(int row) {
         ViewLine line = drvtnExpView.getViewLines().get(row);
 //        ViewLine line = null;
         row++;
@@ -368,7 +371,7 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
     }
 
     //line above, or current if row is the first
-    private ViewLine getContentLineAbove(int row) {
+    public ViewLine getContentLineAbove(int row) {
         ViewLine line = drvtnExpView.getViewLines().get(row);
 //        ViewLine line = null;
         row--;
@@ -618,7 +621,7 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
      * @param flow the text flow
      * @return the extracted string
      */
-    private String getStringFromJustificationFlow(TextFlow flow) {
+    public String getStringFromJustificationFlow(TextFlow flow) {
         StringBuilder sb = new StringBuilder();
         ObservableList<Node> list = flow.getChildren();
         for (Node node : flow.getChildren()) {
@@ -626,6 +629,15 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
             else if (node instanceof Text) sb.append(((Text) node).getText());
         }
         return sb.toString();
+    }
+
+    public List<String> getLineLabelsFromJustificationFlow(TextFlow flow) {
+        List labelList = new ArrayList();
+        ObservableList<Node> list = flow.getChildren();
+        for (Node node : flow.getChildren()) {
+            if (node instanceof Label) labelList.add(((Label) node).getText());
+        }
+        return labelList;
     }
 
     /*
@@ -1053,6 +1065,24 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         }
     }
 
+    public int currentRow() {
+        int row = -1;
+        Node lastFocusedNode = mainWindow.getLastFocusOwner();
+
+        if (lastFocusedNode != null) {
+            if (drvtnExpView.getGrid().getChildren().contains(lastFocusedNode.getParent()))
+                row = drvtnExpView.getGrid().getRowIndex(lastFocusedNode.getParent());
+            else if (lastJustificationRTA == lastFocusedNode) row = lastJustificationRow;
+        }
+        return row;
+    }
+
+    public DrvtnExpHelp getDrvtnExpHelp() {
+        return drvtnExpHelp;
+    }
+
+
+
     /**
      * The derivation model
      * @return the model
@@ -1073,8 +1103,10 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
      */
     @Override
     public void saveExercise(boolean saveAs) {
-        boolean success = DiskUtilities.saveExercise(saveAs, getDrvtnExpModelFromView());
-        if (success) exerciseModified = false;
+        Platform.runLater(() -> {
+            boolean success = DiskUtilities.saveExercise(saveAs, getDrvtnExpModelFromView());
+            if (success) exerciseModified = false;
+        });
     }
 
     /**
@@ -1092,8 +1124,12 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         //header node
         Label exerciseName = new Label(drvtnExpModel.getExerciseName());
         exerciseName.setStyle("-fx-font-weight: bold;");
-        HBox hbox = new HBox(exerciseName);
+        Region spacer = new Region();
+
+        HBox hbox = new HBox(exerciseName, spacer, printCheckNode());
+        hbox.setHgrow(spacer, Priority.ALWAYS);
         hbox.setPadding(new Insets(0,0,10,0));
+        hbox.setMinWidth(nodeWidth);
 
         Group headerRoot = new Group();
         Scene headerScene = new Scene(headerRoot);
@@ -1167,6 +1203,29 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         return nodeList;
     }
 
+    TextFlow printCheckNode() {
+        TextFlow flow = new TextFlow();
+        flow.setMaxWidth(200);
+        if (drvtnExpCheck.isCheckSuccess()) {
+            Text bigCheck = new Text("\ue89a");
+            bigCheck.setFont(Font.font("Noto Serif Combo", 14));
+            Text message = new Text("  " + drvtnExpView.getCheckMessage());
+            message.setFont(Font.font("Noto Serif Combo", 11));
+
+            if (drvtnExpCheck.isCheckFinal()) {
+                bigCheck.setFill(Color.LAWNGREEN);
+                message.setFill(Color.GREEN);
+            }
+            else {
+                bigCheck.setFill(Color.ORCHID);
+                message.setFill(Color.PURPLE);
+            }
+            flow.getChildren().addAll(bigCheck, message);
+        }
+        return flow;
+    }
+
+
     /**
      * Return to the initial (unworked) version of the exercise, retaining the comment only.
      * @return the initial exercise
@@ -1178,6 +1237,13 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         Document commentDocument = commentRTA.getDocument();
         DrvtnExpModel originalModel = (DrvtnExpModel) (drvtnExpModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
+
+        CheckSetup setup = originalModel.getCheckSetup();
+        setup.setHelpTries(drvtnExpCheck.getHelpTries());
+        setup.setCheckTries(drvtnExpCheck.getCheckTries());
+        setup.setCheckSuccess(false);
+        originalModel.setCheckSetup(setup);
+
         DrvtnExpExercise clearExercise = new DrvtnExpExercise(originalModel, mainWindow);
         return clearExercise;
     }
@@ -1304,7 +1370,34 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         newModel.setStatementTextHeight(drvtnExpModel.getStatementTextHeight());
         newModel.setExplanationTextHeight(drvtnExpModel.getExplanationTextHeight());
 
+        CheckSetup setup = drvtnExpModel.getCheckSetup();
+        setup.setCheckSuccess(drvtnExpCheck.isCheckSuccess());
+        setup.setCheckFinal(drvtnExpCheck.isCheckFinal());
+        setup.setCheckTries(drvtnExpCheck.getCheckTries());
+        setup.setHelpTries(drvtnExpCheck.getHelpTries());
+        newModel.setCheckSetup(setup);
+
         return newModel;
+    }
+
+    MainWindow getMainWindow() {
+        return mainWindow;
+    }
+
+    public RichTextArea getLastJustificationRTA() {
+        return lastJustificationRTA;
+    }
+
+    public int getLastJustificationRow() {
+        return lastJustificationRow;
+    }
+
+    public List<Theorem> getTheorems() {
+        return theorems;
+    }
+
+    public DrvtnExpCheck getDrvtnExpCheck() {
+        return drvtnExpCheck;
     }
 
 

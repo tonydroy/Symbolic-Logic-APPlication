@@ -2,7 +2,8 @@ package slapp.editor.derivation.theorems;
 
 import javafx.scene.text.Text;
 import javafx.util.Pair;
-import slapp.editor.derivation.DerivationCheck;
+import slapp.editor.derivation.DCheck;
+import slapp.editor.derivation.DCheck;
 import slapp.editor.derivation.ViewLine;
 
 import java.util.List;
@@ -37,6 +38,6 @@ public abstract class Theorem {
         return name;
     }
 
-    public abstract Pair<Boolean, List<Text>> applies(DerivationCheck checker, ViewLine line, String... inputs);
+    public abstract Pair<Boolean, List<Text>> applies(DCheck checker, ViewLine line, String... inputs);
 
 }

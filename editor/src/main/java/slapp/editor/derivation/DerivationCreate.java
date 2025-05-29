@@ -609,17 +609,6 @@ public class DerivationCreate {
             }
         });
 
-/*
-
-        Button testButton = new Button("Test");
-        testButton.setOnAction(e -> {
-            DerivationModel mod = extractModelFromWindow();
-            for (Pair<String, Boolean> thrmPair : mod.getCheckSetup().getTheoremSets()) {
-                System.out.println("key: " + thrmPair.getKey() + " value: " + thrmPair.getValue());
-            }
-        });
-
- */
 
         HBox thrmBox = new HBox(thrmSet1ListView, thrmSet2ListView, thrmListView);
         thrmBox.setStyle("-fx-border-color: lightgray; -fx-border-width: 1");

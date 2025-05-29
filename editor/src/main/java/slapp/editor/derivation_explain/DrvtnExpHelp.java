@@ -22,10 +22,10 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
 public class DrvtnExpHelp {
-    private DerivationExercise derivationExercise;
-    private DerivationView derivationView;
-    private DerivationModel derivationModel;
-    private DerivationCheck derivationCheck;
+    private DrvtnExpExercise drvtnExpExercise;
+    private DrvtnExpView drvtnExpView;
+    private DrvtnExpModel drvtnExpModel;
+    private DCheck checker;
     private List<ViewLine> viewLines;
     Stage helpStage;
 
@@ -52,14 +52,14 @@ public class DrvtnExpHelp {
 
 
 
-    public DrvtnExpHelp(DerivationExercise derivationExercise) {
-        this.derivationExercise = derivationExercise;
-        this.derivationView = derivationExercise.getExerciseView();
-        this.derivationModel= derivationExercise.getExerciseModel();
-        this.derivationCheck = derivationExercise.getDerivationCheck();
+    public DrvtnExpHelp(DrvtnExpExercise drvtnExpExercise) {
+        this.drvtnExpExercise = drvtnExpExercise;
+        this.drvtnExpView = drvtnExpExercise.getExerciseView();
+        this.drvtnExpModel= drvtnExpExercise.getExerciseModel();
+        this.checker = drvtnExpExercise.getDrvtnExpCheck();
 
 
-        derivationView.getHelpButton().setOnAction(e -> {
+        drvtnExpView.getHelpButton().setOnAction(e -> {
             helpShowing = false;
             for (Stage stage : helpStages) { if (stage != null && stage.isShowing()) helpShowing = true; }
             closeHelpWindows();
@@ -82,25 +82,25 @@ public class DrvtnExpHelp {
     private void runHelp() {
 
 
-        objectLanguage = derivationCheck.getDerivationRuleset().getObjectLanguage();
-        metaLanguage = derivationCheck.getDerivationRuleset().getMetaLanguage();
+        objectLanguage = checker.getDerivationRuleset().getObjectLanguage();
+        metaLanguage = checker.getDerivationRuleset().getMetaLanguage();
 
         //progress ok
         EditorAlerts.setShowPreliminary(true, "Contextual help begins with a background progress check.");
-        boolean progressCheck = derivationCheck.backgroundProgressCheck();
+        boolean progressCheck = checker.backgroundProgressCheck();
         EditorAlerts.setShowPreliminary(false, "");
         if (!progressCheck) return;
 
         //non-empty selected row
-        viewLines = derivationView.getViewLines();
-        targetRow = derivationExercise.currentRow();
+        viewLines = drvtnExpView.getViewLines();
+        targetRow = drvtnExpExercise.currentRow();
         if (targetRow < 0) {
             EditorAlerts.fleetingRedPopup("Select goal formula for contextual help");
             return;
         }
 
         targetLine = viewLines.get(targetRow);
-        if (!derivationExercise.getStringFromJustificationFlow(targetLine.getJustificationFlow()).equals("")) {
+        if (!drvtnExpExercise.getStringFromJustificationFlow(targetLine.getJustificationFlow()).equals("")) {
             EditorAlerts.fleetingRedPopup("Help applies lines that are not (yet) justified.");
             return;
         }
@@ -230,9 +230,9 @@ public class DrvtnExpHelp {
             }
         }
 
-        derivationCheck.setHelpTries(derivationCheck.getHelpTries() + 1);
-        derivationCheck.setHelpCounter();
-        derivationExercise.getMainWindow().getMainView().getBorderPane().requestFocus();
+        checker.setHelpTries(checker.getHelpTries() + 1);
+        checker.setHelpCounter();
+        drvtnExpExercise.getMainWindow().getMainView().getBorderPane().requestFocus();
     }
 
 
@@ -405,7 +405,7 @@ public class DrvtnExpHelp {
         else {
             String footnoteString;
             //if ruleset is ND include existential
-            if (derivationCheck.getDerivationRuleset().getName().equals("\ud835\udc41\ud835\udc37")) footnoteString = "\n\u2022 No disjunction or existential from accessible lines";
+            if (checker.getDerivationRuleset().getName().equals("\ud835\udc41\ud835\udc37")) footnoteString = "\n\u2022 No disjunction or existential from accessible lines";
             else footnoteString = "\n\u2022 No disjunction from accessible line";
             footnotes.add(ParseUtilities.newRegularText(footnoteString));
             //         SG2c();
@@ -581,7 +581,7 @@ public class DrvtnExpHelp {
     private void SG5() {
         List texts = new ArrayList();
         String helpString;
-        if (derivationCheck.getDerivationRuleset().getName().equals("\ud835\udc41\ud835\udc37")) helpString = "Especially for an atomic, disjunction, or existential, set up to obtain goal by negation exploit.";
+        if (checker.getDerivationRuleset().getName().equals("\ud835\udc41\ud835\udc37")) helpString = "Especially for an atomic, disjunction, or existential, set up to obtain goal by negation exploit.";
         else helpString = "Especially for an atomic or disjunction, set up to obtain goal by negation exploit.";
         texts.add(ParseUtilities.newRegularText(helpString));
         if (helpStages.isEmpty()) texts.addAll(footnotes);
@@ -716,7 +716,7 @@ public class DrvtnExpHelp {
         }
         else {
             String footnoteString;
-            if (derivationCheck.getDerivationRuleset().getName().equals("\ud835\udc41\ud835\udc37")) footnoteString = "\n\u2022 No disjunction or existential from accessible lines.";
+            if (checker.getDerivationRuleset().getName().equals("\ud835\udc41\ud835\udc37")) footnoteString = "\n\u2022 No disjunction or existential from accessible lines.";
             else footnoteString = "\n\u2022 No disjunction from accessible lines";
             footnotes.add(ParseUtilities.newRegularText(footnoteString));
             SC3a();
@@ -1272,7 +1272,7 @@ public class DrvtnExpHelp {
         accessibleFormulas = new ArrayList<>();
         for (ViewLine line : viewLines) {
             if (LineType.isContentLine(line.getLineType())) {
-                if (derivationCheck.lineIsAccessibleTo(line, targetLine).getKey()) {
+                if (checker.lineIsAccessibleTo(line, targetLine).getKey()) {
                     Formula lineForm = getFormulaFromViewLine(line);
                     if (lineForm != null && !formulaInList(lineForm, accessibleFormulas)) accessibleFormulas.add(lineForm);
                 }
@@ -1326,7 +1326,7 @@ public class DrvtnExpHelp {
         String negLabelString = "0";
         for (ViewLine line : viewLines) {
             if (LineType.isContentLine(line.getLineType())) {
-                if (derivationCheck.lineIsAccessibleTo(line, targetLine).getKey()) {
+                if (checker.lineIsAccessibleTo(line, targetLine).getKey()) {
                     Formula lineFormula = getFormulaFromViewLine(line);
                     if (lineFormula != null) {
                         Document negationForm = new Document("\u223c\ud835\udcac");
@@ -1343,13 +1343,13 @@ public class DrvtnExpHelp {
                             }
                             if (!immediateSub.isAtomic() && immediateSub.getMainOperator().getType() != ExpressionType.DISJ_OP && immediateSub.getMainOperator().getType() != ExpressionType.EXISTENTIAL_OP) {
                                 String lineLabel = line.getLineNumberLabel().getText();
-                                DerivationRule contradictionIntroRule = derivationCheck.getDerivationRuleset().getContradictionIntroRule();
+                                DerivationRule contradictionIntroRule = checker.getDerivationRuleset().getContradictionIntroRule();
                                 boolean used = false;
                                 for (ViewLine checkLine : viewLines) {
                                     if (LineType.isContentLine(checkLine.getLineType()) ) {
-                                        String checkJustString = derivationExercise.getStringFromJustificationFlow(checkLine.getJustificationFlow());
+                                        String checkJustString = drvtnExpExercise.getStringFromJustificationFlow(checkLine.getJustificationFlow());
                                         if (contradictionIntroRule.matches(checkJustString)) {
-                                            List<String> checkLabels = derivationExercise.getLineLabelsFromJustificationFlow(checkLine.getJustificationFlow());
+                                            List<String> checkLabels = drvtnExpExercise.getLineLabelsFromJustificationFlow(checkLine.getJustificationFlow());
                                             String checkLabelString = checkLabels.get(0);
                                             if (checkLabels.get(0).equals(lineLabel) || checkLabels.get(1).equals(lineLabel) ) {
                                                 if (targetLine.getAssumptionList().containsAll(checkLine.getAssumptionList()) || checkLine.getAssumptionList().containsAll(targetLine.getAssumptionList()) )
@@ -1376,7 +1376,7 @@ public class DrvtnExpHelp {
         String negLabelString = "0";
         for (ViewLine line : viewLines) {
             if (LineType.isContentLine(line.getLineType())) {
-                if (derivationCheck.lineIsAccessibleTo(line, targetLine).getKey()) {
+                if (checker.lineIsAccessibleTo(line, targetLine).getKey()) {
                     Formula lineFormula = getFormulaFromViewLine(line);
                     if (lineFormula != null) {
                         Document negationForm = new Document("∼(\uD835\uDCAB ∨ \uD835\uDCAC)");
@@ -1386,13 +1386,13 @@ public class DrvtnExpHelp {
                             Formula matchForm = (Formula) ParseUtilities.parseDoc(negationForm, metaLanguage.getNameString()).get(0).getMatch();
 
                             String lineLabel = line.getLineNumberLabel().getText();
-                            DerivationRule contradictionIntroRule = derivationCheck.getDerivationRuleset().getContradictionIntroRule();
+                            DerivationRule contradictionIntroRule = checker.getDerivationRuleset().getContradictionIntroRule();
                             int uses = 0;
                             for (ViewLine checkLine : viewLines) {
                                 if (LineType.isContentLine(checkLine.getLineType())) {
-                                    String checkJustString = derivationExercise.getStringFromJustificationFlow(checkLine.getJustificationFlow());
+                                    String checkJustString = drvtnExpExercise.getStringFromJustificationFlow(checkLine.getJustificationFlow());
                                     if (contradictionIntroRule.matches(checkJustString)) {
-                                        List<String> checkLabels = derivationExercise.getLineLabelsFromJustificationFlow(checkLine.getJustificationFlow());
+                                        List<String> checkLabels = drvtnExpExercise.getLineLabelsFromJustificationFlow(checkLine.getJustificationFlow());
                                         String checkLabelString = checkLabels.get(0);
                                         if (checkLabels.get(0).equals(lineLabel) || checkLabels.get(1).equals(lineLabel)) {
                                             if (targetLine.getAssumptionList().containsAll(checkLine.getAssumptionList()) || checkLine.getAssumptionList().containsAll(targetLine.getAssumptionList()) )
@@ -1419,7 +1419,7 @@ public class DrvtnExpHelp {
         String negLabelString = "0";
         for (ViewLine line : viewLines) {
             if (LineType.isContentLine(line.getLineType())) {
-                if (derivationCheck.lineIsAccessibleTo(line, targetLine).getKey()) {
+                if (checker.lineIsAccessibleTo(line, targetLine).getKey()) {
                     Formula lineFormula = getFormulaFromViewLine(line);
                     if (lineFormula != null) {
                         Document negationForm = new Document("∼\u2203\ud835\udccd\ud835\udcab");
@@ -1429,13 +1429,13 @@ public class DrvtnExpHelp {
                             Formula matchForm = (Formula) ParseUtilities.parseDoc(negationForm, metaLanguage.getNameString()).get(0).getMatch();
 
                             String lineLabel = line.getLineNumberLabel().getText();
-                            DerivationRule contradictionIntroRule = derivationCheck.getDerivationRuleset().getContradictionIntroRule();
+                            DerivationRule contradictionIntroRule = checker.getDerivationRuleset().getContradictionIntroRule();
                             int uses = 0;
                             for (ViewLine checkLine : viewLines) {
                                 if (LineType.isContentLine(checkLine.getLineType())) {
-                                    String checkJustString = derivationExercise.getStringFromJustificationFlow(checkLine.getJustificationFlow());
+                                    String checkJustString = drvtnExpExercise.getStringFromJustificationFlow(checkLine.getJustificationFlow());
                                     if (contradictionIntroRule.matches(checkJustString)) {
-                                        List<String> checkLabels = derivationExercise.getLineLabelsFromJustificationFlow(checkLine.getJustificationFlow());
+                                        List<String> checkLabels = drvtnExpExercise.getLineLabelsFromJustificationFlow(checkLine.getJustificationFlow());
                                         String checkLabelString = checkLabels.get(0);
                                         if (checkLabels.get(0).equals(lineLabel) || checkLabels.get(1).equals(lineLabel)) {
                                             if (targetLine.getAssumptionList().containsAll(checkLine.getAssumptionList()) || checkLine.getAssumptionList().containsAll(targetLine.getAssumptionList()) )
@@ -1510,25 +1510,25 @@ public class DrvtnExpHelp {
         String disjLabelString = "0";
         for (ViewLine line : viewLines) {
             if (LineType.isContentLine(line.getLineType())) {
-                if (derivationCheck.lineIsAccessibleTo(line, targetLine).getKey()) {
+                if (checker.lineIsAccessibleTo(line, targetLine).getKey()) {
                     Formula lineFormula = getFormulaFromViewLine(line);
                     if (lineFormula != null) {
                         Document disjunctionForm = new Document("(\ud835\udcab \u2228 \ud835\udcac)");
                         MatchUtilities.clearFormMatch();
                         try {
                             MatchUtilities.simpleExpFormMatch(disjunctionForm, lineFormula, objectLanguage.getNameString(), metaLanguage.getNameString());
-                            String justificationString = derivationExercise.getStringFromJustificationFlow(line.getJustificationFlow());
-                            DerivationRule disjIntroRule = derivationCheck.getDerivationRuleset().getDisjunctionIntroRule();
+                            String justificationString = drvtnExpExercise.getStringFromJustificationFlow(line.getJustificationFlow());
+                            DerivationRule disjIntroRule = checker.getDerivationRuleset().getDisjunctionIntroRule();
                             if (!disjIntroRule.matches(justificationString)) {
 
                                 String lineLabel = line.getLineNumberLabel().getText();
-                                DerivationRule disjExpRule = derivationCheck.getDerivationRuleset().getDisjunctionExploitRule();
+                                DerivationRule disjExpRule = checker.getDerivationRuleset().getDisjunctionExploitRule();
                                 boolean used = false;
                                 for (ViewLine checkLine : viewLines) {
                                     if (LineType.isContentLine(checkLine.getLineType())) {
-                                        String checkJustString = derivationExercise.getStringFromJustificationFlow(checkLine.getJustificationFlow());
+                                        String checkJustString = drvtnExpExercise.getStringFromJustificationFlow(checkLine.getJustificationFlow());
                                         if (disjExpRule.matches(checkJustString)) {
-                                            List<String> checkLabels = derivationExercise.getLineLabelsFromJustificationFlow(checkLine.getJustificationFlow());
+                                            List<String> checkLabels = drvtnExpExercise.getLineLabelsFromJustificationFlow(checkLine.getJustificationFlow());
                                             String checkLabelString = checkLabels.get(0);
                                             if (checkLabelString.equals(lineLabel)) {
                                                 if (targetLine.getAssumptionList().containsAll(checkLine.getAssumptionList()) || checkLine.getAssumptionList().containsAll(targetLine.getAssumptionList()))
@@ -1555,25 +1555,25 @@ public class DrvtnExpHelp {
         String exisLabelString = "0";
         for (ViewLine line : viewLines) {
             if (LineType.isContentLine(line.getLineType())) {
-                if (derivationCheck.lineIsAccessibleTo(line, targetLine).getKey()) {
+                if (checker.lineIsAccessibleTo(line, targetLine).getKey()) {
                     Formula lineFormula = getFormulaFromViewLine(line);
                     if (lineFormula != null) {
                         Document existentialForm = new Document("\u2203\ud835\udccd\ud835\udcab");
                         MatchUtilities.clearFormMatch();
                         try {
                             MatchUtilities.simpleExpFormMatch(existentialForm, lineFormula, objectLanguage.getNameString(), metaLanguage.getNameString());
-                            String justificationString = derivationExercise.getStringFromJustificationFlow(line.getJustificationFlow());
-                            DerivationRule exisIntroRule = derivationCheck.getDerivationRuleset().getExisIntroRule();
+                            String justificationString = drvtnExpExercise.getStringFromJustificationFlow(line.getJustificationFlow());
+                            DerivationRule exisIntroRule = checker.getDerivationRuleset().getExisIntroRule();
                             if (!exisIntroRule.matches(justificationString)) {
 
                                 String lineLabel = line.getLineNumberLabel().getText();
-                                DerivationRule exisExpRule = derivationCheck.getDerivationRuleset().getExisExploitRule();
+                                DerivationRule exisExpRule = checker.getDerivationRuleset().getExisExploitRule();
                                 boolean used = false;
                                 for (ViewLine checkLine : viewLines) {
                                     if (LineType.isContentLine(checkLine.getLineType())) {
-                                        String checkJustString = derivationExercise.getStringFromJustificationFlow(checkLine.getJustificationFlow());
+                                        String checkJustString = drvtnExpExercise.getStringFromJustificationFlow(checkLine.getJustificationFlow());
                                         if (exisExpRule.matches(checkJustString)) {
-                                            List<String> checkLabels = derivationExercise.getLineLabelsFromJustificationFlow(checkLine.getJustificationFlow());
+                                            List<String> checkLabels = drvtnExpExercise.getLineLabelsFromJustificationFlow(checkLine.getJustificationFlow());
                                             String checkLabelString = checkLabels.get(0);
                                             if (checkLabelString.equals(lineLabel)) {
                                                 if (targetLine.getAssumptionList().containsAll(checkLine.getAssumptionList()) || checkLine.getAssumptionList().containsAll(targetLine.getAssumptionList()))
@@ -1772,7 +1772,7 @@ public class DrvtnExpHelp {
 
     private boolean variableScreen(String candidateLineLabel) {
         boolean screen = false;
-        ViewLine candidateLine = derivationCheck.getLineFromLabel(candidateLineLabel).getKey();
+        ViewLine candidateLine = checker.getLineFromLabel(candidateLineLabel).getKey();
         Formula candidateFormula = getFormulaFromViewLine(candidateLine);
         formulaVars.clear();
         addAllVarsToList(candidateFormula);
@@ -1786,10 +1786,15 @@ public class DrvtnExpHelp {
             boolean freeInAssp = false;
             List<String> asspList = targetLine.getAssumptionList();
             for (String asspLabel : asspList) {
-                ViewLine asspLine = derivationCheck.getLineFromLabel(asspLabel).getKey();
+                ViewLine asspLine = checker.getLineFromLabel(asspLabel).getKey();
                 TextFlow asspJustificationFlow = asspLine.getJustificationFlow();
-                String asspJustificationString = derivationCheck.getDerivationExercise().getStringFromJustificationFlow(asspJustificationFlow);
-                if (!derivationCheck.getDerivationRuleset().getPremiseRule().matches(asspJustificationString)) {
+
+                String asspJustificationString = (checker instanceof DerivationCheck) ? ((DerivationExercise) checker.getExercise()).getStringFromJustificationFlow(asspJustificationFlow) :
+                        ((DrvtnExpExercise) checker.getExercise()).getStringFromJustificationFlow(asspJustificationFlow);
+
+
+         //       String asspJustificationString = checker.getDrvtnExpExercise().getStringFromJustificationFlow(asspJustificationFlow);
+                if (!checker.getDerivationRuleset().getPremiseRule().matches(asspJustificationString)) {
                     Formula asspFormula = getFormulaFromViewLine(asspLine);
                     if (SyntacticalFns.expTermFreeInFormula(asspFormula, var, objectLanguage.getNameString())) {
                         freeInAssp = true;

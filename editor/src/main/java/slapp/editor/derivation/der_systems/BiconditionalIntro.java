@@ -7,12 +7,15 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.Pair;
 import slapp.editor.decorated_rta.BoxedDRTA;
-import slapp.editor.derivation.DerivationCheck;
+import slapp.editor.derivation.DCheck;
 import slapp.editor.derivation.ViewLine;
 import slapp.editor.parser.Language;
 import slapp.editor.parser.MatchUtilities;
 import slapp.editor.parser.ParseUtilities;
 import slapp.editor.parser.TextMessageException;
+import slapp.editor.derivation.DerivationCheck;
+import slapp.editor.derivation.DerivationExercise;
+import slapp.editor.derivation_explain.DrvtnExpExercise;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,7 +27,7 @@ public class BiconditionalIntro extends DerivationRule {
         this.premAssp = false;
     }
 
-    public Pair<Boolean, List<Text>> applies(DerivationCheck checker, ViewLine line, String... inputs) {
+    public Pair<Boolean, List<Text>> applies(DCheck checker, ViewLine line, String... inputs) {
 
         BoxedDRTA lineBDRTA = line.getLineContentBoxedDRTA();
         RichTextArea lineRTA = lineBDRTA.getRTA();
@@ -99,11 +102,24 @@ public class BiconditionalIntro extends DerivationRule {
 
         boolean asspOK = true;
         TextFlow topJustificationFlow1 = topLine1.getJustificationFlow();
-        String justificationString1 = checker.getDerivationExercise().getStringFromJustificationFlow(topJustificationFlow1);
+
+        String justificationString1 = (checker instanceof DerivationCheck) ? ((DerivationExercise) checker.getExercise()).getStringFromJustificationFlow(topJustificationFlow1) :
+                ((DrvtnExpExercise) checker.getExercise()).getStringFromJustificationFlow(topJustificationFlow1);
+
+  //      String justificationString1 = checker.getDerivationExercise().getStringFromJustificationFlow(topJustificationFlow1);
+
+
+
+
         TextFlow topJustificationFlow2 = topLine2.getJustificationFlow();
-        String juustificationString2 = checker.getDerivationExercise().getStringFromJustificationFlow(topJustificationFlow2);
+
+        String justificationString2 = (checker instanceof DerivationCheck) ? ((DerivationExercise) checker.getExercise()).getStringFromJustificationFlow(topJustificationFlow2) :
+                ((DrvtnExpExercise) checker.getExercise()).getStringFromJustificationFlow(topJustificationFlow2);
+
+
+   //     String juustificationString2 = checker.getDerivationExercise().getStringFromJustificationFlow(topJustificationFlow2);
         DerivationRule rule = checker.getDerivationRuleset().getAsspBicondIntroRule();
-        if (!rule.matches(justificationString1) || !rule.matches(juustificationString2)) {
+        if (!rule.matches(justificationString1) || !rule.matches(justificationString2)) {
             asspOK = false;
         }
 

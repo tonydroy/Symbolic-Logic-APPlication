@@ -6,7 +6,7 @@ import javafx.event.ActionEvent;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
 import slapp.editor.decorated_rta.BoxedDRTA;
-import slapp.editor.derivation.DerivationCheck;
+import slapp.editor.derivation.DCheck;
 import slapp.editor.derivation.ViewLine;
 import slapp.editor.parser.*;
 import slapp.editor.parser.grammatical_parts.MFormula;
@@ -32,7 +32,7 @@ public class ADqT3_32 extends Theorem {
         setMatcher(pattern.matcher(""));
     }
 
-    public Pair<Boolean, List<Text>> applies(DerivationCheck checker, ViewLine line, String... inputs) {
+    public Pair<Boolean, List<Text>> applies(DCheck checker, ViewLine line, String... inputs) {
         BoxedDRTA lineBDRTA = line.getLineContentBoxedDRTA();
         RichTextArea lineRTA = lineBDRTA.getRTA();
         lineRTA.getActionFactory().saveNow().execute(new ActionEvent());
