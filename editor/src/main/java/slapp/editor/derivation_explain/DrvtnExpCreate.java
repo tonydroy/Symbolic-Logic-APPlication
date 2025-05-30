@@ -732,10 +732,14 @@ public class DrvtnExpCreate {
                 "<li><p>Supply the exercise name and explain prompt.  The name for a theorem exercise should end with underscore and then the name (as '_T3.14') as the check feature uses the name to identify 'prior' theorems available in a derivation.  Then select the default keyboard for derivation content lines, and select whether there is to be a leftmost scope line, and/or a \"shelf\" beneath the top line of an automatically generated subderivation. " +
                 "A typical natural derivation system (as chapter 6 of <em>Symbolic Logic</em>) selects 'italic and sans', 'leftmost scope line' and 'default shelf'.  The width is the (default) percentage of the window's width allocated to this derivation.</p></li>" +
                 "<li><p>For the check and help functions: A 'max value' of -1 corresponds to 'unlimited', 0 to 'none', and otherwise to the maximum number of check or help tries allotted for the exercise.  " +
-                "Then there are checkboxes to select the formal (object) language and ruleset.  Notice that a given keyboard selection may be compatible with multiple formal languages, but a given formal language will typically have some preferred default keyboard. </p>" +
+                "Then there are checkboxes to select the formal language and ruleset.  Notice that a given keyboard selection may be compatible with multiple formal languages, but a given formal language will typically have some preferred default keyboard. </p>" +
                 "<p>The Theorem Set option is relevant only to exercises which appeal to axiom or theorem lists.  Multiple selections are possible, though behavior is unpredictable in case members of selected sets have the same name. " +
                 "The first checkbox selects the set; the second whether its members are \"cumulative\" -- in the sense that one member depends just on ones before. (Ordinarily, then, an axiom set leaves the second box unchecked, but exercises that generate sequenced theorems have the second check.) " +
-                "</p></li>" +
+                "</p>" +
+                "<p> The Show \u2133\u2112 check inserts a metalanguage help button into the lower left corner of the exercise statement (and so is relevant only to derivations conducted in the metalanguage).  " +
+                "The static help check activates the Static Help button which pops up a message which you may state in the right hand text area below." +
+                "</p>" +
+                "</li>" +
                 "<li><p>After that, insert setup derivation lines as appropriate.  In the ordinary case, setup lines will include some premise lines with justification 'P' (the last sitting on a shelf), a blank line, and a conclusion line (without justification), all at scope depth 1. " +
                 "A line identified as a premise cannot have either its formula or justification modified; one identified as a conclusion cannot have its formula modified.  Different arrangements (as, e.g. \"fill in the justification\" exercises) are possible.</p></li>" +
                 "<li><p>Finally, fill in the exercise statement.</p></li>" +
@@ -747,10 +751,10 @@ public class DrvtnExpCreate {
         webEngine.loadContent(helpText);
         helpArea.setPrefHeight(230);
 
+        HBox textEntryRow = new HBox(20, statementRTA, staticHelpRTA);
 
 
-
-        centerBox = new VBox(10, upperFieldsBox, statementRTA, helpArea);
+        centerBox = new VBox(10, upperFieldsBox, textEntryRow, helpArea);
         centerBox.setPadding(new Insets(10,0,10,20));
         spacerPane = new Pane();
 

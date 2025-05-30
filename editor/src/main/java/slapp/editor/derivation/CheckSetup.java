@@ -38,9 +38,9 @@ public class CheckSetup implements Serializable {
         checkSuccess = false;
         checkFinal = false;
 
-        checkMax = 10;
+        checkMax = 0;
         checkTries = 0;
-        helpMax = 3;
+        helpMax = 0;
         helpTries = 0;
         contextualHelp = true;
         staticHelpDoc = new Document();

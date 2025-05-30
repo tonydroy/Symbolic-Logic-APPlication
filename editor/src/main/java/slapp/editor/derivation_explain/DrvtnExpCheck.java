@@ -9,6 +9,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Stage;
 import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
@@ -137,7 +138,9 @@ public class DrvtnExpCheck implements DCheck {
 
         drvtnExpView.getStaticHelpButton().setDisable(!drvtnExpModel.getCheckSetup().isStaticHelpButton());
         drvtnExpView.getStaticHelpButton().setOnAction(e -> {
-            drvtnExpView.showStaticHelp(drvtnExpModel.getCheckSetup().getStaticHelpDoc());
+            Stage helpStage = drvtnExpView.getStaticHelpStage();
+            if (helpStage != null && helpStage.isShowing()) helpStage.close();
+            else drvtnExpView.showStaticHelp(drvtnExpModel.getCheckSetup().getStaticHelpDoc());
         });
 
     }

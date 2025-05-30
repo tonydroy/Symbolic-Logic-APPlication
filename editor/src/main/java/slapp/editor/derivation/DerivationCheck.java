@@ -6,6 +6,7 @@ import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.text.*;
+import javafx.stage.Stage;
 import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
@@ -134,7 +135,9 @@ public class DerivationCheck implements DCheck {
 
         derivationView.getStaticHelpButton().setDisable(!derivationModel.getCheckSetup().isStaticHelpButton());
         derivationView.getStaticHelpButton().setOnAction(e -> {
-            derivationView.showStaticHelp(derivationModel.getCheckSetup().getStaticHelpDoc());
+            Stage helpStage = derivationView.getStaticHelpStage();
+            if (helpStage != null && helpStage.isShowing()) helpStage.close();
+            else derivationView.showStaticHelp(derivationModel.getCheckSetup().getStaticHelpDoc());
         });
 
     }

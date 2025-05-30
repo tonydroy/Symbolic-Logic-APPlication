@@ -916,6 +916,6 @@ public class DrvtnExpView implements ExerciseView<DecoratedRTA> {
      * @return the control node
      */
     @Override
-    public Node getRightControl() { return null; }
+    public Node getRightControl() { return rightControlNode; }
 
 }
