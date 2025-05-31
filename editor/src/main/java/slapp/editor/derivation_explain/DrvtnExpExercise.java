@@ -45,6 +45,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Stage;
 import org.apache.commons.lang3.SerializationUtils;
 import slapp.editor.DiskUtilities;
 import slapp.editor.EditorAlerts;
@@ -251,7 +252,10 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
 
         //see comment in DerivationExericise to edit metalanguage help
         drvtnExpView.getShowMetaLangButton().setOnAction(e -> {
-            drvtnExpView.showMetalanguageHelp(mainWindow.getSlappData().getMetalanguageHelp());
+
+            Stage metaHelpStage = drvtnExpView.getMetaLangStage();
+            if (metaHelpStage != null && metaHelpStage.isShowing()) metaHelpStage.close();
+            else  drvtnExpView.showMetalanguageHelp(mainWindow.getSlappData().getMetalanguageHelp());
         });
     }
 

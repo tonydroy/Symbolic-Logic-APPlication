@@ -24,6 +24,7 @@ public class TheoremSets implements Serializable {
         theoremSets.add(getAstar_th());
         theoremSets.add(getQND_ax());   //ND+
         theoremSets.add(getQND_th());  //ND+
+        theoremSets.add(getQE640());
         theoremSets.add(getADPA_ax());
         theoremSets.add(getADPA_th());
         theoremSets.add(getPAND_ax());
@@ -156,6 +157,23 @@ public class TheoremSets implements Serializable {
         elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "PA.6", "\uE8AC\uE8BA\uD835\uDC65\uD835\uDC46\uD835\uDC66\uE8B8\uE8BA\uD835\uDC65\uD835\uDC66\uD835\uDC65"));
         elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "PA.7", "((\uD835\uDCAB‹\uD835\uDCCD, \uE886› ∧ ∀\uD835\uDCCD(\uD835\uDCAB → \uD835\uDCAB‹\uD835\uDCCD, \uD835\uDC46\uD835\uDCCD›)) → ∀\uD835\uDCCD\uD835\uDCAB)"));
         return PAND_ax;
+    }
+
+    public static TheoremSet getQE640() {
+        TheoremSet QE640 = new TheoremSet("QE6.40");
+        List<ThrmSetElement> elements = QE640.getElements();
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "(a)", "\uE8AC\uE8B8\uD835\uDCC9\uD835\uDC46\uD835\uDC46\uE886\uD835\uDC46\uD835\uDC46\uD835\uDCC9" ));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "(b)", "\uE8AC\uE8BA\uD835\uDC46\uD835\uDC46\uE886\uD835\uDC46\uD835\uDC46\uE886\uD835\uDC46\uD835\uDC46\uD835\uDC46\uD835\uDC46\uE886" ));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "(c)", "\uE8AC\uE8B8\uD835\uDCC9\uD835\uDC46\uD835\uDC46\uD835\uDC46\uE886\uD835\uDC46\uD835\uDC46\uD835\uDC46\uD835\uDCC9" ));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "(d)", "\uE8AC\uE8BA\uD835\uDC46\uD835\uDC46\uD835\uDC46\uE886\uD835\uDC46\uD835\uDC46\uE886\uD835\uDC46\uD835\uDC46\uD835\uDC46\uD835\uDC46\uD835\uDC46\uD835\uDC46\uE886" ));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "(e)", "\uE8AC\uE8BA\uD835\uDC46\uD835\uDC46\uD835\uDC46\uE886\uD835\uDC46\uD835\uDC46\uE886\uE8BA\uD835\uDC46\uD835\uDC46\uE886\uD835\uDC46\uD835\uDC46\uD835\uDC46\uE886" ));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "(f)", "∼∃\uD835\uDC65\uE8AC\uE8B8\uD835\uDC65\uD835\uDC46\uD835\uDC46\uE886\uD835\uDC46\uE886" ));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "(g)", "∀\uD835\uDC65[(\uE8AC\uD835\uDC65\uE886 ∨ \uE8AC\uD835\uDC65\uD835\uDC46\uE886) → \uE8A6\uD835\uDC65\uD835\uDC46\uE886]" ));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "(h)", "∀\uD835\uDC65[(\uE8AC\uD835\uDC65\uE886 ∨ \uE8AC\uD835\uDC65\uD835\uDC46\uE886) → \uE8A4\uD835\uDCCD\uD835\uDC46\uD835\uDC46\uE886]" ));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "(i)", "(∀\uD835\uDC65 \uE8A6 \uD835\uDC46\uE886)(\uE8AC\uD835\uDC65\uE886 ∨ \uE8AC\uD835\uDC65\uD835\uDC46\uE886)" ));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "(j)", "(∀\uD835\uDC65 \uE8A6 \uD835\uDC46\uE886)\uE8A6\uD835\uDC65\uD835\uDC46\uD835\uDC46\uE886" ));
+
+        return QE640;
     }
 
 

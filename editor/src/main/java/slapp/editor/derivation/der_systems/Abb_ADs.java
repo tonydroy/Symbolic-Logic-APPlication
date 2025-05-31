@@ -60,13 +60,13 @@ public class Abb_ADs extends DerivationRule {
         Document veeAbb = new Document(openBracketString + "∼\uD835\uDCAB → \uD835\uDCAC" + closeBracketString);
         //wedge
         Document wedge = new Document(openBracketString + "\uD835\uDCAB ∧ \uD835\uDCAC" + closeBracketString);
-        Document wedgeAbb = new Document(openBracketString + "∼(\uD835\uDCAB → ∼\uD835\uDCAC)" + closeBracketString);
+        Document wedgeAbb = new Document("∼(\uD835\uDCAB → ∼\uD835\uDCAC)");
         //double arrow1
-        Document doubleArrow1 = new Document(openBracketString + "(\uD835\uDCAB ↔ \uD835\uDCAC)" + closeBracketString);
-        Document doubleArrow1Abb = new Document(openBracketString + "∼((\uD835\uDCAB → \uD835\uDCAC) → ∼(\uD835\uDCAC → \uD835\uDCAB))" + closeBracketString);
+        Document doubleArrow1 = new Document(openBracketString + "\uD835\uDCAB ↔ \uD835\uDCAC" + closeBracketString);
+        Document doubleArrow1Abb = new Document( "∼((\uD835\uDCAB → \uD835\uDCAC) → ∼(\uD835\uDCAC → \uD835\uDCAB))" );
         //double arrow2
         Document doubleArrow2 = new Document(openBracketString + "\uD835\uDCAB ↔ \uD835\uDCAC" + closeBracketString);
-        Document doubleArrow2Abb = new Document(openBracketString + "((\uD835\uDCAB → \uD835\uDCAC) ∧ (\uD835\uDCAC → \uD835\uDCAB))" + closeBracketString);
+        Document doubleArrow2Abb = new Document(openBracketString + "(\uD835\uDCAB → \uD835\uDCAC) ∧ (\uD835\uDCAC → \uD835\uDCAB)" + closeBracketString);
 
 
         List<Expression> veeExpressions = ParseUtilities.parseDoc(vee, metaLanguage.getNameString());

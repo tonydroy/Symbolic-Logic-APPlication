@@ -516,11 +516,11 @@ public class DrvtnExpCreate {
 
         //check controls
 
-        checkMaxSpinner = new Spinner<>(-1, 99, 10);
+        checkMaxSpinner = new Spinner<>(-1, 99, 0);
         checkMaxSpinner.setPrefWidth(60);
         Label checkMaxLabel = new Label("Check Max:");
 
-        helpMaxSpinner = new Spinner<>(-1, 99, 3);
+        helpMaxSpinner = new Spinner<>(-1, 99, 0);
         helpMaxSpinner.setPrefWidth(60);
         Label helpMaxLabel = new Label("   Help Max:");
 

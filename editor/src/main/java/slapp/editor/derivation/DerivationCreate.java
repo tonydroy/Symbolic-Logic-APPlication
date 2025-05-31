@@ -502,11 +502,11 @@ public class DerivationCreate {
 
         //check controls
 
-        checkMaxSpinner = new Spinner<>(-1, 99, 10);
+        checkMaxSpinner = new Spinner<>(-1, 99, 0);
         checkMaxSpinner.setPrefWidth(60);
         Label checkMaxLabel = new Label("Check Max:");
 
-        helpMaxSpinner = new Spinner<>(-1, 99, 3);
+        helpMaxSpinner = new Spinner<>(-1, 99, 0);
         helpMaxSpinner.setPrefWidth(60);
         Label helpMaxLabel = new Label("   Help Max:");
 
@@ -1223,6 +1223,8 @@ public class DerivationCreate {
         }
         checkSetup.setThrmSetElements(modelThrmSetElements);
 
+
+
         if (checkSetup.getHelpMax() != 0 && (!DerivationRulesets.getRuleset(checkSetup.getRulesetName()).isContextualHelpCompatible()  || !checkSetup.getTheoremSets().isEmpty())) {
             checkSetup.setHelpMax(0);
             helpMaxSpinner.getValueFactory().setValue(0);
@@ -1235,8 +1237,8 @@ public class DerivationCreate {
         for (ThrmSetElement thrmSetElement : modelThrmSetElements) {
             System.out.println(thrmSetElement.getName());
         }
-
  */
+
         return model;
     }
 
