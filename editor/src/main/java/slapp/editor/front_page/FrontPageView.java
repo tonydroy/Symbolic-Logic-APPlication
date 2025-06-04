@@ -22,7 +22,9 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import slapp.editor.decorated_rta.DecoratedRTA;
@@ -45,6 +47,8 @@ public class FrontPageView implements ExerciseView<Label> {
     private ChangeListener contentFocusListener;
 
 
+
+
     public FrontPageView(MainWindowView mainView) {
         this.mainView = mainView;
         exerciseStatement = new Label("");
@@ -57,10 +61,24 @@ public class FrontPageView implements ExerciseView<Label> {
 
         exerciseContent = frontAnimation.getFrontPageBox();
 
+        /*
         Pane spacerPane = new Pane();
         double centeringWidth = (mainView.getMinStageWidth() - exerciseContent.getPrefWidth()) / 2.0;
         spacerPane.setMinWidth(centeringWidth);
         exerciseControl = spacerPane;
+
+         */
+
+  //      CheckBox checkBox = mainView.getInstructorCheck();
+        AnchorPane controlPane = new AnchorPane();    //(checkBox)
+  //      AnchorPane.setBottomAnchor(checkBox, 10.0);
+  //      AnchorPane.setRightAnchor(checkBox, 5.0);
+
+        double centeringWidth = (mainView.getMinStageWidth() - exerciseContent.getPrefWidth()) / 2.0;
+        controlPane.setMinWidth(centeringWidth);
+        exerciseControl = controlPane;
+
+
 
         RichTextArea commentRTA = exerciseComment.getEditor();
         commentRTA.getActionFactory().open(new Document("Logo Here")).execute(new ActionEvent());

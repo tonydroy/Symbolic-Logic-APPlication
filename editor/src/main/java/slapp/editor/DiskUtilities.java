@@ -32,13 +32,56 @@ public class DiskUtilities {
 
     private static File exerciseDirectory = null;
     private static File assignmentDirectory = null;
+    private static File currentExerciseFile = null;
+    private static File currentAssignmentFile = null;
     private static File userHomeFile = new File(System.getProperty("user.home"));
-    private static String slappDataFile = "slapp.dat";
+    private static String slappProgDataFile = "SLAPPprog.dta";
+    private static String slappUsrDataFile = "SLAPPusr.dta";
 
-    public static boolean saveDataFile(SLAPPdata data) {
+    public static boolean saveUsrDataFile(SlappUsrData data) {
         boolean success = false;
         try {
-            File dataFile = new File(userHomeFile, slappDataFile);
+            File dataFile = new File(userHomeFile, slappUsrDataFile);
+            FileOutputStream fileOutputStream = new FileOutputStream(dataFile);
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+            objectOutputStream.writeObject(data);
+            objectOutputStream.close();
+            success = true;
+        }
+        catch (IOException e) {
+            //     e.printStackTrace();
+            EditorAlerts.showSimpleAlert("Error saving usr file", e.getClass().getCanonicalName());
+            return success;
+        }
+        return success;
+    }
+
+    public static SlappUsrData openUsrDataFile() {
+
+        try {
+            File dataFile = new File(userHomeFile, slappUsrDataFile);
+            if (dataFile.exists()) {
+                FileInputStream fileInputStream = new FileInputStream(dataFile);
+                ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+                SlappUsrData data = (SlappUsrData) objectInputStream.readObject();
+                objectInputStream.close();
+                return data;
+            }
+            else return null;
+        }
+        catch (Exception e) {
+            //     e.printStackTrace();
+            EditorAlerts.showSimpleAlert("Error opening user data file", e.getClass().getCanonicalName());
+            return null;
+        }
+    }
+
+
+
+    public static boolean saveProgDataFile(SlappProgData data) {
+        boolean success = false;
+        try {
+            File dataFile = new File(userHomeFile, slappProgDataFile);
             FileOutputStream fileOutputStream = new FileOutputStream(dataFile);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
             objectOutputStream.writeObject(data);
@@ -47,20 +90,20 @@ public class DiskUtilities {
         }
         catch (IOException e) {
        //     e.printStackTrace();
-            EditorAlerts.showSimpleAlert("Error saving data file", e.getClass().getCanonicalName());
+            EditorAlerts.showSimpleAlert("Error saving program data file", e.getClass().getCanonicalName());
             return success;
         }
         return success;
     }
 
-    public static SLAPPdata openDataFile() {
+    public static SlappProgData openProgDataFile() {
 
         try {
-            File dataFile = new File(userHomeFile, slappDataFile);
+            File dataFile = new File(userHomeFile, slappProgDataFile);
             if (dataFile.exists()) {
                 FileInputStream fileInputStream = new FileInputStream(dataFile);
                 ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-                SLAPPdata data = (SLAPPdata) objectInputStream.readObject();
+                SlappProgData data = (SlappProgData) objectInputStream.readObject();
                 objectInputStream.close();
                 return data;
             }
@@ -68,7 +111,7 @@ public class DiskUtilities {
         }
         catch (Exception e) {
        //     e.printStackTrace();
-            EditorAlerts.showSimpleAlert("Error opening data file", e.getClass().getCanonicalName());
+            EditorAlerts.showSimpleAlert("Error opening program data file", e.getClass().getCanonicalName());
             return null;
         }
     }
@@ -198,6 +241,7 @@ public class DiskUtilities {
             exerciseDirectory = fileToOpen.getParentFile();
             try (FileInputStream fi = new FileInputStream(fileToOpen); ObjectInputStream oi = new ObjectInputStream(fi);) {
                 exerciseModelObject = oi.readObject();
+                currentExerciseFile = fileToOpen;
             } catch (IOException | ClassNotFoundException  e) {
    //                            e.printStackTrace();
                 EditorAlerts.showSimpleAlert("Error opening file", fileToOpen.getName() + " is not compatible with this version of SLAPP.\nCannot open.");
@@ -232,6 +276,7 @@ public class DiskUtilities {
             assignmentDirectory = fileToOpen.getParentFile();
             try (FileInputStream fi = new FileInputStream(fileToOpen); ObjectInputStream oi = new ObjectInputStream(fi);) {
                 assignment = (Assignment) oi.readObject();
+                currentAssignmentFile = fileToOpen;
             } catch (IOException | ClassNotFoundException e) {
 //                e.printStackTrace();
                 EditorAlerts.showSimpleAlert("Error opening file", fileToOpen.getName() + " is not compatible with this version of SLAPP.\nCannot open.");

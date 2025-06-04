@@ -19,9 +19,11 @@ import javafx.animation.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.CheckBox;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Glow;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.*;
@@ -40,6 +42,8 @@ public class FrontPageAnimation {
     ParallelTransition p;
 
     VBox root;
+
+
 
     public VBox getFrontPageBox() {
 
@@ -112,9 +116,13 @@ public class FrontPageAnimation {
 
         Text title2 = new Text("SLAPP editor, v3.0");
         title2.setFont(Font.font("Noto Serif Combo",20));
+
+
+
         VBox titleBox = new VBox(title0, title1, title2);
         titleBox.setPadding(new Insets(10, 20, 10, 20));
         titleBox.setAlignment(Pos.CENTER);
+
 
 
         RotateTransition rt = new RotateTransition(Duration.seconds(5), treePane);

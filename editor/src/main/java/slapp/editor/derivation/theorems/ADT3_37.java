@@ -74,7 +74,7 @@ public class ADT3_37 extends Theorem {
                 new DecorationModel(20, 1, sup, par),
                 new DecorationModel(21, 6, base, par)
         );
-        //different becaus script 'o' takes just one word.
+        //different because script 'o' takes just one word.
         List<DecorationModel> dec3aList = List.of(
                 new DecorationModel(0, 11, base, par),
                 new DecorationModel(11, 1, sup, par),

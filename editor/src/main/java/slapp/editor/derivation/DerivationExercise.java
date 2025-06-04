@@ -247,12 +247,14 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
 /*
             derivationView.getExerciseComment().getEditor().getActionFactory().saveNow().execute(new ActionEvent());
             Document doc = derivationView.getExerciseComment().getEditor().getDocument();
-            mainWindow.getSlappData().setMetalanguageHelp(doc);
-             */
+            mainWindow.getSlappProgData().setMetalanguageHelp(doc);
+
+ */
+
 
             Stage metaHelpStage = derivationView.getMetaLangStage();
             if (metaHelpStage != null && metaHelpStage.isShowing()) metaHelpStage.close();
-            else derivationView.showMetalanguageHelp(mainWindow.getSlappData().getMetalanguageHelp());
+            else derivationView.showMetalanguageHelp(mainWindow.getSlappProgData().getMetalanguageHelp());
 
 
 

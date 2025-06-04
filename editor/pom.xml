@@ -34,6 +34,14 @@
         </dependency>
 
 
+        <dependency>
+            <groupId>com.license4j</groupId>
+            <artifactId>licensing-library</artifactId>
+            <version>5.0.2</version> <!-- Use the latest version available -->
+        </dependency>
+
+
+
 
         <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
         <dependency>

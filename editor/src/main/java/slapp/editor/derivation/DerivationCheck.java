@@ -89,7 +89,7 @@ public class DerivationCheck implements DCheck {
     }
 
     private void setChecksCounter() {
-        if (checkMax != -1 && checkTries >= checkMax) {
+        if (checkMax != -1 && checkTries >= checkMax && !derivationExercise.getMainWindow().isInstructorFunctions()) {
             derivationView.getCheckButton().setDisable(true);
             derivationView.getCheckProgButton().setDisable(true);
         }
@@ -102,7 +102,9 @@ public class DerivationCheck implements DCheck {
     }
 
     public void setHelpCounter() {
-        if (helpMax != -1 && helpTries >= helpMax) {derivationView.getHelpButton().setDisable(true);}
+        if (helpMax != -1 && helpTries >= helpMax && !derivationExercise.getMainWindow().isInstructorFunctions()) {
+            derivationView.getHelpButton().setDisable(true);
+        }
 
         String helpString;
         if (helpMax == -1) helpString = "(unlimited)";
@@ -145,8 +147,10 @@ public class DerivationCheck implements DCheck {
     private boolean runCheck() {
         checkSuccess = false;
         derivationView.deactivateBigCheck();
-        checkTries++;
-        setChecksCounter();
+        if (!derivationExercise.getMainWindow().isInstructorFunctions()) {
+            checkTries++;
+            setChecksCounter();
+        }
         derivationExercise.getDerivationHelp().closeHelpWindows();
 
         viewLines = derivationView.getViewLines();

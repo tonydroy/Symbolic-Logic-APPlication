@@ -19,7 +19,6 @@ import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -55,8 +54,6 @@ import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.derivation.*;
 import slapp.editor.derivation.theorems.*;
 import slapp.editor.main_window.*;
-import slapp.editor.vertical_tree.VerticalTreeExercise;
-import slapp.editor.vertical_tree.VerticalTreeModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -255,7 +252,7 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
 
             Stage metaHelpStage = drvtnExpView.getMetaLangStage();
             if (metaHelpStage != null && metaHelpStage.isShowing()) metaHelpStage.close();
-            else  drvtnExpView.showMetalanguageHelp(mainWindow.getSlappData().getMetalanguageHelp());
+            else  drvtnExpView.showMetalanguageHelp(mainWindow.getSlappProgData().getMetalanguageHelp());
         });
     }
 

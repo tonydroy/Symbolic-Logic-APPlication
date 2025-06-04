@@ -233,8 +233,10 @@ public class DerivationHelp {
             }
         }
 
-        derivationCheck.setHelpTries(derivationCheck.getHelpTries() + 1);
-        derivationCheck.setHelpCounter();
+        if (!derivationExercise.getMainWindow().isInstructorFunctions()) {
+            derivationCheck.setHelpTries(derivationCheck.getHelpTries() + 1);
+            derivationCheck.setHelpCounter();
+        }
         derivationExercise.getMainWindow().getMainView().getBorderPane().requestFocus();
     }
 
@@ -1003,7 +1005,7 @@ public class DerivationHelp {
         whileLoop:
         while (changes) {
 
-            System.out.println(eObtainableFormulas);
+       //     System.out.println(eObtainableFormulas);
 
             changes = false;
             for (Formula formula : eObtainableFormulas) {

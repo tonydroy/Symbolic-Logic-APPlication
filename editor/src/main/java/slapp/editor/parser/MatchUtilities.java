@@ -123,6 +123,8 @@ public class MatchUtilities {
 
         else if (source instanceof PseudoMFormula && target instanceof PseudoMFormula && source.equals(target)) { return; }
 
+        else if (source instanceof MComplexFormula && target instanceof MComplexFormula && source.equals(target)) { return; }
+
         else if (source instanceof PrefixAtomic && target instanceof PrefixAtomic && source.equals(target)) { return; }
 
         else if (source instanceof InfixAtomic && target instanceof InfixAtomic && source.equals(target)) { return; }

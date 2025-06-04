@@ -18,35 +18,53 @@ package slapp.editor.main_window;
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.model.Document;
+import com.license4j.License;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.concurrent.Worker;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.geometry.*;
+import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Scale;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.*;
-import slapp.editor.DiskUtilities;
-import slapp.editor.EditorMain;
-import slapp.editor.PrintUtilities;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.events.Event;
+import org.w3c.dom.events.EventListener;
+import org.w3c.dom.events.EventTarget;
+import org.w3c.dom.html.HTMLAnchorElement;
+import slapp.editor.*;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.decorated_rta.KeyboardDiagram;
 import slapp.editor.main_window.assignment.AssignmentHeader;
 import slapp.editor.main_window.assignment.AssignmentHeaderItem;
 
+import java.awt.*;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
+import static slapp.editor.EditorMain.mainStage;
 
 /**
  * View for the main SLAPP window.  View has border pane with menu bar and toolbars on top, exercise content in
@@ -54,7 +72,7 @@ import java.time.format.DateTimeFormatter;
  * version, just for the free-form exercise), and footer information at the bottom.
  */
 public class MainWindowView {
-    private Stage stage = EditorMain.mainStage;
+    private Stage stage = mainStage;
     private MainWindow mainWindow;
     private ToolBar editToolbar = new ToolBar();
     private ToolBar fontsToolbar = new ToolBar();
@@ -73,6 +91,12 @@ public class MainWindowView {
     private Spinner<Integer> zoomSpinner;
     private Label zoomLabel;
     double minStageWidth = 860.0;   //870
+
+    double mainWindowWidth;
+    double mainWindowHeight;
+    double mainWindowX;
+    double mainWindowY;
+
     private BorderPane borderPane = new BorderPane();
     private Scene mainScene;
     private ExerciseView currentExerciseView;
@@ -100,6 +124,7 @@ public class MainWindowView {
 
     private RichTextAreaSkin dummyRTASkin;
     private MenuItem createNewExerciseItem = new MenuItem("Create New");
+    private Menu recentExerciseMenu = new Menu("Recent Exercises");
     private MenuItem createRevisedExerciseItem = new MenuItem("Create Revised");
     private MenuItem saveExerciseItem = new MenuItem("Save");
     private MenuItem saveAsExerciseItem = new MenuItem("Save As");
@@ -108,6 +133,7 @@ public class MainWindowView {
     private MenuItem exportToPDFExerciseItem = new MenuItem("Export to PDF");
     private MenuItem clearExerciseItem = new MenuItem("Reset");
     private MenuItem closeExerciseItem = new MenuItem("Close");
+    private Menu recentAssignmentMenu = new Menu("Recent Assignments");
     private MenuItem saveAssignmentItem = new MenuItem("Save");
     private MenuItem saveAsAssignmentItem = new MenuItem("Save As");
     private MenuItem openAssignmentItem = new MenuItem("Open");
@@ -152,6 +178,9 @@ public class MainWindowView {
     HBox paraToolbarBox;
     HBox fontsAndEditBox;
 
+    CheckBox instructorCheck = new CheckBox();
+
+
 
     /**
      * Create the main window view
@@ -194,17 +223,18 @@ public class MainWindowView {
         Text filmItemGraphic5 = new Text("\uf008");
         filmItemGraphic5.setStyle("-fx-font-family: la-solid-900");
         derivationItem = new MenuItem("Derivations", filmItemGraphic5);
-        Text filmItemGraphic6 = new Text("\uf008");
-        filmItemGraphic6.setStyle("-fx-font-family: la-solid-900");
-        instructorInfoItem = new MenuItem("Instructor Info", filmItemGraphic6);
 
+
+        Text textItemGraphic0 = new Text("\uf15c");
+        textItemGraphic0.setStyle("-fx-font-family: la-solid-900");
+        instructorInfoItem = new MenuItem("Instructor Functions", textItemGraphic0);
 
         Text textItemGraphic1 = new Text("\uf15c");
         textItemGraphic1.setStyle("-fx-font-family: la-solid-900");
         commonElementsTextItem = new MenuItem("General Info", textItemGraphic1);
         Text textItemGraphic2 = new Text("\uf15c");
         textItemGraphic2.setStyle("-fx-font-family: la-solid-900");
-        contextualTextItem = new MenuItem("Contextual", textItemGraphic2);
+        contextualTextItem = new MenuItem("Contextual Help", textItemGraphic2);
 
 
         Text textItemGraphic5 = new Text("\uf15c");
@@ -228,11 +258,17 @@ public class MainWindowView {
 
 
         menuBar = new MenuBar(exerciseMenu, assignmentMenu, previousExerciseMenu, nextExerciseMenu, goToExerciseMenu, assignmentCommentMenu, printMenu, helpMenu);
-        exerciseMenu.getItems().addAll(saveExerciseItem, saveAsExerciseItem, openExerciseItem, clearExerciseItem, closeExerciseItem, printExerciseItem, exportToPDFExerciseItem, createRevisedExerciseItem, createNewExerciseItem);
-        assignmentMenu.getItems().addAll(saveAssignmentItem, saveAsAssignmentItem, openAssignmentItem, closeAssignmentItem, printAssignmentItem, exportAssignmentToPDFItem, createRevisedAssignmentItem, createNewAssignmentItem);
+        exerciseMenu.getItems().addAll(openExerciseItem, recentExerciseMenu, saveExerciseItem, saveAsExerciseItem, clearExerciseItem, closeExerciseItem, printExerciseItem, exportToPDFExerciseItem, createRevisedExerciseItem, createNewExerciseItem);
+        assignmentMenu.getItems().addAll(openAssignmentItem, recentAssignmentMenu, saveAssignmentItem, saveAsAssignmentItem, closeAssignmentItem, printAssignmentItem, exportAssignmentToPDFItem, createRevisedAssignmentItem, createNewAssignmentItem);
         printMenu.getItems().addAll(printExerciseItemPM, exportExerciseToPDFItemPM, printAssignmentItemPM, exportAssignmentToPDFItemPM, exportSetupItem, pageSetupItem, scaleSetupItem);
-        helpMenu.getItems().addAll(quickStartItem, slappEditorItem, verticalTreeItem, truthTableItem, horizontalTreeItem, derivationItem, instructorInfoItem, commonElementsTextItem, contextualTextItem, keyboardShortcutsItem, aboutItem, updateItem, reportItem);
-/*
+        helpMenu.getItems().addAll(quickStartItem, slappEditorItem, verticalTreeItem, truthTableItem, horizontalTreeItem, derivationItem,  commonElementsTextItem, contextualTextItem, new SeparatorMenuItem(), keyboardShortcutsItem, instructorInfoItem, aboutItem, updateItem, reportItem);
+
+        createNewExerciseItem.setDisable(true);
+        createRevisedExerciseItem.setDisable(true);
+        createNewAssignmentItem.setDisable(true);
+        createRevisedAssignmentItem.setDisable(true);
+
+        /*
         if (EditorMain.os.startsWith("Mac")) {
             menuBar.setUseSystemMenuBar(true);
         }
@@ -241,7 +277,7 @@ public class MainWindowView {
         //toolbar items
 
         zoomLabel = new Label(" Zoom ");
-        zoomSpinner = new Spinner(25, 500, 100, 5);
+        zoomSpinner = new Spinner(25, 500, mainWindow.getSlappUsrData().getZoom(), 5);
         zoomSpinner.setPrefSize(65,25);
         zoomSpinner.setTooltip(new Tooltip("Window zoom as percentage of normal"));
         zoomSpinner.valueProperty().addListener((obs, ov, nv) -> {
@@ -348,21 +384,40 @@ public class MainWindowView {
         stage.setScene(mainScene);
         stage.setTitle("SLAPP Editor");
         stage.setMinWidth(minStageWidth);
- //       stage.setWidth(minStageWidth);
 
-        Rectangle2D mainBounds = Screen.getPrimary().getVisualBounds();
-        double mainWindowX = Math.max(0.0, (mainBounds.getMaxX() - mainBounds.getMinX())/8);
-        double mainWindowY = 40;
+        setMainWindowBounds();
+
+        stage.setWidth(mainWindowWidth);
+        stage.setHeight(mainWindowHeight);
         stage.setX(mainWindowX);
         stage.setY(mainWindowY);
 
-        stage.setHeight(860); //this added to keep SlappLogoView on screen (adjust with actual logo) ok in general? 800
         stage.setOnCloseRequest(e -> {
             e.consume();
             closeWindow();
         });
 
         stage.show();
+    }
+
+    private void setMainWindowBounds() {
+        SlappUsrData usrData = mainWindow.getSlappUsrData();
+        boolean dataValid = usrData.getMainWindowX() >= 0 && usrData.getMainWindowY() >= 0 && usrData.getMainWindowWidth() >= minStageWidth && usrData.getMainWindowHeight() > 400;
+        if (dataValid && Screen.getScreensForRectangle(usrData.getMainWindowX(), usrData.getMainWindowY(), usrData.getMainWindowWidth(), usrData.getMainWindowHeight()).size() != 0) {
+            mainWindowX = usrData.getMainWindowX();
+            mainWindowY = usrData.getMainWindowY();
+            mainWindowWidth = usrData.getMainWindowWidth();
+            mainWindowHeight = usrData.getMainWindowHeight();
+        }
+        else {
+            Rectangle2D mainBounds = Screen.getPrimary().getVisualBounds();
+            mainWindowX = Math.max(0.0, (mainBounds.getMaxX() - mainBounds.getMinX())/8);
+            mainWindowY = 40;
+            mainWindowWidth = minStageWidth;
+            mainWindowHeight = 860;
+
+        }
+
     }
 
     /**
@@ -377,7 +432,7 @@ public class MainWindowView {
      * The dummy window contains an RTA upon which text may be "measured"
      */
     private void setUpDummyWindow() {
-        dummyRTA = new RichTextArea(EditorMain.mainStage);
+        dummyRTA = new RichTextArea(mainStage);
         dummyRTA.getStylesheets().add("slappTextArea.css");
 
 
@@ -389,7 +444,7 @@ public class MainWindowView {
         dummyStage.setScene(dummyScene);
 
         dummyStage.initStyle(StageStyle.UTILITY);
-        dummyStage.initOwner(EditorMain.mainStage);
+        dummyStage.initOwner(mainStage);
         dummyStage.getIcons().add(new Image(EditorMain.class.getResourceAsStream("/icon32x32.png")));
         dummyStage.getIcons().add(new Image(EditorMain.class.getResourceAsStream("/icon16x16.png")));
 
@@ -433,7 +488,7 @@ public class MainWindowView {
 
     public static Rectangle2D getCurrentScreenBounds() {
         Screen screen = Screen.getPrimary();
-        for (Screen s : Screen.getScreensForRectangle(EditorMain.mainStage.getX(), EditorMain.mainStage.getY(), EditorMain.mainStage.getWidth(), EditorMain.mainStage.getHeight())) {
+        for (Screen s : Screen.getScreensForRectangle(mainStage.getX(), mainStage.getY(), mainStage.getWidth(), mainStage.getHeight())) {
             if (s.getBounds().getMinX() > screen.getBounds().getMinX()) screen = s;
         }
         return screen.getVisualBounds();
@@ -536,7 +591,7 @@ public class MainWindowView {
      *
      * @param zoom integer percentage
      */
-    private void updateZoom(int zoom) {
+    public void updateZoom(int zoom) {
         scale = (double)zoom/100.0;
 
         KeyboardDiagram keyboardDiagram = KeyboardDiagram.getInstance();
@@ -638,12 +693,25 @@ public class MainWindowView {
             mainWindow.closeVideoHelp();
             if (mainWindow.getCurrentExercise() != null) mainWindow.getCurrentExercise().clearStandingPopups();
 
-//            if (mainWindow.getMediaViewer() != null) {  mainWindow.getMediaViewer().stopPlay();    }
-            DiskUtilities.saveDataFile(mainWindow.getSlappData());
+            recordUsrDta();
+            DiskUtilities.saveProgDataFile(mainWindow.getSlappProgData());
+            DiskUtilities.saveUsrDataFile(mainWindow.getSlappUsrData());
+
             stage.close();
             System.exit(0);
         }
     }
+
+    private void recordUsrDta() {
+        SlappUsrData usrData = mainWindow.getSlappUsrData();
+        usrData.setMainWindowX(mainStage.getX());
+        usrData.setMainWindowY(mainStage.getY());
+        usrData.setMainWindowWidth(mainStage.getWidth());
+        usrData.setMainWindowHeight(mainStage.getHeight());
+        usrData.setZoom(zoomSpinner.getValue());
+    }
+
+
 
     /**
      * Get print/export assignment header
@@ -681,7 +749,7 @@ public class MainWindowView {
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
 
-        RichTextArea commentArea = new RichTextArea(EditorMain.mainStage);
+        RichTextArea commentArea = new RichTextArea(mainStage);
         commentArea.getActionFactory().open(header.getComment()).execute(new ActionEvent());
         commentArea.setContentAreaWidth(PrintUtilities.getPageWidth());
         commentArea.setPrefWidth(PrintUtilities.getPageWidth());
@@ -690,6 +758,128 @@ public class MainWindowView {
         headerBox.getChildren().addAll(nameBox,itemsBox, separator, commentArea );
         headerBox.setPadding(new Insets(0,0,20,0));
         return headerBox;
+    }
+
+    public void showInstructorInfo() {
+        Stage helpStage = new Stage();
+
+        String textString = "<body style=\"margin-left:10; margin-right: 20\">" +
+                "<h3>Instructor Functions</h3>" +
+                "<p> Instructor functions include activation of the 'Create New' and 'Create Revised' options for Exercises and Assignments, " +
+                "along with removal of limits on exercise check and help options.  These options are explained in the Instructor Help Video.</p>" +
+                "<p> Instructor functions require a license key which you can <a href=\"https://tonyroyphilosophy.net/sl-answers-to-exercises-password-request/\">request here</a> and submit below.  "+
+                "After registration, the functions are enabled and disabled by the small checkbox on the lower left of the SLAPP opening page.</p>";
+
+        WebView textArea = new WebView();
+        WebEngine webEngine = textArea.getEngine();
+        webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
+        //open links in native browser
+        webEngine.getLoadWorker().stateProperty().addListener((ob, ov, nv) -> {
+            if (nv == Worker.State.SUCCEEDED) {
+                org.w3c.dom.Document document = webEngine.getDocument();
+                NodeList nodeList = document.getElementsByTagName("a");
+                for (int i = 0; i < nodeList.getLength(); i++)
+                {
+                    org.w3c.dom.Node node= nodeList.item(i);
+                    EventTarget eventTarget = (EventTarget) node;
+                    eventTarget.addEventListener("click", new EventListener()
+                    {
+                        @Override
+                        public void handleEvent(Event evt)
+                        {
+                            EventTarget target = evt.getCurrentTarget();
+                            HTMLAnchorElement anchorElement = (HTMLAnchorElement) target;
+                            String href = anchorElement.getHref();
+                            //handle opening URL outside JavaFX WebView
+                            System.out.println(href);
+
+                            try {
+                                Desktop.getDesktop().browse(new URI(href));
+                            } catch (URISyntaxException e) {
+                                System.out.println("URISyntaxException (textHelpPopup)");
+                            } catch (IOException e) {
+                                System.out.println("IOException (textHelpPopup)");
+                            }
+                            evt.preventDefault();
+                        }
+                    }, false);
+                }
+            }
+        });
+
+
+
+
+        webEngine.loadContent(textString);
+        textArea.setPrefHeight(230);
+        textArea.setPrefWidth(500);
+
+        Button videoButton = new Button("Play Instructor Help Video");
+        videoButton.setOnAction(e -> mainWindow.videoHelp("https://www.slappservices.net/instructor/instructor_player.html", 900, 537));
+        TextField licenseField = new TextField();
+        licenseField.setPromptText("License Key");
+        licenseField.setPrefWidth(250);
+        licenseField.setMaxWidth(250);
+        Button licenseButton = new Button("Submit License");
+        licenseButton.setOnAction(e -> {
+            License license = License.getInstance();
+
+            license.getBuilder()
+                    .product("8B4A2B871E73E19C931F2D599719FFB7")
+                    .build();
+
+            license.validate(licenseField.getText());
+            if (license.getStatus().isValid()) {
+                mainWindow.setInstructorFunctions(true);
+                enableExerAssItems();
+                mainWindow.getSlappUsrData().setInstructorCheck(true);
+                instructorCheck.setSelected(true);
+                EditorAlerts.fleetingPopup("Registration Complete");
+            }
+            else {
+                EditorAlerts.fleetingRedPopup("Registration Failed");
+            }
+
+        });
+
+        Label checkBoxLabel = new Label("Activate Instructor Functions:   ");
+        HBox checkHBox = new HBox(checkBoxLabel, instructorCheck);
+        checkHBox.setAlignment(Pos.CENTER);
+
+
+
+        VBox helpBox = new VBox(20, textArea, videoButton, licenseField, licenseButton, checkHBox);
+        helpBox.setMinWidth(300);
+        helpBox.setAlignment(Pos.CENTER);
+        helpBox.setPadding(new Insets(20,20,20,20));
+
+        Scene scene = new Scene(helpBox);
+        scene.getStylesheets().add(RichTextArea.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
+        helpBox.applyCss();
+        helpStage.setScene(scene);
+        helpStage.setTitle("Instructor Help");
+        helpStage.initModality(Modality.NONE);
+        helpStage.getIcons().addAll(EditorMain.icons);
+        helpStage.initOwner(mainStage);
+        Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
+        helpStage.setX(Math.min(mainStage.getX() + mainStage.getWidth(), bounds.getMaxX() - 500));
+        helpStage.setY(mainStage.getY() + 20);
+
+        helpStage.show();
+    }
+
+    public void enableExerAssItems() {
+        createNewExerciseItem.setDisable(false);
+        createRevisedExerciseItem.setDisable(false);
+        createNewAssignmentItem.setDisable(false);
+        createRevisedAssignmentItem.setDisable(false);
+    }
+
+    public void disableExerAssItems() {
+        createNewExerciseItem.setDisable(true);
+        createRevisedExerciseItem.setDisable(true);
+        createNewAssignmentItem.setDisable(true);
+        createRevisedAssignmentItem.setDisable(true);
     }
 
 
@@ -1126,4 +1316,6 @@ public class MainWindowView {
     public BorderPane getBorderPane() {
         return borderPane;
     }
+
+    public CheckBox getInstructorCheck() {return instructorCheck;}
 }

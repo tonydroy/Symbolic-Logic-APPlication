@@ -19,6 +19,7 @@ import com.gluonhq.richtextarea.model.Document;
 import com.install4j.api.launcher.ApplicationLauncher;
 import com.install4j.api.update.UpdateSchedule;
 import com.install4j.api.update.UpdateScheduleRegistry;
+import com.license4j.License;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
@@ -57,6 +58,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+
 import static javafx.scene.control.ButtonType.OK;
 
 /**
@@ -78,7 +81,10 @@ public class MainWindow {
     private WebEngine videoWebEngine;
     private WebView videoWebView;
     private Stage videoStage;
-    private SLAPPdata slappData = new SLAPPdata();
+    private SlappProgData slappProgData = new SlappProgData();
+    private SlappUsrData slappUsrData = new SlappUsrData();
+    private boolean instructorFunctions;
+
 
 
 
@@ -86,6 +92,22 @@ public class MainWindow {
      * Create main SLAPP main window
      */
     public MainWindow(String startFileName) {
+
+        SlappProgData progData = DiskUtilities.openProgDataFile();
+        if (progData != null) {
+            slappProgData = progData;
+        }
+        else {
+            System.out.println("no prog data file");
+        }
+
+        SlappUsrData usrData = DiskUtilities.openUsrDataFile();
+        if (usrData != null) {
+            slappUsrData = usrData;
+        }
+        else {
+            System.out.println("no usr data file");
+        }
 
         mainWindow = this;
         mainView = new MainWindowView(this);
@@ -102,17 +124,22 @@ public class MainWindow {
             }
         };
         setUpExercise(new FrontPageExercise(this));
+
+        mainView.updateZoom(slappUsrData.getZoom());
+
         mainView.getMainScene().focusOwnerProperty().addListener(focusListener);
 
-        SLAPPdata data = DiskUtilities.openDataFile();
-        if (data != null) {
-            slappData = data;
-        }
-        else {
-            System.out.println("no data file");
-        }
 
 
+
+
+
+        instructorFunctions = false;
+
+        mainView.getInstructorCheck().setSelected(slappUsrData.isInstructorCheck());
+        if (slappUsrData.isInstructorCheck()) {
+            checkForInstructor();
+        }
 
         //install4j
         UpdateScheduleRegistry.setUpdateSchedule(UpdateSchedule.WEEKLY);
@@ -207,7 +234,8 @@ public class MainWindow {
         mainView.getHorizontalTreeItem().setOnAction(e -> videoHelp("https://www.slappservices.net/horizontal_trees/horizontal_trees_player.html", 600, 835));
         mainView.getTruthTableItem().setOnAction(e -> videoHelp("https://www.slappservices.net/truth_tables/truth_tables_player.html", 600, 746));
         mainView.getDerivationItem().setOnAction(e -> videoHelp("https://www.slappservices.net/derivations/derivations_player.html", 700, 774));
-        mainView.getInstructorInfoItem().setOnAction(e -> videoHelp("https://www.slappservices.net/instructor/instructor_player.html", 900, 537));
+        mainView.getInstructorInfoItem().setOnAction(e -> mainView.showInstructorInfo());
+     //   mainView.getInstructorInfoItem().setOnAction(e -> videoHelp("https://www.slappservices.net/instructor/instructor_player.html", 900, 537));
 
         mainView.getCommonElementsTextItem().setOnAction(e -> generalTextHelp());
         mainView.getAboutItem().setOnAction(e -> aboutTextHelp());
@@ -222,6 +250,17 @@ public class MainWindow {
 
         mainView.getReportItem().setOnAction(e -> makeReport());
         mainView.getSaveButton().setOnAction(e -> saveAction());
+
+        mainView.getInstructorCheck().selectedProperty().addListener((ob, ov, nv) -> {
+            if (nv) {
+                slappUsrData.setInstructorCheck(true);
+                checkForInstructor();
+            }
+            else {
+                slappUsrData.setInstructorCheck(false);
+                mainView.disableExerAssItems();
+            }
+        });
 
 
         Label previousExerciseLabel = new Label("Previous");
@@ -969,7 +1008,7 @@ public class MainWindow {
     }
      */
 
-    private void videoHelp(String urlString, double width, double height) {
+    public void videoHelp(String urlString, double width, double height) {
         closeVideoHelp();
 
         videoWebEngine = videoWebView.getEngine();
@@ -1030,20 +1069,41 @@ public class MainWindow {
     }
 
 
-    /*
-    private void keyboardDiagramHelp() {
-        KeyboardDiagram kbd = KeyboardDiagram.getInstance();
-        if (!kbd.isShowing()) {
-            kbd.initialize(mainView.getLastFocusedDRTA());
-            kbd.updateAndShow();
+    private void checkForInstructor() {
+
+        License license = License.getInstance();
+
+        license.getBuilder()
+              .product("8B4A2B871E73E19C931F2D599719FFB7")
+              .build();
+
+        license.validate();
+        if (license.getStatus().isValid()) {
+            instructorFunctions = true;
+            mainView.enableExerAssItems();
+        }
+        else {
+            mainView.getInstructorCheck().setSelected(false);
+            instructorFunctions = false;
+            slappUsrData.setInstructorCheck(false);
+            EditorAlerts.fleetingRedPopup("No Valid license.  Valid license required for instructor functions.");
         }
     }
 
-     */
+    public boolean isInstructorFunctions() {
+        return instructorFunctions;
+    }
 
+    public void setInstructorFunctions(boolean instructorFunctions) {
+        this.instructorFunctions = instructorFunctions;
+    }
 
-    public SLAPPdata getSlappData() {
-        return slappData;
+    public SlappProgData getSlappProgData() {
+        return slappProgData;
+    }
+
+    public SlappUsrData getSlappUsrData() {
+        return slappUsrData;
     }
 
     /*
