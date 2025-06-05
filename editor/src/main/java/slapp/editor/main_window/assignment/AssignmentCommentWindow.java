@@ -29,10 +29,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import slapp.editor.EditorMain;
@@ -48,22 +45,26 @@ public class AssignmentCommentWindow {
     private AssignmentHeader header;
     private MainWindowView mainView;
     private DecoratedRTA commentDRTA;
-    private RichTextArea commentEditor;
+    private RichTextArea commentRTA;
     private double scale = 1.0;
     private Scene scene;
     private Stage stage;
     private TextArea helpArea;
     private VBox centerBox;
     private SimpleDoubleProperty centerHeightProperty;
+    private int pointsPossible;
+    private int pointsEarned;
 
     /**
      * Creates (but does not show) window to update comment in the assignment header.
      * @param header the current header
      * @param mainView the current MainWindowView
      */
-    public AssignmentCommentWindow(AssignmentHeader header, MainWindowView mainView) {
+    public AssignmentCommentWindow(AssignmentHeader header, MainWindowView mainView, int assignmentPointsPossible, int assignmentPointsEarned) {
         this.header = header;
         this.mainView = mainView;
+        this.pointsPossible = assignmentPointsPossible;
+        this.pointsEarned = assignmentPointsEarned;
         setUpWindow();
     }
 
@@ -88,17 +89,31 @@ public class AssignmentCommentWindow {
         menuBar.setStyle("-fx-background-color: aliceblue; -fx-border-color: white;");
 
         commentDRTA = new DecoratedRTA();
-        commentEditor = commentDRTA.getEditor();
-        commentEditor.getActionFactory().open(header.getComment()).execute(new ActionEvent());
-        commentEditor.setPromptText("Assignment Comment:");
-        commentEditor.getStylesheets().add("slappTextArea.css");
-        commentEditor.setPrefWidth(PrintUtilities.getPageWidth() + 20);
-        commentEditor.setContentAreaWidth(PrintUtilities.getPageWidth());
-        commentEditor.setPrefHeight(200);
-
-        commentEditor.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            header.setCommentTextHeight(mainView.getRTATextHeight(commentEditor));
+        commentRTA = commentDRTA.getEditor();
+        commentRTA.getActionFactory().open(header.getComment()).execute(new ActionEvent());
+        commentRTA.setPromptText("Assignment Comment:");
+        commentRTA.getStylesheets().add("slappTextArea.css");
+        commentRTA.setPrefWidth(PrintUtilities.getPageWidth() + 20);
+        commentRTA.setContentAreaWidth(PrintUtilities.getPageWidth());
+        commentRTA.setPrefHeight(200);
+        commentRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
+            header.setCommentTextHeight(mainView.getRTATextHeight(commentRTA));
         });
+
+        Node commentNode;
+        if (pointsPossible > 0) {
+            int percent = (int) Math.round((double) pointsEarned / pointsPossible * 100);
+            Label pointsLabel = new Label(Integer.toString(pointsEarned) + "/" + Integer.toString(pointsPossible) + " = " + Integer.toString(percent) + "/100");
+            AnchorPane anchorPane = new AnchorPane(commentRTA, pointsLabel);
+            anchorPane.setTopAnchor(commentRTA, 0.0);
+            anchorPane.setLeftAnchor(commentRTA, 0.0);
+            anchorPane.setBottomAnchor(pointsLabel, 3.0);
+            anchorPane.setRightAnchor(pointsLabel, 3.0);
+            commentNode = anchorPane;
+        }
+        else commentNode = commentRTA;
+
+
 
         String helpText = "You may comment on the assignment as a whole.  Comment will not show on main screen, but does appear at top of your printed assignment.";
 
@@ -110,7 +125,7 @@ public class AssignmentCommentWindow {
         helpArea.setMouseTransparent(true);
         helpArea.setStyle("-fx-text-fill: mediumslateblue");
 
-        centerBox = new VBox(10, commentEditor, helpArea);
+        centerBox = new VBox(10, commentNode, helpArea);
         centerBox.setPadding(new Insets(20,0,0,0));
         Group centerGroup = new Group(centerBox);
         borderPane.setCenter(centerGroup);
@@ -237,7 +252,7 @@ public class AssignmentCommentWindow {
         DoubleProperty scaleProperty = new SimpleDoubleProperty(scale);
         centerHeightProperty = new SimpleDoubleProperty();
         centerHeightProperty.bind(Bindings.min(maximumHeightProperty, (stage.heightProperty().subtract(fixedValueProperty)).divide(scaleProperty)));
-        commentEditor.prefHeightProperty().bind(centerHeightProperty);
+        commentRTA.prefHeightProperty().bind(centerHeightProperty);
     }
 
 
@@ -245,8 +260,8 @@ public class AssignmentCommentWindow {
      * Update the header with the current value of the comment field.
      */
     private void updateHeaderFromWindow() {
-        commentEditor.getActionFactory().saveNow().execute(new ActionEvent());
-        Document statementDocument = commentEditor.getDocument();
+        commentRTA.getActionFactory().saveNow().execute(new ActionEvent());
+        Document statementDocument = commentRTA.getDocument();
         header.setComment(statementDocument);
 
     }

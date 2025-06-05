@@ -53,7 +53,7 @@ public class FreeFormModel implements ExerciseModel<Document>, Serializable {
         exerciseName = name;
         elementTypes = types;
         this.pointsPossible = 0;
-        this.pointsEarned = 0;
+        this.pointsEarned = -1;
     }
 
     /**

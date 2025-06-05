@@ -69,7 +69,7 @@ public class ABEFGmodel implements ExerciseModel<Document>, Serializable {
         this.pageContents = pageContents;
         if (pageContents.isEmpty()) pageContents.add(new PageContent(new Document(), 0.0));
         this.pointsPossible = 0;
-        this.pointsEarned = 0;
+        this.pointsEarned = -1;
     }
 
     /**

@@ -80,7 +80,7 @@ public class DerivationModel implements ExerciseModel<Document>, Serializable {
         this.splitPanePrefWidth = PrintUtilities.getPageWidth();
         this.checkSetup = new CheckSetup();
         this.pointsPossible = 0;
-        this.pointsEarned = 0;
+        this.pointsEarned = -1;
     }
 
     /**

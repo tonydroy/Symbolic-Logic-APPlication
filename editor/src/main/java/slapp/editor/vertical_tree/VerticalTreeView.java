@@ -311,6 +311,7 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
     public Node getPointsNode() {
         if (pointsPossible > 0) {
             Label pointsPossibleLabel = new Label(" / " + pointsPossible);
+            if (!mainView.isInstructorFunctions()) pointsEarnedTextField.setDisable(true);
             HBox pointBox = new HBox(pointsEarnedTextField, pointsPossibleLabel);
             return pointBox;
         }
@@ -320,6 +321,10 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
     public void setPointsPossible(int pointsPossible) {
         this.pointsPossible = pointsPossible;
     }
+
+    @Override
+    public int getPointsPossible() { return pointsPossible;  }
+
     public TextField getPointsEarnedTextField() {
         return pointsEarnedTextField;
     }

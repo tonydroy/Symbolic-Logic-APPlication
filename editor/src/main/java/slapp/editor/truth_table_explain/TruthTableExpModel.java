@@ -66,7 +66,7 @@ public class TruthTableExpModel implements ExerciseModel<Document>, Serializable
      */
     public TruthTableExpModel(){
         pointsPossible = 0;
-        pointsEarned = 0;
+        pointsEarned = -1;
     }
 
     /**

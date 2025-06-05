@@ -84,6 +84,8 @@ public class MainWindow {
     private SlappProgData slappProgData = new SlappProgData();
     private SlappUsrData slappUsrData = new SlappUsrData();
     private boolean instructorFunctions;
+    private int assignmentPointsEarned;
+    private int assignmentPointsPossible;
 
 
 
@@ -266,6 +268,8 @@ public class MainWindow {
             }
             else {
                 slappUsrData.setInstructorCheck(false);
+                instructorFunctions = false;
+                mainView.setInstructorFunctions(false);
                 mainView.disableExerAssItems();
             }
         });
@@ -616,7 +620,21 @@ public class MainWindow {
         if (currentAssignment == null) {
             EditorAlerts.fleetingRedPopup("There is no open assignment on which to comment.");
         } else {
-            AssignmentCommentWindow commentWindow = new AssignmentCommentWindow(currentAssignment.getHeader(), mainView);
+
+            if (currentExercise.isExerciseModified()) assignmentContentModified = true;
+            ExerciseModel currentModel = currentExercise.getExerciseModelFromView();
+            currentAssignment.replaceExerciseModel(assignmentIndex, currentModel);
+
+            assignmentPointsEarned = 0;  assignmentPointsPossible = 0;
+            List<ExerciseModel> exerciseModelList = currentAssignment.getExerciseModels();
+            for (int i = 0; i < exerciseModelList.size(); i++) {
+                ExerciseModel model = exerciseModelList.get(i);
+                assignmentPointsEarned += model.getPointsEarned();
+                assignmentPointsPossible += model.getPointsPossible();
+            }
+
+
+            AssignmentCommentWindow commentWindow = new AssignmentCommentWindow(currentAssignment.getHeader(), mainView, assignmentPointsPossible, assignmentPointsEarned);
             AssignmentHeader header = commentWindow.getAssignmentHeader();
             if (!(header.getComment().equals(new Document()))) assignmentContentModified = true;
             currentAssignment.setHeader(header);
@@ -728,15 +746,20 @@ public class MainWindow {
             boolean heightGood = true;
             List<String> badExerciseList = new ArrayList<>();
             PrintUtilities.resetPrintBuffer(getBaseScale());
-            PrintUtilities.setTopBox(mainView.getAssignmentHeader());
+
 
             if (currentExercise.isExerciseModified()) assignmentContentModified = true;
             ExerciseModel currentModel = currentExercise.getExerciseModelFromView();
             currentAssignment.replaceExerciseModel(assignmentIndex, currentModel);
 
+            assignmentPointsEarned = 0;  assignmentPointsPossible = 0;
             List<ExerciseModel> exerciseModelList = currentAssignment.getExerciseModels();
             for (int i = 0; i < exerciseModelList.size(); i++) {
                 ExerciseModel model = exerciseModelList.get(i);
+
+                assignmentPointsEarned += model.getPointsEarned();
+                assignmentPointsPossible += model.getPointsPossible();
+
                 TypeSelectorFactories typeFactory = new TypeSelectorFactories(this);
                 Exercise exercise = typeFactory.getExerciseFromModelObject(model);
                 List<Node> exerciseNodes = exercise.getPrintNodes(model);
@@ -761,6 +784,8 @@ public class MainWindow {
                 if (result.get() == OK) heightGood = true;
             }
 
+            PrintUtilities.setTopBox(mainView.getAssignmentHeader(assignmentPointsPossible, assignmentPointsEarned));
+
             if (heightGood) {
                 if (!fitToPage) PrintUtilities.resetPrintBufferScale();
                 String infoString = currentAssignment.getHeader().getCreationID() + "-" + currentAssignment.getHeader().getWorkingID();
@@ -782,12 +807,13 @@ public class MainWindow {
             boolean heightGood = true;
             List<String> badExerciseList = new ArrayList<>();
             PrintUtilities.resetPrintBuffer(getBaseScale());
-            PrintUtilities.setTopBox(mainView.getAssignmentHeader());
+
 
             if (currentExercise.isExerciseModified()) assignmentContentModified = true;
             ExerciseModel currentModel = currentExercise.getExerciseModelFromView();
             currentAssignment.replaceExerciseModel(assignmentIndex, currentModel);
 
+            assignmentPointsEarned = 0;  assignmentPointsPossible = 0;
             List<ExerciseModel> exerciseModelList = currentAssignment.getExerciseModels();
             for (int i = 0; i < exerciseModelList.size(); i++) {
                 ExerciseModel model = exerciseModelList.get(i);
@@ -795,6 +821,9 @@ public class MainWindow {
                 Exercise exercise = typeFactory.getExerciseFromModelObject(model);
 
                 List<Node> exerciseNodes = exercise.getPrintNodes(model);
+
+                assignmentPointsEarned += model.getPointsEarned();
+                assignmentPointsPossible += model.getPointsPossible();
 
                 for (Node node : exerciseNodes) {
                     if (!PrintUtilities.processPrintNode(node) && !fitToPage) {
@@ -816,6 +845,8 @@ public class MainWindow {
                 Optional<ButtonType> result = confirm.showAndWait();
                 if (result.get() == OK) heightGood = true;
             }
+
+            PrintUtilities.setTopBox(mainView.getAssignmentHeader(assignmentPointsPossible, assignmentPointsEarned));
 
             if (heightGood) {
 
@@ -1135,6 +1166,7 @@ public class MainWindow {
             slappUsrData.setInstructorCheck(false);
             EditorAlerts.fleetingRedPopup("No Valid license.  Valid license required for instructor functions.");
         }
+        mainView.setInstructorFunctions(instructorFunctions);
     }
 
     public boolean isInstructorFunctions() {

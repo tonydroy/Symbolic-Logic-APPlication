@@ -51,6 +51,7 @@ import slapp.editor.page_editor.PageContent;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 import static javafx.scene.control.ButtonType.OK;
 
@@ -73,6 +74,7 @@ public class ABcreate {
     private ChangeListener fieldListenerA;
     private ChangeListener fieldListenerB;
     private ChangeListener contentPromptListener;
+    private ChangeListener pointsPossibleListener;
     private double scale =1.0;
     private Scene scene;
     private Stage stage;
@@ -89,6 +91,8 @@ public class ABcreate {
 
     private Pane spacerPane;
     private Spinner<Double> statementHeightSpinner;
+
+    private TextField pointsPossibleTextField;
 
 
     /**
@@ -123,6 +127,8 @@ public class ABcreate {
         leaderField.textProperty().addListener(leaderListener);
         promptFieldA.textProperty().addListener(fieldListenerA);
         promptFieldB.textProperty().addListener(fieldListenerB);
+        pointsPossibleTextField.textProperty().addListener(pointsPossibleListener);
+
     }
 
     /*
@@ -245,7 +251,7 @@ public class ABcreate {
             if (nv) textFieldInFocus();
         });
 
-        Label contentPromptLabel = new Label("Explain prompt: ");
+        Label contentPromptLabel = new Label("Explain Prompt: ");
         contentPromptLabel.setPrefWidth(100);
         contentPromptField = new TextField();
         contentPromptField.setPromptText("(plain text)");
@@ -262,6 +268,31 @@ public class ABcreate {
             if (nv) textFieldInFocus();
         });
 
+        Label pointsPossibleLabel = new Label("Points Possible: ");
+        pointsPossibleLabel.setPrefWidth(100);
+        pointsPossibleTextField = new TextField();
+        pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+        pointsPossibleTextField.setText("0");
+        pointsPossibleListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                fieldsModified = true;
+            }
+        };
+        pointsPossibleTextField.textProperty().addListener(pointsPossibleListener);
+
+
+
         HBox nameBox = new HBox(nameLabel, nameField);
         nameBox.setAlignment(Pos.BASELINE_LEFT);
         HBox promptBox = new HBox(contentPromptLabel, contentPromptField);
@@ -272,7 +303,10 @@ public class ABcreate {
         promptBox.setAlignment(Pos.BASELINE_LEFT);
         HBox bBox = new HBox(promptLabelB, promptFieldB);
         bBox.setAlignment(Pos.BASELINE_LEFT);
-        textFieldsPromptBox = new VBox(10,nameBox, promptBox, leaderBox, aBbox, bBox);
+        HBox pointsBox = new HBox(pointsPossibleLabel, pointsPossibleTextField);
+        pointsBox.setAlignment(Pos.BASELINE_LEFT);
+
+        textFieldsPromptBox = new VBox(10,nameBox, promptBox, leaderBox, aBbox, bBox, pointsBox);
         textFieldsPromptBox.setPadding(new Insets(20,0,20,0));
 
         String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
@@ -280,6 +314,7 @@ public class ABcreate {
                 "<ul>" +
                 "<li><p>For the AB Explain exercise, you supply the exercise name and, if desired, a prompt to appear in the explanation field.</p></li> " +
                 "<li><p>Then the Checkbox Lead appears prior to the check boxes, the A Prompt with the first box, and the B Prompt with the second.</p></li>" +
+                "<li><p>If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
                 "<li><p>Finally, provide the exercise statement.</p></li>" +
                 "</ul>";
 
@@ -288,7 +323,7 @@ public class ABcreate {
         WebEngine webEngine = helpArea.getEngine();
         webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
         webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(200);
+        helpArea.setPrefHeight(250);
 
 
         centerBox = new VBox(10, textFieldsPromptBox, statementRTA, helpArea);
@@ -359,7 +394,7 @@ public class ABcreate {
 
 
         stage.setWidth(890);
-        stage.setHeight(800);
+        stage.setHeight(870);
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
         stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 890));
@@ -491,6 +526,8 @@ public class ABcreate {
         double statementPrefHeight = statementTextHeight + 25;
         ABmodel model = new ABmodel(name, fields,  false, prompt, statementPrefHeight, statementDocument, commentDoc, new ArrayList<PageContent>());
         model.setStatementTextHeight(statementTextHeight);
+        model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
+
         return model;
     }
 

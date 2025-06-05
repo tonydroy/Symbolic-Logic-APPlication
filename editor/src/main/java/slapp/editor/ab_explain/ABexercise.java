@@ -81,6 +81,9 @@ public class ABexercise implements Exercise<ABmodel, ABview> {
         abView.setCommentPrefHeight(abModel.getCommentPrefHeight());
         abView.setPaginationPrefHeight(abModel.getPaginationPrefHeight());
 
+        abView.setPointsPossible(abModel.getPointsPossible());
+        if (abModel.getPointsEarned() >= 0) abView.getPointsEarnedTextField().setText(Integer.toString(abModel.getPointsEarned()));
+
         //choices
         ABmodelExtra modelFields = abModel.getModelFields();
         abView.getLeaderLabel().setText(modelFields.getLeader());
@@ -462,6 +465,8 @@ public class ABexercise implements Exercise<ABmodel, ABview> {
         newModel.setPaginationPrefHeight(abView.getPaginationPrefHeight());
         newModel.setCommentTextHeight(abModel.getCommentTextHeight());
         newModel.setStatementTextHeight(abModel.getStatementTextHeight());
+        newModel.setPointsPossible(abModel.getPointsPossible());
+        if (!abView.getPointsEarnedTextField().getText().equals("")) newModel.setPointsEarned(Integer.parseInt(abView.getPointsEarnedTextField().getText()));
 
         return newModel;
     }

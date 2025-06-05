@@ -75,7 +75,7 @@ public class VerticalTreeABEFExpModel implements ExerciseModel<Document>, Serial
 
     public VerticalTreeABEFExpModel(){
         pointsPossible = 0;
-        pointsEarned = 0;
+        pointsEarned = -1;
     }
 
 

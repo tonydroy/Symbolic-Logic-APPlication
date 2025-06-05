@@ -56,7 +56,7 @@ public class HorizontalTreeModel implements ExerciseModel<Document>, Serializabl
      */
     public HorizontalTreeModel() {
         this.pointsPossible = 0;
-        this.pointsEarned = 0;
+        this.pointsEarned = -1;
     }
 
     /**

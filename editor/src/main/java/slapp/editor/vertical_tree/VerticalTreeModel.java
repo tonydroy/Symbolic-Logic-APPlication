@@ -63,7 +63,7 @@ public class VerticalTreeModel implements ExerciseModel<Document>, Serializable 
 
     public VerticalTreeModel(){
         pointsPossible = 0;
-        pointsEarned = 0;
+        pointsEarned = -1;
     }
 
 

@@ -53,7 +53,7 @@ public class SimpleTransModel implements ExerciseModel<Document>, Serializable {
     public SimpleTransModel(String name) {
         exerciseName = name;
         this.pointsPossible = 0;
-        this.pointsEarned = 0;
+        this.pointsEarned = -1;
     }
 
     /**

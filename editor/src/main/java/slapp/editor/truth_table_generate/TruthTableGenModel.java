@@ -70,7 +70,7 @@ public class TruthTableGenModel implements ExerciseModel<Document>, Serializable
      */
     public TruthTableGenModel(){
         pointsPossible = 0;
-        pointsEarned = 0;
+        pointsEarned = -1;
     }
 
     /**

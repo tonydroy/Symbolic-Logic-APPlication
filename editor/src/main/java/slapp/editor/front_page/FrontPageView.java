@@ -130,4 +130,7 @@ public class FrontPageView implements ExerciseView<Label> {
     public Node getPointsNode() {
         return null;
     }
+
+    @Override
+    public int getPointsPossible() { return 0;  }
 }

@@ -69,7 +69,7 @@ public class VerticalTreeABExpModel implements ExerciseModel<Document>, Serializ
 
     public VerticalTreeABExpModel(){
         pointsPossible = 0;
-        pointsEarned = 0;
+        pointsEarned = -1;
     }
 
 

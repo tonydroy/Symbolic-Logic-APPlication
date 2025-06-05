@@ -56,7 +56,7 @@ public class SimpleEditModel implements ExerciseModel <Document>, Serializable {
         exerciseName = name;
         responsePrompt = prompt;
         this.pointsPossible = 0;
-        this.pointsEarned = 0;
+        this.pointsEarned = -1;
     }
 
     /**

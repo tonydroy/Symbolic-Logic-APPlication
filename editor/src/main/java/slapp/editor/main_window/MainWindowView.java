@@ -180,6 +180,7 @@ public class MainWindowView {
     HBox fontsAndEditBox;
 
     CheckBox instructorCheck = new CheckBox();
+    private boolean instructorFunctions = false;
 
 
 
@@ -509,7 +510,21 @@ public class MainWindowView {
         this.statementNode = currentExerciseView.getExerciseStatementNode();
         this.contentNode = currentExerciseView.getExerciseContentNode();
         this.commentDecoratedRTA = currentExerciseView.getExerciseComment();
-        this.commentNode = commentDecoratedRTA.getEditor();
+
+        if (currentExerciseView.getPointsNode() != null) {
+
+            HBox pointBox = new HBox(currentExerciseView.getPointsNode(), new Label(" / " + currentExerciseView.getPointsPossible()));
+            pointBox.setAlignment(Pos.CENTER);
+            AnchorPane anchorPane = new AnchorPane(commentDecoratedRTA.getEditor(), pointBox);
+            anchorPane.setTopAnchor(commentDecoratedRTA.getEditor(), 0.0);
+            anchorPane.setLeftAnchor(commentDecoratedRTA.getEditor(), 0.0);
+            anchorPane.setBottomAnchor(pointBox, 3.0);
+            anchorPane.setRightAnchor(pointBox, 3.0);
+            anchorPane.maxWidthProperty().bind(scalePageWidthProperty());
+            anchorPane.minWidthProperty().bind(scalePageWidthProperty());
+            commentNode = anchorPane;
+        }
+        else commentNode = commentDecoratedRTA.getEditor();
 
         this.leftControlNode = currentExerciseView.getExerciseControl();
         this.rightControlNode = currentExerciseView.getRightControl();
@@ -724,7 +739,7 @@ public class MainWindowView {
      *
      * @return VBox header node
      */
-    VBox getAssignmentHeader() {
+    VBox getAssignmentHeader(int pointsPossible, int pointsEarned) {
         VBox headerBox = new VBox(10);
         AssignmentHeader header = mainWindow.getCurrentAssignment().getHeader();
 
@@ -755,16 +770,35 @@ public class MainWindowView {
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
 
-        RichTextArea commentArea = new RichTextArea(mainStage);
-        commentArea.getActionFactory().open(header.getComment()).execute(new ActionEvent());
-        commentArea.setContentAreaWidth(PrintUtilities.getPageWidth());
-        commentArea.setPrefWidth(PrintUtilities.getPageWidth());
-        commentArea.setPrefHeight(header.getCommentTextHeight() + 35);
+        RichTextArea commentRTA = new RichTextArea(mainStage);
+        commentRTA.getActionFactory().open(header.getComment()).execute(new ActionEvent());
+        commentRTA.setContentAreaWidth(PrintUtilities.getPageWidth());
+        commentRTA.setPrefWidth(PrintUtilities.getPageWidth());
+        commentRTA.setPrefHeight(header.getCommentTextHeight() + 35);
 
-        headerBox.getChildren().addAll(nameBox,itemsBox, separator, commentArea );
+        Node assignmentComment;
+        if (pointsPossible > 0) {
+            int percent = (int) Math.round((double) pointsEarned / pointsPossible * 100);
+            Label pointsLabel = new Label(Integer.toString(pointsEarned) + "/" + Integer.toString(pointsPossible) + " = " + Integer.toString(percent) + "/100");
+            AnchorPane anchorPane = new AnchorPane(commentRTA, pointsLabel);
+            anchorPane.setTopAnchor(commentRTA, 0.0);
+            anchorPane.setLeftAnchor(commentRTA, 0.0);
+            anchorPane.setBottomAnchor(pointsLabel, 3.0);
+            anchorPane.setRightAnchor(pointsLabel, 3.0);
+            anchorPane.setPrefHeight(header.getCommentTextHeight() + 35);
+            assignmentComment = anchorPane;
+        }
+        else assignmentComment = commentRTA;
+
+
+        headerBox.getChildren().addAll(nameBox,itemsBox, separator, assignmentComment );
         headerBox.setPadding(new Insets(0,0,20,0));
         return headerBox;
     }
+
+
+
+
 
     public void showInstructorInfo() {
         Stage helpStage = new Stage();
@@ -837,6 +871,7 @@ public class MainWindowView {
             license.validate(licenseField.getText());
             if (license.getStatus().isValid()) {
                 mainWindow.setInstructorFunctions(true);
+                setInstructorFunctions(true);
                 enableExerAssItems();
                 mainWindow.getSlappUsrData().setInstructorCheck(true);
                 instructorCheck.setSelected(true);
@@ -1331,5 +1366,13 @@ public class MainWindowView {
 
     public Menu getRecentAssignmentMenu() {
         return recentAssignmentMenu;
+    }
+
+    public boolean isInstructorFunctions() {
+        return instructorFunctions;
+    }
+
+    public void setInstructorFunctions(boolean instructorFunctions) {
+        this.instructorFunctions = instructorFunctions;
     }
 }

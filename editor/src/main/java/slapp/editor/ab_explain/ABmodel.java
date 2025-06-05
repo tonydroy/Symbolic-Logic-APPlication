@@ -70,7 +70,7 @@ public class ABmodel implements ExerciseModel<Document>, Serializable {
         this.pageContents = pageContents;
         if (pageContents.isEmpty()) pageContents.add(new PageContent(new Document(), 0.0));
         pointsPossible = 0;
-        pointsEarned = 0;
+        pointsEarned = -1;
     }
 
     /**

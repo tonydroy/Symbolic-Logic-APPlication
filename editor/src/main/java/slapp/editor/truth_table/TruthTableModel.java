@@ -57,7 +57,7 @@ public class TruthTableModel implements ExerciseModel<Document>, Serializable {
      */
     public TruthTableModel(){
         pointsPossible = 0;
-        pointsEarned = 0;
+        pointsEarned = -1;
     }
 
     /**
