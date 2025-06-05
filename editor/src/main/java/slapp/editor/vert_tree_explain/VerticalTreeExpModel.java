@@ -59,9 +59,14 @@ public class VerticalTreeExpModel implements ExerciseModel<Document>, Serializab
     private List<ClickableMapLinkMod> clickableMapLinks = new ArrayList<>();
     private List <MapQuestionMarkerMod> mapQuestionMarkers = new ArrayList<>();
     private String explainPrompt = "";
+    private int pointsPossible;
+    private int pointsEarned;
 
 
-    public VerticalTreeExpModel(){}
+    public VerticalTreeExpModel(){
+        pointsPossible = 0;
+        pointsEarned = 0;
+    }
 
 
     void setExerciseName(String exerciseName) { this.exerciseName = exerciseName;    }
@@ -152,4 +157,23 @@ public class VerticalTreeExpModel implements ExerciseModel<Document>, Serializab
     @Override
     public String toString() { return exerciseName; }
 
+    @Override
+    public int getPointsPossible() {
+        return pointsPossible;
+    }
+
+    @Override
+    public void setPointsPossible(int pointsPossible) {
+        this.pointsPossible = pointsPossible;
+    }
+
+    @Override
+    public int getPointsEarned() {
+        return pointsEarned;
+    }
+
+    @Override
+    public void setPointsEarned(int pointsEarned) {
+        this.pointsEarned = pointsEarned;
+    }
 }

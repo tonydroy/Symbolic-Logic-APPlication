@@ -63,9 +63,14 @@ public class VerticalTreeABExpModel implements ExerciseModel<Document>, Serializ
     private String bPrompt = new String("");
     private boolean bSelected = false;
     private String explainPrompt = "";
+    private int pointsPossible;
+    private int pointsEarned;
 
 
-    public VerticalTreeABExpModel(){}
+    public VerticalTreeABExpModel(){
+        pointsPossible = 0;
+        pointsEarned = 0;
+    }
 
 
     void setExerciseName(String exerciseName) { this.exerciseName = exerciseName;    }
@@ -186,4 +191,23 @@ public class VerticalTreeABExpModel implements ExerciseModel<Document>, Serializ
     @Override
     public String toString() { return exerciseName; }
 
+    @Override
+    public int getPointsPossible() {
+        return pointsPossible;
+    }
+
+    @Override
+    public void setPointsPossible(int pointsPossible) {
+        this.pointsPossible = pointsPossible;
+    }
+
+    @Override
+    public int getPointsEarned() {
+        return pointsEarned;
+    }
+
+    @Override
+    public void setPointsEarned(int pointsEarned) {
+        this.pointsEarned = pointsEarned;
+    }
 }

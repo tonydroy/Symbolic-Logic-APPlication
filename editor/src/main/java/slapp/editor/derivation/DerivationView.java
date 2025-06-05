@@ -109,6 +109,9 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
     private Stage metaLangStage;
     private Stage staticHelpStage;
 
+    private int pointsPossible;
+    private TextField pointsEarnedTextField;
+
 
     /**
      * Construct the derivation view
@@ -849,6 +852,23 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
      */
     @Override
     public Node getRightControl() { return rightControlNode; }
+
+    @Override
+    public Node getPointsNode() {
+        if (pointsPossible > 0) {
+            Label pointsPossibleLabel = new Label(" / " + pointsPossible);
+            HBox pointBox = new HBox(pointsEarnedTextField, pointsPossibleLabel);
+            return pointBox;
+        }
+        return null;
+    }
+
+    public void setPointsPossible(int pointsPossible) {
+        this.pointsPossible = pointsPossible;
+    }
+    public TextField getPointsEarnedTextField() {
+        return pointsEarnedTextField;
+    }
 
 
 }

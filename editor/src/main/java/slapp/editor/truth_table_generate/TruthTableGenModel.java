@@ -61,12 +61,17 @@ public class TruthTableGenModel implements ExerciseModel<Document>, Serializable
     private boolean bSelected = false;
     private String explainPrompt = "";
     private int tableRows = 0;
+    private int pointsPossible;
+    private int pointsEarned;
 
 
     /**
      * Construct truth table generate model
      */
-    public TruthTableGenModel(){}
+    public TruthTableGenModel(){
+        pointsPossible = 0;
+        pointsEarned = 0;
+    }
 
     /**
      * Fill in empty values for table contents
@@ -533,4 +538,23 @@ public class TruthTableGenModel implements ExerciseModel<Document>, Serializable
     @Override
     public String toString() {      return exerciseName;    }
 
+    @Override
+    public int getPointsPossible() {
+        return pointsPossible;
+    }
+
+    @Override
+    public void setPointsPossible(int pointsPossible) {
+        this.pointsPossible = pointsPossible;
+    }
+
+    @Override
+    public int getPointsEarned() {
+        return pointsEarned;
+    }
+
+    @Override
+    public void setPointsEarned(int pointsEarned) {
+        this.pointsEarned = pointsEarned;
+    }
 }

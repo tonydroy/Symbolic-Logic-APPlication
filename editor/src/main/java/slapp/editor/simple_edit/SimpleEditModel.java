@@ -43,6 +43,8 @@ public class SimpleEditModel implements ExerciseModel <Document>, Serializable {
     private double responsePrefHeight = 350;
     private double responseTextHeight = 0;
     private String responsePrompt = "";
+    private int pointsPossible;
+    private int pointsEarned;
 
 
     /**
@@ -53,6 +55,8 @@ public class SimpleEditModel implements ExerciseModel <Document>, Serializable {
     public SimpleEditModel(String name, String prompt) {
         exerciseName = name;
         responsePrompt = prompt;
+        this.pointsPossible = 0;
+        this.pointsEarned = 0;
     }
 
     /**
@@ -235,4 +239,23 @@ public class SimpleEditModel implements ExerciseModel <Document>, Serializable {
     @Override
     public String toString() { return exerciseName; }
 
+    @Override
+    public int getPointsPossible() {
+        return pointsPossible;
+    }
+
+    @Override
+    public void setPointsPossible(int pointsPossible) {
+        this.pointsPossible = pointsPossible;
+    }
+
+    @Override
+    public int getPointsEarned() {
+        return pointsEarned;
+    }
+
+    @Override
+    public void setPointsEarned(int pointsEarned) {
+        this.pointsEarned = pointsEarned;
+    }
 }

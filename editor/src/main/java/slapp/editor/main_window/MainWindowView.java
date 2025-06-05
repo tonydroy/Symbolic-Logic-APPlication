@@ -58,6 +58,7 @@ import slapp.editor.main_window.assignment.AssignmentHeader;
 import slapp.editor.main_window.assignment.AssignmentHeaderItem;
 
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -400,6 +401,9 @@ public class MainWindowView {
         stage.show();
     }
 
+
+
+
     private void setMainWindowBounds() {
         SlappUsrData usrData = mainWindow.getSlappUsrData();
         boolean dataValid = usrData.getMainWindowX() >= 0 && usrData.getMainWindowY() >= 0 && usrData.getMainWindowWidth() >= minStageWidth && usrData.getMainWindowHeight() > 400;
@@ -709,6 +713,8 @@ public class MainWindowView {
         usrData.setMainWindowWidth(mainStage.getWidth());
         usrData.setMainWindowHeight(mainStage.getHeight());
         usrData.setZoom(zoomSpinner.getValue());
+        usrData.setRecentExercises(DiskUtilities.getRecentExerciseFiles());
+        usrData.setRecentAssignments(DiskUtilities.getRecentAssignmentFiles());
     }
 
 
@@ -1318,4 +1324,12 @@ public class MainWindowView {
     }
 
     public CheckBox getInstructorCheck() {return instructorCheck;}
+
+    public Menu getRecentExerciseMenu() {
+        return recentExerciseMenu;
+    }
+
+    public Menu getRecentAssignmentMenu() {
+        return recentAssignmentMenu;
+    }
 }

@@ -1,8 +1,9 @@
 package slapp.editor;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 
-public class LimitedQueue<E> extends LinkedList<E> {
+public class LimitedQueue<E> extends LinkedList<E> implements Serializable {
 
     private int limit;
 

@@ -55,6 +55,8 @@ public class DrvtnExpModel implements ExerciseModel<Document>, Serializable {
     private List<ModelLine> derivationLines = new ArrayList<>();
 
     private CheckSetup checkSetup;
+    private int pointsPossible;
+    private int pointsEarned;
 
     /**
      * Construct derivation explain model
@@ -87,6 +89,8 @@ public class DrvtnExpModel implements ExerciseModel<Document>, Serializable {
         this.derivationLines = derivationLines;
         this.splitPanePrefWidth = PrintUtilities.getPageWidth();
         this.checkSetup = new CheckSetup();
+        this.pointsPossible = 0;
+        this.pointsEarned = 0;
     }
 
     /**
@@ -297,4 +301,23 @@ public class DrvtnExpModel implements ExerciseModel<Document>, Serializable {
     @Override
     public String toString() { return exerciseName; }
 
+    @Override
+    public int getPointsPossible() {
+        return pointsPossible;
+    }
+
+    @Override
+    public void setPointsPossible(int pointsPossible) {
+        this.pointsPossible = pointsPossible;
+    }
+
+    @Override
+    public int getPointsEarned() {
+        return pointsEarned;
+    }
+
+    @Override
+    public void setPointsEarned(int pointsEarned) {
+        this.pointsEarned = pointsEarned;
+    }
 }

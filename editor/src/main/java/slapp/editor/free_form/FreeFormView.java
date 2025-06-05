@@ -22,9 +22,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
@@ -75,6 +73,9 @@ public class FreeFormView implements ExerciseView<DecoratedRTA> {
     private Button addADrvtnScriptItalButton;
     private Button addADrvtnScriptSansButton;
     private Button addADrvtnItalBBButton;
+
+    private int pointsPossible;
+    private TextField pointsEarnedTextField;
 
 
     /**
@@ -450,5 +451,22 @@ public class FreeFormView implements ExerciseView<DecoratedRTA> {
      */
     @Override
     public Node getRightControl() { return freeFormControlNode; }
+
+    @Override
+    public Node getPointsNode() {
+        if (pointsPossible > 0) {
+            Label pointsPossibleLabel = new Label(" / " + pointsPossible);
+            HBox pointBox = new HBox(pointsEarnedTextField, pointsPossibleLabel);
+            return pointBox;
+        }
+        return null;
+    }
+
+    public void setPointsPossible(int pointsPossible) {
+        this.pointsPossible = pointsPossible;
+    }
+    public TextField getPointsEarnedTextField() {
+        return pointsEarnedTextField;
+    }
 
 }

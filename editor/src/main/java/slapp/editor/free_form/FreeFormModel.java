@@ -41,6 +41,8 @@ public class FreeFormModel implements ExerciseModel<Document>, Serializable {
     private double commentTextHeight = 0;
     private List<ModelElement> modelElements = new ArrayList<>();
     private List<ElementTypes> elementTypes = new ArrayList<>();
+    private int pointsPossible;
+    private int pointsEarned;
 
     /**
      * Construct free form model
@@ -50,6 +52,8 @@ public class FreeFormModel implements ExerciseModel<Document>, Serializable {
     public FreeFormModel(String name, List<ElementTypes> types) {
         exerciseName = name;
         elementTypes = types;
+        this.pointsPossible = 0;
+        this.pointsEarned = 0;
     }
 
     /**
@@ -202,4 +206,23 @@ public class FreeFormModel implements ExerciseModel<Document>, Serializable {
     @Override
     public String toString() { return exerciseName;  }
 
+    @Override
+    public int getPointsPossible() {
+        return pointsPossible;
+    }
+
+    @Override
+    public void setPointsPossible(int pointsPossible) {
+        this.pointsPossible = pointsPossible;
+    }
+
+    @Override
+    public int getPointsEarned() {
+        return pointsEarned;
+    }
+
+    @Override
+    public void setPointsEarned(int pointsEarned) {
+        this.pointsEarned = pointsEarned;
+    }
 }

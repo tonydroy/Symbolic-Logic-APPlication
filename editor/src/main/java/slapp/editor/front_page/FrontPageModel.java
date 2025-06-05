@@ -52,4 +52,23 @@ public class FrontPageModel implements ExerciseModel<Document> {
     @Override
     public String toString() { return ""; }
 
+    @Override
+    public int getPointsPossible() {
+        return 0;
+    }
+
+    @Override
+    public void setPointsPossible(int pointsPossible) {
+
+    }
+
+    @Override
+    public int getPointsEarned() {
+        return 0;
+    }
+
+    @Override
+    public void setPointsEarned(int pointsEarned) {
+
+    }
 }

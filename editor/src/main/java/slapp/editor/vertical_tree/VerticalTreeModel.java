@@ -57,9 +57,14 @@ public class VerticalTreeModel implements ExerciseModel<Document>, Serializable 
     private List<ClickableNodeLinkMod> clickableNodeLinks = new ArrayList<>();
     private List<ClickableMapLinkMod> clickableMapLinks = new ArrayList<>();
     private List <MapQuestionMarkerMod> mapQuestionMarkers = new ArrayList<>();
+    private int pointsPossible;
+    private int pointsEarned;
 
 
-    public VerticalTreeModel(){}
+    public VerticalTreeModel(){
+        pointsPossible = 0;
+        pointsEarned = 0;
+    }
 
 
     void setExerciseName(String exerciseName) { this.exerciseName = exerciseName;    }
@@ -137,4 +142,23 @@ public class VerticalTreeModel implements ExerciseModel<Document>, Serializable 
     @Override
     public String toString() { return exerciseName; }
 
+    @Override
+    public int getPointsPossible() {
+        return pointsPossible;
+    }
+
+    @Override
+    public void setPointsPossible(int pointsPossible) {
+        this.pointsPossible = pointsPossible;
+    }
+
+    @Override
+    public int getPointsEarned() {
+        return pointsEarned;
+    }
+
+    @Override
+    public void setPointsEarned(int pointsEarned) {
+        this.pointsEarned = pointsEarned;
+    }
 }

@@ -124,22 +124,30 @@ public class MainWindow {
             }
         };
         setUpExercise(new FrontPageExercise(this));
-
         mainView.updateZoom(slappUsrData.getZoom());
-
         mainView.getMainScene().focusOwnerProperty().addListener(focusListener);
-
-
-
-
-
-
         instructorFunctions = false;
 
         mainView.getInstructorCheck().setSelected(slappUsrData.isInstructorCheck());
         if (slappUsrData.isInstructorCheck()) {
             checkForInstructor();
         }
+
+        if (slappUsrData.getRecentExercises() != null) {
+            LimitedQueue<File> recents = slappUsrData.getRecentExercises();
+            DiskUtilities.setRecentExerciseFiles(recents);
+            for (File file : recents ) {
+                addRecentExerciseItem(file);
+            }
+        }
+        if (slappUsrData.getRecentAssignments() != null) {
+            LimitedQueue<File> recents = slappUsrData.getRecentAssignments();
+            DiskUtilities.setRecentAssignmentFiles(recents);
+            for (File file : recents ) {
+                addRecentAssignmentItem(file);
+            }
+        }
+
 
         //install4j
         UpdateScheduleRegistry.setUpdateSchedule(UpdateSchedule.WEEKLY);
@@ -304,6 +312,32 @@ public class MainWindow {
 
     }
 
+    private void addRecentExerciseItem(File file) {
+
+        MenuItem newMenuItem = new MenuItem(file.getAbsolutePath());
+        newMenuItem.setMnemonicParsing(false);
+        newMenuItem.setOnAction(e -> mainWindow.openExercise(file));
+        Menu recentExerciseMenu = mainView.getRecentExerciseMenu();
+        recentExerciseMenu.getItems().add(0, newMenuItem);
+        while (recentExerciseMenu.getItems().size() > 5) {
+            recentExerciseMenu.getItems().remove(recentExerciseMenu.getItems().size() - 1);
+        }
+    }
+
+    private void addRecentAssignmentItem(File file) {
+        MenuItem newMenuItem = new MenuItem(file.getAbsolutePath());
+        newMenuItem.setOnAction(e -> mainWindow.openAssignment(file));
+        newMenuItem.setMnemonicParsing(false);
+        Menu recentAssignmentMenu = mainView.getRecentAssignmentMenu();
+        recentAssignmentMenu.getItems().add(0, newMenuItem);
+        while (recentAssignmentMenu.getItems().size() > 5) {
+            recentAssignmentMenu.getItems().remove(recentAssignmentMenu.getItems().size() - 1);
+        }
+    }
+
+
+
+
     /**
      * Update currentExercise, and then the mainView.
      * @param exercise the new exercise
@@ -344,6 +378,9 @@ public class MainWindow {
 
                 Object exerciseModelObject = DiskUtilities.openExerciseModelObject();
                 if (exerciseModelObject != null) {
+                    List<File> recents = DiskUtilities.getRecentExerciseFiles();
+                    addRecentExerciseItem(recents.get(recents.size() - 1));
+
                     TypeSelectorFactories typeFactories = new TypeSelectorFactories(this);
                     typeFactories.createRevisedExerciseFromModelObject(exerciseModelObject);
                     isExerciseOpen = false;
@@ -430,7 +467,7 @@ public class MainWindow {
     /*
      * Open exercise from disk
      */
-    private void openExercise(File exerciseFile){
+    public void openExercise(File exerciseFile){
         Object exerciseModelObject = null;
         if (checkContinueAssignment("Confirm Open", "This assignment appears to have unsaved changes, and will be overwritten by the new exercise.  Continue to open exercise?")) {
             if (checkContinueExercise("Confirm Open", "This exercise appears to have unsaved changes, and will be overwritten by the new one.  Continue to open exercise?")) {
@@ -441,7 +478,11 @@ public class MainWindow {
                 else
                     exerciseModelObject = DiskUtilities.openExerciseObjectFromFile(exerciseFile);
 
+
                 if (exerciseModelObject != null) {
+                    List<File> recents = DiskUtilities.getRecentExerciseFiles();
+                    addRecentExerciseItem(recents.get(recents.size() - 1));
+
                     TypeSelectorFactories typeFactories = new TypeSelectorFactories(this);
                     Exercise exercise = typeFactories.getExerciseFromModelObject(exerciseModelObject);
                     if (exercise != null) {
@@ -625,6 +666,9 @@ public class MainWindow {
                     assignment = DiskUtilities.openAssignmentFromFile(assignmentFile);
 
                 if (assignment != null) {
+                    List<File> recents = DiskUtilities.getRecentAssignmentFiles();
+                    addRecentAssignmentItem(recents.get(recents.size() - 1));
+
                     if (!assignment.hasCompletedHeader()) {
                         UpdateAssignmentHeader headerUpdater = new UpdateAssignmentHeader(assignment.getHeader());
                         assignment.setHeader(headerUpdater.updateHeader());
@@ -793,11 +837,14 @@ public class MainWindow {
                  isExerciseOpen = false;
                 Assignment assignment = DiskUtilities.openAssignment();
                 if (assignment != null) {
+                    List<File> recents = DiskUtilities.getRecentAssignmentFiles();
+                    addRecentAssignmentItem(recents.get(recents.size() - 1));
+
                     if (!assignment.hasCompletedHeader()) {
                         currentAssignment = null;
                         new CreateAssignment(assignment, this);
                     } else {
-                        EditorAlerts.showSimpleAlert("Cannot Modify", "This assignment appears to have been started.  Cannot open in create window.");
+                        EditorAlerts.showSimpleAlert("Cannot Modify", "This assignment appears to have been started.  Cannot modify in create window.");
                     }
                 }
             }

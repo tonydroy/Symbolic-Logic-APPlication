@@ -84,6 +84,9 @@ public interface ExerciseView<T> {
      */
     Node getRightControl();
 
+    Node getPointsNode();
+
+
 
 
 

@@ -100,6 +100,14 @@ public interface ExerciseModel<T> extends Serializable {
      */
     void setOriginalModel(ExerciseModel<T> exerciseModel);
 
+    int getPointsPossible();
+
+    void setPointsPossible(int pointsPossible);
+
+    int getPointsEarned();
+
+    void setPointsEarned(int pointsEarned);
+
 }
 
 

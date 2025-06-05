@@ -32,8 +32,8 @@ public class DiskUtilities {
 
     private static File exerciseDirectory = null;
     private static File assignmentDirectory = null;
-    private static File currentExerciseFile = null;
-    private static File currentAssignmentFile = null;
+    private static LimitedQueue<File> recentExerciseFiles = new LimitedQueue<>(5);
+    private static LimitedQueue<File> recentAssignmentFiles = new LimitedQueue<>(5);
     private static File userHomeFile = new File(System.getProperty("user.home"));
     private static String slappProgDataFile = "SLAPPprog.dta";
     private static String slappUsrDataFile = "SLAPPusr.dta";
@@ -241,7 +241,8 @@ public class DiskUtilities {
             exerciseDirectory = fileToOpen.getParentFile();
             try (FileInputStream fi = new FileInputStream(fileToOpen); ObjectInputStream oi = new ObjectInputStream(fi);) {
                 exerciseModelObject = oi.readObject();
-                currentExerciseFile = fileToOpen;
+                recentExerciseFiles.add(fileToOpen);
+
             } catch (IOException | ClassNotFoundException  e) {
    //                            e.printStackTrace();
                 EditorAlerts.showSimpleAlert("Error opening file", fileToOpen.getName() + " is not compatible with this version of SLAPP.\nCannot open.");
@@ -276,7 +277,7 @@ public class DiskUtilities {
             assignmentDirectory = fileToOpen.getParentFile();
             try (FileInputStream fi = new FileInputStream(fileToOpen); ObjectInputStream oi = new ObjectInputStream(fi);) {
                 assignment = (Assignment) oi.readObject();
-                currentAssignmentFile = fileToOpen;
+                recentAssignmentFiles.add(fileToOpen);
             } catch (IOException | ClassNotFoundException e) {
 //                e.printStackTrace();
                 EditorAlerts.showSimpleAlert("Error opening file", fileToOpen.getName() + " is not compatible with this version of SLAPP.\nCannot open.");
@@ -356,8 +357,19 @@ public class DiskUtilities {
 
     }
 
+    public static LimitedQueue<File> getRecentExerciseFiles() {
+        return recentExerciseFiles;
+    }
 
+    public static LimitedQueue<File> getRecentAssignmentFiles() {
+        return recentAssignmentFiles;
+    }
 
+    public static void setRecentExerciseFiles(LimitedQueue<File> recentExerciseFiles) {
+        DiskUtilities.recentExerciseFiles = recentExerciseFiles;
+    }
 
-
+    public static void setRecentAssignmentFiles(LimitedQueue<File> recentAssignmentFiles) {
+        DiskUtilities.recentAssignmentFiles = recentAssignmentFiles;
+    }
 }

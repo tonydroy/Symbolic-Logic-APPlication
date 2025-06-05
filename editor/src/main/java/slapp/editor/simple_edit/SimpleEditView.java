@@ -19,9 +19,12 @@ import com.gluonhq.richtextarea.RichTextArea;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import slapp.editor.decorated_rta.DecoratedRTA;
@@ -49,6 +52,9 @@ public class SimpleEditView implements ExerciseView<DecoratedRTA> {
     private Spinner<Double> responseHeightSpinner;
     private Spinner<Double> responseWidthSpinner;
     private Node currentSpinnerNode;
+    private int pointsPossible;
+    private TextField pointsEarnedTextField;
+
 
 
     /**
@@ -322,6 +328,23 @@ public class SimpleEditView implements ExerciseView<DecoratedRTA> {
      */
     @Override
     public Node getRightControl() { return null; }
+
+    @Override
+    public Node getPointsNode() {
+        if (pointsPossible > 0) {
+            Label pointsPossibleLabel = new Label(" / " + pointsPossible);
+            HBox pointBox = new HBox(pointsEarnedTextField, pointsPossibleLabel);
+            return pointBox;
+        }
+        return null;
+    }
+
+    public void setPointsPossible(int pointsPossible) {
+        this.pointsPossible = pointsPossible;
+    }
+    public TextField getPointsEarnedTextField() {
+        return pointsEarnedTextField;
+    }
 
 }
 

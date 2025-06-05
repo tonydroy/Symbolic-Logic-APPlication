@@ -1,5 +1,6 @@
 package slapp.editor;
 
+import java.io.File;
 import java.io.Serializable;
 
 public class SlappUsrData implements Serializable {
@@ -11,6 +12,8 @@ public class SlappUsrData implements Serializable {
     private double mainWindowWidth;
     private double mainWindowHeight;
     private int zoom;
+    private LimitedQueue<File> recentExercises;
+    private LimitedQueue<File> recentAssignments;
 
 
 
@@ -21,6 +24,8 @@ public class SlappUsrData implements Serializable {
         mainWindowWidth = -1;
         mainWindowHeight = -1;
         zoom = 100;
+        recentExercises = new LimitedQueue(5);
+        recentAssignments = new LimitedQueue(5);
     }
 
     public boolean isInstructorCheck() {
@@ -69,5 +74,21 @@ public class SlappUsrData implements Serializable {
 
     public void setZoom(int zoom) {
         this.zoom = zoom;
+    }
+
+    public LimitedQueue<File> getRecentExercises() {
+        return recentExercises;
+    }
+
+    public void setRecentExercises(LimitedQueue<File> recentExercises) {
+        this.recentExercises = recentExercises;
+    }
+
+    public LimitedQueue<File> getRecentAssignments() {
+        return recentAssignments;
+    }
+
+    public void setRecentAssignments(LimitedQueue<File> recentAssignments) {
+        this.recentAssignments = recentAssignments;
     }
 }

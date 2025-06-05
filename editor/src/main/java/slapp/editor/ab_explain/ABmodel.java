@@ -44,6 +44,8 @@ public class ABmodel implements ExerciseModel<Document>, Serializable {
     private double commentTextHeight = 0;
     private List<PageContent> pageContents = new ArrayList<>();
     private double paginationPrefHeight = 450;
+    private int pointsPossible;
+    private int pointsEarned;
 
 
     /**
@@ -67,6 +69,8 @@ public class ABmodel implements ExerciseModel<Document>, Serializable {
         this.exerciseComment = exerciseComment;
         this.pageContents = pageContents;
         if (pageContents.isEmpty()) pageContents.add(new PageContent(new Document(), 0.0));
+        pointsPossible = 0;
+        pointsEarned = 0;
     }
 
     /**
@@ -228,6 +232,11 @@ public class ABmodel implements ExerciseModel<Document>, Serializable {
         String name = getExerciseName();
         return name;
     }
+
+    @Override public int getPointsPossible() { return pointsPossible; }
+    @Override public int getPointsEarned() { return pointsEarned; }
+    @Override public void setPointsPossible(int pointsPossible) { this.pointsPossible = pointsPossible; }
+    @Override public void setPointsEarned(int pointsEarned) { this.pointsEarned = pointsEarned; }
 
 }
 

@@ -42,6 +42,8 @@ public class PageEditModel implements ExerciseModel<Document>, Serializable {
     private List<PageContent> pageContents = new ArrayList<>();
     private double paginationPrefHeight = 450.0;
     private String contentPrompt = "";
+    private int pointsPossible;
+    private int pointsEarned;
 
 
     /**
@@ -63,6 +65,8 @@ public class PageEditModel implements ExerciseModel<Document>, Serializable {
         this.exerciseComment = exerciseComment;
         this.pageContents = pageContents;
         if (pageContents.isEmpty()) pageContents.add(new PageContent(new Document(), 0.0));
+        this.pointsPossible = 0;
+        this.pointsEarned = 0;
     }
 
     /**
@@ -229,4 +233,23 @@ public class PageEditModel implements ExerciseModel<Document>, Serializable {
     @Override
     public String toString() { return exerciseName; }
 
+    @Override
+    public int getPointsPossible() {
+        return pointsPossible;
+    }
+
+    @Override
+    public void setPointsPossible(int pointsPossible) {
+        this.pointsPossible = pointsPossible;
+    }
+
+    @Override
+    public int getPointsEarned() {
+        return pointsEarned;
+    }
+
+    @Override
+    public void setPointsEarned(int pointsEarned) {
+        this.pointsEarned = pointsEarned;
+    }
 }

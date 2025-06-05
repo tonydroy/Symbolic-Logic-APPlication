@@ -24,6 +24,7 @@ import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import slapp.editor.EditorAlerts;
 import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.DecoratedRTA;
@@ -63,6 +64,9 @@ public class ABview implements ExerciseView<DecoratedRTA> {
     private Spinner<Double> paginationHeightSpinner;
     private Spinner<Double> paginationWidthSpinner;
     private Node currentSpinnerNode;
+    private int pointsPossible;
+    private TextField pointsEarnedTextField;
+
 
 
 
@@ -463,6 +467,23 @@ public class ABview implements ExerciseView<DecoratedRTA> {
      */
     @Override
     public Node getRightControl() { return null; }
+
+    @Override
+    public Node getPointsNode() {
+        if (pointsPossible > 0) {
+            Label pointsPossibleLabel = new Label(" / " + pointsPossible);
+            HBox pointBox = new HBox(pointsEarnedTextField, pointsPossibleLabel);
+            return pointBox;
+        }
+        return null;
+    }
+
+    public void setPointsPossible(int pointsPossible) {
+        this.pointsPossible = pointsPossible;
+    }
+    public TextField getPointsEarnedTextField() {
+        return pointsEarnedTextField;
+    }
 
 }
 

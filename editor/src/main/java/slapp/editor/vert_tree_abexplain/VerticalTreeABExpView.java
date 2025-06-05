@@ -77,6 +77,9 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
     Node exerciseControlNode;
     SplitPane mainPane;
 
+    private int pointsPossible;
+    private TextField pointsEarnedTextField;
+
     VerticalTreeABExpView(MainWindowView mainView) {
         this.mainView = mainView;
 
@@ -393,5 +396,22 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
     }
     @Override
     public Node getRightControl() { return null; }
+
+    @Override
+    public Node getPointsNode() {
+        if (pointsPossible > 0) {
+            Label pointsPossibleLabel = new Label(" / " + pointsPossible);
+            HBox pointBox = new HBox(pointsEarnedTextField, pointsPossibleLabel);
+            return pointBox;
+        }
+        return null;
+    }
+
+    public void setPointsPossible(int pointsPossible) {
+        this.pointsPossible = pointsPossible;
+    }
+    public TextField getPointsEarnedTextField() {
+        return pointsEarnedTextField;
+    }
 
 }

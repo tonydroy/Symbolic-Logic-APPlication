@@ -47,12 +47,17 @@ public class HorizontalTreeModel implements ExerciseModel<Document>, Serializabl
     private List<TreeModel> treeModels = new ArrayList<>();
     private double mainPaneWidth;
     private boolean axis = false;
+    private int pointsPossible;
+    private int pointsEarned;
 
 
     /**
      * Construct horizontal tree model
      */
-    public HorizontalTreeModel() {}
+    public HorizontalTreeModel() {
+        this.pointsPossible = 0;
+        this.pointsEarned = 0;
+    }
 
     /**
      * The Document for the explanation field
@@ -265,5 +270,23 @@ public class HorizontalTreeModel implements ExerciseModel<Document>, Serializabl
     @Override
     public String toString() { return exerciseName; }
 
+    @Override
+    public int getPointsPossible() {
+        return pointsPossible;
+    }
 
+    @Override
+    public void setPointsPossible(int pointsPossible) {
+        this.pointsPossible = pointsPossible;
+    }
+
+    @Override
+    public int getPointsEarned() {
+        return pointsEarned;
+    }
+
+    @Override
+    public void setPointsEarned(int pointsEarned) {
+        this.pointsEarned = pointsEarned;
+    }
 }

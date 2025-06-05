@@ -102,6 +102,9 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
     private boolean axis = false;
     private static BranchNode clickNode = null;
 
+    private int pointsPossible;
+    private TextField pointsEarnedTextField;
+
     /**
      * Construct the horizontal tree view
      * @param mainView the main view
@@ -1120,6 +1123,23 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
      */
     @Override
     public Node getRightControl() { return null; }
+
+    @Override
+    public Node getPointsNode() {
+        if (pointsPossible > 0) {
+            Label pointsPossibleLabel = new Label(" / " + pointsPossible);
+            HBox pointBox = new HBox(pointsEarnedTextField, pointsPossibleLabel);
+            return pointBox;
+        }
+        return null;
+    }
+
+    public void setPointsPossible(int pointsPossible) {
+        this.pointsPossible = pointsPossible;
+    }
+    public TextField getPointsEarnedTextField() {
+        return pointsEarnedTextField;
+    }
 
 
 }

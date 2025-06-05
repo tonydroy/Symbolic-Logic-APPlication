@@ -42,13 +42,19 @@ public class SimpleTransModel implements ExerciseModel<Document>, Serializable {
     private Document exerciseResponse = new Document("");
     private double responsePrefHeight = 60;
     private double responseTextHeight = 0;
+    private int pointsPossible;
+    private int pointsEarned;
 
 
     /**
      * Set up the simple translate model
      * @param name the exercise name.
      */
-    public SimpleTransModel(String name) {      exerciseName = name;   }
+    public SimpleTransModel(String name) {
+        exerciseName = name;
+        this.pointsPossible = 0;
+        this.pointsEarned = 0;
+    }
 
     /**
      * Height of text in comment area
@@ -248,4 +254,23 @@ public class SimpleTransModel implements ExerciseModel<Document>, Serializable {
     @Override
     public String toString() { return exerciseName; }
 
+    @Override
+    public int getPointsPossible() {
+        return pointsPossible;
+    }
+
+    @Override
+    public void setPointsPossible(int pointsPossible) {
+        this.pointsPossible = pointsPossible;
+    }
+
+    @Override
+    public int getPointsEarned() {
+        return pointsEarned;
+    }
+
+    @Override
+    public void setPointsEarned(int pointsEarned) {
+        this.pointsEarned = pointsEarned;
+    }
 }
