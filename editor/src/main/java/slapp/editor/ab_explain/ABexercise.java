@@ -81,8 +81,12 @@ public class ABexercise implements Exercise<ABmodel, ABview> {
         abView.setCommentPrefHeight(abModel.getCommentPrefHeight());
         abView.setPaginationPrefHeight(abModel.getPaginationPrefHeight());
 
+
         abView.setPointsPossible(abModel.getPointsPossible());
         if (abModel.getPointsEarned() >= 0) abView.getPointsEarnedTextField().setText(Integer.toString(abModel.getPointsEarned()));
+        abView.getPointsEarnedTextField().textProperty().addListener((ob, ov, nv) -> {
+            exerciseModified = true;
+        });
 
         //choices
         ABmodelExtra modelFields = abModel.getModelFields();
@@ -344,8 +348,22 @@ public class ABexercise implements Exercise<ABmodel, ABview> {
         commentRTA.setPrefHeight(printModel.getCommentTextHeight() + 35.0);
         commentRTA.setContentAreaWidth(nodeWidth);
         commentRTA.setMinWidth(nodeWidth);
-        commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
-        nodeList.add(commentRTA);
+        commentRTA.getStylesheets().clear();
+        commentRTA.getStylesheets().add("richTextAreaPrinter.css");
+
+        Node commentNode;
+        if (printModel.getPointsPossible() > 0) {
+            Label pointsLabel = new Label(Integer.toString(printModel.getPointsEarned()) + "/" + Integer.toString(printModel.getPointsPossible()));
+            AnchorPane anchorPane = new AnchorPane(commentRTA, pointsLabel);
+            anchorPane.setTopAnchor(commentRTA, 0.0);
+            anchorPane.setLeftAnchor(commentRTA, 0.0);
+            anchorPane.setBottomAnchor(pointsLabel, 3.0);
+            anchorPane.setRightAnchor(pointsLabel, 3.0);
+            anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
+            commentNode = anchorPane;
+        }
+        else commentNode = commentRTA;
+        nodeList.add(commentNode);
 
         return nodeList;
     }
@@ -359,8 +377,15 @@ public class ABexercise implements Exercise<ABmodel, ABview> {
         RichTextArea commentRTA = abView.getExerciseComment().getEditor();
         commentRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document commentDocument = commentRTA.getDocument();
+        int pointsEarned = -1;
+        if (!abView.getPointsEarnedTextField().getText().equals("")) pointsEarned = Integer.parseInt(abView.getPointsEarnedTextField().getText());
+
+
         ABmodel originalModel = (ABmodel) (abModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
+        originalModel.setPointsEarned(pointsEarned);
+
+
         ABexercise clearExercise = new ABexercise(originalModel, mainWindow);
         return clearExercise;
     }
@@ -465,8 +490,11 @@ public class ABexercise implements Exercise<ABmodel, ABview> {
         newModel.setPaginationPrefHeight(abView.getPaginationPrefHeight());
         newModel.setCommentTextHeight(abModel.getCommentTextHeight());
         newModel.setStatementTextHeight(abModel.getStatementTextHeight());
+
         newModel.setPointsPossible(abModel.getPointsPossible());
         if (!abView.getPointsEarnedTextField().getText().equals("")) newModel.setPointsEarned(Integer.parseInt(abView.getPointsEarnedTextField().getText()));
+        else newModel.setPointsEarned(-1);
+
 
         return newModel;
     }

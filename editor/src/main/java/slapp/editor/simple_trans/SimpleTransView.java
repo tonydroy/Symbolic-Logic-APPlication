@@ -19,11 +19,10 @@ import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
@@ -31,6 +30,8 @@ import javafx.scene.layout.VBox;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.ExerciseView;
 import slapp.editor.main_window.MainWindowView;
+
+import java.util.function.UnaryOperator;
 
 /**
  * View for the simple translate exercise
@@ -72,6 +73,20 @@ public class SimpleTransView implements ExerciseView<DecoratedRTA> {
         spacer.setPrefWidth(150);
         VBox controlBox = (VBox) exerciseControlNode;
         controlBox.getChildren().add(spacer);
+
+        pointsEarnedTextField = new TextField();
+        pointsEarnedTextField.setPrefWidth(27);
+        pointsEarnedTextField.setAlignment(Pos.CENTER_RIGHT);
+        pointsEarnedTextField.setPadding(new Insets(0,5,0,3));
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        pointsEarnedTextField.setTextFormatter(textFormatter);
     }
 
     /**
@@ -381,10 +396,8 @@ public class SimpleTransView implements ExerciseView<DecoratedRTA> {
     @Override
     public Node getPointsNode() {
         if (pointsPossible > 0) {
-            Label pointsPossibleLabel = new Label(" / " + pointsPossible);
             if (!mainView.isInstructorFunctions()) pointsEarnedTextField.setDisable(true);
-            HBox pointBox = new HBox(pointsEarnedTextField, pointsPossibleLabel);
-            return pointBox;
+            return pointsEarnedTextField;
         }
         return null;
     }

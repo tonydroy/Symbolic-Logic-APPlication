@@ -45,6 +45,7 @@ import slapp.editor.main_window.MainWindowView;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 /**
  * View for the horizontal tree exercise
@@ -331,6 +332,20 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
         controlBox.setPadding(new Insets(20,20,0,20));
         controlBox.setMinWidth(150); controlBox.setMaxWidth(150);
         exerciseControlNode = controlBox;
+
+        pointsEarnedTextField = new TextField();
+        pointsEarnedTextField.setPrefWidth(27);
+        pointsEarnedTextField.setAlignment(Pos.CENTER_RIGHT);
+        pointsEarnedTextField.setPadding(new Insets(0,5,0,3));
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        pointsEarnedTextField.setTextFormatter(textFormatter);
     }
 
     /**
@@ -1127,10 +1142,8 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
     @Override
     public Node getPointsNode() {
         if (pointsPossible > 0) {
-            Label pointsPossibleLabel = new Label(" / " + pointsPossible);
             if (!mainView.isInstructorFunctions()) pointsEarnedTextField.setDisable(true);
-            HBox pointBox = new HBox(pointsEarnedTextField, pointsPossibleLabel);
-            return pointBox;
+            return pointsEarnedTextField;
         }
         return null;
     }

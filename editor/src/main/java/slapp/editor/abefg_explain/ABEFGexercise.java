@@ -29,6 +29,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
@@ -82,6 +83,13 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
         abefgView.setStatementPrefHeight(abefgModel.getStatementPrefHeight());
         abefgView.setCommentPrefHeight(abefgModel.getCommentPrefHeight());
         abefgView.setPaginationPrefHeight(abefgModel.getPaginationPrefHeight());
+
+        abefgView.setPointsPossible(abefgModel.getPointsPossible());
+        if (abefgModel.getPointsEarned() >= 0) abefgView.getPointsEarnedTextField().setText(Integer.toString(abefgModel.getPointsEarned()));
+        abefgView.getPointsEarnedTextField().textProperty().addListener((ob, ov, nv) -> {
+            exerciseModified = true;
+        });
+
 
         //choices
         ABEFGmodelExtra modelFields = abefgModel.getModelFields();
@@ -401,7 +409,20 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
         commentRTA.setContentAreaWidth(nodeWidth);
         commentRTA.setMinWidth(nodeWidth);
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
-        nodeList.add(commentRTA);
+
+        Node commentNode;
+        if (printModel.getPointsPossible() > 0) {
+            Label pointsLabel = new Label(Integer.toString(printModel.getPointsEarned()) + "/" + Integer.toString(printModel.getPointsPossible()));
+            AnchorPane anchorPane = new AnchorPane(commentRTA, pointsLabel);
+            anchorPane.setTopAnchor(commentRTA, 0.0);
+            anchorPane.setLeftAnchor(commentRTA, 0.0);
+            anchorPane.setBottomAnchor(pointsLabel, 3.0);
+            anchorPane.setRightAnchor(pointsLabel, 3.0);
+            anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
+            commentNode = anchorPane;
+        }
+        else commentNode = commentRTA;
+        nodeList.add(commentNode);
 
         return nodeList;
     }
@@ -415,8 +436,12 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
         RichTextArea commentRTA = abefgView.getExerciseComment().getEditor();
         commentRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document commentDocument = commentRTA.getDocument();
+        int pointsEarned = -1;
+        if (!abefgView.getPointsEarnedTextField().getText().equals("")) pointsEarned = Integer.parseInt(abefgView.getPointsEarnedTextField().getText());
+
         ABEFGmodel originalModel = (ABEFGmodel) (abefgModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
+        originalModel.setPointsEarned(pointsEarned);
         ABEFGexercise clearExercise = new ABEFGexercise(originalModel, mainWindow);
         return clearExercise;
     }
@@ -533,6 +558,9 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
         newModel.setPaginationPrefHeight(abefgView.getPaginationPrefHeight());
         newModel.setCommentTextHeight(abefgModel.getCommentTextHeight());
         newModel.setStatementTextHeight(abefgModel.getStatementTextHeight());
+        newModel.setPointsPossible(abefgModel.getPointsPossible());
+        if (!abefgView.getPointsEarnedTextField().getText().equals("")) newModel.setPointsEarned(Integer.parseInt(abefgView.getPointsEarnedTextField().getText()));
+        else newModel.setPointsEarned(-1);
 
         return newModel;
     }

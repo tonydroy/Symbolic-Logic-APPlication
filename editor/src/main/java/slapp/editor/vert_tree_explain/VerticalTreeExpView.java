@@ -34,6 +34,8 @@ import slapp.editor.main_window.ExerciseView;
 import slapp.editor.main_window.MainWindowView;
 import slapp.editor.vertical_tree.drag_drop.RootLayout;
 
+import java.util.function.UnaryOperator;
+
 public class VerticalTreeExpView implements ExerciseView<DecoratedRTA> {
 
     private MainWindowView mainView;
@@ -89,6 +91,20 @@ public class VerticalTreeExpView implements ExerciseView<DecoratedRTA> {
         controlBox.setPadding(new Insets(100,20,0,40));
         controlBox.setMinWidth(150); controlBox.setMaxWidth(150);
         exerciseControlNode = controlBox;
+
+        pointsEarnedTextField = new TextField();
+        pointsEarnedTextField.setPrefWidth(27);
+        pointsEarnedTextField.setAlignment(Pos.CENTER_RIGHT);
+        pointsEarnedTextField.setPadding(new Insets(0,5,0,3));
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        pointsEarnedTextField.setTextFormatter(textFormatter);
     }
 
     void initializeViewDetails() {
@@ -380,10 +396,8 @@ public class VerticalTreeExpView implements ExerciseView<DecoratedRTA> {
     @Override
     public Node getPointsNode() {
         if (pointsPossible > 0) {
-            Label pointsPossibleLabel = new Label(" / " + pointsPossible);
             if (!mainView.isInstructorFunctions()) pointsEarnedTextField.setDisable(true);
-            HBox pointBox = new HBox(pointsEarnedTextField, pointsPossibleLabel);
-            return pointBox;
+            return pointsEarnedTextField;
         }
         return null;
     }

@@ -245,7 +245,8 @@ public class ABEFGmodel implements ExerciseModel<Document>, Serializable {
 
     @Override
     public int getPointsEarned() {
-        return pointsEarned;
+        if (pointsEarned >= 0) return pointsEarned;
+        else return 0;
     }
 
     @Override

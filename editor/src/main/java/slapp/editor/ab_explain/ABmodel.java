@@ -234,7 +234,11 @@ public class ABmodel implements ExerciseModel<Document>, Serializable {
     }
 
     @Override public int getPointsPossible() { return pointsPossible; }
-    @Override public int getPointsEarned() { return pointsEarned; }
+
+    @Override public int getPointsEarned() {
+        if (pointsEarned >= 0) return pointsEarned;
+        else return 0;
+    }
     @Override public void setPointsPossible(int pointsPossible) { this.pointsPossible = pointsPossible; }
     @Override public void setPointsEarned(int pointsEarned) { this.pointsEarned = pointsEarned; }
 

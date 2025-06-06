@@ -36,10 +36,7 @@ import javafx.scene.control.Spinner;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -128,7 +125,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
                     theorems.add(new ADqT3_31(thrmSetElement.getName(), ""));
                     break;
                 case ADQT3_32:
-                    theorems.add(new QND_T51(thrmSetElement.getName(), ""));
+                    theorems.add(new ADqT3_32(thrmSetElement.getName(), ""));
                     break;
                 case AD_A7:
                     theorems.add(new AD_A7(thrmSetElement.getName(), ""));
@@ -175,6 +172,12 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         derivationView.setCommentPrefHeight(derivationModel.getCommentPrefHeight());
         derivationView.setSplitPanePrefWidth(derivationModel.getSplitPanePrefWidth());
         derivationView.setShowMetaLang(derivationModel.getCheckSetup().isShowMetalanguageButton());
+
+        derivationView.setPointsPossible(derivationModel.getPointsPossible());
+        if (derivationModel.getPointsEarned() >= 0) derivationView.getPointsEarnedTextField().setText(Integer.toString(derivationModel.getPointsEarned()));
+        derivationView.getPointsEarnedTextField().textProperty().addListener((ob, ov, nv) -> {
+            exerciseModified = true;
+        });
 
         //statement
         DecoratedRTA statementDRTA = new DecoratedRTA();
@@ -1220,7 +1223,20 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         commentRTA.setContentAreaWidth(nodeWidth);
         commentRTA.setMinWidth(nodeWidth);
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
-        nodeList.add(commentRTA);
+
+        Node commentNode;
+        if (printModel.getPointsPossible() > 0) {
+            Label pointsLabel = new Label(Integer.toString(printModel.getPointsEarned()) + "/" + Integer.toString(printModel.getPointsPossible()));
+            AnchorPane anchorPane = new AnchorPane(commentRTA, pointsLabel);
+            anchorPane.setTopAnchor(commentRTA, 0.0);
+            anchorPane.setLeftAnchor(commentRTA, 0.0);
+            anchorPane.setBottomAnchor(pointsLabel, 3.0);
+            anchorPane.setRightAnchor(pointsLabel, 3.0);
+            anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
+            commentNode = anchorPane;
+        }
+        else commentNode = commentRTA;
+        nodeList.add(commentNode);
 
         return nodeList;
     }
@@ -1256,8 +1272,12 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         RichTextArea commentRTA = derivationView.getExerciseComment().getEditor();
         commentRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document commentDocument = commentRTA.getDocument();
+        int pointsEarned = -1;
+        if (!derivationView.getPointsEarnedTextField().getText().equals("")) pointsEarned = Integer.parseInt(derivationView.getPointsEarnedTextField().getText());
+
         DerivationModel originalModel = (DerivationModel) (derivationModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
+        originalModel.setPointsEarned(pointsEarned);
         CheckSetup setup = originalModel.getCheckSetup();
         setup.setHelpTries(derivationCheck.getHelpTries());
         setup.setCheckTries(derivationCheck.getCheckTries());
@@ -1400,6 +1420,9 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         newModel.setSplitPanePrefWidth(derivationView.getSplitPanePrefWidth());
         newModel.setCommentTextHeight(derivationModel.getCommentTextHeight());
         newModel.setStatementTextHeight(derivationModel.getStatementTextHeight());
+        newModel.setPointsPossible(derivationModel.getPointsPossible());
+        if (!derivationView.getPointsEarnedTextField().getText().equals("")) newModel.setPointsEarned(Integer.parseInt(derivationView.getPointsEarnedTextField().getText()));
+        else newModel.setPointsEarned(-1);
 
         ///
         CheckSetup setup = derivationModel.getCheckSetup();

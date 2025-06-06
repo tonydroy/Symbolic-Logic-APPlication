@@ -169,7 +169,8 @@ public class VerticalTreeExpModel implements ExerciseModel<Document>, Serializab
 
     @Override
     public int getPointsEarned() {
-        return pointsEarned;
+        if (pointsEarned >= 0) return pointsEarned;
+        else return 0;
     }
 
     @Override

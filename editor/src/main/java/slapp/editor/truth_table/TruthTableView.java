@@ -157,6 +157,20 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
         tableGrid.setPadding(new Insets(20,0,20,10));
         centerBox = new VBox(10, tableGrid);
         tableGrid.setStyle("-fx-border-color: gainsboro");
+
+        pointsEarnedTextField = new TextField();
+        pointsEarnedTextField.setPrefWidth(27);
+        pointsEarnedTextField.setAlignment(Pos.CENTER_RIGHT);
+        pointsEarnedTextField.setPadding(new Insets(0,5,0,3));
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        pointsEarnedTextField.setTextFormatter(textFormatter);
     }
 
     /**
@@ -756,10 +770,8 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
     @Override
     public Node getPointsNode() {
         if (pointsPossible > 0) {
-            Label pointsPossibleLabel = new Label(" / " + pointsPossible);
             if (!mainView.isInstructorFunctions()) pointsEarnedTextField.setDisable(true);
-            HBox pointBox = new HBox(pointsEarnedTextField, pointsPossibleLabel);
-            return pointBox;
+            return pointsEarnedTextField;
         }
         return null;
     }

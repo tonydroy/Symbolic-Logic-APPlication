@@ -54,6 +54,7 @@ import slapp.editor.main_window.MainWindowView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 /**
  * View for the derivation explain exercise
@@ -196,6 +197,20 @@ public class DrvtnExpView implements ExerciseView<DecoratedRTA> {
         showMetaLangButton.setPadding(new Insets(2));
         showMetaLangButton.setTooltip(new Tooltip("Show metalanguage information."));
         showMetaLangButton.setStyle("-fx-background-color: rgb(" + 0xF0 + "," + 0xF0 + "," + 0xF0 + "); ");
+
+        pointsEarnedTextField = new TextField();
+        pointsEarnedTextField.setPrefWidth(27);
+        pointsEarnedTextField.setAlignment(Pos.CENTER_RIGHT);
+        pointsEarnedTextField.setPadding(new Insets(0,5,0,3));
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        pointsEarnedTextField.setTextFormatter(textFormatter);
 
     }
 
@@ -925,10 +940,8 @@ public class DrvtnExpView implements ExerciseView<DecoratedRTA> {
     @Override
     public Node getPointsNode() {
         if (pointsPossible > 0) {
-            Label pointsPossibleLabel = new Label(" / " + pointsPossible);
             if (!mainView.isInstructorFunctions()) pointsEarnedTextField.setDisable(true);
-            HBox pointBox = new HBox(pointsEarnedTextField, pointsPossibleLabel);
-            return pointBox;
+            return pointsEarnedTextField;
         }
         return null;
     }

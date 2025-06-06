@@ -447,6 +447,9 @@ public class DerivationCheck implements DCheck {
                         }
 
                         for (Theorem theorem : derivationExercise.getTheorems()) {
+
+                            System.out.println(theorem.getName());
+
                             if (theorem.matches(justificationString)) {
                                 ok = true;
                                 break;
