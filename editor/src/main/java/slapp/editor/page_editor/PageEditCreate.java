@@ -49,6 +49,7 @@ import slapp.editor.main_window.MainWindowView;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 import static javafx.scene.control.ButtonType.OK;
 
@@ -82,6 +83,7 @@ public class PageEditCreate {
     private Pane spacerPane;
     private HBox nameBox;
     private Spinner<Double> statementHeightSpinner;
+    private TextField pointsPossibleTextField;
 
 
     /**
@@ -108,6 +110,8 @@ public class PageEditCreate {
         promptField.setText(originalModel.getContentPrompt());
         nameField.textProperty().addListener(nameListener);
         promptField.textProperty().addListener(promptListener);
+        pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
+
         fieldModified = false;
     }
 
@@ -197,24 +201,49 @@ public class PageEditCreate {
             if (nv) textFieldInFocus();
         });
 
+        Label pointsPossibleLabel = new Label("Points Possible: ");
+        pointsPossibleLabel.setPrefWidth(95);
+        pointsPossibleTextField = new TextField();
+        pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+        pointsPossibleTextField.setText("0");
+        pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { fieldModified = true; });
+        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
+
 
         HBox nameBox = new HBox(nameLabel, nameField);
         nameBox.setAlignment(Pos.BASELINE_LEFT);
         HBox promptBox = new HBox(promptLabel, promptField);
         promptBox.setAlignment(Pos.BASELINE_LEFT);
-        nameNpromptBox = new VBox(10,nameBox,promptBox);
+        HBox pointsBox = new HBox(pointsPossibleLabel, pointsPossibleTextField);
+        pointsBox.setAlignment(Pos.BASELINE_LEFT);
+
+        nameNpromptBox = new VBox(10,nameBox,promptBox,pointsBox);
         nameNpromptBox.setPadding(new Insets(20,0,20,0));
 
         String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
                 "<p>Page Edit Exercise is appropriate for any exercise that calls for a text response.  Such a response may range from short answer to multiple pages.</p>" +
                 "<ul>" +
-                "<li><p>For the Page Edit Exercise, you need only provide the exercise name, exercise statement and, if desired, a prompt that will appear in an empty content area (you may not see the prompt until the content area gains focus). </p></li>";
+                "<li><p>Provide the exercise name.</p></li>" +
+                "<li><p>Provide a prompt that will appear in an empty content area (you may not see the prompt until the content area gains focus). </p></li>" +
+                "<li><p>If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
+                "<li><p>And finally provide the exercise statement.</p></li>";
+
 
         WebView helpArea = new WebView();
         WebEngine webEngine = helpArea.getEngine();
         webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
         webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(150);
+        helpArea.setPrefHeight(250);
 
 
         centerBox = new VBox(10, nameNpromptBox, statementRTA, helpArea);
@@ -282,11 +311,11 @@ public class PageEditCreate {
         stage.getIcons().addAll(EditorMain.icons);
 
         stage.setWidth(890);
-        stage.setHeight(700);
+        stage.setHeight(800);
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
         stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 890));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 700));
+        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 800));
         stage.initModality(Modality.WINDOW_MODAL);
         stage.setOnCloseRequest(e-> {
             e.consume();
@@ -404,6 +433,13 @@ public class PageEditCreate {
         double statementPrefHeight = statementTextHeight + 25;
         PageEditModel model = new PageEditModel(name, false, prompt, statementPrefHeight, statementDocument, commentDoc, new ArrayList<PageContent>());
         model.setStatementTextHeight(statementTextHeight);
+
+        if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
+        else {
+            model.setPointsPossible(0);
+            pointsPossibleTextField.setText("0");
+        }
+
         return model;
     }
 

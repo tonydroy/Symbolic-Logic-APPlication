@@ -116,6 +116,9 @@ public class ABcreate {
         statementTextHeight = originalModel.getStatementTextHeight();
         nameField.setText(originalModel.getExerciseName());
         contentPromptField.setText(originalModel.getContentPrompt());
+
+        pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
+
         ABmodelExtra fields = originalModel.getModelFields();
         leaderField.setText(fields.getLeader());
         promptFieldA.setText(fields.getPromptA());
@@ -127,7 +130,7 @@ public class ABcreate {
         leaderField.textProperty().addListener(leaderListener);
         promptFieldA.textProperty().addListener(fieldListenerA);
         promptFieldB.textProperty().addListener(fieldListenerB);
-        pointsPossibleTextField.textProperty().addListener(pointsPossibleListener);
+
 
     }
 
@@ -268,6 +271,8 @@ public class ABcreate {
             if (nv) textFieldInFocus();
         });
 
+
+
         Label pointsPossibleLabel = new Label("Points Possible: ");
         pointsPossibleLabel.setPrefWidth(100);
         pointsPossibleTextField = new TextField();
@@ -283,13 +288,8 @@ public class ABcreate {
         TextFormatter<String> textFormatter = new TextFormatter<>(filter);
         pointsPossibleTextField.setTextFormatter(textFormatter);
         pointsPossibleTextField.setText("0");
-        pointsPossibleListener = new ChangeListener() {
-            @Override
-            public void changed(ObservableValue ob, Object ov, Object nv) {
-                fieldsModified = true;
-            }
-        };
-        pointsPossibleTextField.textProperty().addListener(pointsPossibleListener);
+        pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { fieldsModified = true; });
+        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
 
 
 
@@ -303,6 +303,8 @@ public class ABcreate {
         promptBox.setAlignment(Pos.BASELINE_LEFT);
         HBox bBox = new HBox(promptLabelB, promptFieldB);
         bBox.setAlignment(Pos.BASELINE_LEFT);
+
+
         HBox pointsBox = new HBox(pointsPossibleLabel, pointsPossibleTextField);
         pointsBox.setAlignment(Pos.BASELINE_LEFT);
 
@@ -526,7 +528,12 @@ public class ABcreate {
         double statementPrefHeight = statementTextHeight + 25;
         ABmodel model = new ABmodel(name, fields,  false, prompt, statementPrefHeight, statementDocument, commentDoc, new ArrayList<PageContent>());
         model.setStatementTextHeight(statementTextHeight);
-        model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
+
+        if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
+        else {
+            model.setPointsPossible(0);
+            pointsPossibleTextField.setText("0");
+        }
 
         return model;
     }

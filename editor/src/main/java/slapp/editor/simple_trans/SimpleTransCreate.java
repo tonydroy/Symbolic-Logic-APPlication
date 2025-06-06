@@ -49,6 +49,7 @@ import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
 
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 import static javafx.scene.control.ButtonType.OK;
 
@@ -86,6 +87,7 @@ public class SimpleTransCreate {
     private Spinner<Double> interpretationHeightSpinner;
     private Spinner<Double> verticalSizeSpinner;
     private RichTextArea currentSpinnerNode;
+    private TextField pointsPossibleTextField;
 
     /**
      * Construct the simple translate create window from scratch
@@ -114,6 +116,7 @@ public class SimpleTransCreate {
 
         nameField.setText(originalModel.getExerciseName());
         nameField.textProperty().addListener(nameListener);
+        pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
         fieldModified = false;
     }
 
@@ -234,26 +237,51 @@ public class SimpleTransCreate {
             if (nv) textFieldInFocus();
         });
 
+        Label pointsPossibleLabel = new Label("Points Possible: ");
+        pointsPossibleLabel.setPrefWidth(95);
+        pointsPossibleTextField = new TextField();
+        pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+        pointsPossibleTextField.setText("0");
+        pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { fieldModified = true; });
+        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
+
+
         HBox nameBox = new HBox(nameLabel, nameField);
         nameBox.setAlignment(Pos.BASELINE_LEFT);
-        nameBox.setPadding(new Insets(20,0,20,0));
+        HBox pointsBox = new HBox(pointsPossibleLabel, pointsPossibleTextField);
+        pointsBox.setAlignment(Pos.BASELINE_LEFT);
 
-  //      nameVBox = new VBox(nameBox);
-  //      nameVBox.setPadding(new Insets(20,0,20,70));
+        VBox nameAndPointsBox = new VBox(10, nameBox, pointsBox);
+        nameAndPointsBox.setPadding(new Insets(20,0,20,0));
+
+
+
 
         String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
                 "<p>Simple Translation is appropriate for any exercise that calls for an interpretation function and simple formal translation (usually of an ordinary language sentence).<p>" +
                 "<ul>" +
-                "<li><p>For the Simple Translate Exercise, provide the exercise name and exercise statement.</p></li>" +
-                "<li><p>If desired, you may include an interpretation function to appear along with the exercise.  If this field is left blank, an empty field for an interpretation function appears along with the exercise to be filled in by the student.</p></li>" +
+                "<li><p>Provide the exercise name.</p></li>" +
+                "<li><p>If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
+                "<li><p>Provide the exercise statement.</p></li>" +
+                "<li><p>If desired, you may include an interpretation function to appear along with the exercise.  If this field is left blank, an empty field for an interpretation function that is to be filled in by the student appears along with the exercise.</p></li>" +
                 "</ul>";
         WebView helpArea = new WebView();
         WebEngine webEngine = helpArea.getEngine();
         webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
         webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(180);
+        helpArea.setPrefHeight(250);
 
-        centerBox = new VBox(10, nameBox, statementRTA, interpretationRTA, helpArea);
+        centerBox = new VBox(10, nameAndPointsBox, statementRTA, interpretationRTA, helpArea);
         centerBox.setPadding(new Insets(10,0,10,20));
 
         spacerPane = new Pane();
@@ -322,10 +350,10 @@ public class SimpleTransCreate {
         stage.getIcons().addAll(EditorMain.icons);
 
         stage.setWidth(890);
-        stage.setHeight(800);
+        stage.setHeight(860);
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
         stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 890));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 800));
+        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 860));
 
         stage.initModality(Modality.WINDOW_MODAL);
         stage.setOnCloseRequest(e-> {
@@ -451,6 +479,12 @@ public class SimpleTransCreate {
 
         model.setInterpretationTextHeight(interpretationTextHeight);
         model.setInterpretationPrefHeight(Math.max(100, interpretationTextHeight + 25));
+
+        if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
+        else {
+            model.setPointsPossible(0);
+            pointsPossibleTextField.setText("0");
+        }
 
         return model;
     }

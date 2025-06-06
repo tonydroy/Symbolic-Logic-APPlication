@@ -59,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 import static javafx.scene.control.ButtonType.OK;
 
@@ -111,6 +112,7 @@ public class TruthTableGenCreate {
 
     private Pane spacerPane;
     private Spinner<Double> statementHeightSpinner;
+    private TextField pointsPossibleTextField;
 
     /**
      * Create new truth table generate exercise
@@ -139,6 +141,7 @@ public class TruthTableGenCreate {
         aPromptField.setText(originalModel.getaPrompt());
         bPromptField.setText(originalModel.getbPrompt());
         conclusionDividerCheck.setSelected(originalModel.isConclusionDivider());
+        pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
         updateOperatorFieldsFromModel(originalModel);
         updateUnaryOperatorGridFromFields();
         updateBinaryOperatorGridFromFields();
@@ -216,8 +219,27 @@ public class TruthTableGenCreate {
             if (nv) textFieldInFocus();
         });
 
-        HBox nameBox = new HBox(10, nameLabel, nameField);
+        Label pointsPossibleLabel = new Label("Points Possible: ");
+        pointsPossibleLabel.setPrefWidth(95);
+        pointsPossibleTextField = new TextField();
+        pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+        pointsPossibleTextField.setText("0");
+        pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { fieldModified = true; });
+        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
+
+        HBox nameBox = new HBox(10, nameLabel, nameField, pointsPossibleLabel, pointsPossibleTextField);
         nameBox.setAlignment(Pos.CENTER_LEFT);
+
 
         Label genPromptLabel = new Label("Interp Prompt: ");
         genPromptLabel.setPrefWidth(95);
@@ -503,7 +525,8 @@ public class TruthTableGenCreate {
                 "<p>The Truth Table Gen Exercise is like Truth Table Explain Exercise in that it requests a truth table along with choice between some mutually exclusive options and an explanation.  " +
                 "In addition the truth table gen exercise begins with a field for an interpretation/translation, and lets the student generate the premises and conclusion on the table.</p>" +
                 "<ul>" +
-                "<li><p>Begin with the exercise name and prompts to appear in the interpretation and explanation fields.</p></li>" +
+                "<li><p>Begin with the exercise name and points fields.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
+                "<li><p>Add prompts to appear in the interpretation and explanation fields.</p></li>" +
                 "<li><p>The Checkbox lead appears prior to the check boxes, the A prompt with the first box, and the B prompt with the second.</p></li>" +
                 "<li><p>The preset operator buttons set operators according to the official and abbreviating sentential languages from <em>Symbolic Logic</em>; alternatively, you may edit sentential operator symbols individually, using the plus and minus buttons to add and remove fields.</p></li> " +
                 "<li><p>In the ordinary case, you will leave the formula fields blank, as any formulas you enter here may be overwritten by the student working the exercise.  And you will typically leave the \"conclusion divider\" selected, as the student is expected to provide at least a conclusion sentence.</p></li> " +
@@ -586,10 +609,10 @@ public class TruthTableGenCreate {
         stage.getIcons().addAll(EditorMain.icons);
         stage.setWidth(890);
         stage.setMinWidth(860);
-        stage.setHeight(950);
+        stage.setHeight(970);
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
         stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 890));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 950));
+        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 970));
 
 
         stage.initModality(Modality.WINDOW_MODAL);
@@ -910,6 +933,12 @@ public class TruthTableGenCreate {
         model.setChoiceLead(choiceLeadField.getText());
         model.setaPrompt(aPromptField.getText());
         model.setbPrompt(bPromptField.getText());
+
+        if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
+        else {
+            model.setPointsPossible(0);
+            pointsPossibleTextField.setText("0");
+        }
 
         return model;
     }

@@ -196,7 +196,7 @@ public class FreeFormView implements ExerciseView<DecoratedRTA> {
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
 
-        commentRTA.maxWidthProperty().bind(mainView.scalePageWidthProperty());
+        commentRTA.prefWidthProperty().bind(mainView.scalePageWidthProperty());
         commentWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         commentWidthSpinner.setPrefWidth(60);
         commentWidthSpinner.setDisable(true);

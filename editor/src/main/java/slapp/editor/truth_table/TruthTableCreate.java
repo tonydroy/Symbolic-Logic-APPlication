@@ -57,6 +57,7 @@ import slapp.editor.main_window.MainWindowView;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 import static javafx.scene.control.ButtonType.OK;
 
@@ -99,6 +100,7 @@ public class TruthTableCreate {
 
     private Pane spacerPane;
     private Spinner<Double> statementHeightSpinner;
+    private TextField pointsPossibleTextField;
 
 
     /**
@@ -123,6 +125,7 @@ public class TruthTableCreate {
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         statementTextHeight = originalModel.getStatementTextHeight();
         conclusionDividerCheck.setSelected(originalModel.isConclusionDivider());
+        pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
         updateOperatorFieldsFromModel(originalModel);
         updateUnaryOperatorGridFromFields();
         updateBinaryOperatorGridFromFields();
@@ -199,8 +202,27 @@ public class TruthTableCreate {
             if (nv) textFieldInFocus();
         });
 
-        HBox nameBox = new HBox(10, nameLabel, nameField);
+        Label pointsPossibleLabel = new Label("Points Possible: ");
+        pointsPossibleLabel.setPrefWidth(100);
+        pointsPossibleTextField = new TextField();
+        pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+        pointsPossibleTextField.setText("0");
+        pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { fieldModified = true; });
+        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
+
+        HBox nameBox = new HBox(10, nameLabel, nameField, pointsPossibleLabel, pointsPossibleTextField);
         nameBox.setAlignment(Pos.CENTER_LEFT);
+        nameBox.setMargin(pointsPossibleLabel, new Insets(0, 0, 0, 30));
 
         //language presets
         Label operatorPresetLabel = new Label("Preset operators: ");
@@ -390,7 +412,7 @@ public class TruthTableCreate {
         String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
                 "<p>The Truth Table Exercise is appropriate for any exercise that requires a truth table as response.</p>" +
                 "<ul>" +
-                "<li><p>Start with the the exercise name.</p></li>" +
+                "<li><p>Start with the the exercise name and point fields.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
                 "<li><p>The preset operator buttons set operators according to the official and abbreviating sentential languages from <em>Symbolic Logic</em>; alternatively, you may edit sentential operator symbols individually, using the plus and minus buttons to add and remove fields.</p></li> " +
                 "<li><p>Supply formulas to appear across the top of the truth table (not including the base column), again using the plus and minus buttons to add and remove fields.  The \"conclusion divider\" merely inserts an extra space and slash ('/') prior to the last formula.</p></li>" +
                 "<li><p>Finally supply the exercise statement.</p></li>" +
@@ -399,7 +421,7 @@ public class TruthTableCreate {
         WebEngine webEngine = helpArea.getEngine();
         webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
         webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(230);
+        helpArea.setPrefHeight(270);
 
         centerBox = new VBox(10, upperFieldsBox, statementRTA, helpArea);
         centerBox.setPadding(new Insets(10,0,10,20));
@@ -472,10 +494,10 @@ public class TruthTableCreate {
         stage.getIcons().addAll(EditorMain.icons);
         stage.setWidth(890);
         stage.setMinWidth(860);
-        stage.setHeight(900);
+        stage.setHeight(930);
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
         stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 890));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 900));
+        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 930));
 
 
         stage.initModality(Modality.WINDOW_MODAL);
@@ -784,6 +806,12 @@ public class TruthTableCreate {
         model.setMainFormulas(mainFormulaDocs);
 
         model.setConclusionDivider(conclusionDividerCheck.isSelected());
+
+        if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
+        else {
+            model.setPointsPossible(0);
+            pointsPossibleTextField.setText("0");
+        }
 
         return model;
     }

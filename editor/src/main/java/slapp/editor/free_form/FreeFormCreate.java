@@ -48,6 +48,7 @@ import slapp.editor.main_window.MainWindowView;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 import static javafx.scene.control.ButtonType.OK;
 
@@ -93,6 +94,7 @@ public class FreeFormCreate {
 
     private Pane spacerPane;
     private Spinner<Double> statementHeightSpinner;
+    private TextField pointsPossibleTextField;
 
     /**
      * Create new Free Form exercise
@@ -115,6 +117,7 @@ public class FreeFormCreate {
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         statementTextHeight = originalModel.getStatementTextHeight();
         nameField.setText(originalModel.getExerciseName());
+        pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
         setChecks(originalModel);
         modified = false;
     }
@@ -255,8 +258,30 @@ public class FreeFormCreate {
             if (nv) textFieldInFocus();
         });
 
-        HBox nameBox = new HBox(nameLabel, nameField);
+
+
+        Label pointsPossibleLabel = new Label("Points Possible: ");
+        pointsPossibleLabel.setPrefWidth(100);
+        pointsPossibleTextField = new TextField();
+        pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+        pointsPossibleTextField.setText("0");
+        pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { modified = true; });
+        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
+
+        HBox nameBox = new HBox(nameLabel, nameField, pointsPossibleLabel, pointsPossibleTextField);
         nameBox.setAlignment(Pos.BASELINE_LEFT);
+        nameBox.setMargin(pointsPossibleLabel, new Insets(0, 0, 0, 30));
+
 
         //checks
         simpleEditCheck = new CheckBox("Simple Edit");
@@ -413,8 +438,8 @@ public class FreeFormCreate {
         String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
                 "<p>The Free Form Exercise is appropriate for any exercise that combines text (usually) with other elements - tree, truth table, or derivation - where a student may insert these elements into the exercise in arbitrary combinations.</p> " +
                 "<ul>" +
-                "<li><p>Start with the exercise name.</p></li>" +
-                "<li><p>Then select items to insert into the exercise from among: Simple Edit, Truth Table, Horizontal Tree, Vertical Tree, Natural Derivation, or Axiomatic Derivation.</p>" +
+                "<li><p>Start with the exercise name and points possible.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
+                "<li><p>Then select items to insert into the exercise from among: Simple Edit, Truth Table, Horizontal Tree, Vertical Tree, Natural Derivation, and Axiomatic Derivation.</p>" +
                 "<p> The vertical tree, natural derivation, and axiomatic derivation options allow different default keyboards.  You will be able to select just one keyboard option per item.</p></li>" +
                 "</ul>";
         WebView helpArea = new WebView();
@@ -615,6 +640,12 @@ public class FreeFormCreate {
         model.setExerciseStatement(statementRTA.getDocument());
         model.setStatementPrefHeight(statementTextHeight + 25);
         model.setStatementTextHeight(statementTextHeight);
+
+        if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
+        else {
+            model.setPointsPossible(0);
+            pointsPossibleTextField.setText("0");
+        }
 
         return model;
     }

@@ -51,6 +51,7 @@ import slapp.editor.vertical_tree.object_models.ObjectControlType;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 import static com.gluonhq.richtextarea.RichTextAreaSkin.KeyMapValue.*;
 import static javafx.scene.control.ButtonType.OK;
@@ -96,6 +97,7 @@ public class VerticalTreeCreate {
 
     private Pane spacerPane;
     private Spinner<Double> statementHeightSpinner;
+    private TextField pointsPossibleTextField;
 
 
     public VerticalTreeCreate(MainWindow mainWindow) {
@@ -114,6 +116,7 @@ public class VerticalTreeCreate {
         italicSansCheck.setSelected(keyboardSelector == ITALIC_AND_SANS);
         baseItalicCheck.setSelected(keyboardSelector == RichTextAreaSkin.KeyMapValue.BASE);
         scriptItalicCheck.setSelected(keyboardSelector == SCRIPT_AND_ITALIC);
+        pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
         List<DragIconType> dragIconList = originalModel.getDragIconList();
         treeFormulaBoxCheck.setSelected(dragIconList.contains(tree_field));
         verticalBracketCheck.setSelected(dragIconList.contains(bracket));
@@ -196,9 +199,29 @@ public class VerticalTreeCreate {
         nameField.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) textFieldInFocus();
         });
-
         HBox nameBox = new HBox(nameLabel, nameField);
         nameBox.setAlignment(Pos.BASELINE_LEFT);
+
+        Label pointsPossibleLabel = new Label("Points Possible: ");
+        pointsPossibleLabel.setPrefWidth(100);
+        pointsPossibleTextField = new TextField();
+        pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+        pointsPossibleTextField.setText("0");
+        pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { modified = true; });
+        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
+        HBox pointsBox = new HBox(pointsPossibleLabel, pointsPossibleTextField);
+        pointsBox.setAlignment(Pos.BASELINE_LEFT);
+
 
         Label keyboardLabel = new Label("Default Keyboard: ");
         keyboardLabel.setPrefWidth(100);
@@ -285,14 +308,14 @@ public class VerticalTreeCreate {
         HBox controlBox = new HBox(20,controlLabel, boxingFormulaCheck, circleCheck, starCheck, annotationCheck, underlineCheck, mappingCheck);
         controlBox.setAlignment(Pos.BASELINE_LEFT);
 
-        fieldsBox = new VBox(15, nameBox, dragBox, controlBox, keyboardBox);
+        fieldsBox = new VBox(15, nameBox, pointsBox, dragBox, controlBox, keyboardBox);
         fieldsBox.setPadding(new Insets(20,0, 0, 20));
 
         //center
         String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
                 "<p>The Vertical Tree Exercise is appropriate for any exercise that builds a tree diagram from the top down (or bottom up), as well as for 'mapping' exercises (as from chapter 2 of <em>Symbolic Logic</em>).</p>" +
                 "<ul>" +
-                "<li><p>Start with the exercise name.</p></li>" +
+                "<li><p>Start with the exercise name and points fields.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
                 "<li><p>Use checkboxes to select items that may be dragged into the work area (to appear across the top), and then to select controls for functions applied to the formula boxes (to appear down the left).</p>" +
                 "<p>It is unlikely that any one exercise will include all the drag and control options (especially \"star\" and \"annotation\" cannot both apply to the same node) -- but the different options make it possible to accomodate a wide variety of exercises.</p></li>" +
                 "<li><p>The keyboard options set the default keyboard for formula boxes.</p></li>" +
@@ -395,11 +418,11 @@ public class VerticalTreeCreate {
         stage.getIcons().addAll(EditorMain.icons);
 
         stage.setWidth(890);
-        stage.setHeight(800);
+        stage.setHeight(820);
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
         stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 890));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 800));
+        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 820));
         stage.initModality(Modality.WINDOW_MODAL);
         stage.setOnCloseRequest(e-> {
             e.consume();
@@ -512,6 +535,12 @@ public class VerticalTreeCreate {
         model.setExerciseStatement(statementRTA.getDocument());
         model.setStatementPrefHeight(statementTextHeight + 25);
         model.setStatementTextHeight(statementTextHeight);
+
+        if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
+        else {
+            model.setPointsPossible(0);
+            pointsPossibleTextField.setText("0");
+        }
 
         return model;
     }

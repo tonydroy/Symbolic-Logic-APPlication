@@ -75,6 +75,12 @@ public class PageEditExercise implements Exercise<PageEditModel, PageEditView> {
         editView.setCommentPrefHeight(editModel.getCommentPrefHeight());
         editView.setPaginationPrefHeight(editModel.getPaginationPrefHeight());
 
+        editView.setPointsPossible(editModel.getPointsPossible());
+        if (editModel.getPointsEarned() >= 0) editView.getPointsEarnedTextField().setText(Integer.toString(editModel.getPointsEarned()));
+        editView.getPointsEarnedTextField().textProperty().addListener((ob, ov, nv) -> {
+            exerciseModified = true;
+        });
+
         //statement
         DecoratedRTA statementDRTA = new DecoratedRTA();
         RichTextArea statementEditor = statementDRTA.getEditor();
@@ -301,13 +307,24 @@ public class PageEditExercise implements Exercise<PageEditModel, PageEditView> {
         RichTextArea commentRTA = printExercise.getExerciseView().getExerciseComment().getEditor();
         commentRTA.prefHeightProperty().unbind();
         commentRTA.minWidthProperty().unbind();
-
         commentRTA.setPrefHeight(printModel.getCommentTextHeight() + 35.0);
-
         commentRTA.setContentAreaWidth(nodeWidth);
         commentRTA.setMinWidth(nodeWidth);
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
-        nodeList.add(commentRTA);
+
+        Node commentNode;
+        if (printModel.getPointsPossible() > 0) {
+            Label pointsLabel = new Label(Integer.toString(printModel.getPointsEarned()) + "/" + Integer.toString(printModel.getPointsPossible()));
+            AnchorPane anchorPane = new AnchorPane(commentRTA, pointsLabel);
+            anchorPane.setTopAnchor(commentRTA, 0.0);
+            anchorPane.setLeftAnchor(commentRTA, 0.0);
+            anchorPane.setBottomAnchor(pointsLabel, 3.0);
+            anchorPane.setRightAnchor(pointsLabel, 3.0);
+            anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
+            commentNode = anchorPane;
+        }
+        else commentNode = commentRTA;
+        nodeList.add(commentNode);
 
         return nodeList;
     }
@@ -321,8 +338,11 @@ public class PageEditExercise implements Exercise<PageEditModel, PageEditView> {
         RichTextArea commentRTA = editView.getExerciseComment().getEditor();
         commentRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document commentDocument = commentRTA.getDocument();
+        int pointsEarned = -1;
+        if (!editView.getPointsEarnedTextField().getText().equals("")) pointsEarned = Integer.parseInt(editView.getPointsEarnedTextField().getText());
         PageEditModel originalModel = (PageEditModel) (editModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
+        originalModel.setPointsEarned(pointsEarned);
         PageEditExercise clearExercise = new PageEditExercise(originalModel, mainWindow);
         return clearExercise;
     }
@@ -423,6 +443,10 @@ public class PageEditExercise implements Exercise<PageEditModel, PageEditView> {
         newModel.setPaginationPrefHeight(editView.getPaginationPrefHeight());
         newModel.setCommentTextHeight(editModel.getCommentTextHeight());
         newModel.setStatementTextHeight(editModel.getStatementTextHeight());
+
+        newModel.setPointsPossible(editModel.getPointsPossible());
+        if (!editView.getPointsEarnedTextField().getText().equals("")) newModel.setPointsEarned(Integer.parseInt(editView.getPointsEarnedTextField().getText()));
+        else newModel.setPointsEarned(-1);
 
         return newModel;
     }

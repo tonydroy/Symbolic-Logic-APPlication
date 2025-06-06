@@ -92,7 +92,13 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
         horizontalTreeView.setCommentPrefHeight(horizontalTreeModel.getCommentPrefHeight());
         horizontalTreeView.setExplainPrefHeight(horizontalTreeModel.getExplainPrefHeight());
 
-        //statenebt
+        horizontalTreeView.setPointsPossible(horizontalTreeModel.getPointsPossible());
+        if (horizontalTreeModel.getPointsEarned() >= 0) horizontalTreeView.getPointsEarnedTextField().setText(Integer.toString(horizontalTreeModel.getPointsEarned()));
+        horizontalTreeView.getPointsEarnedTextField().textProperty().addListener((ob, ov, nv) -> {
+            exerciseModified = true;
+        });
+
+        //statement
         DecoratedRTA statementDRTA = new DecoratedRTA();
         RichTextArea statementEditor = statementDRTA.getEditor();
         statementEditor.getActionFactory().open(horizontalTreeModel.getExerciseStatement()).execute(new ActionEvent());
@@ -420,7 +426,20 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
         commentRTA.setContentAreaWidth(nodeWidth);
         commentRTA.setMinWidth(nodeWidth);
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
-        nodeList.add(commentRTA);
+
+        Node commentNode;
+        if (printModel.getPointsPossible() > 0) {
+            Label pointsLabel = new Label(Integer.toString(printModel.getPointsEarned()) + "/" + Integer.toString(printModel.getPointsPossible()));
+            AnchorPane anchorPane = new AnchorPane(commentRTA, pointsLabel);
+            anchorPane.setTopAnchor(commentRTA, 0.0);
+            anchorPane.setLeftAnchor(commentRTA, 0.0);
+            anchorPane.setBottomAnchor(pointsLabel, 3.0);
+            anchorPane.setRightAnchor(pointsLabel, 3.0);
+            anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
+            commentNode = anchorPane;
+        }
+        else commentNode = commentRTA;
+        nodeList.add(commentNode);
 
         return nodeList;
     }
@@ -434,8 +453,11 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
         RichTextArea commentRTA = horizontalTreeView.getExerciseComment().getEditor();
         commentRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document commentDocument = commentRTA.getDocument();
+        int pointsEarned = -1;
+        if (!horizontalTreeView.getPointsEarnedTextField().getText().equals("")) pointsEarned = Integer.parseInt(horizontalTreeView.getPointsEarnedTextField().getText());
         HorizontalTreeModel originalModel = (HorizontalTreeModel) (horizontalTreeModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
+        originalModel.setPointsEarned(pointsEarned);
         HorizontalTreeExercise clearExercise = new HorizontalTreeExercise(originalModel, mainWindow);
         return clearExercise;
     }
@@ -565,6 +587,10 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
         model.setMainPaneWidth(horizontalTreeView.getMainPane().getWidth());
 
         model.setAxis(horizontalTreeView.isAxis());
+
+        model.setPointsPossible(horizontalTreeModel.getPointsPossible());
+        if (!horizontalTreeView.getPointsEarnedTextField().getText().equals("")) model.setPointsEarned(Integer.parseInt(horizontalTreeView.getPointsEarnedTextField().getText()));
+        else model.setPointsEarned(-1);
 
         List<TreePane> treePanes = horizontalTreeView.getTreePanes();
         List<TreeModel> treeModels = model.getTreeModels();

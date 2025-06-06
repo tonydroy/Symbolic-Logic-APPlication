@@ -58,6 +58,7 @@ import slapp.editor.main_window.MainWindowView;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 import static javafx.scene.control.ButtonType.OK;
 
@@ -107,6 +108,7 @@ public class TruthTableExpCreate {
 
     private Pane spacerPane;
     private Spinner<Double> statementHeightSpinner;
+    private TextField pointsPossibleTextField;
 
     /**
      * Create new truth table explain exercise
@@ -134,6 +136,7 @@ public class TruthTableExpCreate {
         aPromptField.setText(originalModel.getaPrompt());
         bPromptField.setText(originalModel.getbPrompt());
         conclusionDividerCheck.setSelected(originalModel.isConclusionDivider());
+        pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
         updateOperatorFieldsFromModel(originalModel);
         updateUnaryOperatorGridFromFields();
         updateBinaryOperatorGridFromFields();
@@ -218,6 +221,26 @@ public class TruthTableExpCreate {
         explainPromptLabel.setPrefWidth(95);
         explainPromptField  = new TextField();
 
+
+        Label pointsPossibleLabel = new Label("Points Possible: ");
+        pointsPossibleLabel.setPrefWidth(95);
+        pointsPossibleTextField = new TextField();
+        pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+        pointsPossibleTextField.setText("0");
+        pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { fieldModified = true; });
+        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
+
+
         explainPromptField.setPromptText("(plain text)");
         explainPromptListener = new ChangeListener() {
             @Override
@@ -231,7 +254,7 @@ public class TruthTableExpCreate {
             if (nv) textFieldInFocus();
         });
 
-        HBox nameBox = new HBox(10, nameLabel, nameField, explainPromptLabel, explainPromptField);
+        HBox nameBox = new HBox(10, nameLabel, nameField, explainPromptLabel, explainPromptField, pointsPossibleLabel, pointsPossibleTextField);
         nameBox.setAlignment(Pos.CENTER_LEFT);
 
         //choice fields
@@ -477,7 +500,7 @@ public class TruthTableExpCreate {
         String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
                 "<p>The Truth Table AB Explain Exercise is like Truth Table Exercise except that it requests a choice between some mutually exclusive options (as valid/invalid) along with a short explanation.</p>" +
                 "<ul>" +
-                "<li><p>Begin with the exercise name and a prompt to appear in the Explain field.</p></li>" +
+                "<li><p>Begin with the exercise name, prompt, and points fields.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
                 "<li><p>The checkbox lead appears prior to the check boxes, the A prompt with the first box, and the B prompt with the second.</p></li>" +
                 "<li><p>The preset operator buttons set operators according to the official and abbreviating sentential languages from <em>Symbolic Logic</em>; alternatively, you may edit sentential operator symbols individually using the plus and minus buttons to add and remove fields.</p></li> " +
                 "<li><p>Then supply formulas to appear across the top of the truth table (not including the base column), using the plus and minus buttons to add and remove fields.  The \"conclusion divider\" merely inserts an extra space and slash ('/') prior to the last formula." +
@@ -882,6 +905,12 @@ public class TruthTableExpCreate {
         model.setChoiceLead(choiceLeadField.getText());
         model.setaPrompt(aPromptField.getText());
         model.setbPrompt(bPromptField.getText());
+
+        if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
+        else {
+            model.setPointsPossible(0);
+            pointsPossibleTextField.setText("0");
+        }
 
         return model;
     }

@@ -32,6 +32,7 @@ import javafx.scene.control.Separator;
 import javafx.scene.control.Spinner;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -140,6 +141,12 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
     private void setFreeFormView() {
         freeFormView.setStatementPrefHeight(freeFormModel.getStatementPrefHeight());
         freeFormView. setCommentPrefHeight(freeFormModel.getCommentPrefHeight());
+
+        freeFormView.setPointsPossible(freeFormModel.getPointsPossible());
+        if (freeFormModel.getPointsEarned() >= 0) freeFormView.getPointsEarnedTextField().setText(Integer.toString(freeFormModel.getPointsEarned()));
+        freeFormView.getPointsEarnedTextField().textProperty().addListener((ob, ov, nv) -> {
+            exerciseModified = true;
+        });
 
         //statement
         DecoratedRTA statementDRTA = new DecoratedRTA();
@@ -886,7 +893,20 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
         commentRTA.setContentAreaWidth(nodeWidth);
         commentRTA.setMinWidth(nodeWidth);
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
-        nodeList.add(commentRTA);
+
+        Node commentNode;
+        if (printModel.getPointsPossible() > 0) {
+            Label pointsLabel = new Label(Integer.toString(printModel.getPointsEarned()) + "/" + Integer.toString(printModel.getPointsPossible()));
+            AnchorPane anchorPane = new AnchorPane(commentRTA, pointsLabel);
+            anchorPane.setTopAnchor(commentRTA, 0.0);
+            anchorPane.setLeftAnchor(commentRTA, 0.0);
+            anchorPane.setBottomAnchor(pointsLabel, 3.0);
+            anchorPane.setRightAnchor(pointsLabel, 3.0);
+            anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
+            commentNode = anchorPane;
+        }
+        else commentNode = commentRTA;
+        nodeList.add(commentNode);
 
         return nodeList;
     }
@@ -900,8 +920,11 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
         RichTextArea commentRTA = freeFormView.getExerciseComment().getEditor();
         commentRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document commentDocument = commentRTA.getDocument();
+        int pointsEarned = -1;
+        if (!freeFormView.getPointsEarnedTextField().getText().equals("")) pointsEarned = Integer.parseInt(freeFormView.getPointsEarnedTextField().getText());
         FreeFormModel originalModel = (FreeFormModel) (freeFormModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
+        originalModel.setPointsEarned(pointsEarned);
         FreeFormExercise clearExercise = new FreeFormExercise(originalModel, mainWindow);
         exerciseModified = false;
         return clearExercise;
@@ -964,6 +987,10 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
         model.setExerciseComment(commentRTA.getDocument());
         model.setCommentPrefHeight(freeFormView.getCommentPrefHeight());
         model.setCommentTextHeight(freeFormModel.getCommentTextHeight());
+
+        model.setPointsPossible(freeFormModel.getPointsPossible());
+        if (!freeFormView.getPointsEarnedTextField().getText().equals("")) model.setPointsEarned(Integer.parseInt(freeFormView.getPointsEarnedTextField().getText()));
+        else model.setPointsEarned(-1);
 
         List<ModelElement> modelElements = new ArrayList<>();
         for (int i = 0; i < exerciseList.size(); i++) {

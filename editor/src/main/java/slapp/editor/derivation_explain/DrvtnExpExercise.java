@@ -36,10 +36,7 @@ import javafx.scene.control.Spinner;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -174,6 +171,14 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         drvtnExpView.setExplanationPrefHeight(drvtnExpModel.getExplanationPrefHeight());
         drvtnExpView.setSplitPanePrefWidth(drvtnExpModel.getSplitPanePrefWidth());
         drvtnExpView.setShowMetaLang(drvtnExpModel.getCheckSetup().isShowMetalanguageButton());
+
+        drvtnExpView.setPointsPossible(drvtnExpModel.getPointsPossible());
+        if (drvtnExpModel.getPointsEarned() >= 0) drvtnExpView.getPointsEarnedTextField().setText(Integer.toString(drvtnExpModel.getPointsEarned()));
+        drvtnExpView.getPointsEarnedTextField().textProperty().addListener((ob, ov, nv) -> {
+            exerciseModified = true;
+        });
+
+
 
         //statement
         DecoratedRTA statementDRTA = new DecoratedRTA();
@@ -1199,7 +1204,20 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         commentRTA.setContentAreaWidth(nodeWidth);
         commentRTA.setMinWidth(nodeWidth);
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
-        nodeList.add(commentRTA);
+
+        Node commentNode;
+        if (printModel.getPointsPossible() > 0) {
+            Label pointsLabel = new Label(Integer.toString(printModel.getPointsEarned()) + "/" + Integer.toString(printModel.getPointsPossible()));
+            AnchorPane anchorPane = new AnchorPane(commentRTA, pointsLabel);
+            anchorPane.setTopAnchor(commentRTA, 0.0);
+            anchorPane.setLeftAnchor(commentRTA, 0.0);
+            anchorPane.setBottomAnchor(pointsLabel, 3.0);
+            anchorPane.setRightAnchor(pointsLabel, 3.0);
+            anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
+            commentNode = anchorPane;
+        }
+        else commentNode = commentRTA;
+        nodeList.add(commentNode);
 
         return nodeList;
     }
@@ -1236,8 +1254,11 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         RichTextArea commentRTA = drvtnExpView.getExerciseComment().getEditor();
         commentRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document commentDocument = commentRTA.getDocument();
+        int pointsEarned = -1;
+        if (!drvtnExpView.getPointsEarnedTextField().getText().equals("")) pointsEarned = Integer.parseInt(drvtnExpView.getPointsEarnedTextField().getText());
         DrvtnExpModel originalModel = (DrvtnExpModel) (drvtnExpModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
+        originalModel.setPointsEarned(pointsEarned);
 
         CheckSetup setup = originalModel.getCheckSetup();
         setup.setHelpTries(drvtnExpCheck.getHelpTries());
@@ -1370,6 +1391,10 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         newModel.setCommentTextHeight(drvtnExpModel.getCommentTextHeight());
         newModel.setStatementTextHeight(drvtnExpModel.getStatementTextHeight());
         newModel.setExplanationTextHeight(drvtnExpModel.getExplanationTextHeight());
+
+        newModel.setPointsPossible(drvtnExpModel.getPointsPossible());
+        if (!drvtnExpView.getPointsEarnedTextField().getText().equals("")) newModel.setPointsEarned(Integer.parseInt(drvtnExpView.getPointsEarnedTextField().getText()));
+        else newModel.setPointsEarned(-1);
 
         CheckSetup setup = drvtnExpModel.getCheckSetup();
         setup.setCheckSuccess(drvtnExpCheck.isCheckSuccess());

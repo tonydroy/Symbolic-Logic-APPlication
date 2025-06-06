@@ -73,6 +73,7 @@ import slapp.editor.parser.Languages;
 
 import java.util.*;
 import java.util.List;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -153,6 +154,8 @@ public class DerivationCreate {
     private Spinner<Double> verticalSizeSpinner;
     private RichTextArea currentSpinnerNode;
 
+    private TextField pointsPossibleTextField;
+
 
 
     /**
@@ -177,6 +180,7 @@ public class DerivationCreate {
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         nameField.setText(originalModel.getExerciseName());
         statementTextHeight = originalModel.getStatementTextHeight();
+        pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
 
 
 
@@ -499,6 +503,26 @@ public class DerivationCreate {
         widthSpinner.valueProperty().addListener(defaultWidthListener);
         widthSpinner.setPrefWidth(65);
 
+        Label pointsPossibleLabel = new Label("Points Possible: ");
+        pointsPossibleLabel.setPrefWidth(90);
+        pointsPossibleTextField = new TextField();
+        pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+        pointsPossibleTextField.setText("0");
+        pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { fieldModified = true; });
+        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
+
+
+
 
         //check controls
 
@@ -683,9 +707,10 @@ public class DerivationCreate {
         HBox keyboardBox = new HBox(10, keyboardLabel, italicAndSansCheck, scriptAndItalicCheck, scriptAndSansCheck, italicAndBlackboardCheck, greekAndFrakturCheck);
 
         Label widthLabel = new Label("Width: ");
-        HBox topFields = new HBox(30, scopeLineCheck, defaultShelfCheck, widthLabel, widthSpinner);
+        HBox topFields = new HBox(30, scopeLineCheck, defaultShelfCheck, widthLabel, widthSpinner, pointsPossibleLabel, pointsPossibleTextField);
         topFields.setAlignment(Pos.CENTER_LEFT);
         topFields.setMargin(widthLabel, new Insets(0, -10, 0, 0));
+        topFields.setMargin(pointsPossibleLabel, new Insets(0, -10, 0, 0));
 
 
         HBox setupLineButtons = new HBox(30, metalangCheckLabel, showMetalanguageCheck, staticHelpCheckLabel, staticHelpCheck, setupLinesLabel, addSetupLineButton, removeSetupLineButton);
@@ -723,7 +748,8 @@ public class DerivationCreate {
                 "<ul>" +
 
                 "<li><p>Supply the exercise name.  The name for a theorem exercise should end with underscore and then the name (as '_T3.14') as the check feature uses the name to identify 'prior' theorems available in a derivation.  Then select the default keyboard for derivation content lines, and select whether there is to be a leftmost scope line, and/or a \"shelf\" beneath the top line of an automatically generated subderivation. " +
-                "A typical natural derivation system (as chapter 6 of <em>Symbolic Logic</em>) selects 'italic and sans', 'leftmost scope line' and 'default shelf'.  The width is the (default) percentage of the window's width allocated to this derivation.</p></li>" +
+                "The width is the (default) percentage of the window's width allocated to this derivation.  " +
+                "If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
                 "<li><p>For the check and help functions: A 'max value' of -1 corresponds to 'unlimited', 0 to 'none', and otherwise to the maximum number of check or help tries allotted for the exercise.  " +
                 "Then there are checkboxes to select the formal language and ruleset.  Notice that a given keyboard selection may be compatible with multiple formal languages, but a given formal language will typically have some preferred default keyboard. </p>" +
                 "<p>The Theorem Set option is relevant only to exercises which appeal to axiom or theorem lists.  Multiple selections are possible, though behavior is unpredictable in case members of selected sets have the same name. " +
@@ -1239,6 +1265,12 @@ public class DerivationCreate {
         }
 
  */
+
+        if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
+        else {
+            model.setPointsPossible(0);
+            pointsPossibleTextField.setText("0");
+        }
 
 
         return model;

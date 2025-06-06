@@ -28,6 +28,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.control.Spinner;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import slapp.editor.DiskUtilities;
 import slapp.editor.PrintUtilities;
@@ -74,6 +75,12 @@ public class SimpleTransExercise implements Exercise<SimpleTransModel, SimpleTra
         transView.setCommentPrefHeight(transModel.getCommentPrefHeight());
         transView.setResponsePrefHeight(transModel.getResponsePrefHeight());
         transView.setInterpretationPrefHeight(transModel.getInterpretationPrefHeight());
+
+        transView.setPointsPossible(transModel.getPointsPossible());
+        if (transModel.getPointsEarned() >= 0) transView.getPointsEarnedTextField().setText(Integer.toString(transModel.getPointsEarned()));
+        transView.getPointsEarnedTextField().textProperty().addListener((ob, ov, nv) -> {
+            exerciseModified = true;
+        });
 
         //statement
         DecoratedRTA statementDRTA = new DecoratedRTA();
@@ -265,7 +272,20 @@ public class SimpleTransExercise implements Exercise<SimpleTransModel, SimpleTra
         commentRTA.setContentAreaWidth(nodeWidth);
         commentRTA.setMinWidth(nodeWidth);
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
-        nodeList.add(commentRTA);
+
+        Node commentNode;
+        if (printModel.getPointsPossible() > 0) {
+            Label pointsLabel = new Label(Integer.toString(printModel.getPointsEarned()) + "/" + Integer.toString(printModel.getPointsPossible()));
+            AnchorPane anchorPane = new AnchorPane(commentRTA, pointsLabel);
+            anchorPane.setTopAnchor(commentRTA, 0.0);
+            anchorPane.setLeftAnchor(commentRTA, 0.0);
+            anchorPane.setBottomAnchor(pointsLabel, 3.0);
+            anchorPane.setRightAnchor(pointsLabel, 3.0);
+            anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
+            commentNode = anchorPane;
+        }
+        else commentNode = commentRTA;
+        nodeList.add(commentNode);
 
         return nodeList;
     }
@@ -279,8 +299,11 @@ public class SimpleTransExercise implements Exercise<SimpleTransModel, SimpleTra
         RichTextArea commentRTA = transView.getExerciseComment().getEditor();
         commentRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document commentDocument = commentRTA.getDocument();
+        int pointsEarned = -1;
+        if (!transView.getPointsEarnedTextField().getText().equals("")) pointsEarned = Integer.parseInt(transView.getPointsEarnedTextField().getText());
         SimpleTransModel originalModel = (SimpleTransModel) (transModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
+        originalModel.setPointsEarned(pointsEarned);
         SimpleTransExercise clearExercise = new SimpleTransExercise(originalModel, mainWindow);
         return clearExercise;
     }
@@ -367,6 +390,10 @@ public class SimpleTransExercise implements Exercise<SimpleTransModel, SimpleTra
         model.setExerciseInterpretation(interpretationDocument);
         model.setInterpretationPrefHeight(transView.getInterpretationPrefHeight());
         model.setInterpretationTextHeight(transModel.getInterpretationTextHeight());
+
+        model.setPointsPossible(transModel.getPointsPossible());
+        if (!transView.getPointsEarnedTextField().getText().equals("")) model.setPointsEarned(Integer.parseInt(transView.getPointsEarnedTextField().getText()));
+        else model.setPointsEarned(-1);
 
 
         boolean started = (transModel.isStarted() || exerciseModified);

@@ -32,6 +32,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -120,6 +121,12 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         truthTableExpView.setCommentPrefHeight(truthTableExpModel.getCommentPrefHeight());
         truthTableExpView.setExplainPrefHeight(truthTableExpModel.getExplainPrefHeight());
         truthTableExpView.setTableRows(tableRows);
+
+        truthTableExpView.setPointsPossible(truthTableExpModel.getPointsPossible());
+        if (truthTableExpModel.getPointsEarned() >= 0) truthTableExpView.getPointsEarnedTextField().setText(Integer.toString(truthTableExpModel.getPointsEarned()));
+        truthTableExpView.getPointsEarnedTextField().textProperty().addListener((ob, ov, nv) -> {
+            exerciseModified = true;
+        });
 
         //statement
         DecoratedRTA statementDRTA = new DecoratedRTA();
@@ -456,7 +463,20 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         commentRTA.setContentAreaWidth(nodeWidth);
         commentRTA.setMinWidth(nodeWidth);
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
-        nodeList.add(commentRTA);
+
+        Node commentNode;
+        if (printModel.getPointsPossible() > 0) {
+            Label pointsLabel = new Label(Integer.toString(printModel.getPointsEarned()) + "/" + Integer.toString(printModel.getPointsPossible()));
+            AnchorPane anchorPane = new AnchorPane(commentRTA, pointsLabel);
+            anchorPane.setTopAnchor(commentRTA, 0.0);
+            anchorPane.setLeftAnchor(commentRTA, 0.0);
+            anchorPane.setBottomAnchor(pointsLabel, 3.0);
+            anchorPane.setRightAnchor(pointsLabel, 3.0);
+            anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
+            commentNode = anchorPane;
+        }
+        else commentNode = commentRTA;
+        nodeList.add(commentNode);
 
         return nodeList;
     }
@@ -470,8 +490,11 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         RichTextArea commentRTA = truthTableExpView.getExerciseComment().getEditor();
         commentRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document commentDocument = commentRTA.getDocument();
+        int pointsEarned = -1;
+        if (!truthTableExpView.getPointsEarnedTextField().getText().equals("")) pointsEarned = Integer.parseInt(truthTableExpView.getPointsEarnedTextField().getText());
         TruthTableExpModel originalModel = (TruthTableExpModel) (truthTableExpModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
+        originalModel.setPointsEarned(pointsEarned);
         TruthTableExpExercise clearExercise = new TruthTableExpExercise(originalModel, mainWindow, true);
         return clearExercise;
     }
@@ -615,6 +638,10 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         model.setbSelected(truthTableExpView.getbCheckBox().isSelected());
 
         model.setTableRows(tableRows);
+
+        model.setPointsPossible(truthTableExpModel.getPointsPossible());
+        if (!truthTableExpView.getPointsEarnedTextField().getText().equals("")) model.setPointsEarned(Integer.parseInt(truthTableExpView.getPointsEarnedTextField().getText()));
+        else model.setPointsEarned(-1);
 
         return model;
     }

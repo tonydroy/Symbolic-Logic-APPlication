@@ -51,6 +51,7 @@ import slapp.editor.vertical_tree.object_models.ObjectControlType;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 import static com.gluonhq.richtextarea.RichTextAreaSkin.KeyMapValue.*;
 import static javafx.scene.control.ButtonType.OK;
@@ -103,6 +104,7 @@ public class VerticalTreeABExpCreate {
 
     private Pane spacerPane;
     private Spinner<Double> statementHeightSpinner;
+    private TextField pointsPossibleTextField;
 
 
     public VerticalTreeABExpCreate(MainWindow mainWindow) {
@@ -125,6 +127,7 @@ public class VerticalTreeABExpCreate {
         aPromptField.setText(originalModel.getaPrompt());
         bPromptField.setText(originalModel.getbPrompt());
         explainPromptField.setText(originalModel.getExplainPrompt());
+        pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
 
         List<DragIconType> dragIconList = originalModel.getDragIconList();
         treeFormulaBoxCheck.setSelected(dragIconList.contains(tree_field));
@@ -224,8 +227,26 @@ public class VerticalTreeABExpCreate {
             if (nv) textFieldInFocus();
         });
 
+        Label pointsPossibleLabel = new Label("Points Possible: ");
+        pointsPossibleLabel.setPrefWidth(95);
+        pointsPossibleTextField = new TextField();
+        pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+        pointsPossibleTextField.setText("0");
+        pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { modified = true; });
+        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
 
-        HBox nameBox = new HBox(10, nameLabel, nameField, explainPromptLabel, explainPromptField);
+
+        HBox nameBox = new HBox(10, nameLabel, nameField, explainPromptLabel, explainPromptField, pointsPossibleLabel, pointsPossibleTextField);
         nameBox.setAlignment(Pos.BASELINE_LEFT);
 
         Label keyboardLabel = new Label("Default Keyboard: ");
@@ -373,7 +394,7 @@ public class VerticalTreeABExpCreate {
         String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
                 "<p>Vertical Tree AB/Explain Exercise is like Vertical Tree Explain Exercise except that it requires a binary choice.  It is appropriate for any exercise that builds tree or map diagrams and requires a choice together with an explanation of the choice.</p>" +
                 "<ul>" +
-                "<li><p>Start with the exercise name and explain prompt.</p></li>" +
+                "<li><p>Start with the exercise name, explain prompt, and points fields.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
                 "<li><p>The checkbox lead appears before the choice boxes, the A prompt with the first box, and the B prompt with the second.</p></li>" +
                 "<li><p>Use checkboxes to select items that may be dragged into the work area (to appear across the top), and then to select controls for functions applied to the formula boxes (to appear down the left).</p>" +
                 "<p>It is unlikely that any one exercise will include all the drag and control options (especially \"star\" and \"annotation\" cannot both apply to the same node) -- but the different options make it possible to accomodate a wide variety of exercises.</p></li>" +
@@ -477,10 +498,10 @@ public class VerticalTreeABExpCreate {
         stage.getIcons().addAll(EditorMain.icons);
 
         stage.setWidth(890);
-        stage.setHeight(800);
+        stage.setHeight(820);
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
         stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 890));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 800));
+        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 820));
 
         stage.initModality(Modality.WINDOW_MODAL);
         stage.setOnCloseRequest(e-> {
@@ -607,6 +628,12 @@ public class VerticalTreeABExpCreate {
         model.setExerciseStatement(statementRTA.getDocument());
         model.setStatementPrefHeight(statementTextHeight + 25);
         model.setStatementTextHeight(statementTextHeight);
+
+        if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
+        else {
+            model.setPointsPossible(0);
+            pointsPossibleTextField.setText("0");
+        }
 
         return model;
     }

@@ -52,6 +52,7 @@ import slapp.editor.page_editor.PageContent;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 import static javafx.scene.control.ButtonType.OK;
 
@@ -99,6 +100,8 @@ public class ABEFGcreate {
     private Pane spacerPane;
     private Spinner<Double> statementHeightSpinner;
 
+    private TextField pointsPossibleTextField;
+
     /**
      * Construct AB/EFG edit create window from scratch
      * @param mainWindow the main window
@@ -120,6 +123,7 @@ public class ABEFGcreate {
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         statementTextHeight = originalModel.getStatementTextHeight();
         nameField.setText(originalModel.getExerciseName());
+        pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
         explainPromptField.setText(originalModel.getContentPrompt());
         ABEFGmodelExtra fields = originalModel.getModelFields();
         leaderABfield.setText(fields.getLeaderAB());
@@ -340,11 +344,31 @@ public class ABEFGcreate {
             if (nv) textFieldInFocus();
         });
 
+        Label pointsPossibleLabel = new Label("Points Possible: ");
+        pointsPossibleLabel.setPrefWidth(100);
+        pointsPossibleTextField = new TextField();
+        pointsPossibleTextField.setMaxWidth(35);
+        pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+        pointsPossibleTextField.setText("0");
+        pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { fieldsModified = true; });
+        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
+
+
+
         Region spacer = new Region();
         spacer.setMinWidth(50);
         GridPane checkboxPane = new GridPane();
-        checkboxPane.addColumn(0, nameLabel, leaderLabelAB, promptLabelA, promptLabelB);
-        checkboxPane.addColumn(1, nameField, leaderABfield, promptFieldA, promptFieldB);
+        checkboxPane.addColumn(0, nameLabel, leaderLabelAB, promptLabelA, promptLabelB, pointsPossibleLabel);
+        checkboxPane.addColumn(1, nameField, leaderABfield, promptFieldA, promptFieldB, pointsPossibleTextField);
         checkboxPane.addColumn(3, spacer);
         checkboxPane.addColumn(5, explainPromptLabel, leaderLabelEFG, promptLabelE, promptLabelF, promptLabelG);
         checkboxPane.addColumn(6, explainPromptField, leaderEFGfield, promptFieldE, promptFieldF, promptFieldG);
@@ -359,13 +383,14 @@ public class ABEFGcreate {
                 "<ul>" +
                 "<li><p>For the AB/EFG Explain exercise you supply the exercise name and, if desired, a prompt to appear in the explanation field.</p></li>" +
                 "<li><p>Then each set of options has a Lead that appears prior to the check boxes, and labels to appear with the check boxes.</p></li>" +
+                "<li><p>If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
                 "<li><p>And, finally, add the exercise statement.</p></li>" +
                 "</ul>";
         WebView helpArea = new WebView();
         WebEngine webEngine = helpArea.getEngine();
         webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
         webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(200);
+        helpArea.setPrefHeight(250);
 
         centerBox = new VBox(10, gridBox, statementRTA, helpArea);
         centerBox.setPadding(new Insets(10,0,10,20));
@@ -568,6 +593,11 @@ public class ABEFGcreate {
 
         ABEFGmodel model = new ABEFGmodel(name, fields,  false, prompt, statementPrefHeight, statementDocument, commentDoc, new ArrayList<PageContent>());
         model.setStatementTextHeight(statementTextHeight);
+        if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
+        else {
+            model.setPointsPossible(0);
+            pointsPossibleTextField.setText("0");
+        }
         return model;
     }
 

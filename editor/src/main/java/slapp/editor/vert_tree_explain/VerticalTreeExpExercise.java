@@ -85,6 +85,12 @@ public class VerticalTreeExpExercise implements Exercise<VerticalTreeExpModel, V
         verticalTreeExpView.setMainPanePrefHeight(verticalTreeExpModel.getMainPanePrefHeight());
         verticalTreeExpView.setMainPanePrefWidth(verticalTreeExpModel.getMainPanePrefWidth());
 
+        verticalTreeExpView.setPointsPossible(verticalTreeExpModel.getPointsPossible());
+        if (verticalTreeExpModel.getPointsEarned() >= 0) verticalTreeExpView.getPointsEarnedTextField().setText(Integer.toString(verticalTreeExpModel.getPointsEarned()));
+        verticalTreeExpView.getPointsEarnedTextField().textProperty().addListener((ob, ov, nv) -> {
+            exerciseModified = true;
+        });
+
 
 
         //statement
@@ -470,7 +476,20 @@ public class VerticalTreeExpExercise implements Exercise<VerticalTreeExpModel, V
         commentRTA.setContentAreaWidth(nodeWidth);
         commentRTA.setMinWidth(nodeWidth);
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
-        nodeList.add(commentRTA);
+
+        Node commentNode;
+        if (printModel.getPointsPossible() > 0) {
+            Label pointsLabel = new Label(Integer.toString(printModel.getPointsEarned()) + "/" + Integer.toString(printModel.getPointsPossible()));
+            AnchorPane anchorPane = new AnchorPane(commentRTA, pointsLabel);
+            anchorPane.setTopAnchor(commentRTA, 0.0);
+            anchorPane.setLeftAnchor(commentRTA, 0.0);
+            anchorPane.setBottomAnchor(pointsLabel, 3.0);
+            anchorPane.setRightAnchor(pointsLabel, 3.0);
+            anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
+            commentNode = anchorPane;
+        }
+        else commentNode = commentRTA;
+        nodeList.add(commentNode);
 
         return nodeList;
     }
@@ -480,8 +499,11 @@ public class VerticalTreeExpExercise implements Exercise<VerticalTreeExpModel, V
         RichTextArea commentRTA = verticalTreeExpView.getExerciseComment().getEditor();
         commentRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document commentDocument = commentRTA.getDocument();
+        int pointsEarned = -1;
+        if (!verticalTreeExpView.getPointsEarnedTextField().getText().equals("")) pointsEarned = Integer.parseInt(verticalTreeExpView.getPointsEarnedTextField().getText());
         VerticalTreeExpModel originalModel = (VerticalTreeExpModel) (verticalTreeExpModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
+        originalModel.setPointsEarned(pointsEarned);
         VerticalTreeExpExercise clearExercise = new VerticalTreeExpExercise(originalModel, mainWindow);
         return clearExercise;
     }
@@ -641,6 +663,11 @@ public class VerticalTreeExpExercise implements Exercise<VerticalTreeExpModel, V
                 model.getMapQuestionMarkers().add(qMod);
             }  
         }
+
+        model.setPointsPossible(verticalTreeExpModel.getPointsPossible());
+        if (!verticalTreeExpView.getPointsEarnedTextField().getText().equals("")) model.setPointsEarned(Integer.parseInt(verticalTreeExpView.getPointsEarnedTextField().getText()));
+        else model.setPointsEarned(-1);
+
         return model;
     }
 

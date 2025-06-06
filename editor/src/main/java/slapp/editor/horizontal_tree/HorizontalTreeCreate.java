@@ -47,6 +47,7 @@ import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
 
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 import static javafx.scene.control.ButtonType.OK;
 
@@ -79,6 +80,7 @@ public class HorizontalTreeCreate {
 
     private Pane spacerPane;
     private Spinner<Double> statementHeightSpinner;
+    private TextField pointsPossibleTextField;
 
 
     /**
@@ -104,6 +106,8 @@ public class HorizontalTreeCreate {
         nameField.setText(originalModel.getExerciseName());
         promptField.setText(originalModel.getExplainPrompt());
         nameField.textProperty().addListener(nameListener);
+        pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
+
         fieldModified = false;
     }
 
@@ -199,20 +203,46 @@ public class HorizontalTreeCreate {
         HBox promptBox = new HBox(promptLabel, promptField);
         promptBox.setAlignment(Pos.BASELINE_LEFT);
 
-        topFieldsBox = new VBox(15, nameBox, promptBox);
+
+
+        //points possible
+        Label pointsPossibleLabel = new Label("Points Possible: ");
+        pointsPossibleLabel.setPrefWidth(100);
+        pointsPossibleTextField = new TextField();
+        pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String text = change.getText();
+            if (text.matches("[0-9]*")) {
+                return change;
+            }
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+        pointsPossibleTextField.setText("0");
+        pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { fieldModified = true; });
+        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
+        HBox pointsBox = new HBox(pointsPossibleLabel, pointsPossibleTextField);
+        pointsBox.setAlignment(Pos.CENTER_LEFT);
+
+        topFieldsBox = new VBox(15, nameBox, promptBox, pointsBox);
         topFieldsBox.setPadding(new Insets(20, 0,20, 0));
 
         //help area
         String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
-                "<p>The Horizontal Tree Explain Exercise is appropriate for exercises that involve horizontal trees (of the sort that appear in Chapter 4 of <em>Symbolic Logic</em>), along with an explanation of some sort.</p>" +
+                "<p>The Horizontal Tree Explain Exercise is appropriate for exercises that involve horizontal trees (of the sort that appear in Chapter 4 of <em>Symbolic Logic</em>), along with an explanation of some sort.  Setup of these exercises is especially easy: </p>" +
                 "<ul>" +
-                "<li><p>Setup of these exercises is especially easy: Provide the exercise name, a prompt for the explain field, and the exercise statement.</p></li>" +
+                "<li><p>Provide the exercise name.</p></li>" +
+                "<li><p>Provide a prompt for the explain field.</p></li>" +
+                "<li><p>If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
+                "<li><p>And, finally, provided the exercise statement.</p></li>" +
                 "</ul>";
         WebView helpArea = new WebView();
         WebEngine webEngine = helpArea.getEngine();
         webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
         webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(120);
+        helpArea.setPrefHeight(230);
 
         //center
         centerBox = new VBox(10, topFieldsBox, statementRTA, helpArea);
@@ -283,11 +313,11 @@ public class HorizontalTreeCreate {
         stage.setTitle("Create Horizontal Tree Explain Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
         stage.setWidth(890);
-        stage.setHeight(700);
+        stage.setHeight(780);
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
         stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 890));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 700));
+        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 780));
         stage.initModality(Modality.WINDOW_MODAL);
         stage.setOnCloseRequest(e-> {
             e.consume();
@@ -404,6 +434,13 @@ public class HorizontalTreeCreate {
         model.setExerciseStatement(statementRTA.getDocument());
         model.setStatementPrefHeight(statementTextHeight + 25);
         model.setStatementTextHeight(statementTextHeight);
+
+        if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
+        else {
+            model.setPointsPossible(0);
+            pointsPossibleTextField.setText("0");
+        }
+
         return model;
     }
 
