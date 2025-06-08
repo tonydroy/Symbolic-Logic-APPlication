@@ -402,6 +402,7 @@ class ParagraphTile extends HBox {
             textFlow.setOnMousePressed(this::mousePressedListener);
 
             caretShape.setFocusTraversable(false);
+            caretShape.setManaged(false);
             caretShape.getStyleClass().add("caret");
             selectionShape.getStyleClass().setAll("selection");
             textBackgroundColorPaths.addListener(this::updateLayer);
@@ -413,9 +414,7 @@ class ParagraphTile extends HBox {
 
         @Override
         protected double computePrefHeight(double width) {
-            // take into account caret height: whether it is visible or not,
-            // the layer's height doesn't change
-            return Math.max(caretShape.getLayoutBounds().getHeight(), textFlow.prefHeight(textFlow.getPrefWidth()) + 1);
+            return textFlow.prefHeight(textFlow.getPrefWidth()) + 1;
         }
 
         @Override

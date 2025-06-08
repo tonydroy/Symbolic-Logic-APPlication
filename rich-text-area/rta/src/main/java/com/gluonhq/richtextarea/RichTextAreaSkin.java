@@ -112,6 +112,8 @@ import static com.gluonhq.richtextarea.CharModification.*;
 import static com.gluonhq.richtextarea.CharModification.SLASH;
 import static com.gluonhq.richtextarea.viewmodel.RichTextAreaViewModel.Direction;
 import static java.util.Map.entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.scene.input.KeyCode;
 
 import static javafx.scene.input.KeyCode.*;
@@ -123,6 +125,8 @@ import static javafx.scene.text.FontWeight.NORMAL;
 
 public class RichTextAreaSkin extends SkinBase<RichTextArea> {
     private RichTextArea control;
+
+    static final Logger LOG = Logger.getLogger(RichTextAreaSkin.class.getName());
 
     interface ActionBuilder extends Function<KeyEvent, ActionCmd>{}
 
@@ -564,6 +568,8 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
                 getSkinnable().decorationAtCaret.bind(viewModel.decorationAtCaretProperty());
                 getSkinnable().decorationAtParagraph.bind(viewModel.decorationAtParagraphProperty());
                 caretPositionProperty.bind(viewModel.caretPositionProperty());
+                getSkinnable().caretOriginProperty.bind(caretOriginProperty);
+                getSkinnable().caretRowColumnProperty.bind(caretRowColumnProperty);
                 promptNode.visibleProperty().bind(promptVisibleBinding);
                 promptNode.fontProperty().bind(promptFontBinding);
             } else {
@@ -575,6 +581,8 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
                 getSkinnable().decorationAtCaret.unbind();
                 getSkinnable().decorationAtParagraph.unbind();
                 caretPositionProperty.unbind();
+                getSkinnable().caretOriginProperty.unbind();
+                getSkinnable().caretRowColumnProperty.unbind();
                 promptNode.visibleProperty().unbind();
                 promptNode.fontProperty().unbind();
             }
@@ -597,7 +605,17 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
         }
     };
 
-    final ObjectProperty<Point2D> caretOriginProperty = new SimpleObjectProperty<>(this, "caretOrigin", DEFAULT_POINT_2D);
+    final ObjectProperty<Point2D> caretOriginProperty = new SimpleObjectProperty<>(this, "caretOrigin", DEFAULT_POINT_2D) {
+        @Override
+        protected void invalidated() {
+            viewModel.getParagraphWithCaret().ifPresentOrElse(p -> {
+                int row = viewModel.getParagraphList().indexOf(p);
+                int col = caretPositionProperty.get() - p.getStart();
+                caretRowColumnProperty.set(new Point2D(col, row));
+            }, () -> caretRowColumnProperty.set(DEFAULT_POINT_2D));
+        }
+    };
+    private final ObjectProperty<Point2D> caretRowColumnProperty = new SimpleObjectProperty<>(this, "caretRowColumn", DEFAULT_POINT_2D);
 
     private final ObjectBinding<Font> promptFontBinding = Bindings.createObjectBinding(this::getPromptNodeFont,
             viewModel.decorationAtCaretProperty(), viewModel.decorationAtParagraphProperty());
@@ -1142,6 +1160,7 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
     }
 
     private void keyPressedListener(KeyEvent e) {
+        long a0 = System.nanoTime();
         //Print character assigned to key
         for (KeyCombination kc : keyPressedCharMap.keySet()) {
             if (kc.match(e)) {
@@ -1163,9 +1182,15 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
                 return;
             }
         }
+        if (LOG.isLoggable(Level.FINEST)) {
+            long a1 = System.nanoTime();
+            LOG.finest("KeyPressed processed in " + (a1 - a0) + "ns");
+        }
+
     }
 
     private void keyTypedListener(KeyEvent e) {
+        long a0 = System.nanoTime();
         if (e.isAltDown() || e.isShortcutDown()) return;
         String text;
         //Print character mapped to key
@@ -1193,6 +1218,11 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
             sendKeyboardContent(text);
             e.consume();
         }
+        if (LOG.isLoggable(Level.FINEST)) {
+            long a1 = System.nanoTime();
+            LOG.finest("KeyTyped processed in "+ (a1-a0) + "ns");
+        }
+
     }
 
     private void sendKeyboardContent(String s) {
@@ -2231,13 +2261,13 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
 
 
 
-                entry(new KeyCodeCombination(KeyCode.N, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\u2039"),             //french quote left
-                entry(new KeyCodeCombination(KeyCode.M, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\u203a"),             //french quote right
+                entry(new KeyCodeCombination(KeyCode.N, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ue89b"),             //x with dot
+                entry(new KeyCodeCombination(KeyCode.M, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ue89c"),             //y with dot
 
 
-                entry(new KeyCodeCombination(KeyCode.COMMA, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\u27e8"),     //left angle bracket
+                entry(new KeyCodeCombination(KeyCode.COMMA, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ue89d"),     //z with dot
                 entry(new KeyCodeCombination(KeyCode.PERIOD, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\u27e9"),         //right angle bracket
-                entry(new KeyCodeCombination(KeyCode.SLASH, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ue89b")             //x with dot
+                entry(new KeyCodeCombination(KeyCode.SLASH, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\u27e8")             //left angle bracket
         );
     }
 

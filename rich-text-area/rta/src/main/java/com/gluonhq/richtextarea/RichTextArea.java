@@ -49,6 +49,7 @@ import javafx.beans.property.StringProperty;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Control;
 import javafx.scene.control.SkinBase;
@@ -72,6 +73,8 @@ import java.util.function.Function;
  *
  * A list of {@link com.gluonhq.richtextarea.model.DecorationModel} and the full text forms the {@link Document}, which
  * is the model that ultimately the control renders.
+ *
+ * slapp version based on v1.2.2
  *
  */
 public class RichTextArea extends Control {
@@ -324,12 +327,37 @@ public class RichTextArea extends Control {
     }
 
     /**
-     * The current position of the caret within the text.
+     * The current position of the caret within the text, in terms of characters.
      */
     final ReadOnlyIntegerWrapper caretPosition = new ReadOnlyIntegerWrapper(this, "caretPosition", 0);
     public final int getCaretPosition() { return caretPosition.get(); }
     public final ReadOnlyIntegerProperty caretPositionProperty() { return caretPosition.getReadOnlyProperty(); }
 
+    /**
+     * The current location of the caret node, in RTA local coordinates.
+     */
+    final ReadOnlyObjectWrapper<Point2D> caretOriginProperty = new ReadOnlyObjectWrapper<>(this, "caretOrigin", new Point2D(-1, -1));
+    public final ReadOnlyObjectProperty<Point2D> caretOriginProperty() {
+        return caretOriginProperty.getReadOnlyProperty();
+    }
+    public final Point2D getCaretOrigin() {
+        return caretOriginProperty.get();
+    }
+
+    /**
+     * A Point2D, with x for column and y for row, with integer values, for a given position of the caret.
+     * Column is defined by the number of characters from the beginning of the paragraph to the current position
+     * of the caret, starting in 0 (or -1 if the control has no text).
+     * Row is defined by the number of paragraph the caret is placed in, starting in 0 (or -1 if the controlMore actions
+     * has no text).
+     */
+    final ReadOnlyObjectWrapper<Point2D> caretRowColumnProperty = new ReadOnlyObjectWrapper<>(this, "caretRowColumn", Point2D.ZERO);
+    public final ReadOnlyObjectProperty<Point2D> caretRowColumnProperty() {
+        return caretRowColumnProperty.getReadOnlyProperty();
+    }
+    public final Point2D getCaretRowColumn() {
+        return caretRowColumnProperty.get();
+    }
 
     /**
      * The current decoration at the caret.

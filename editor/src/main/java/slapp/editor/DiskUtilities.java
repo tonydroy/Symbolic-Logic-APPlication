@@ -238,15 +238,18 @@ public class DiskUtilities {
         Object exerciseModelObject = null;
 
         if (fileToOpen != null) {
-            exerciseDirectory = fileToOpen.getParentFile();
-            try (FileInputStream fi = new FileInputStream(fileToOpen); ObjectInputStream oi = new ObjectInputStream(fi);) {
-                exerciseModelObject = oi.readObject();
-                recentExerciseFiles.add(fileToOpen);
+            if (fileToOpen.exists() && !fileToOpen.isDirectory()) {
+                exerciseDirectory = fileToOpen.getParentFile();
+                try (FileInputStream fi = new FileInputStream(fileToOpen); ObjectInputStream oi = new ObjectInputStream(fi);) {
+                    exerciseModelObject = oi.readObject();
+                    recentExerciseFiles.add(fileToOpen);
 
-            } catch (IOException | ClassNotFoundException  e) {
-   //                            e.printStackTrace();
-                EditorAlerts.showSimpleAlert("Error opening file", fileToOpen.getName() + " is not compatible with this version of SLAPP.\nCannot open.");
+                } catch (IOException | ClassNotFoundException e) {
+                    //                            e.printStackTrace();
+                    EditorAlerts.showSimpleAlert("Error opening file", fileToOpen.getPath() + " is not compatible with this version of SLAPP.\nCannot open.");
+                }
             }
+            else EditorAlerts.fleetingRedPopup("Cannot find " + fileToOpen.getPath() + ".");
         }
 
         return exerciseModelObject;
@@ -274,14 +277,17 @@ public class DiskUtilities {
         Assignment assignment = null;
 
         if (fileToOpen != null) {
-            assignmentDirectory = fileToOpen.getParentFile();
-            try (FileInputStream fi = new FileInputStream(fileToOpen); ObjectInputStream oi = new ObjectInputStream(fi);) {
-                assignment = (Assignment) oi.readObject();
-                recentAssignmentFiles.add(fileToOpen);
-            } catch (IOException | ClassNotFoundException e) {
+            if (fileToOpen.exists() && !fileToOpen.isDirectory()) {
+                assignmentDirectory = fileToOpen.getParentFile();
+                try (FileInputStream fi = new FileInputStream(fileToOpen); ObjectInputStream oi = new ObjectInputStream(fi);) {
+                    assignment = (Assignment) oi.readObject();
+                    recentAssignmentFiles.add(fileToOpen);
+                } catch (IOException | ClassNotFoundException e) {
 //                e.printStackTrace();
-                EditorAlerts.showSimpleAlert("Error opening file", fileToOpen.getName() + " is not compatible with this version of SLAPP.\nCannot open.");
+                    EditorAlerts.showSimpleAlert("Error opening file", fileToOpen.getPath() + " is not compatible with this version of SLAPP.\nCannot open.");
+                }
             }
+            else EditorAlerts.fleetingRedPopup("Cannot find " + fileToOpen.getPath() + ".");
         }
 
         return assignment;

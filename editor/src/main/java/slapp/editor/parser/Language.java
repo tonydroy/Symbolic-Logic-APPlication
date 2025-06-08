@@ -239,6 +239,8 @@ public class Language implements Serializable {
         newVars.addAll(variables);
         newVars.add("\u1e8f");
         newVars.add("\ue89b");
+        newVars.add("\ue89c");
+        newVars.add("\ue89d");
         return newVars;
     }
 

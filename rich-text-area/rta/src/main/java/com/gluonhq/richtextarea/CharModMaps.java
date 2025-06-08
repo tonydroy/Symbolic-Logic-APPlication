@@ -1870,6 +1870,8 @@ public class CharModMaps {
                 entry("|", "\ue898"), //
                 entry("<", "\u226e"), //
                 entry(">", "\u226f"), //
+                entry(",", "\u2039"),     //french left
+                entry(".", "\u203a"),     //french right
 
                 //italic
                 entry("\ud835\udc50", "\ue855"),      //c  *
@@ -1883,6 +1885,7 @@ public class CharModMaps {
                 entry("\ud835\udc43", "\ud835\udcab"),  //P  *
                 entry("\ud835\udc46", "\ue852"),      //S  *
                 entry("\ud835\udc48", "\ue856"),      //U  *
+
 
                 //Special
                 entry("\u21d2", "\ue876"),      //meta arrow
@@ -1951,6 +1954,8 @@ public class CharModMaps {
                 entry("|", "\ue898"), //
                 entry("<", "\u226e"), //
                 entry(">", "\u226f"), //
+                entry(",", "\u2039"),     //french left
+                entry(".", "\u203a"),     //french right
 
                 //script
                 entry("\ud835\udcb8", "\ue855"),      //c  *
@@ -2031,6 +2036,8 @@ public class CharModMaps {
                 entry("|", "\ue898"), //
                 entry("<", "\u226e"), //
                 entry(">", "\u226f"), //
+                entry(",", "\u2039"),     //french left
+                entry(".", "\u203a"),     //french right
 
                 //sans
                 entry("\ud835\uddbc", "\ue855"),      //c  *
@@ -2111,6 +2118,8 @@ public class CharModMaps {
                 entry("|", "\ue898"), //
                 entry("<", "\u226e"), //
                 entry(">", "\u226f"), //
+                entry(",", "\u2039"),     //french left
+                entry(".", "\u203a"),     //french right
 
                 //sans
                 entry("\ud835\uddbc", "\ue855"),      //c  *
@@ -2191,6 +2200,8 @@ public class CharModMaps {
                 entry("|", "\ue898"), //
                 entry("<", "\u226e"), //
                 entry(">", "\u226f"), //
+                entry(",", "\u2039"),     //french left
+                entry(".", "\u203a"),     //french right
 
                 //bb
                 entry("\uf895", "\ue855"),      //c  *
@@ -2271,6 +2282,8 @@ public class CharModMaps {
                 entry("|", "\ue898"), //
                 entry("<", "\u226e"), //
                 entry(">", "\u226f"), //
+                entry(",", "\u2039"),     //french left
+                entry(".", "\u203a"),     //french right
 
                 //italic
                 entry("\ud835\udc50", "\ue855"),      //c  *
@@ -2351,6 +2364,8 @@ public class CharModMaps {
                 entry("|", "\ue898"), //
                 entry("<", "\u226e"), //
                 entry(">", "\u226f"), //
+                entry(",", "\u2039"),     //french left
+                entry(".", "\u203a"),     //french right
 
                 //sans
                 entry("\ud835\uddbc", "\ue855"),      //c  *
@@ -2430,6 +2445,8 @@ public class CharModMaps {
                 entry("|", "\ue898"), //
                 entry("<", "\u226e"), //
                 entry(">", "\u226f"), //
+                entry(",", "\u2039"),     //french left
+                entry(".", "\u203a"),     //french right
 
                 //frak
                 entry("\ud835\udd20", "\ue855"),      //c  *

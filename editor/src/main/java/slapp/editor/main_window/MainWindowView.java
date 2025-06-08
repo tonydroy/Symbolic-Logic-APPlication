@@ -805,10 +805,10 @@ public class MainWindowView {
 
         String textString = "<body style=\"margin-left:10; margin-right: 20\">" +
                 "<h3>Instructor Functions</h3>" +
-                "<p> Instructor functions include activation of the 'Create New' and 'Create Revised' options for Exercises and Assignments, " +
-                "along with removal of limits on exercise check and help options.  These options are explained in the Instructor Help Video.</p>" +
+                "<p> Instructor functions include activation of the 'Create New' and 'Create Revised' options for Exercises and Assignments, activation of exercise points earned fields, and " +
+                "removal of limits on exercise check and help options.  These options are explained in the Instructor Help Video.</p>" +
                 "<p> Instructor functions require a license key which you can <a href=\"https://tonyroyphilosophy.net/sl-answers-to-exercises-password-request/\">request here</a> and submit below.  "+
-                "After registration, the functions are enabled and disabled by the small checkbox on the lower left of the SLAPP opening page.</p>";
+                "After registration, the functions are enabled and disabled by the small checkbox below.</p>";
 
         WebView textArea = new WebView();
         WebEngine webEngine = textArea.getEngine();
