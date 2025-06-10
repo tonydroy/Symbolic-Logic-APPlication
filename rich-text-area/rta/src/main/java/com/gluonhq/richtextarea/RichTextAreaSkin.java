@@ -1160,7 +1160,7 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
     }
 
     private void keyPressedListener(KeyEvent e) {
-        long a0 = System.nanoTime();
+ //       long a0 = System.nanoTime();
         //Print character assigned to key
         for (KeyCombination kc : keyPressedCharMap.keySet()) {
             if (kc.match(e)) {
@@ -1182,15 +1182,18 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
                 return;
             }
         }
+        /*
         if (LOG.isLoggable(Level.FINEST)) {
             long a1 = System.nanoTime();
             LOG.finest("KeyPressed processed in " + (a1 - a0) + "ns");
         }
 
+         */
+
     }
 
     private void keyTypedListener(KeyEvent e) {
-        long a0 = System.nanoTime();
+   //     long a0 = System.nanoTime();
         if (e.isAltDown() || e.isShortcutDown()) return;
         String text;
         //Print character mapped to key
@@ -1218,14 +1221,18 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
             sendKeyboardContent(text);
             e.consume();
         }
+        /*
         if (LOG.isLoggable(Level.FINEST)) {
             long a1 = System.nanoTime();
             LOG.finest("KeyTyped processed in "+ (a1-a0) + "ns");
         }
 
+         */
+
     }
 
     private void sendKeyboardContent(String s) {
+
         paragraphListView.resetCaret();
         if (viewModel.getSelection().isDefined()) {
             execute(ACTION_CMD_FACTORY.replaceText(s));

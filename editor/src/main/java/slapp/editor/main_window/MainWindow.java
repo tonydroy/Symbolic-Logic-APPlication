@@ -138,16 +138,12 @@ public class MainWindow {
         if (slappUsrData.getRecentExercises() != null) {
             LimitedQueue<File> recents = slappUsrData.getRecentExercises();
             DiskUtilities.setRecentExerciseFiles(recents);
-            for (File file : recents ) {
-                addRecentExerciseItem(file);
-            }
+            updateRecentExercises();
         }
         if (slappUsrData.getRecentAssignments() != null) {
             LimitedQueue<File> recents = slappUsrData.getRecentAssignments();
             DiskUtilities.setRecentAssignmentFiles(recents);
-            for (File file : recents ) {
-                addRecentAssignmentItem(file);
-            }
+            updateRecentAssignments();
         }
 
 
@@ -316,26 +312,27 @@ public class MainWindow {
 
     }
 
-    private void addRecentExerciseItem(File file) {
-
-        MenuItem newMenuItem = new MenuItem(file.getAbsolutePath());
-        newMenuItem.setMnemonicParsing(false);
-        newMenuItem.setOnAction(e -> mainWindow.openExercise(file));
+    private void updateRecentExercises() {
         Menu recentExerciseMenu = mainView.getRecentExerciseMenu();
-        recentExerciseMenu.getItems().add(0, newMenuItem);
-        while (recentExerciseMenu.getItems().size() > 5) {
-            recentExerciseMenu.getItems().remove(recentExerciseMenu.getItems().size() - 1);
+        recentExerciseMenu.getItems().clear();
+        for (int i = DiskUtilities.getRecentExerciseFiles().size() - 1; i >= 0; i--) {
+            File file = DiskUtilities.getRecentExerciseFiles().get(i);
+            MenuItem newMenuItem = new MenuItem(file.getAbsolutePath());
+            newMenuItem.setMnemonicParsing(false);
+            newMenuItem.setOnAction(e -> mainWindow.openExercise(file));
+            recentExerciseMenu.getItems().add(newMenuItem);
         }
     }
 
-    private void addRecentAssignmentItem(File file) {
-        MenuItem newMenuItem = new MenuItem(file.getAbsolutePath());
-        newMenuItem.setOnAction(e -> mainWindow.openAssignment(file));
-        newMenuItem.setMnemonicParsing(false);
+    private void updateRecentAssignments() {
         Menu recentAssignmentMenu = mainView.getRecentAssignmentMenu();
-        recentAssignmentMenu.getItems().add(0, newMenuItem);
-        while (recentAssignmentMenu.getItems().size() > 5) {
-            recentAssignmentMenu.getItems().remove(recentAssignmentMenu.getItems().size() - 1);
+        recentAssignmentMenu.getItems().clear();
+        for (int i = DiskUtilities.getRecentAssignmentFiles().size() - 1; i >= 0; i--) {
+            File file = DiskUtilities.getRecentAssignmentFiles().get(i);
+            MenuItem newMenuItem = new MenuItem(file.getAbsolutePath());
+            newMenuItem.setMnemonicParsing(false);
+            newMenuItem.setOnAction(e -> mainWindow.openAssignment(file));
+            recentAssignmentMenu.getItems().add(newMenuItem);
         }
     }
 
@@ -382,9 +379,7 @@ public class MainWindow {
 
                 Object exerciseModelObject = DiskUtilities.openExerciseModelObject();
                 if (exerciseModelObject != null) {
-                    List<File> recents = DiskUtilities.getRecentExerciseFiles();
-                    addRecentExerciseItem(recents.get(recents.size() - 1));
-
+                    updateRecentExercises();
                     TypeSelectorFactories typeFactories = new TypeSelectorFactories(this);
                     typeFactories.createRevisedExerciseFromModelObject(exerciseModelObject);
                     isExerciseOpen = false;
@@ -484,9 +479,7 @@ public class MainWindow {
 
 
                 if (exerciseModelObject != null) {
-                    List<File> recents = DiskUtilities.getRecentExerciseFiles();
-                    addRecentExerciseItem(recents.get(recents.size() - 1));
-
+                    updateRecentExercises();
                     TypeSelectorFactories typeFactories = new TypeSelectorFactories(this);
                     Exercise exercise = typeFactories.getExerciseFromModelObject(exerciseModelObject);
                     if (exercise != null) {
@@ -684,9 +677,7 @@ public class MainWindow {
                     assignment = DiskUtilities.openAssignmentFromFile(assignmentFile);
 
                 if (assignment != null) {
-                    List<File> recents = DiskUtilities.getRecentAssignmentFiles();
-                    addRecentAssignmentItem(recents.get(recents.size() - 1));
-
+                    updateRecentAssignments();
                     if (!assignment.hasCompletedHeader()) {
                         UpdateAssignmentHeader headerUpdater = new UpdateAssignmentHeader(assignment.getHeader());
                         assignment.setHeader(headerUpdater.updateHeader());
@@ -868,9 +859,7 @@ public class MainWindow {
                  isExerciseOpen = false;
                 Assignment assignment = DiskUtilities.openAssignment();
                 if (assignment != null) {
-                    List<File> recents = DiskUtilities.getRecentAssignmentFiles();
-                    addRecentAssignmentItem(recents.get(recents.size() - 1));
-
+                    updateRecentAssignments();
                     if (!assignment.hasCompletedHeader()) {
                         currentAssignment = null;
                         new CreateAssignment(assignment, this);

@@ -242,7 +242,7 @@ public class DiskUtilities {
                 exerciseDirectory = fileToOpen.getParentFile();
                 try (FileInputStream fi = new FileInputStream(fileToOpen); ObjectInputStream oi = new ObjectInputStream(fi);) {
                     exerciseModelObject = oi.readObject();
-                    recentExerciseFiles.add(fileToOpen);
+                    if (!recentExerciseFiles.get(recentExerciseFiles.size() - 1).getPath().equals(fileToOpen.getPath())) recentExerciseFiles.add(fileToOpen);
 
                 } catch (IOException | ClassNotFoundException e) {
                     //                            e.printStackTrace();
@@ -281,7 +281,7 @@ public class DiskUtilities {
                 assignmentDirectory = fileToOpen.getParentFile();
                 try (FileInputStream fi = new FileInputStream(fileToOpen); ObjectInputStream oi = new ObjectInputStream(fi);) {
                     assignment = (Assignment) oi.readObject();
-                    recentAssignmentFiles.add(fileToOpen);
+                    if (!recentAssignmentFiles.get(recentAssignmentFiles.size() - 1).getPath().equals(fileToOpen.getPath())) recentAssignmentFiles.add(fileToOpen);
                 } catch (IOException | ClassNotFoundException e) {
 //                e.printStackTrace();
                     EditorAlerts.showSimpleAlert("Error opening file", fileToOpen.getPath() + " is not compatible with this version of SLAPP.\nCannot open.");

@@ -372,6 +372,10 @@ public class ExpMapFormulaBox extends AnchorPane {
             if (e.getCode() == KeyCode.ENTER) e.consume();
         });
 
+        rtaSkin.nodesWidthProperty().addListener((observable, oldValue, newValue) -> {
+            Platform.runLater(() -> rta.getParent().requestLayout());
+        });
+
 
  //       rta.setContentAreaWidth(500);
        rta.getStylesheets().add("greenFormulaBox.css");

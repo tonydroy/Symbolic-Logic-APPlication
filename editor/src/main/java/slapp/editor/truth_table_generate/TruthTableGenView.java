@@ -17,6 +17,7 @@ package slapp.editor.truth_table_generate;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.geometry.Insets;
@@ -527,6 +528,9 @@ public class TruthTableGenView implements ExerciseView<DecoratedRTA> {
 
         RichTextAreaSkin rtaSkin = (RichTextAreaSkin) rta.getSkin();
         rta.prefWidthProperty().bind(Bindings.max(Bindings.add(rtaSkin.nodesWidthProperty(), 6), 100));
+        rtaSkin.nodesWidthProperty().addListener((observable, oldValue, newValue) -> {
+            Platform.runLater(() -> rta.getParent().requestLayout());
+        });
         rta.addEventFilter(KeyEvent.ANY, e -> {
             if (e.getCode() == KeyCode.ENTER) e.consume();
         });

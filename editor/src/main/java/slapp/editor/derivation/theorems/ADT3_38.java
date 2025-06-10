@@ -129,7 +129,7 @@ public class ADT3_38 extends Theorem {
         }
         catch (TextMessageException e) {}
 
-        return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("Line (" + line.getLineNumberLabel().getText() + ") is not an instance of " + getName() + ".\n (SLAPP recognizes " + getName() + " only for 1-, 2- and 3-place relation symbols).")));
+        return new Pair(false, Collections.singletonList(ParseUtilities.newRegularText("Line (" + line.getLineNumberLabel().getText() + ") is not an instance of " + getName() + ".")));
 
 
     }

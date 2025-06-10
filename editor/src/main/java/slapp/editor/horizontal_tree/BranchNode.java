@@ -20,6 +20,7 @@ import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.action.TextDecorateAction;
 import com.gluonhq.richtextarea.model.ParagraphDecoration;
 import com.gluonhq.richtextarea.model.TextDecoration;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -267,7 +268,12 @@ public class BranchNode extends HBox {
         rta.setMinHeight(formulaBoxHeight);
 
         RichTextAreaSkin rtaSkin = (RichTextAreaSkin) rta.getSkin();
-        rta.prefWidthProperty().bind(Bindings.max(Bindings.add(rtaSkin.nodesWidthProperty(), 8), 12));
+        rta.prefWidthProperty().bind(Bindings.max(Bindings.add(rtaSkin.nodesWidthProperty(), 6), 12));
+
+        rtaSkin.nodesWidthProperty().addListener((observable, oldValue, newValue) -> {
+            Platform.runLater(() -> rta.getParent().requestLayout());
+        });
+
         rta.prefWidthProperty().addListener((ob, ov, nv) -> {
             horizontalTreeView.refreshTreePanes();
         });

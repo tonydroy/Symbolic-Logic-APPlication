@@ -17,6 +17,7 @@ package slapp.editor.vert_tree_abefexplain;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -369,6 +370,9 @@ public class ABEFExpMapFormulaBox extends AnchorPane {
 
         RichTextAreaSkin rtaSkin = (RichTextAreaSkin) rta.getSkin();
         rta.prefWidthProperty().bind(Bindings.max(Bindings.add(rtaSkin.nodesWidthProperty(), 6), 12));
+        rtaSkin.nodesWidthProperty().addListener((observable, oldValue, newValue) -> {
+            Platform.runLater(() -> rta.getParent().requestLayout());
+        });
         rta.addEventFilter(KeyEvent.ANY, e -> {
             if (e.getCode() == KeyCode.ENTER) e.consume();
         });
