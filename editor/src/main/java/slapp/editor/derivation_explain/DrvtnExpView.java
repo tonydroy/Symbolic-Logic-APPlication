@@ -298,7 +298,7 @@ public class DrvtnExpView implements ExerciseView<DecoratedRTA> {
 
        //split pane
         double splitPaneInitialWidth = Math.round(splitPanePrefWidth / mainView.getScalePageWidth() * 20.0) * 5.0;
-        splitPaneWidthSpinner = new Spinner<>(100.0, 999.0, splitPaneInitialWidth, 5.0);
+        splitPaneWidthSpinner = new Spinner<>(70.0, 999.0, splitPaneInitialWidth, 5.0);
         splitPaneWidthSpinner.setPrefWidth(65);
         splitPaneWidthSpinner.setDisable(false);
         splitPaneWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
@@ -487,6 +487,11 @@ public class DrvtnExpView implements ExerciseView<DecoratedRTA> {
                 rta.setMinHeight(contentRowHeight);
                 rta.setPrefWidth(100);
                 rta.getStylesheets().add("slappDerivation.css");
+
+                if (viewLine.isLineHighlight()) {
+                    rta.getStylesheets().clear();
+                    rta.getStylesheets().add("slappDerivationHighlight.css");
+                }
 
                 contentBox = bdrta.getBoxedRTA();
                 contentBox.setHgrow(bdrta.getRTA(), Priority.ALWAYS);

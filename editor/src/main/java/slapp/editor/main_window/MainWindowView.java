@@ -855,7 +855,7 @@ public class MainWindowView {
         textArea.setPrefWidth(500);
 
         Button videoButton = new Button("Play Instructor Help Video");
-        videoButton.setOnAction(e -> mainWindow.videoHelp("https://www.slappservices.net/instructor/instructor_player.html", 900, 537));
+        videoButton.setOnAction(e -> mainWindow.videoHelp("https://www.slappservices.net/instructor/instructor_player.html", 900, 591));
         TextField licenseField = new TextField();
         licenseField.setPromptText("License Key");
         licenseField.setPrefWidth(250);

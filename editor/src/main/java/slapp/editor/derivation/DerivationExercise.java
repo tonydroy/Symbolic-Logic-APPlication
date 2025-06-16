@@ -256,6 +256,8 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
 
 
 
+
+
             Stage metaHelpStage = derivationView.getMetaLangStage();
             if (metaHelpStage != null && metaHelpStage.isShowing()) metaHelpStage.close();
             else derivationView.showMetalanguageHelp(mainWindow.getSlappProgData().getMetalanguageHelp());
@@ -430,7 +432,8 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
                 if (charIsDigit(justificationString.charAt(j)) == buildingDigit) {
                     builder.append(justificationString.charAt(j));
                     j++;
-                } else {
+                }
+                else {
                     splitList.add(builder.toString());
                     builder.delete(0, builder.length());
                     buildingDigit = charIsDigit(justificationString.charAt(j));
@@ -566,21 +569,26 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
             if (code == KeyCode.ENTER || (code == KeyCode.RIGHT && e.isShortcutDown())) {
                 derivationView.setGridFromViewLines();
                 ViewLine contentLineBelow = getContentLineBelow(row);
+     //           saveJustificationRTA(rta, row);
+
                 if (contentLineBelow != null) contentLineBelow.getLineContentBoxedDRTA().getRTA().requestFocus();
                 e.consume();
             } else if (code == KeyCode.LEFT && e.isShortcutDown()) {
                 derivationView.setGridFromViewLines();
                 ViewLine currentLine = derivationView.getViewLines().get(row);
+      //          saveJustificationRTA(rta, row);
                 currentLine.getLineContentBoxedDRTA().getRTA().requestFocus();
                 e.consume();
             } else if (code == KeyCode.UP) {
                 derivationView.setGridFromViewLines();
                 ViewLine contentLineAbove = getContentLineAbove(row);
+     //           saveJustificationRTA(rta, row);
                 if (contentLineAbove != null) contentLineAbove.getJustificationFlow().requestFocus();
                 e.consume();
             } else if (code == KeyCode.DOWN) {
                 derivationView.setGridFromViewLines();
                 ViewLine contentLineBelow = getContentLineBelow(row);
+        //        saveJustificationRTA(rta, row);
                 if (contentLineBelow != null) contentLineBelow.getJustificationFlow().requestFocus();
                 e.consume();
             }

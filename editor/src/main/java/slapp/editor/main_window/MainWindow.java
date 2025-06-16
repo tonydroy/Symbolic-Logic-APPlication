@@ -234,7 +234,7 @@ public class MainWindow {
 
 
 
-        mainView.getQuickStartItem().setOnAction(e -> videoHelp("https://www.slappservices.net/quick_start/quick_start_player.html", 900, 655));
+        mainView.getQuickStartItem().setOnAction(e -> videoHelp("https://www.slappservices.net/quick_start/quick_start_player.html", 900, 631));
         mainView.getSlappEditorItem().setOnAction(e -> videoHelp("https://www.slappservices.net/slapp_editor/slapp_editor_player.html", 800, 677));
         mainView.getVerticalTreeItem().setOnAction(e -> videoHelp("https://www.slappservices.net/vertical_trees/vertical_trees_player.html",650, 783));
         mainView.getHorizontalTreeItem().setOnAction(e -> videoHelp("https://www.slappservices.net/horizontal_trees/horizontal_trees_player.html", 600, 835));

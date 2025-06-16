@@ -105,7 +105,9 @@ public class DrvtnExpCheck implements DCheck {
     }
 
     public void setHelpCounter() {
-        if (helpMax != -1 && helpTries >= helpMax) {drvtnExpView.getHelpButton().setDisable(true);}
+        if (helpMax != -1 && helpTries >= helpMax && !drvtnExpExercise.getMainWindow().isInstructorFunctions()) {
+            drvtnExpView.getHelpButton().setDisable(true);
+        }
 
         String helpString;
         if (helpMax == -1) helpString = "(unlimited)";
@@ -148,8 +150,10 @@ public class DrvtnExpCheck implements DCheck {
     private boolean runCheck() {
         checkSuccess = false;
         drvtnExpView.deactivateBigCheck();
-        checkTries++;
-        setChecksCounter();
+        if (!drvtnExpExercise.getMainWindow().isInstructorFunctions()) {
+            checkTries++;
+            setChecksCounter();
+        }
         drvtnExpExercise.getDrvtnExpHelp().closeHelpWindows();
 
         viewLines = drvtnExpView.getViewLines();

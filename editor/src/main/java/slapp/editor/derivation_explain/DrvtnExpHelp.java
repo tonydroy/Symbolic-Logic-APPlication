@@ -128,11 +128,14 @@ public class DrvtnExpHelp {
             goalIsContradiction = true;
         } catch (TextMessageException e) {}
 
+        /*
         MatchUtilities.clearFormMatch();
         try {
             Pair<Boolean, Boolean> match2 = MatchUtilities.simpleExpFormMatch(contradictionForm2, targetFormula, objectLanguage.getNameString(), metaLanguage.getNameString());
             goalIsContradiction = true;
         } catch (TextMessageException e) {}
+
+         */
 
         footnotes.clear();
         footnotes.add(new Text("\n-----"));
@@ -230,8 +233,10 @@ public class DrvtnExpHelp {
             }
         }
 
-        checker.setHelpTries(checker.getHelpTries() + 1);
-        checker.setHelpCounter();
+        if (!drvtnExpExercise.getMainWindow().isInstructorFunctions()) {
+            checker.setHelpTries(checker.getHelpTries() + 1);
+            checker.setHelpCounter();
+        }
         drvtnExpExercise.getMainWindow().getMainView().getBorderPane().requestFocus();
     }
 
@@ -734,7 +739,7 @@ public class DrvtnExpHelp {
             ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
             helpStage = popup.getHelpStage();
             helpStages.add(helpStage);
-            SC3a();
+            SC3d();
         }
         else {
             SC2Ec();
@@ -1000,7 +1005,7 @@ public class DrvtnExpHelp {
         whileLoop:
         while (changes) {
 
-            System.out.println(eObtainableFormulas);
+      //      System.out.println(eObtainableFormulas);
 
             changes = false;
             for (Formula formula : eObtainableFormulas) {

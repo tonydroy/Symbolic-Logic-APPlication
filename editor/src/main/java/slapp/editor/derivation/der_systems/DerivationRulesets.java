@@ -56,6 +56,9 @@ public class DerivationRulesets implements Serializable {
 
         List<Pair<Pattern, String>> dummyRules = new ArrayList<>();
         dummyRules.add(new Pair(Pattern.compile("^.*R\\d+\\s*$"), "Insert dot prior to rule number (as 'R.1')."));
+        dummyRules.add(new Pair(Pattern.compile("^.*(Win!|Win|win!|win)\\s*$"), "Leave out 'Win! for SLAPP' (the check says it all)."));
+        dummyRules.add(new Pair(Pattern.compile("^.*R.2\\s*$"), "R.2 not allowed for this exercise."));
+
         NP.setDummyRules(dummyRules);
 
         List<DerivationRule> rules = new ArrayList<>();
@@ -80,6 +83,7 @@ public class DerivationRulesets implements Serializable {
 
         List<Pair<Pattern, String>> dummyRules = new ArrayList<>();
         dummyRules.add(new Pair(Pattern.compile(".*R\\d+\\s*$"), "Insert dot prior to rule number (as 'R.1')."));
+        dummyRules.add(new Pair(Pattern.compile("^.*(Win!|Win|win!|win)\\s*$"), "Leave out 'Win!' for SLAPP (the check says it all)."));
         NP.setDummyRules(dummyRules);
 
         List<DerivationRule> rules = new ArrayList<>();

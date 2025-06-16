@@ -470,7 +470,7 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
 
 
                 if (isLeftmostScopeLine || depth > 1)
-                    contentBox.setStyle("-fx-border-color: white, white, white, black; -fx-border-width: 0 0 0 1;");
+                    contentBox.setStyle("-fx-border-color: white white white black; -fx-border-width: 0 0 0 1;");
                 else contentBox.setStyle("-fx-border-color: white white white white; -fx-border-width: 0 0 0 0;");
 
                 grid.add(contentBox, depth, index, 21 - depth, 1);

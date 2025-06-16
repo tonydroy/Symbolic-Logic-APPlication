@@ -122,7 +122,7 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
                     theorems.add(new ADqT3_31(thrmSetElement.getName(), ""));
                     break;
                 case ADQT3_32:
-                    theorems.add(new QND_T51(thrmSetElement.getName(), ""));
+                    theorems.add(new ADqT3_32(thrmSetElement.getName(), ""));
                     break;
                 case AD_A7:
                     theorems.add(new AD_A7(thrmSetElement.getName(), ""));
@@ -195,12 +195,14 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         //comment
         DecoratedRTA commentDRTA = new DecoratedRTA();
         RichTextArea commentEditor = commentDRTA.getEditor();
-        commentEditor.getActionFactory().open(drvtnExpModel.getExerciseComment()).execute(new ActionEvent());
+
         commentEditor.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
             exerciseModified = true;
             double commentTextHeight = mainView.getRTATextHeight(commentEditor);
             drvtnExpModel.setCommentTextHeight(commentTextHeight);
         });
+        commentEditor.getActionFactory().open(drvtnExpModel.getExerciseComment()).execute(new ActionEvent());
+
         commentEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(commentDRTA, ControlType.AREA);
@@ -211,13 +213,13 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         //explain
         DecoratedRTA explanationDRTA = new DecoratedRTA();
         RichTextArea explanationEditor = explanationDRTA.getEditor();
-        explanationEditor.getActionFactory().open(drvtnExpModel.getExplanationDocument()).execute(new ActionEvent());
 
         explanationEditor.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
             exerciseModified = true;
             double explanationTextHeight = mainView.getRTATextHeight(explanationEditor);
             drvtnExpModel.setExplanationTextHeight(explanationTextHeight);
         });
+        explanationEditor.getActionFactory().open(drvtnExpModel.getExplanationDocument()).execute(new ActionEvent());
 
         explanationEditor.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
@@ -498,6 +500,12 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         rta.applyCss();
         rta.layout();
 
+        if (drvtnExpView.getViewLines().get(rowIndex).isLineHighlight()) {
+            rta.getStylesheets().clear();
+            rta.getStylesheets().add("slappDerivationHighlight.css");
+        }
+
+
         justificationClickFilter = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -610,6 +618,9 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         String justificationString = rta.getDocument().getText();
 
         TextFlow justificationFlow = getJustificationFlow(justificationString, drvtnExpView.getViewLines());
+        if (drvtnExpView.getViewLines().get(rowIndex).isLineHighlight()) {
+            justificationFlow.setStyle("-fx-background-color: mistyrose");
+        }
         drvtnExpView.getViewLines().get(rowIndex).setJustificationFlow(justificationFlow);
 
         rta.getActionFactory().newDocumentNow().execute(new ActionEvent());

@@ -131,11 +131,16 @@ public class DerivationHelp {
             goalIsContradiction = true;
         } catch (TextMessageException e) {}
 
+        /*
+        if is definite sentence use strategies for goal
+
         MatchUtilities.clearFormMatch();
         try {
             Pair<Boolean, Boolean> match2 = MatchUtilities.simpleExpFormMatch(contradictionForm2, targetFormula, objectLanguage.getNameString(), metaLanguage.getNameString());
             goalIsContradiction = true;
         } catch (TextMessageException e) {}
+
+         */
 
         footnotes.clear();
         footnotes.add(new Text("\n-----"));
@@ -739,7 +744,7 @@ public class DerivationHelp {
             ExerciseHelpPopup popup = new ExerciseHelpPopup(texts, windowOffset);
             helpStage = popup.getHelpStage();
             helpStages.add(helpStage);
-            SC3a();
+            SC3d();
         }
         else {
             SC2Ec();
@@ -1794,7 +1799,8 @@ public class DerivationHelp {
                 ViewLine asspLine = derivationCheck.getLineFromLabel(asspLabel).getKey();
                 TextFlow asspJustificationFlow = asspLine.getJustificationFlow();
                 String asspJustificationString = (derivationCheck instanceof DerivationCheck) ? ((DerivationExercise) derivationCheck.getExercise()).getStringFromJustificationFlow(asspJustificationFlow) :
-                        ((DerivationExercise) derivationCheck.getExercise()).getStringFromJustificationFlow(asspJustificationFlow);
+                        ((DrvtnExpExercise) derivationCheck.getExercise()).getStringFromJustificationFlow(asspJustificationFlow);
+
                 if (!derivationCheck.getDerivationRuleset().getPremiseRule().matches(asspJustificationString)) {
                     Formula asspFormula = getFormulaFromViewLine(asspLine);
                     if (SyntacticalFns.expTermFreeInFormula(asspFormula, var, objectLanguage.getNameString())) {
