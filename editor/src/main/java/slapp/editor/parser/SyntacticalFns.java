@@ -1151,7 +1151,7 @@ public class SyntacticalFns {
         EditorAlerts.showSimpleTxtFlowAlert("Parser Content", new TextFlow(txt));
     }
 
-    private static Term getDummyVariable() {
+    public static Term getDummyVariable() {
         Term dummyVar = new Term();
         dummyVar.setLevel(0);
         ArrayList children = new ArrayList();

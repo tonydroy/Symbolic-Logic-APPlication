@@ -92,7 +92,7 @@ public class DrvtnExpCheck implements DCheck {
     }
 
     private void setChecksCounter() {
-        if (checkMax != -1 && checkTries >= checkMax) {
+        if (checkMax != -1 && checkTries >= checkMax && !drvtnExpExercise.getMainWindow().isInstructorFunctions()) {
             drvtnExpView.getCheckButton().setDisable(true);
             drvtnExpView.getCheckProgButton().setDisable(true);
         }
@@ -105,7 +105,8 @@ public class DrvtnExpCheck implements DCheck {
     }
 
     public void setHelpCounter() {
-        if (helpMax != -1 && helpTries >= helpMax && !drvtnExpExercise.getMainWindow().isInstructorFunctions()) {
+        if ( (helpMax != -1 && helpTries >= helpMax && !drvtnExpExercise.getMainWindow().isInstructorFunctions()) || !derivationRuleset.isContextualHelpCompatible() ||
+                !drvtnExpModel.getCheckSetup().getTheoremSets().isEmpty() ) {
             drvtnExpView.getHelpButton().setDisable(true);
         }
 

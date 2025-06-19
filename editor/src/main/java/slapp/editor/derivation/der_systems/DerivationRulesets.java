@@ -485,13 +485,26 @@ public class DerivationRulesets implements Serializable {
         ND_sp.setAsspExisExploitCRule(asspExisExploitCRule);
         DerivationRule asspExisExploitGRule = new AsspExisExploitG("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\d+\\s*\\u2203E\\)\\s*$");
         ND_sp.setAsspExisExploitGRule(asspExisExploitGRule);
+
+        DerivationRule disjExploitRule = new DisjunctionExploit("\u2228E", "^\\s*\\d+\\s*,\\s*\\d+\\s*-\\s*\\d+,\\s*\\d+\\s*-\\s*\\d+\\s*\\u2228E\\s*$"); // wedge E
+        ND_sp.setDisjunctionExploitRule(disjExploitRule);
+        DerivationRule contradictionIntroRule = new ContradictionIntro("\u22a5I", "^\\s*\\d+\\s*,\\s*\\d+\\s*\\u22a5I\\s*$");
+        ND_sp.setContradictionIntroRule(contradictionIntroRule);
+        DerivationRule disjIntroRule = new DisjunctionIntro("\u2228I", "^\\s*\\d+\\s*\\u2228I\\s*$");  //
+        ND_sp.setDisjunctionIntroRule(disjIntroRule);
+        DerivationRule existentialIntroRule = new ExistentialIntro("\u2203I", "^\\s*\\d+\\s*\\u2203I\\s*$");
+        ND_sp.setExisIntroRule(existentialIntroRule);
+        DerivationRule existentialExploitRule = new ExistentialExploit("\u2203E", "^\\s*\\d+\\s*,\\s*\\d+\\s*-\\s*\\d+\\s*\\u2203E\\s*$");
+        ND_sp.setExisExploitRule(existentialExploitRule);
+
         DerivationRule asspRestrictedUnivIntroRule = new AsspRestrictedUnivIntroRule("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\(\\u2200I\\)\\)\\s*$");
         ND_sp.setAsspRestrictedUnivIntroRule(asspRestrictedUnivIntroRule);
-
         DerivationRule asspRestrictedExisExploitCRule = new AsspRestrictedExisExploitC("A","^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\d+\\s*\\(\\u2203E\\)\\)\\s*$");
         ND_sp.setAsspRestrictedExisExploitCRule(asspRestrictedExisExploitCRule);
         DerivationRule asspRestrictedExisExploitGRule = new AsspRestrictedExisExploitG("A","^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\d+\\s*\\(\\u2203E\\)\\)\\s*$");
         ND_sp.setAsspRestrictedExisExploitGRule(asspRestrictedExisExploitGRule);
+
+
 
         List<DerivationRule> rules = new ArrayList<>();
         rules.add(premiseRule);
@@ -503,6 +516,13 @@ public class DerivationRulesets implements Serializable {
         rules.add(asspDisjExploitCRule);
         rules.add(asspExisExploitCRule);
         rules.add(asspExisExploitGRule);
+
+        rules.add(disjExploitRule);
+        rules.add(contradictionIntroRule);
+        rules.add(disjIntroRule);
+        rules.add(existentialIntroRule);
+        rules.add(existentialExploitRule);
+
         rules.add(asspRestrictedUnivIntroRule);
         rules.add(asspRestrictedExisExploitCRule);
         rules.add(asspRestrictedExisExploitGRule);
@@ -511,20 +531,20 @@ public class DerivationRulesets implements Serializable {
         rules.add(new ConjunctionIntro("\u2227I","^\\s*\\d+\\s*,\\s*\\d+\\s*\\u2227I\\s*$"));  // caret I
         rules.add(new ConjunctionExploit("\u2227E","^\\s*\\d+\\s*\\u2227E\\s*$"));  //caret E
         rules.add(new ConditionalExploit("\u2192E","^\\s*\\d+\\s*,\\s*\\d+\\s*\\u2192E\\s*$"));  // arrow E
-        rules.add(new DisjunctionIntro("\u2228I", "^\\s*\\d+\\s*\\u2228I\\s*$"));  //wedgeI))
+ //       rules.add(new DisjunctionIntro("\u2228I", "^\\s*\\d+\\s*\\u2228I\\s*$"));  //wedgeI))
         rules.add(new BiconditionalExploit("\u2194E","^\\s*\\d+\\s*,\\s*\\d+\\s*\\u2194E\\s*$"));  // double arrow E
         rules.add(new ContradictionIntro("\u22a5I", "^\\s*\\d+\\s*,\\s*\\d+\\s*\\u22a5I\\s*$"));
 
-        rules.add(new ConditionalIntro("\u2192I", "^\\s*\\d+\\s*-\\s*\\d+\\s*\\u2192I\\s*$"));  // arrow I
+ //       rules.add(new ConditionalIntro("\u2192I", "^\\s*\\d+\\s*-\\s*\\d+\\s*\\u2192I\\s*$"));  // arrow I
         rules.add(new BiconditionalIntro("\u2194I", "^\\s*\\d+\\s*-\\s*\\d+,\\s*\\d+\\s*-\\s*\\d+\\s*\\u2194I\\s*$")); // double arrow I
         rules.add(new NegationIntro("\u223cI", "^\\s*\\d+\\s*-\\s*\\d+\\s*\\u223cI\\s*$"));  // tilde I
         rules.add(new NegationExploit("\u223cE", "^\\s*\\d+\\s*-\\s*\\d+\\s*\\u223cE\\s*$"));  // tilde E
-        rules.add(new DisjunctionExploit("\u2228E", "^\\s*\\d+\\s*,\\s*\\d+\\s*-\\s*\\d+,\\s*\\d+\\s*-\\s*\\d+\\s*\\u2228E\\s*$")); // wedge E
+//        rules.add(new DisjunctionExploit("\u2228E", "^\\s*\\d+\\s*,\\s*\\d+\\s*-\\s*\\d+,\\s*\\d+\\s*-\\s*\\d+\\s*\\u2228E\\s*$")); // wedge E
 
         rules.add(new UniversalExploit("\u2200E", "^\\s*\\d+\\s*\\u2200E\\s*$"));
-        rules.add(new ExistentialIntro("\u2203I", "^\\s*\\d+\\s*\\u2203I\\s*$"));
+//        rules.add(new ExistentialIntro("\u2203I", "^\\s*\\d+\\s*\\u2203I\\s*$"));
         rules.add(new UniversalIntro("\u2200I", "^\\s*\\d+\\s*\\u2200I\\s*$"));
-        rules.add(new ExistentialExploit("\u2203E", "^\\s*\\d+\\s*,\\s*\\d+\\s*-\\s*\\d+\\s*\\u2203E\\s*$"));
+//        rules.add(new ExistentialExploit("\u2203E", "^\\s*\\d+\\s*,\\s*\\d+\\s*-\\s*\\d+\\s*\\u2203E\\s*$"));
         rules.add(new EqualityIntro("\ue8acI", "^\\s*\\ue8acI\\s*$"));
         rules.add(new EqualityExploit("\ue8acE" ,"^\\s*\\d+\\s*,\\s*\\d+\\s*\\ue8acE\\s*$"));
 

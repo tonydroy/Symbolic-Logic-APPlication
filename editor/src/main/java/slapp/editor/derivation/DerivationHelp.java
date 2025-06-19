@@ -536,7 +536,7 @@ public class DerivationHelp {
                 List texts = new ArrayList();
                 texts.add(ParseUtilities.newRegularText("Goal has has main operator "));
                 texts.addAll(opTexts);
-                texts.add(ParseUtilities.newRegularText(".  Set new goal for application of "));
+                texts.add(ParseUtilities.newRegularText(".  Set an instance as new goal for application of "));
                 texts.addAll(opSymTxts);
                 texts.add(ParseUtilities.newRegularText("I - usually with a new variable."));
                 if (helpStages.isEmpty()) texts.addAll(footnotes);
@@ -568,7 +568,7 @@ public class DerivationHelp {
                 List opSymTxts = mainOperator.getMainSymbol().toTextList();
                 texts.add(ParseUtilities.newRegularText("Goal has has main operator "));
                 texts.addAll(opTexts);
-                texts.add(ParseUtilities.newRegularText(".  If you do not already have it, set new goal to use "));
+                texts.add(ParseUtilities.newRegularText(".  If you do not already have it, set an instance as new goal to use "));
                 texts.addAll(opSymTxts);
                 texts.add(ParseUtilities.newRegularText("I."));
                 if (helpStages.isEmpty()) texts.addAll(footnotes);
@@ -1721,7 +1721,7 @@ public class DerivationHelp {
         return lineFormula;
     }
 
-
+/*
     private void findTermsInFormulas() {
         termList.clear();
 
@@ -1742,6 +1742,43 @@ public class DerivationHelp {
             }
         }
     }
+
+ */
+
+
+
+// This speeds creating list in case of multiple quantified variables
+
+    private void findTermsInFormulas() {
+        termList.clear();
+
+        for (ViewLine line : viewLines) {
+            if (LineType.isContentLine(line.getLineType())) {
+                Formula lineForm = getFormulaFromViewLine(line);
+                if (lineForm != null) addTermsToList(lineForm, lineForm);
+            }
+        }
+        if (termList.isEmpty()) {
+            termList.add(SyntacticalFns.getDummyVariable());
+        }
+    }
+
+    private void addTermsToList(Expression exp, Formula origForm) {
+        if (exp instanceof Term && !termList.contains(exp) && SyntacticalFns.expTermFreeInFormula(origForm, exp, objectLanguage.getNameString())) termList.add((Term) exp);
+
+        if (exp.getChildren() != null && exp.getLevel() > 0) {
+            for (int i = 0; i < exp.getChildren().size(); i++) {
+                addTermsToList(exp.getChildren().get(i), origForm);
+            }
+        }
+    }
+
+    //
+
+
+
+
+
 
     private void addVarInstancesToList(Expression exp, Term filterVar) {
 

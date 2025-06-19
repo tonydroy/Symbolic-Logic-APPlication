@@ -3,6 +3,7 @@ package slapp.editor.derivation;
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.text.*;
@@ -41,6 +42,7 @@ public class DerivationCheck implements DCheck {
     private int helpTries;
     private boolean checkFinal;
     private boolean checkSuccess;
+
 
     DerivationCheck(DerivationExercise derivationExercise) {
         this.derivationExercise = derivationExercise;
@@ -102,7 +104,8 @@ public class DerivationCheck implements DCheck {
     }
 
     public void setHelpCounter() {
-        if (helpMax != -1 && helpTries >= helpMax && !derivationExercise.getMainWindow().isInstructorFunctions()) {
+        if ((helpMax != -1 && helpTries >= helpMax && !derivationExercise.getMainWindow().isInstructorFunctions()) || !derivationRuleset.isContextualHelpCompatible() ||
+                !derivationModel.getCheckSetup().getTheoremSets().isEmpty() ) {
             derivationView.getHelpButton().setDisable(true);
         }
 
@@ -635,6 +638,8 @@ public class DerivationCheck implements DCheck {
         line.getJustificationFlow().setStyle("-fx-background-color: transparent");
         line.setLineHighlight(false);
     }
+
+
 
     private int getCurrentLineNum() {
         int row = -1;
