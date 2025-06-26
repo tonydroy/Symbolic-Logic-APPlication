@@ -83,11 +83,11 @@ public class Abb_NDpnt extends DerivationRule {
 
         //leq
         Document leq = new Document("(\uD835\uDCC8 \uE8A6 \uD835\uDCC9)");
-        Document leqAbb = new Document("∃\uD835\uDCCA(\uD835\uDCCA \uE8B8 \uD835\uDCC8 \uE8AC \uD835\uDCC9)");
+        Document leqAbb = new Document("∃\uD835\uDCCa(\uD835\uDCCa \uE8B8 \uD835\uDCC8 \uE8AC \uD835\uDCC9)");
 
         //less
         Document less = new Document("(\uD835\uDCC8 \uE8A4 \uD835\uDCC9)");
-        Document lessAbb = new Document("∃\uD835\uDCCA(\uD835\uDC46\uD835\uDCCA \uE8B8 \uD835\uDCC8 \uE8AC \uD835\uDCC9)");
+        Document lessAbb = new Document("∃\uD835\uDCCa(\uD835\uDC46\uD835\uDCCa \uE8B8 \uD835\uDCC8 \uE8AC \uD835\uDCC9)");
 
         List<Expression> boundedLeqUniv1Expressions = ParseUtilities.parseDoc(boundedLeqUniv1, metaLanguage.getNameString());
         Expression boundedLeqUniv1Exp = boundedLeqUniv1Expressions.get(0);
@@ -264,7 +264,7 @@ public class Abb_NDpnt extends DerivationRule {
         MatchUtilities.clearFormMatch();
         List<String> noMatchVars = metaLanguage.getNoMatchVariables();
         for (String var : noMatchVars) {
-            Document leqAbb1 = new Document("∃" + var + "(" + var + " \uE8B8 \uD835\uDCC8 \uE8AC \uD835\uDCC9)");
+            Document leqAbb1 = new Document("∃" + var + "(" + var + " \uE8B8 \uD835\uDCC8 \uE8AC \uD835\uDCC9)");   //Ev(v + s = t)
             List<Expression> leqAbb1Expressions = ParseUtilities.parseDoc(leqAbb1, metaLanguage.getNameString());
             Expression leqAbb1Exp = leqAbb1Expressions.get(0);
 
@@ -277,6 +277,7 @@ public class Abb_NDpnt extends DerivationRule {
         }
 
         try {
+
             boolean resultGood = MatchUtilities.replacementCheck(leqAbbExp, leqExp, inputExpression, lineExpression);
             if (resultGood && (varFreeInTerm("\ud835\udcca", "\ud835\udcc8") || varFreeInTerm("\ud835\udcca", "\ud835\udcc9"))) return new Pair(false, freeVariableFailure);
             if (resultGood) return new Pair(true, null);
@@ -335,7 +336,7 @@ public class Abb_NDpnt extends DerivationRule {
             }
         }
 
-        //        System.out.println("term: " + matchTerm);
+       //         System.out.println("term: " + matchTerm);
 
         if (variableMatch != null && matchTerm != null) {
 

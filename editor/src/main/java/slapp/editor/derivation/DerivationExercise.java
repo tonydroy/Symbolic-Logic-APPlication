@@ -255,9 +255,6 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
  */
 
 
-
-
-
             Stage metaHelpStage = derivationView.getMetaLangStage();
             if (metaHelpStage != null && metaHelpStage.isShowing()) metaHelpStage.close();
             else derivationView.showMetalanguageHelp(mainWindow.getSlappProgData().getMetalanguageHelp());
@@ -1192,7 +1189,8 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         double statementHeight = printModel.getStatementTextHeight();
         statementRTA.setPrefHeight(statementHeight + 35.0);
         statementRTA.setContentAreaWidth(nodeWidth);
-        statementRTA.setMinWidth(nodeWidth);
+
+ //       statementRTA.setMinWidth(nodeWidth);
         statementRTA.getStylesheets().clear(); statementRTA.getStylesheets().add("richTextAreaPrinter.css");
         nodeList.add(statementRTA);
 

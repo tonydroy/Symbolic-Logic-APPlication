@@ -340,6 +340,8 @@ public class DerivationRulesets implements Serializable {
         dummyRules.add(new Pair(Pattern.compile("^\\s*\\d+\\s*,\\s*\\d+\\s*\\u2192I\\s*$"), "\u2192I requires a subderivation, not two individual lines."));
         dummyRules.add(new Pair(Pattern.compile("^\\s*A\\s*\\((g|\\ud835\\udc54),?\\s*\\u2228E\\)\\s*$"), "Exit strategy for \u2228E should cite the line number of the disjunction to which it applies."));
         dummyRules.add(new Pair(Pattern.compile("^\\s*A\\s*\\((c|\\ud835\\udc50),?\\s*\\u2228E\\)\\s*$"), "Exit strategy for \u2228E should cite the line number of the disjunction to which it applies."));
+        dummyRules.add(new Pair(Pattern.compile("^\\s*Q\\d+\\s*$"), "Insert dot prior to axiom number (as 'Q.1')."));
+        dummyRules.add(new Pair(Pattern.compile("^\\s*PA\\d+\\s*$"), "Insert dot prior to axiom number (as 'PA.1')."));
 
         ND_pnt.setDummyRules(dummyRules);
 

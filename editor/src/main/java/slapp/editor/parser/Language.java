@@ -512,6 +512,8 @@ public class Language implements Serializable {
         List<String> newVars = new ArrayList<>();
         newVars.addAll(noMatchVariables);
         newVars.add("\ue89b");
+        newVars.add("\ue89c");
+        newVars.add("\ue89d");
 
         return newVars;
     }

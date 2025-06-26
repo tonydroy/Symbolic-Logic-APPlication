@@ -135,7 +135,7 @@ public class QuantifierPlacement extends DerivationRule {
         //form 1
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood1 = MatchUtilities.replacementCheck(leftFormExp, rightFormExp, inputExpression, lineExpression);
+            boolean resultGood1 = MatchUtilities.replacementCheck(leftFormExp, rightFormExp, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree) return new Pair(false, freeVariableFailure);
             if (resultGood1) return new Pair(true, null);
@@ -144,7 +144,7 @@ public class QuantifierPlacement extends DerivationRule {
 
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood1 = MatchUtilities.replacementCheck(rightFormExp, leftFormExp, inputExpression, lineExpression);
+            boolean resultGood1 = MatchUtilities.replacementCheck(rightFormExp, leftFormExp, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree) return new Pair(false, freeVariableFailure);
             if (resultGood1) return new Pair(true, null);
@@ -154,7 +154,7 @@ public class QuantifierPlacement extends DerivationRule {
         //form 2
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood2 = MatchUtilities.replacementCheck(leftFormExp2, rightFormExp2, inputExpression, lineExpression);
+            boolean resultGood2 = MatchUtilities.replacementCheck(leftFormExp2, rightFormExp2, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree)  return new Pair(false, freeVariableFailure);
             if (resultGood2) return new Pair(true, null);
@@ -163,7 +163,7 @@ public class QuantifierPlacement extends DerivationRule {
 
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood2 = MatchUtilities.replacementCheck(rightFormExp2, leftFormExp2, inputExpression, lineExpression);
+            boolean resultGood2 = MatchUtilities.replacementCheck(rightFormExp2, leftFormExp2, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree) return new Pair(false, freeVariableFailure);
             if (resultGood2) return new Pair(true, null);
@@ -173,7 +173,7 @@ public class QuantifierPlacement extends DerivationRule {
         //form 3
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood3 = MatchUtilities.replacementCheck(leftFormExp3, rightFormExp3, inputExpression, lineExpression);
+            boolean resultGood3 = MatchUtilities.replacementCheck(leftFormExp3, rightFormExp3, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree)  return new Pair(false, freeVariableFailure);
             if (resultGood3) return new Pair(true, null);
@@ -182,7 +182,7 @@ public class QuantifierPlacement extends DerivationRule {
 
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood3 = MatchUtilities.replacementCheck(rightFormExp3, leftFormExp3, inputExpression, lineExpression);
+            boolean resultGood3 = MatchUtilities.replacementCheck(rightFormExp3, leftFormExp3, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree) return new Pair(false, freeVariableFailure);
             if (resultGood3) return new Pair(true, null);
@@ -192,7 +192,7 @@ public class QuantifierPlacement extends DerivationRule {
         //form 4
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood4 = MatchUtilities.replacementCheck(leftFormExp4, rightFormExp4, inputExpression, lineExpression);
+            boolean resultGood4 = MatchUtilities.replacementCheck(leftFormExp4, rightFormExp4, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree)  return new Pair(false, freeVariableFailure);
             if (resultGood4) return new Pair(true, null);
@@ -201,7 +201,7 @@ public class QuantifierPlacement extends DerivationRule {
 
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood4 = MatchUtilities.replacementCheck(rightFormExp4, leftFormExp4, inputExpression, lineExpression);
+            boolean resultGood4 = MatchUtilities.replacementCheck(rightFormExp4, leftFormExp4, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree) return new Pair(false, freeVariableFailure);
             if (resultGood4) return new Pair(true, null);
@@ -211,7 +211,7 @@ public class QuantifierPlacement extends DerivationRule {
         //form 5
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood5 = MatchUtilities.replacementCheck(leftFormExp5, rightFormExp5, inputExpression, lineExpression);
+            boolean resultGood5 = MatchUtilities.replacementCheck(leftFormExp5, rightFormExp5, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree)  return new Pair(false, freeVariableFailure);
             if (resultGood5) return new Pair(true, null);
@@ -220,7 +220,7 @@ public class QuantifierPlacement extends DerivationRule {
 
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood5 = MatchUtilities.replacementCheck(rightFormExp5, leftFormExp5, inputExpression, lineExpression);
+            boolean resultGood5 = MatchUtilities.replacementCheck(rightFormExp5, leftFormExp5, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree) return new Pair(false, freeVariableFailure);
             if (resultGood5) return new Pair(true, null);
@@ -231,7 +231,7 @@ public class QuantifierPlacement extends DerivationRule {
         //form 6
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood6 = MatchUtilities.replacementCheck(leftFormExp6, rightFormExp6, inputExpression, lineExpression);
+            boolean resultGood6 = MatchUtilities.replacementCheck(leftFormExp6, rightFormExp6, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree)  return new Pair(false, freeVariableFailure);
             if (resultGood6) return new Pair(true, null);
@@ -240,7 +240,7 @@ public class QuantifierPlacement extends DerivationRule {
 
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood6 = MatchUtilities.replacementCheck(rightFormExp6, leftFormExp6, inputExpression, lineExpression);
+            boolean resultGood6 = MatchUtilities.replacementCheck(rightFormExp6, leftFormExp6, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree) return new Pair(false, freeVariableFailure);
             if (resultGood6) return new Pair(true, null);
@@ -252,7 +252,7 @@ public class QuantifierPlacement extends DerivationRule {
         //form 7
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood7 = MatchUtilities.replacementCheck(leftFormExp7, rightFormExp7, inputExpression, lineExpression);
+            boolean resultGood7 = MatchUtilities.replacementCheck(leftFormExp7, rightFormExp7, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree)  return new Pair(false, freeVariableFailure);
             if (resultGood7) return new Pair(true, null);
@@ -261,7 +261,7 @@ public class QuantifierPlacement extends DerivationRule {
 
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood7 = MatchUtilities.replacementCheck(rightFormExp7, leftFormExp7, inputExpression, lineExpression);
+            boolean resultGood7 = MatchUtilities.replacementCheck(rightFormExp7, leftFormExp7, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree) return new Pair(false, freeVariableFailure);
             if (resultGood7) return new Pair(true, null);
@@ -271,7 +271,7 @@ public class QuantifierPlacement extends DerivationRule {
         //form 8
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood8 = MatchUtilities.replacementCheck(leftFormExp8, rightFormExp8, inputExpression, lineExpression);
+            boolean resultGood8 = MatchUtilities.replacementCheck(leftFormExp8, rightFormExp8, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree)  return new Pair(false, freeVariableFailure);
             if (resultGood8) return new Pair(true, null);
@@ -280,7 +280,7 @@ public class QuantifierPlacement extends DerivationRule {
 
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood8 = MatchUtilities.replacementCheck(rightFormExp8, leftFormExp8, inputExpression, lineExpression);
+            boolean resultGood8 = MatchUtilities.replacementCheck(rightFormExp8, leftFormExp8, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree) return new Pair(false, freeVariableFailure);
             if (resultGood8) return new Pair(true, null);
@@ -290,7 +290,7 @@ public class QuantifierPlacement extends DerivationRule {
         //form 9
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood9 = MatchUtilities.replacementCheck(leftFormExp9, rightFormExp9, inputExpression, lineExpression);
+            boolean resultGood9 = MatchUtilities.replacementCheck(leftFormExp9, rightFormExp9, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree)  return new Pair(false, freeVariableFailure);
             if (resultGood9) return new Pair(true, null);
@@ -299,7 +299,7 @@ public class QuantifierPlacement extends DerivationRule {
 
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood9 = MatchUtilities.replacementCheck(rightFormExp9, leftFormExp9, inputExpression, lineExpression);
+            boolean resultGood9 = MatchUtilities.replacementCheck(rightFormExp9, leftFormExp9, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree) return new Pair(false, freeVariableFailure);
             if (resultGood9) return new Pair(true, null);
@@ -309,7 +309,7 @@ public class QuantifierPlacement extends DerivationRule {
         //form 10
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood10 = MatchUtilities.replacementCheck(leftFormExp10, rightFormExp10, inputExpression, lineExpression);
+            boolean resultGood10 = MatchUtilities.replacementCheck(leftFormExp10, rightFormExp10, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree)  return new Pair(false, freeVariableFailure);
             if (resultGood10) return new Pair(true, null);
@@ -318,7 +318,7 @@ public class QuantifierPlacement extends DerivationRule {
 
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood10 = MatchUtilities.replacementCheck(rightFormExp10, leftFormExp10, inputExpression, lineExpression);
+            boolean resultGood10 = MatchUtilities.replacementCheck(rightFormExp10, leftFormExp10, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree) return new Pair(false, freeVariableFailure);
             if (resultGood10) return new Pair(true, null);
@@ -328,7 +328,7 @@ public class QuantifierPlacement extends DerivationRule {
         //form 11
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood11 = MatchUtilities.replacementCheck(leftFormExp11, rightFormExp11, inputExpression, lineExpression);
+            boolean resultGood11 = MatchUtilities.replacementCheck(leftFormExp11, rightFormExp11, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree)  return new Pair(false, freeVariableFailure);
             if (resultGood11) return new Pair(true, null);
@@ -337,7 +337,7 @@ public class QuantifierPlacement extends DerivationRule {
 
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood11 = MatchUtilities.replacementCheck(rightFormExp11, leftFormExp11, inputExpression, lineExpression);
+            boolean resultGood11 = MatchUtilities.replacementCheck(rightFormExp11, leftFormExp11, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree) return new Pair(false, freeVariableFailure);
             if (resultGood11) return new Pair(true, null);
@@ -348,7 +348,7 @@ public class QuantifierPlacement extends DerivationRule {
         //form 12
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood12 = MatchUtilities.replacementCheck(leftFormExp12, rightFormExp12, inputExpression, lineExpression);
+            boolean resultGood12 = MatchUtilities.replacementCheck(leftFormExp12, rightFormExp12, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree)  return new Pair(false, freeVariableFailure);
             if (resultGood12) return new Pair(true, null);
@@ -357,7 +357,7 @@ public class QuantifierPlacement extends DerivationRule {
 
         MatchUtilities.clearFormMatch();
         try {
-            boolean resultGood12 = MatchUtilities.replacementCheck(rightFormExp12, leftFormExp12, inputExpression, lineExpression);
+            boolean resultGood12 = MatchUtilities.replacementCheck(rightFormExp12, leftFormExp12, inputExpression, lineExpression, false);
             boolean xFree = xFreeInP();
             if (xFree) return new Pair(false, freeVariableFailure);
             if (resultGood12) return new Pair(true, null);
@@ -379,7 +379,7 @@ public class QuantifierPlacement extends DerivationRule {
 
         List<MVariable> mVariables = MVariable.getVariables();
         for (MVariable mVariable : mVariables) {
-            if (mVariable.getBaseStr().equals("\ud835\udccd")) {
+            if (mVariable.getBaseStr().equals("\ud835\udccd")) {   //script x
                 Term term = new Term();
                 term.setLevel(0);
                 ArrayList children = new ArrayList();
@@ -390,11 +390,11 @@ public class QuantifierPlacement extends DerivationRule {
                 variableMatch = term;
             }
         }
- //       System.out.println("var: " + variableMatch);
+  //      System.out.println("var: " + variableMatch);
 
         List<MFormula> mFormulas = MFormula.getmFormulas();
         for (MFormula mFormula : mFormulas) {
-            if (mFormula.getFormulaSym().getBaseStr().equals("\ud835\udcab")) {
+            if (mFormula.getFormulaSym().getBaseStr().equals("\ud835\udcab")) {  //script P
                 formulaMatch = mFormula.getMatch();
             }
         }

@@ -20,6 +20,10 @@ public class MatchUtilities {
     private static Boolean subFreeFor = true;
     private static List<Formula> replacementList = new ArrayList<>();
 
+    private static boolean clear1;
+
+
+
 
     /*
     For replacement check if one form has more "content" than another
@@ -27,7 +31,24 @@ public class MatchUtilities {
     f1 is the form with greater content.  This is because matching on the first
     form is used to identify a matches for the second.
      */
+
+
+    /*
+   There is a bandaid here: The free variable check for QP requires that match expressions "freeze" at the point where match is made.
+   This might be right for other functions too.  However, by overloading this method, and running QP overloaded with clear = false,
+   we keep behavior all the same except in that case.  Do we want this generally?
+     */
     public static boolean replacementCheck(Expression f1, Expression f2, Expression s, Expression t) throws TextMessageException {
+        try {
+            return replacementCheck(f1, f2, s, t, true);
+        }
+        catch (TextMessageException e) {throw new TextMessageException(e.getMessageList()); }
+    }
+
+    public static boolean replacementCheck(Expression f1, Expression f2, Expression s, Expression t, boolean clear) throws TextMessageException {
+
+        clear1 = true;   // this is the variable that will freeze matching if set to false
+
         replacementList.clear();
 
 
@@ -42,7 +63,7 @@ public class MatchUtilities {
             setParens(form1, form2, source, target);
 
             try {
-                checkReplacements(form1, form2, source, target);
+                checkReplacements(form1, form2, source, target, clear);
             }
             catch (TextMessageException e) { throw new TextMessageException(e.getMessageList());  }
 
@@ -99,9 +120,10 @@ public class MatchUtilities {
         }
     }
 
-    private static void checkReplacements(Formula form1, Formula form2, Formula source, Formula target) throws TextMessageException {
+    private static void checkReplacements(Formula form1, Formula form2, Formula source, Formula target, boolean clear) throws TextMessageException {
 
-        clearMatching();
+        if (clear1) clearMatching();  //work in the usual way while clear1 is true
+
         try {
       //      System.out.println("form1: " + form1 + " form2: " + form2 + " source: " + source + " target: " + target);
             setMatching(form1, source);
@@ -109,11 +131,14 @@ public class MatchUtilities {
         }
         catch (TextMessageException e) {    }
 
-  //      System.out.println("1: " + form1.getMatch() + " 2: " + form2.getMatch());
+ //       System.out.println("1: " + form1.getMatch() + " 2: " + form2.getMatch());
 
 
         if (form2.getMatch() != null && form2.getMatch().equals(target)) {
-            if (!replacementList.contains(form2.getMatch())) replacementList.add(form2.getMatch());
+
+            if (!clear || !replacementList.contains(form2.getMatch())) replacementList.add(form2.getMatch());
+            if (!clear) clear1 = false;  //when match is made - if we are in the special case with clear false, freeze matching
+
             return;
         }
 
@@ -137,14 +162,14 @@ public class MatchUtilities {
                 Formula qSource = ((UnivRestrictedQuantOp) source.getMainOperator()).getRestrictingFormula();
                 Formula qTarget = ((UnivRestrictedQuantOp) target.getMainOperator()).getRestrictingFormula();
                 setParens(form1, form2, qSource, qTarget);
-                checkReplacements(form1, form2, qSource, qTarget);
+                checkReplacements(form1, form2, qSource, qTarget, clear);
                 good = true;
             }
             else if (source.getMainOperator() instanceof ExisRestrictedQuantOp && target.getMainOperator() instanceof ExisRestrictedQuantOp) {
                 Formula qSource = ((ExisRestrictedQuantOp) source.getMainOperator()).getRestrictingFormula();
                 Formula qTarget = ((ExisRestrictedQuantOp) target.getMainOperator()).getRestrictingFormula();
                 setParens(form1, form2, qSource, qTarget);
-                checkReplacements(form1, form2, qSource, qTarget);
+                checkReplacements(form1, form2, qSource, qTarget, clear);
                 good = true;
             }
             else if (source.getMainOperator().equals(target.getMainOperator())) {
@@ -153,7 +178,7 @@ public class MatchUtilities {
             if (good) {
                 for (int i = 0; i < source.getChildren().size(); i++) {
                     if (source.getChildren().get(i).getType() == ExpressionType.FORMULA && target.getChildren().get(i).getType() == ExpressionType.FORMULA) {
-                        checkReplacements(form1, form2, (Formula) source.getChildren().get(i), (Formula) target.getChildren().get(i));
+                        checkReplacements(form1, form2, (Formula) source.getChildren().get(i), (Formula) target.getChildren().get(i), clear);
                     }
                 }
             }

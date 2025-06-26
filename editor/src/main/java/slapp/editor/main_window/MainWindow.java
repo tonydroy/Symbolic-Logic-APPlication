@@ -239,7 +239,7 @@ public class MainWindow {
         mainView.getVerticalTreeItem().setOnAction(e -> videoHelp("https://www.slappservices.net/vertical_trees/vertical_trees_player.html",650, 783));
         mainView.getHorizontalTreeItem().setOnAction(e -> videoHelp("https://www.slappservices.net/horizontal_trees/horizontal_trees_player.html", 600, 835));
         mainView.getTruthTableItem().setOnAction(e -> videoHelp("https://www.slappservices.net/truth_tables/truth_tables_player.html", 600, 746));
-        mainView.getDerivationItem().setOnAction(e -> videoHelp("https://www.slappservices.net/derivations/derivations_player.html", 700, 774));
+        mainView.getDerivationItem().setOnAction(e -> videoHelp("https://www.slappservices.net/derivations/derivations_player.html", 700, 587));
         mainView.getInstructorInfoItem().setOnAction(e -> mainView.showInstructorInfo());
      //   mainView.getInstructorInfoItem().setOnAction(e -> videoHelp("https://www.slappservices.net/instructor/instructor_player.html", 900, 537));
 
@@ -645,12 +645,12 @@ public class MainWindow {
         } else {
                 //run later to allow derivation justifications to set ok???
                 Platform.runLater(() -> {
-                if (currentExercise.isExerciseModified()) {
-                    assignmentContentModified = true;
-                    ExerciseModel model = currentExercise.getExerciseModelFromView();
-                    currentAssignment.replaceExerciseModel(assignmentIndex, model);
-                    currentExercise.setExerciseModified(false);
-                }
+                if (currentExercise.isExerciseModified())  assignmentContentModified = true;
+                
+                ExerciseModel model = currentExercise.getExerciseModelFromView();
+                currentAssignment.replaceExerciseModel(assignmentIndex, model);
+                currentExercise.setExerciseModified(false);
+
                 currentAssignment.setBaseScale(getBaseScale());
                 currentAssignment.setFitToPage(fitToPage);
                 currentAssignment.setPageLayout(PrintUtilities.getPageLayout());

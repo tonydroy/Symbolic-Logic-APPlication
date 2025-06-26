@@ -138,7 +138,7 @@ public class TheoremSets implements Serializable {
         elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "T6.71","\uE8AC\uE8BA\uE8BA\uD835\uDCC8\uD835\uDCC9\uE886\uE8BA\uD835\uDCC8\uE8BA\uD835\uDCC9\uE886"));
         elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "T6.72", "\uE8AC\uE8BA\uE8BA\uD835\uDCC8\uD835\uDCC9\uD835\uDCC7\uE8BA\uD835\uDCC8\uE8BA\uD835\uDCC9\uD835\uDCC7"));
         elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "T6.73", "(\uE8AC\uE8B8\uD835\uDCC7\uD835\uDCC9\uE8B8\uD835\uDCC8\uD835\uDCC9 → \uE8AC\uD835\uDCC7\uD835\uDCC8)"));
-        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "T6.74", "∀\uD835\uDC66[∼\uE8AC\uD835\uDCC9\uE886 → (\uE8AC\uE8BA\uD835\uDC66\uD835\uDCC9\uE8BA\uE886\uD835\uDCC9 → \uE8AC\uD835\uDC66\uE886)]"));
+        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "T6.74", "∀\uE89C[∼\uE8AC\uD835\uDCC9\uE886 → (\uE8AC\uE8BA\uE89C\uD835\uDCC9\uE8BA\uE886\uD835\uDCC9 → \uE8AC\uE89C\uE886)]"));
         elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "T6.75", "(∼\uE8AC\uD835\uDCC9\uE886 → (\uE8AC\uE8BA\uD835\uDCC7\uD835\uDCC9\uE8BA\uD835\uDCC8\uD835\uDCC9 → \uE8AC\uD835\uDCC7\uD835\uDCC8))"));
 
         return PAND_th;
@@ -197,8 +197,8 @@ public class TheoremSets implements Serializable {
     public static TheoremSet getQND_ax() {
         TheoremSet QND_ax = new TheoremSet("Q(\ud835\udc41\ud835\udc37+) ax");
         List<ThrmSetElement> elements = QND_ax.getElements();
-        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "T6.21", "(\uD835\uDCAB ∨ ∼\uD835\uDCAB)"));
-        elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "T6.42", "(\uE8AC\uD835\uDCC9\uD835\uDCC8 → \uE8AC\uD835\uDCC8\uD835\uDCC9)"));
+  //      elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "T6.21", "(\uD835\uDCAB ∨ ∼\uD835\uDCAB)"));
+  //      elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "T6.42", "(\uE8AC\uD835\uDCC9\uD835\uDCC8 → \uE8AC\uD835\uDCC8\uD835\uDCC9)"));
         elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "Q.1", "∼\uE8AC\uD835\uDC46\uD835\uDC65\uE886"));
         elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "Q.2", "(\uE8AC\uD835\uDC46\uD835\uDC65\uD835\uDC46\uD835\uDC66 → \uE8AC\uD835\uDC65\uD835\uDC66)"));
         elements.add(new ThrmSetElement(TheoremType.ZERO_INPUT, "Q.3", "\uE8AC\uE8B8\uD835\uDC65\uE886\uD835\uDC65"));
