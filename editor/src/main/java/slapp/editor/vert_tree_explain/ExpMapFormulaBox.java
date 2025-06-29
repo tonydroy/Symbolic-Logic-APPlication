@@ -69,7 +69,6 @@ public class ExpMapFormulaBox extends AnchorPane {
     private HBox mainBox;
     private GridPane labelPane;
     private VBox centerBox;
-
     private String idString = "";
 
 
@@ -81,6 +80,9 @@ public class ExpMapFormulaBox extends AnchorPane {
     int mapStage = 0;
     Label[] mapMarkers;
     Double[] mapXAnchors = new Double[2];
+
+    private double printWidth;
+
 
     public ExpMapFormulaBox(VerticalTreeExpView verticalTreeView) {
         this.verticalTreeView = verticalTreeView;
@@ -458,5 +460,11 @@ public class ExpMapFormulaBox extends AnchorPane {
         return formulaBox;
     }
 
+    public double getPrintWidth() {
+        return printWidth;
+    }
 
+    public void setPrintWidth(double printWidth) {
+        this.printWidth = printWidth;
+    }
 }

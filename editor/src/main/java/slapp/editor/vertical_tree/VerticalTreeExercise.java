@@ -20,7 +20,6 @@ import com.gluonhq.richtextarea.model.Document;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
-import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -32,17 +31,13 @@ import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
-import javafx.scene.shape.Rectangle;
 import org.apache.commons.lang3.SerializationUtils;
 import slapp.editor.DiskUtilities;
 import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
-import slapp.editor.free_form.FreeFormExercise;
 import slapp.editor.main_window.*;
 import slapp.editor.vertical_tree.drag_drop.*;
 import slapp.editor.vertical_tree.object_models.*;
@@ -162,6 +157,8 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
             mapFormulaBox.setIdString(mapBoxMod.getIdString());
             mapFormulaBox.setmLinkIds(mapBoxMod.getLinkIdStrings());
 
+            mapFormulaBox.setPrintWidth(mapBoxMod.getPrintWidth());
+
             BoxedDRTA formulaBox = mapFormulaBox.getFormulaBox();
             RichTextArea mapBoxRTA = formulaBox.getRTA();
 //            mapBoxRTA.setPrefWidth(mapBoxMod.getWidth());
@@ -176,6 +173,8 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
             treeFormulaBox.setLayoutY(treeBoxMod.getLayoutY());
             treeFormulaBox.setIdString(treeBoxMod.getIdString());
             treeFormulaBox.setmLinkIds(treeBoxMod.getLinkIdStrings());
+
+            treeFormulaBox.setPrintWidth(treeBoxMod.getPrintWidth());
 
             BoxedDRTA treeFormulaDRTA = treeFormulaBox.getFormulaBox();
             RichTextArea treeBoxRTA = treeFormulaDRTA.getRTA();
@@ -365,11 +364,10 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
 
     @Override
     public List<Node> getPrintNodes(ExerciseModel originalModel) {
+
         List<Node> nodeList = new ArrayList<>();
         VerticalTreeModel printModel = verticalTreeModel;
         VerticalTreeExercise printExercise = this;
-
-
 
         double nodeWidth = PrintUtilities.getPageWidth() / mainWindow.getBaseScale();
 
@@ -413,7 +411,8 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         AnchorPane mainPane = printExercise.getExerciseView().getRootLayout().getMainPane();
         mainPane.setStyle("-fx-background-color: transparent");
 
-        VerticalTreeModel originalVTmod = (VerticalTreeModel) originalModel;
+
+        VerticalTreeModel originalVTmod = (VerticalTreeModel) printModel;
         mainPane.setMinWidth(originalVTmod.getMainPanePrefWidth());
 
         ObservableList<Node> nodes = mainPane.getChildren();
@@ -421,12 +420,25 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
             if (node instanceof TreeFormulaBox) {
                 TreeFormulaBox treeBox = (TreeFormulaBox) node;
                 treeBox.getFormulaBox().getRTA().setStyle("-fx-border-color: transparent");
+
+                treeBox.getFormulaBox().getRTA().setMinWidth(treeBox.getPrintWidth());
+
                 if (treeBox.getAnnotationField() != null) treeBox.getAnnotationField().getRTA().setStyle("-fx-border-color: transparent");
             }
             if (node instanceof MapFormulaBox) {
-                ((MapFormulaBox) node).getFormulaBox().getRTA().setStyle("-fx-border-color: transparent");
+                MapFormulaBox mapBox = (MapFormulaBox) node;
+                mapBox.getFormulaBox().getRTA().setStyle("-fx-border-color: transparent");
+
+                mapBox.getFormulaBox().getRTA().setMinWidth(mapBox.getPrintWidth());
             }
         }
+
+        Group root = new Group();
+        Scene scene = new Scene(root);
+        root.getChildren().add(mainPane);
+        root.applyCss();
+        root.layout();
+
 
         HBox contentHBox = new HBox(mainPane);
         contentHBox.setAlignment(Pos.CENTER);
@@ -530,6 +542,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
             if (node instanceof TreeFormulaBox) {
                 TreeFormulaBox treeBox = (TreeFormulaBox) node;
                 treeBox.getFormulaBox().getRTA().setStyle("-fx-border-color: transparent");
+                treeBox.getFormulaBox().getRTA().setMinWidth(treeBox.getPrintWidth());
                 if (treeBox.getAnnotationField() != null) treeBox.getAnnotationField().getRTA().setStyle("-fx-bprder-color: transparent");
             }
             if (node instanceof MapFormulaBox) {
@@ -550,6 +563,9 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
     }
 
     private VerticalTreeModel getVerticalTreeModelFromView() {
+
+ //       new Exception().printStackTrace();
+
         VerticalTreeModel model = new VerticalTreeModel();
 
         model.setExerciseName(verticalTreeModel.getExerciseName());
@@ -588,8 +604,9 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
                 newTreeMod.setLinkIdStrings(originalTreeBox.getmLinkIds());
 
                 BoxedDRTA treeFormulaBox = originalTreeBox.getFormulaBox();
- //               newTreeMod.setWidth(treeFormulaBox.getRTA().getPrefWidth());
                 RichTextArea treeRTA = treeFormulaBox.getRTA();
+                newTreeMod.setPrintWidth(treeRTA.getPrefWidth());     /////////////
+
                 treeRTA.getActionFactory().saveNow().execute(new ActionEvent());
                 newTreeMod.setText(treeRTA.getDocument());
 
@@ -623,8 +640,9 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
                 newMapMod.setLinkIdStrings(originalMapBox.getmLinkIds());
 
                 BoxedDRTA formulaBox = originalMapBox.getFormulaBox();
- //               newMapMod.setWidth(formulaBox.getRTA().getPrefWidth());
                 RichTextArea mapRTA = formulaBox.getRTA();
+                newMapMod.setPrintWidth(mapRTA.getPrefWidth());
+
                 mapRTA.getActionFactory().saveNow().execute(new ActionEvent());
                 newMapMod.setText(mapRTA.getDocument());
 

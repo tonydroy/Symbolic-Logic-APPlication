@@ -82,6 +82,7 @@ public class ABExpMapFormulaBox extends AnchorPane {
     int mapStage = 0;
     Label[] mapMarkers;
     Double[] mapXAnchors = new Double[2];
+    private double printWidth;
 
     public ABExpMapFormulaBox(VerticalTreeABExpView verticalTreeView) {
         this.verticalTreeView = verticalTreeView;
@@ -457,5 +458,11 @@ public class ABExpMapFormulaBox extends AnchorPane {
         return formulaBox;
     }
 
+    public double getPrintWidth() {
+        return printWidth;
+    }
 
+    public void setPrintWidth(double printWidth) {
+        this.printWidth = printWidth;
+    }
 }

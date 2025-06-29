@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License along with SLA
 package slapp.editor.vertical_tree.object_models;
 
 import com.gluonhq.richtextarea.model.Document;
-import javafx.geometry.Bounds;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -44,6 +43,12 @@ public class TreeFormulaBoxMod implements Serializable {
     double rtaBoundsMinY;
     List<UnderlineMod> underlineList = new ArrayList<>();
     List<Integer> baseline;
+
+    double printWidth;
+
+    public TreeFormulaBoxMod() {
+        printWidth = 0;
+    }
 
     /**
      * id string for this node
@@ -220,4 +225,12 @@ public class TreeFormulaBoxMod implements Serializable {
      */
     public void setRtaBoundsMinY(double rtaBoundsMinY) {       this.rtaBoundsMinY = rtaBoundsMinY;   }
 
+
+    public double getPrintWidth() {
+        return printWidth;
+    }
+
+    public void setPrintWidth(double printWidth) {
+        this.printWidth = printWidth;
+    }
 }

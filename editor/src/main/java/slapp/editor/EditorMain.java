@@ -125,7 +125,7 @@ public class EditorMain extends Application {
             }
         }
 
-        Platform.runLater(() -> {
+  //      Platform.runLater(() -> {
 
            mainWindow = new MainWindow(fileToOpen);
 
@@ -134,7 +134,7 @@ public class EditorMain extends Application {
        //    new RegexTest(mainStage);
       //    new SimpleEditor(mainStage);
 
-        });
+     //   });
 
 
 

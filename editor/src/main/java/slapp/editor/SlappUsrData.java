@@ -14,6 +14,7 @@ public class SlappUsrData implements Serializable {
     private int zoom;
     private LimitedQueue<File> recentExercises;
     private LimitedQueue<File> recentAssignments;
+    private String pdfPrinterName;
 
 
 
@@ -26,6 +27,7 @@ public class SlappUsrData implements Serializable {
         zoom = 100;
         recentExercises = new LimitedQueue(5);
         recentAssignments = new LimitedQueue(5);
+        pdfPrinterName = "";
     }
 
     public boolean isInstructorCheck() {
@@ -90,5 +92,14 @@ public class SlappUsrData implements Serializable {
 
     public void setRecentAssignments(LimitedQueue<File> recentAssignments) {
         this.recentAssignments = recentAssignments;
+    }
+
+    public String getPdfPrinterName() {
+        if (pdfPrinterName == null) return "";
+        else return pdfPrinterName;
+    }
+
+    public void setPdfPrinterName(String pdfPrinterName) {
+        this.pdfPrinterName = pdfPrinterName;
     }
 }

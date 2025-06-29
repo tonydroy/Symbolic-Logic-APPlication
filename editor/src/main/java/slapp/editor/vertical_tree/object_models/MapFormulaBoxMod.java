@@ -30,7 +30,11 @@ public class MapFormulaBoxMod implements Serializable {
     private double layoutY;
     private Document text;
     private List<String> linkIdStrings;
+    double printWidth;
 
+    public MapFormulaBoxMod() {
+        printWidth = 0;
+    }
 
     /**
      * id string for this node
@@ -92,4 +96,11 @@ public class MapFormulaBoxMod implements Serializable {
      */
     public void setLinkIdStrings(List<String> linkIdStrings) {       this.linkIdStrings = linkIdStrings;   }
 
+    public double getPrintWidth() {
+        return printWidth;
+    }
+
+    public void setPrintWidth(double printWidth) {
+        this.printWidth = printWidth;
+    }
 }

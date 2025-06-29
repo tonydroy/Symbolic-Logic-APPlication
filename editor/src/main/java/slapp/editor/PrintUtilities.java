@@ -19,6 +19,7 @@ package slapp.editor;
 import com.gluonhq.richtextarea.RichTextArea;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.collections.ObservableSet;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -221,7 +222,7 @@ public class PrintUtilities {
 
 
                 String message = "Please select a PDF printer from the following window.\n\n" +
-                        "There are a variety of such printers, each with slightly different characteristics.  On PC, 'Microsoft Print to PDF' works fine.\nYou will only have to do this once per session.\n\n" +
+                        "There are a variety of such printers, each with slightly different characteristics.  On PC, 'Microsoft Print to PDF' works fine.\nYou can change this selection from Print/Export Setup.\n\n" +
                         "Current: " + current;
 
 
@@ -553,6 +554,18 @@ public class PrintUtilities {
         return printer;
     }
 
+    public static Printer getPdfPrinter() {
+        return pdfPrinter;
+    }
+
+    public static void setPdfPrinter(String name) {
+        ObservableSet<Printer> printers = Printer.getAllPrinters();
+        for (Printer printer : printers) {
+            if (printer.getName().equals(name)) {
+                pdfPrinter = printer;
+            }
+        }
+    }
 
     /**
      * Reset scale for members of the print buffer all to the base value

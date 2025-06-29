@@ -109,6 +109,8 @@ public class ExpTreeFormulaBox extends AnchorPane {
     double ulineSpace = 3.0;
     List<Integer> baseline = new ArrayList<>();
 
+    private double printWidth;
+
 
 
 
@@ -957,5 +959,13 @@ public class ExpTreeFormulaBox extends AnchorPane {
 
     public void setBaseline(List<Integer> baseline) {
         this.baseline = baseline;
+    }
+
+    public double getPrintWidth() {
+        return printWidth;
+    }
+
+    public void setPrintWidth(double printWidth) {
+        this.printWidth = printWidth;
     }
 }

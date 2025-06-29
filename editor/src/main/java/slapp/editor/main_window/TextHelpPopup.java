@@ -73,10 +73,10 @@ static {
 
     commonElements = "<body style=\"margin-left:10; margin-right: 20\">" +
             "<p><h3>Common Functions:</h3></p>" +
-            "<p>Information which applies generally across different functions of SLAPP: The SLAPP file structure consists of exercises, and then assignments made up of exercises.  You can open and work an exercise as such.  However, in the usual case, you begin with an assignment.</p>" +
+            "<p>The SLAPP file structure consists of exercises, and then assignments made up of exercises.  You can open and work an exercise as such.  However, in the usual case, you begin with an assignment.</p>" +
             "<ol><li><h4>Top Menu Bar:</li>" +
             "<ul><li>The assignment dropdown has the usual operations: open, open recent, save, save as, close, print, and export to PDF.  (The export option is disabled on Mac: to create a PDF on Mac, select the regular SLAPP print option and then the PDF dropdown from the Mac printer window.)  The 'create' options have application for instructors.<br><br>" +
-            "In addition to the menu file options, double clicking a SLAPP assignment or exercise file will start the app and/or open the file in the program.<br><br></li>" +
+            "In addition to the menu options, double clicking a SLAPP file will start the app and/or open the file in the program.<br><br></li>" +
             "<li>The first time you open an assignment you will be asked to provide header information.  The name field is required.  Then the '+' and '-' buttons add and remove fields for optional header items (as student number or course section).  You will not be able to return to this screen without restarting the assignment from scratch; so be sure that the information is complete and correct as you enter it.  <br><br></li>" +
             "<li>Once you have an open assignment, move among exercises by the 'previous', 'next' and 'jump' items from the menu bar.  The 'comment' item opens a window to add a comment on the assignment as a whole; the comment appears at the top of a printed assignment.  The 'print' menu item duplicates print and export commands from the assignment and exercise items, and adds options for printer and page setup. <br><br></li>" +
             "<li>The 'Help' menu item includes help videos on the different exercise types.  In addition to this text page, the 'Contextual' help item pops up text help relevant to whatever exercise is currently open.<br><br></li>" +
@@ -137,7 +137,7 @@ static {
 
     verticalTrees = "<body style=\"margin-left:10; margin-right: 20\">" +
             "<p><h3>VerticalTrees</h3></p>" +
-            "<p>Vertical trees appear in a variety of contexts and in a variety of forms, as sprinkled through chapters 2, 4, and 5 of <i>Symbolic Logic</i>.  Such exercises have a variety of controls, where different exercises may include different combinations of the controls.  Also, though they are not strictly vertical trees, there is a sort of 'mapping' exercise (as encountered in chapter 2 of <i>Symbolic Logic</i>) that works within the same overall framework.</p>" +
+            "<p>Vertical trees appear in a variety of contexts and in a variety of forms, as sprinkled through chapters 2, 4, and 5 of <i>Symbolic Logic</i>.  Such exercises have a variety of controls, where different exercises may include different combinations of them.  Also, though they are not strictly vertical trees, there is a sort of 'mapping' exercise (as encountered in chapter 2 of <i>Symbolic Logic</i>) that works within the same overall framework.</p>" +
 
             "<ol><li>A vertical tree exercise always  has a bar over the main work area containing items that may be dragged into the work area.  Among the possibilities are a blue formula field, a green formula field, a grey vertical bracket, and/or a grey dotted horizontal line.    Once placed in the work area, the formula fields grow as you type in them; bracket and line may be sized from the far end (the right or bottom) by the mouse.  Each of the items has small popup buttons at the start (the left or top) -- grey to drag the object around in the work area, black to delete.   <br><br> A formula field is always associated with a default keyboard selection.  If you require a keyboard other than the default, it is often helpful to select the keyboard when the field is first dragged to the work area.  Each box 'remembers' its selected keyboard.<br><br></li>" +
 
@@ -191,8 +191,8 @@ static {
 
     derivations = "<body style=\"margin-left:10; margin-right: 20\">" +
             "<p><h3>Derivation Exercises</h3></p>" +
-            "<p>A derivation exercise typically begins with premise(s) at the top, and a conclusion at the bottom.  You will not be able to modify the concluding formula and, in the ordinary case, you will not be able to modify either a premise or its justification.</p> " +
-            "<ol><li>There is a vertical slider bar to adjust the width of formula fields.  In addition you can change the width of a derivation window by its width spinner.  Move within a derivation by the mouse and/or Enter/Return, Ctrl/Cmd-up, -down, -right, -left (Ctrl/Cmd optional for -up, -down). Exercises conducted in the metalanguage may show a button with script \u2133 for metalanguage help.<br><br></li>" +
+            "<p>A derivation exercise typically begins with premise(s) at the top, and a conclusion at the bottom.  In the usual case, you will not be able to modify the concluding formula and not be able to modify either a premise or its justification.</p> " +
+            "<ol><li>There is a vertical slider bar to adjust the width of formula fields.  In addition you can change the width of a derivation window by its width spinner.  Move within a derivation by the mouse and/or Enter/Return, Ctrl/Cmd-up, &#8209;down, &#8209;right, &#8209;left (Ctrl/Cmd optional for &#8209;up, &#8209;down). Exercises conducted in the metalanguage may show a button with script \u2133 for metalanguage help.<br><br></li>" +
             "<li>After that, buttons on the left are reasonably straightforward:<br><br></li>" +
             "<ul><li>The 'insert line' button inserts a line above the current line (at current scope depth), and 'delete line' removes the current line.<br><br></li>" +
             "<li>The 'insert subder' button adds lines for a new subderivation just above the current line, and 'insert subders' adds lines for a pair of subderivations above the current line (as for &#x2194;I or &#x2228;E). <br><br></li>" +

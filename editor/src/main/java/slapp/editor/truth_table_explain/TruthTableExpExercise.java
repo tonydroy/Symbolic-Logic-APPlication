@@ -413,6 +413,15 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         nodeList.add(statementSepBox);
 
         //content node
+        BoxedDRTA[] rowCommentsArray = printExercise.getExerciseView().getRowCommentsArray();
+        Double[] commentPrintWidths = truthTableExpModel.getCommentPrintWidths();
+        for (int i = 0; i < rowCommentsArray.length; i++) {
+            BoxedDRTA bDRTA = rowCommentsArray[i];
+            RichTextArea rta = bDRTA.getRTA();
+            rta.setMinWidth(commentPrintWidths[i]);
+        }
+
+
         GridPane tablePane = printExercise.getExerciseView().getTableGrid();
         ObservableList<Node> gridItems = tablePane.getChildren();
         ToggleButton[] buttons = printExercise.getExerciseView().getHighlightButtons();
@@ -612,14 +621,17 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
 
         BoxedDRTA[] lineCommentBoxedDRTAs = truthTableExpView.getRowCommentsArray();
         Document[] commentDocs = new Document[tableRows];
+        Double[] commentPrintWidths = new Double[tableRows];
         for (int i = 0; i < tableRows; i++) {
             BoxedDRTA bdrta = lineCommentBoxedDRTAs[i];
             RichTextArea rta = bdrta.getRTA();
             rta.getActionFactory().saveNow().execute(new ActionEvent());
             Document doc = rta.getDocument();
             commentDocs[i] = doc;
+            commentPrintWidths[i] = rta.getPrefWidth();
         }
         model.setRowComments(commentDocs);
+        model.setCommentPrintWidths(commentPrintWidths);
 
         ToggleButton[] highlightButtons = truthTableExpView.getHighlightButtons();
         boolean[] highlightValues = new boolean[tableColumns];

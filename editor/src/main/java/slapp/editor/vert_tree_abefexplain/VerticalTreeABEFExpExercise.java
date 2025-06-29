@@ -230,6 +230,8 @@ public class VerticalTreeABEFExpExercise implements Exercise<VerticalTreeABEFExp
             mapFormulaBox.setIdString(mapBoxMod.getIdString());
             mapFormulaBox.setmLinkIds(mapBoxMod.getLinkIdStrings());
 
+            mapFormulaBox.setPrintWidth(mapBoxMod.getPrintWidth());
+
             BoxedDRTA formulaBox = mapFormulaBox.getFormulaBox();
             RichTextArea mapBoxRTA = formulaBox.getRTA();
 //            mapBoxRTA.setPrefWidth(mapBoxMod.getWidth());
@@ -244,6 +246,8 @@ public class VerticalTreeABEFExpExercise implements Exercise<VerticalTreeABEFExp
             treeFormulaBox.setLayoutY(treeBoxMod.getLayoutY());
             treeFormulaBox.setIdString(treeBoxMod.getIdString());
             treeFormulaBox.setmLinkIds(treeBoxMod.getLinkIdStrings());
+
+            treeFormulaBox.setPrintWidth(treeBoxMod.getPrintWidth());
 
             BoxedDRTA treeFormulaDRTA = treeFormulaBox.getFormulaBox();
             RichTextArea treeBoxRTA = treeFormulaDRTA.getRTA();
@@ -487,10 +491,13 @@ public class VerticalTreeABEFExpExercise implements Exercise<VerticalTreeABEFExp
             if (node instanceof ABEFExpTreeFormulaBox) {
                 ABEFExpTreeFormulaBox treeBox = (ABEFExpTreeFormulaBox) node;
                 treeBox.getFormulaBox().getRTA().setStyle("-fx-border-color: transparent");
+                treeBox.getFormulaBox().getRTA().setMinWidth(treeBox.getPrintWidth());
                 if (treeBox.getAnnotationField() != null) treeBox.getAnnotationField().getRTA().setStyle("-fx-border-color: transparent");
             }
             if (node instanceof ABEFExpMapFormulaBox) {
-                ((ABEFExpMapFormulaBox) node).getFormulaBox().getRTA().setStyle("-fx-border-color: transparent");
+                ABEFExpMapFormulaBox mapBox = (ABEFExpMapFormulaBox) node;
+                mapBox.getFormulaBox().getRTA().setStyle("-fx-border-color: transparent");
+                mapBox.getFormulaBox().getRTA().setMinWidth(mapBox.getPrintWidth());
             }
         }
 
@@ -679,8 +686,9 @@ public class VerticalTreeABEFExpExercise implements Exercise<VerticalTreeABEFExp
                 newTreeMod.setLinkIdStrings(originalTreeBox.getmLinkIds());
 
                 BoxedDRTA treeFormulaBox = originalTreeBox.getFormulaBox();
-//                newTreeMod.setWidth(treeFormulaBox.getRTA().getPrefWidth());
                 RichTextArea treeRTA = treeFormulaBox.getRTA();
+                newTreeMod.setPrintWidth(treeRTA.getPrefWidth());
+
                 treeRTA.getActionFactory().saveNow().execute(new ActionEvent());
                 newTreeMod.setText(treeRTA.getDocument());
 
@@ -714,8 +722,9 @@ public class VerticalTreeABEFExpExercise implements Exercise<VerticalTreeABEFExp
                 newMapMod.setLinkIdStrings(originalMapBox.getmLinkIds());
 
                 BoxedDRTA formulaBox = originalMapBox.getFormulaBox();
-//                newMapMod.setWidth(formulaBox.getRTA().getPrefWidth());
                 RichTextArea mapRTA = formulaBox.getRTA();
+                newMapMod.setPrintWidth(mapRTA.getPrefWidth());
+
                 mapRTA.getActionFactory().saveNow().execute(new ActionEvent());
                 newMapMod.setText(mapRTA.getDocument());
 

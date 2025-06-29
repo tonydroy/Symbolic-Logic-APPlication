@@ -101,6 +101,8 @@ public class TreeFormulaBox extends AnchorPane {
     private double ulineSpace = 3.0;
     private List<Integer> baseline = new ArrayList<>();
 
+    private double printWidth;
+
     /**
      * Construct the tree formula box
      * @param verticalTreeView the {@link slapp.editor.vertical_tree.VerticalTreeView}
@@ -985,4 +987,11 @@ public class TreeFormulaBox extends AnchorPane {
      */
     public void setBaseline(List<Integer> baseline) {     this.baseline = baseline;   }
 
+    public double getPrintWidth() {
+        return printWidth;
+    }
+
+    public void setPrintWidth(double printWidth) {
+        this.printWidth = printWidth;
+    }
 }

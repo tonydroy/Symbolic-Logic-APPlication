@@ -145,6 +145,7 @@ public class MainWindow {
             DiskUtilities.setRecentAssignmentFiles(recents);
             updateRecentAssignments();
         }
+        if (!slappUsrData.getPdfPrinterName().equals("")) PrintUtilities.setPdfPrinter(slappUsrData.getPdfPrinterName());
 
 
         //install4j

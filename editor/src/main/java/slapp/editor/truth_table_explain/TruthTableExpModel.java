@@ -49,6 +49,7 @@ public class TruthTableExpModel implements ExerciseModel<Document>, Serializable
     private String[][]  tableValues;   //[w][h]
     private double gridWidth;
     private Document[] rowComments; //[h]
+    private Double[] commentPrintWidths;
     private boolean[] columnHighlights; //[w]
     private boolean conclusionDivider = false;
     private String choiceLead = new String("");
@@ -515,5 +516,13 @@ public class TruthTableExpModel implements ExerciseModel<Document>, Serializable
     @Override
     public void setPointsEarned(int pointsEarned) {
         this.pointsEarned = pointsEarned;
+    }
+
+    public Double[] getCommentPrintWidths() {
+        return commentPrintWidths;
+    }
+
+    public void setCommentPrintWidths(Double[] commentPrintWidths) {
+        this.commentPrintWidths = commentPrintWidths;
     }
 }

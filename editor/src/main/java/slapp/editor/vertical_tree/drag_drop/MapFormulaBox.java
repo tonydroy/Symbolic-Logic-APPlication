@@ -65,6 +65,7 @@ public class MapFormulaBox extends AnchorPane {
     int mapStage = 0;
     Label[] mapMarkers;
     Double[] mapXAnchors = new Double[2];
+    private double printWidth;
 
 
     public MapFormulaBox(VerticalTreeView verticalTreeView) {
@@ -437,5 +438,11 @@ public class MapFormulaBox extends AnchorPane {
         return formulaBox;
     }
 
+    public double getPrintWidth() {
+        return printWidth;
+    }
 
+    public void setPrintWidth(double printWidth) {
+        this.printWidth = printWidth;
+    }
 }

@@ -75,6 +75,8 @@ public class BranchNode extends HBox {
     double formulaBoxHeight = 22.5;
     ChangeListener formulaFocusListener;
     ChangeListener connectorFocusListener;
+    double formPrintWidth;
+    double connPrintWidth;
 
 
     /**
@@ -475,4 +477,20 @@ public class BranchNode extends HBox {
      */
     void setFormulaNode(boolean formulaNode) { this.formulaNode = formulaNode; }
 
+
+    public double getFormPrintWidth() {
+        return formPrintWidth;
+    }
+
+    public void setFormPrintWidth(double formPrintWidth) {
+        this.formPrintWidth = formPrintWidth;
+    }
+
+    public double getConnPrintWidth() {
+        return connPrintWidth;
+    }
+
+    public void setConnPrintWidth(double connPrintWidth) {
+        this.connPrintWidth = connPrintWidth;
+    }
 }

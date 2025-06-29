@@ -37,40 +37,11 @@ class BranchModel implements Serializable {
     private Document connectorDoc;
     private ArrayList<BranchModel> dependents = new ArrayList<>();
     private Document annotationDoc = new Document();
-
-
-//    private boolean annotationSwitch = false;
-//    private String annotationText = "";
-
-
-/*
-    private void readObject (ObjectInputStream stream) throws IOException, ClassNotFoundException {
-        stream.defaultReadObject();
-        if (annotationSwitch == false) {
-            annotationDoc = new Document(annotationText);
-            annotationSwitch = true;
-        }
-        System.out.println("doc: " + annotationDoc.getText());
-
-    }
-
- */
+    private double formPrintWidth;
+    private double connPrintWidth;
 
 
 
-
-
-
-
-
-
-/*
-    void tripAnnotationSwitch() {
-        annotationSwitch = true;
-    }
-
-
- */
 
 
     public Document getAnnotationDoc() {
@@ -184,4 +155,20 @@ class BranchModel implements Serializable {
      */
     Document getConnectorDoc() {    return connectorDoc;  }
 
+
+    public double getFormPrintWidth() {
+        return formPrintWidth;
+    }
+
+    public void setFormPrintWidth(double formPrintWidth) {
+        this.formPrintWidth = formPrintWidth;
+    }
+
+    public double getConnPrintWidth() {
+        return connPrintWidth;
+    }
+
+    public void setConnPrintWidth(double connPrintWidth) {
+        this.connPrintWidth = connPrintWidth;
+    }
 }

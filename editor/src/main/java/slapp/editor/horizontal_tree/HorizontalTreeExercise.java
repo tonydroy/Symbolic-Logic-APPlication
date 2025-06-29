@@ -209,6 +209,8 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
         branchNode.setIndefiniteNode(branchModel.isIndefiniteNumBranch());
         branchNode.setDotDivider(branchModel.isDotDivider());
         branchNode.setRoot(branchModel.isRootBranch());
+        branchNode.setFormPrintWidth(branchModel.getFormPrintWidth());
+        branchNode.setConnPrintWidth(branchModel.getConnPrintWidth());
 
 //        branchNode.getAnnotationField().getRTA().getActionFactory().open(new Document(branchModel.getAnnotationText())).execute(new ActionEvent());
         branchNode.getAnnotationField().getRTA().getActionFactory().open(branchModel.getAnnotationDoc()).execute(new ActionEvent());
@@ -384,6 +386,9 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
                         branchNode.getFormulaBoxedDRTA().getRTA().setStyle("-fx-border-color: transparent");
                         branchNode.getConnectorBoxedDRTA().getRTA().setStyle("-fx-border-color: transparent");
                         branchNode.getAnnotationField().getRTA().setStyle("-fx-border-color: transparent");
+
+                        branchNode.getFormulaBoxedDRTA().getRTA().setMinWidth(branchNode.getFormPrintWidth());
+                        branchNode.getConnectorBoxedDRTA().getRTA().setMinWidth(branchNode.getConnPrintWidth());
                     }
                 }
             }
@@ -635,10 +640,12 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
         RichTextArea formulaRTA = node.getFormulaBoxedDRTA().getRTA();
         formulaRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setFormulaDoc(formulaRTA.getDocument());
+        model.setFormPrintWidth(formulaRTA.getPrefWidth());
 
         RichTextArea connectRTA = node.getConnectorBoxedDRTA().getRTA();
         connectRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setConnectorDoc(connectRTA.getDocument());
+        model.setConnPrintWidth(connectRTA.getPrefWidth());
 
         for (BranchNode dependentNode : node.getDependents()) {
             BranchModel dependentMod = new BranchModel();
