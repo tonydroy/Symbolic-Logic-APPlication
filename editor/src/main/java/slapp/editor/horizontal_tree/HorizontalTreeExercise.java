@@ -531,10 +531,10 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
                         BranchNode branchNode = (BranchNode) paneNode;
                         branchNode.getFormulaBoxedDRTA().getRTA().setStyle("-fx-border-color: transparent");
                         branchNode.getConnectorBoxedDRTA().getRTA().setStyle("-fx-border-color: transparent");
-
                         branchNode.getAnnotationField().getRTA().setStyle("-fx-border-color: transparent");
 
-                     //   branchNode.getAnnotationField().setStyle("-fx-background-color: transparent");
+                        branchNode.getFormulaBoxedDRTA().getRTA().setMinWidth(branchNode.getFormPrintWidth());
+                        branchNode.getConnectorBoxedDRTA().getRTA().setMinWidth(branchNode.getConnPrintWidth());
                     }
                 }
             }
