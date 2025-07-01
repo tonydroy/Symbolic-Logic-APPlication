@@ -75,7 +75,7 @@ static {
             "<p><h3>Common Functions:</h3></p>" +
             "<p>The SLAPP file structure consists of exercises, and then assignments made up of exercises.  You can open and work an exercise as such.  However, in the usual case, you begin with an assignment.</p>" +
             "<ol><li><h4>Top Menu Bar:</li>" +
-            "<ul><li>The assignment dropdown has the usual operations: open, open recent, save, save as, close, print, and export to PDF.  (The export option is disabled on Mac: to create a PDF on Mac, select the regular SLAPP print option and then the PDF dropdown from the Mac printer window.)  The 'create' options have application for instructors.<br><br>" +
+            "<ul><li>The assignment dropdown has the usual operations: open, open recent, save, save as, close, print, and export to PDF.  (The export option is disabled on Mac: to create a PDF on Mac, select the regular SLAPP print option and then the PDF/Save as PDF from the Mac printer window.)  The 'create' options have application for instructors.<br><br>" +
             "In addition to the menu options, double clicking a SLAPP file will start the app and/or open the file in the program.<br><br></li>" +
             "<li>The first time you open an assignment you will be asked to provide header information.  The name field is required.  Then the '+' and '-' buttons add and remove fields for optional header items (as student number or course section).  You will not be able to return to this screen without restarting the assignment from scratch; so be sure that the information is complete and correct as you enter it.  <br><br></li>" +
             "<li>Once you have an open assignment, move among exercises by the 'previous', 'next' and 'jump' items from the menu bar.  The 'comment' item opens a window to add a comment on the assignment as a whole; the comment appears at the top of a printed assignment.  The 'print' menu item duplicates print and export commands from the assignment and exercise items, and adds options for printer and page setup. <br><br></li>" +
@@ -114,8 +114,10 @@ static {
             "<li><i>Mouse Right-Click:</i> SLAPP makes use of right-click on the mouse.  On a PC, this is most always enabled.  There are different means of performing right-click on a Mac, including modifications from System Settings / Mouse (or Trackpad) / Secondary Click.<br><br></li>" +
             "<li><i>Rich Text Area:</i> SLAPP makes use of the <a href=\"https://github.com/gluonhq/rich-text-area\">Rich Text Area</a> Java control for most text editing purposes.  This is a wonderful tool insofar as it (is open-source and) in a modified form makes possible special characters and the like required for SLAPP.  However the Rich Text Area (RTA) is itself a work in progress.  Recent improvements have made it vastly more stable.  However, there remain a couple of contexts where it can give trouble.  <br><br></li>" +
             "<ul>" +
-            "<li>In its current version, the RTA may give an error in case you attempt to copy and paste an <i>indented</i> line or paragraph.  In this case, you should see a popup warning: save your work, then close and restart SLAPP.  You should not have lost any of your work.<br><br></li>" +
-            "<li>Some of the RTA insert options (lists, pictures, and such) are fairly primitive -- lacking features you might expect.  This is so especially for tables (which may also behave strangely when indented).</li></ul>" +
+            "<li>In its current version, the RTA may give an error in case you attempt to copy and paste an <i>indented</i> line or paragraph.  In this case, you should see a popup warning: save your work, then close and restart SLAPP.  You should not have lost anything.<br><br></li>" +
+            "<li>Some of the RTA insert options (lists, pictures, and such) are fairly primitive -- lacking features you might expect.  This is so especially for tables (which strangely when indented).<br><br></li>" +
+            "<li>RTA scrollbars \"jump\" when you are adding text at the very end of a field.  Adding a final word such as 'END' (which you can delete later) and inserting prior to it removes the problem." +
+            "</ul>" +
             "</ol>"
             ;
 

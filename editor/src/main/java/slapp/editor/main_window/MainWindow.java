@@ -20,6 +20,8 @@ import com.install4j.api.launcher.ApplicationLauncher;
 import com.install4j.api.update.UpdateSchedule;
 import com.install4j.api.update.UpdateScheduleRegistry;
 import com.license4j.License;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
@@ -46,6 +48,7 @@ import javafx.stage.Modality;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import javafx.util.Duration;
 import slapp.editor.*;
 import slapp.editor.free_form.FreeFormExercise;
 import slapp.editor.front_page.FrontPageExercise;
@@ -645,7 +648,7 @@ public class MainWindow {
             EditorAlerts.fleetingRedPopup("There is no open assignment to save.");
         } else {
                 //run later to allow derivation justifications to set ok???
-                Platform.runLater(() -> {
+         //       Platform.runLater(() -> {
                 if (currentExercise.isExerciseModified())  assignmentContentModified = true;
                 
                 ExerciseModel model = currentExercise.getExerciseModelFromView();
@@ -658,7 +661,7 @@ public class MainWindow {
                 boolean saved = DiskUtilities.saveAssignment(saveAs, currentAssignment);
 
                 if (saved) assignmentContentModified = false;
-            });
+         //   });
         }
     }
 
@@ -1012,7 +1015,7 @@ public class MainWindow {
         int spinnerInitialValue = (int) Math.round(getBaseScale() * 100);
         Spinner<Integer> baseScaleSpinner = new Spinner(50, 150, spinnerInitialValue, 1);
         baseScaleSpinner.setTooltip(new Tooltip("Print at selected percentage of full size"));
-        baseScaleSpinner.setPrefWidth(60);
+        baseScaleSpinner.setPrefWidth(75);
         Label baseScaleLabel = new Label("Base Scale");
         HBox spinnerBox = new HBox(10, baseScaleSpinner, baseScaleLabel);
         VBox choicesBox = new VBox(15, spinnerBox, fitToPageCheck);

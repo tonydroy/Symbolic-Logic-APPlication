@@ -35,7 +35,7 @@ public class ExerciseHelpPopup {
             Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
 
 
-            helpStage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth() + windowOffset, bounds.getMaxX() - 420));
+            helpStage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth() + 10.0 + windowOffset, bounds.getMaxX() - 420));
             helpStage.setY(EditorMain.mainStage.getY() + EditorMain.mainStage.getHeight()/4 + windowOffset);
      //       helpStage.initOwner(EditorMain.mainStage);
         }

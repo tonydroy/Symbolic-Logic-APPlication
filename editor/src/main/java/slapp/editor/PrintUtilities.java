@@ -17,6 +17,9 @@ package slapp.editor;
 
 
 import com.gluonhq.richtextarea.RichTextArea;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableSet;
@@ -32,6 +35,7 @@ import javafx.scene.layout.*;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Scale;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import javafx.util.Pair;
 
 
@@ -370,20 +374,23 @@ public class PrintUtilities {
 
         PrinterJob job = getPrinterJob();
         if (job != null) {
-    //        boolean proceed = job.showPrintDialog(null);
+            //        boolean proceed = job.showPrintDialog(null);
             boolean proceed = job.showPrintDialog(EditorMain.mainStage);
 
             if (proceed) {
                 printNodes(footerInfo, job);
-            }
-            else MainWindowView.deactivateProgressIndicator();
+            } else MainWindowView.deactivateProgressIndicator();
             job.endJob();
+
+        //     This is a failed attempt to stop need to click out/click back after Mac print
+        //       Platform.runLater(() -> {
+        //           new Timeline(new KeyFrame(Duration.millis(100), e -> EditorMain.mainStage.requestFocus())).play();
+        //       });
         }
- //       else  EditorAlerts.showSimpleAlert("Print Problem", "Failed to create printer job");
     }
 
 
-    /**
+    /*
      * If pdf printer not already selected, select; then send print buffer to the selected pdf printer
      * @param footerInfo
      */

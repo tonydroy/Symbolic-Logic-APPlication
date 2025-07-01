@@ -191,7 +191,7 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         mainView.editorInFocus(explainDRTA, ControlType.AREA);
         explainEditor.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
             exerciseModified = true;
-            double explainTextHeight = mainView.getRTATextHeight(commentEditor);
+            double explainTextHeight = mainView.getRTATextHeight(explainEditor);
             truthTableExpModel.setExplainTextHeight(explainTextHeight);
         });
         explainEditor.focusedProperty().addListener((o, ov, nv) -> {

@@ -205,7 +205,7 @@ public class TruthTableGenExercise implements Exercise<TruthTableGenModel, Truth
         explainEditor.getActionFactory().saveNow().execute(new ActionEvent());
         explainEditor.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
             exerciseModified = true;
-            double explainTextHeight = mainView.getRTATextHeight(commentEditor);
+            double explainTextHeight = mainView.getRTATextHeight(explainEditor);
             truthTableGenModel.setExplainTextHeight(explainTextHeight);
         });
         mainView.editorInFocus(explainDRTA, ControlType.AREA);

@@ -9,6 +9,7 @@ import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
+import slapp.editor.EditorMain;
 import slapp.editor.ExerciseHelpPopup;
 import slapp.editor.derivation.der_systems.DerivationRule;
 import slapp.editor.derivation_explain.DrvtnExpExercise;
@@ -23,6 +24,8 @@ import slapp.editor.parser.symbols.VariableSym;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+
+import static javafx.stage.StageStyle.TRANSPARENT;
 
 public class DerivationHelp {
     private DerivationExercise derivationExercise;
@@ -66,10 +69,11 @@ public class DerivationHelp {
             helpShowing = false;
             for (Stage stage : helpStages) { if (stage != null && stage.isShowing()) helpShowing = true; }
             closeHelpWindows();
-   //        MainWindowView.activateProgressIndicator("Help: ");
 
-
-            runHelp();
+            //this is to let the windows close (esp. on Mac) before initiating the 250ms delay in runHelp().
+            Platform.runLater(() -> {
+                runHelp();
+            });
         });
 
 
@@ -77,9 +81,11 @@ public class DerivationHelp {
 
     public void closeHelpWindows() {
         for (Stage stage : helpStages) {
-            if (stage != null) stage.close();
+            if (stage != null) {
+                stage.close();
+            }
         }
-
+        //I think on Mac the windows don't appear as closed until a new one opens - which eliminates the delay.  Can't fix.
     }
 
     private void runHelp() {
@@ -167,7 +173,7 @@ public class DerivationHelp {
                     public void run() {
                         latch.countDown();
                     }
-                }, 250);
+                }, 250);   //250
 
                 setAccessibleFormulas();
                 findTermsInFormulas();
@@ -212,7 +218,7 @@ public class DerivationHelp {
                     public void run() {
                         latch.countDown();
                     }
-                }, 250);
+                }, 250);   //250
 
                 setAccessibleFormulas();
                 findTermsInFormulas();
@@ -225,7 +231,7 @@ public class DerivationHelp {
                 try {
                     latch.await();
                     SG0e();
-                } catch (InterruptedException e) {  }
+                } catch (InterruptedException e) { System.out.println(e.getMessage()); }
             }
 
      //       System.out.println("obtainable size: " + eObtainableFormulas.size() + " potential size: " + ePotentialFormulas.size());

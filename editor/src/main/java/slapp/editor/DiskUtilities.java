@@ -133,7 +133,10 @@ public class DiskUtilities {
                 fileChooser.setInitialDirectory(exerciseDirectory);
             else
                 fileChooser.setInitialDirectory(userHomeFile);
-            fileChooser.setInitialFileName(exerciseModel.getExerciseName() + ".sle");
+
+            fileChooser.setInitialFileName(exerciseModel.getExerciseName());
+        //    fileChooser.setInitialFileName(exerciseModel.getExerciseName() + ".sle");
+
             fileToSave = fileChooser.showSaveDialog(EditorMain.mainStage);
             if (fileToSave == null)
                 return success;
@@ -183,7 +186,11 @@ public class DiskUtilities {
                 fileChooser.setInitialDirectory(assignmentDirectory);
             else
                 fileChooser.setInitialDirectory(userHomeFile);
-            fileChooser.setInitialFileName(assignment.getHeader().getAssignmentName() + ".sla");
+
+            fileChooser.setInitialFileName(assignment.getHeader().getAssignmentName());
+         //   fileChooser.setInitialFileName(assignment.getHeader().getAssignmentName() + ".sla");
+
+
             fileToSave = fileChooser.showSaveDialog(EditorMain.mainStage);
             if (fileToSave == null)
                 return success;

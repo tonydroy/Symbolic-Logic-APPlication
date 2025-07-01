@@ -131,9 +131,9 @@ public class AssignmentCommentWindow {
         borderPane.setCenter(centerGroup);
 
         Button updateButton = new Button("Update");
-        updateButton.setPrefWidth(55);
+        updateButton.setPrefWidth(70);
         Button cancelButton = new Button("Cancel");
-        cancelButton.setPrefWidth(55);
+        cancelButton.setPrefWidth(70);
         updateButton.setOnAction(e -> {
             updateHeaderFromWindow();
             closeWindow();

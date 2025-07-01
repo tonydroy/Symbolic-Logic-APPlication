@@ -1377,4 +1377,8 @@ public class MainWindowView {
     public void setInstructorFunctions(boolean instructorFunctions) {
         this.instructorFunctions = instructorFunctions;
     }
+
+    public Node getCommentNode() {
+        return commentNode;
+    }
 }
