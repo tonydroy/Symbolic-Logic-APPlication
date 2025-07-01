@@ -1118,7 +1118,7 @@ public class DrvtnExpCreate {
         if (statementRTA.isModified()) fieldModified = true;
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document statementDocument = statementRTA.getDocument();
-        double statementPrefHeight = statementTextHeight + 25;
+        double statementPrefHeight = statementTextHeight + 29;
         Document commentDocument = new Document();
         Document explainDocument = new Document();
 

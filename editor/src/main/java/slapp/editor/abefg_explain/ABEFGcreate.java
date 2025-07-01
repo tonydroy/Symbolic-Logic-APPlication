@@ -589,7 +589,7 @@ public class ABEFGcreate {
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document statementDocument = statementRTA.getDocument();
         Document commentDoc = new Document();
-        double statementPrefHeight = statementTextHeight + 25;
+        double statementPrefHeight = statementTextHeight + 29;
 
         ABEFGmodel model = new ABEFGmodel(name, fields,  false, prompt, statementPrefHeight, statementDocument, commentDoc, new ArrayList<PageContent>());
         model.setStatementTextHeight(statementTextHeight);

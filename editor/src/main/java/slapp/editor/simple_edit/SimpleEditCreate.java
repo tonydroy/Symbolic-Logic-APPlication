@@ -430,7 +430,7 @@ public class SimpleEditCreate {
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExerciseStatement(statementRTA.getDocument());
         model.setStatementTextHeight(statementTextHeight);
-        model.setStatementPrefHeight(statementTextHeight + 25);
+        model.setStatementPrefHeight(statementTextHeight + 29);
 
         if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
         else {

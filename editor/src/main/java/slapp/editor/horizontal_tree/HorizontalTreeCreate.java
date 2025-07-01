@@ -432,7 +432,7 @@ public class HorizontalTreeCreate {
         if (statementRTA.isModified()) fieldModified = true;
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExerciseStatement(statementRTA.getDocument());
-        model.setStatementPrefHeight(statementTextHeight + 25);
+        model.setStatementPrefHeight(statementTextHeight + 29);
         model.setStatementTextHeight(statementTextHeight);
 
         if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));

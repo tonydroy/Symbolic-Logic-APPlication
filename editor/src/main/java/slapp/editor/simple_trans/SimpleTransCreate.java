@@ -472,7 +472,7 @@ public class SimpleTransCreate {
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExerciseStatement(statementRTA.getDocument());
         model.setStatementTextHeight(statementTextHeight);
-        model.setStatementPrefHeight(statementTextHeight + 35);
+        model.setStatementPrefHeight(statementTextHeight + 29);
 
         interpretationRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExerciseInterpretation(interpretationRTA.getDocument());

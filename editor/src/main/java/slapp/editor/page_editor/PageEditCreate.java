@@ -430,7 +430,7 @@ public class PageEditCreate {
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document statementDocument = statementRTA.getDocument();
         Document commentDoc = new Document();
-        double statementPrefHeight = statementTextHeight + 25;
+        double statementPrefHeight = statementTextHeight + 29;
         PageEditModel model = new PageEditModel(name, false, prompt, statementPrefHeight, statementDocument, commentDoc, new ArrayList<PageContent>());
         model.setStatementTextHeight(statementTextHeight);
 

@@ -272,7 +272,7 @@ public class DrvtnExpModel implements ExerciseModel<Document>, Serializable {
      * @return the statement height
      */
     @Override
-    public double getStatementPrefHeight() { return statementPrefHeight; }
+    public double getStatementPrefHeight() { return statementPrefHeight; }  //compensate for mac-pc difference
 
     /**
      * The height of the exercise statement window.
