@@ -96,7 +96,7 @@ public class VerticalBracket extends AnchorPane {
 
         Pane brackPane = new Pane();
         brackPane.setMinWidth(8.0); brackPane.setMaxWidth(8.0);
-        brackPane.setStyle("-fx-border-width: 1.5 0 1.5 1.5; -fx-border-color: black white black black; -fx-border-radius: 5 0 0 5; fx-background-color: transparent");
+        brackPane.setStyle("-fx-border-width: 1.5 0 1.5 1.5; -fx-border-color: black transparent black black; -fx-border-radius: 5 0 0 5; -fx-background-color: transparent");
 
         mainPane = new VBox();
         mainPane.setMinWidth(24.0);

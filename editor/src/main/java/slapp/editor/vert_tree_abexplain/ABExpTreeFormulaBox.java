@@ -253,17 +253,20 @@ public class ABExpTreeFormulaBox extends AnchorPane {
 
                 if (code == KeyCode.F10) {
                     if (circleStage < 2) {
-                        Bounds caretBounds = ((RichTextAreaSkin) formulaBox.getRTA().getSkin()).getCaretPosition();
-                        Bounds newCaretBounds = rta.sceneToLocal(caretBounds);
-                        double xAnchor = newCaretBounds.getMaxX() + rtaBounds.getMinX() - 1.0;
-                        double yAnchor = newCaretBounds.getMaxY() * .75 + rtaBounds.getMinY();
+                        if (!circled) {
+                            Bounds caretBounds = ((RichTextAreaSkin) formulaBox.getRTA().getSkin()).getCaretPosition();
+                            Bounds newCaretBounds = rta.sceneToLocal(caretBounds);
+                            double xAnchor = newCaretBounds.getMaxX() + rtaBounds.getMinX() - 1.0;
+                            double yAnchor = newCaretBounds.getMaxY() * .75 + rtaBounds.getMinY();
 
-                        Label marker = circleMarkers[circleStage];
-                        circleXAnchors[circleStage] = xAnchor;
-                        self.getChildren().add(marker);
-                        self.setLeftAnchor(marker, xAnchor);
-                        self.setTopAnchor(marker, yAnchor);
-                        circleStage++;
+                            Label marker = circleMarkers[circleStage];
+                            circleXAnchors[circleStage] = xAnchor;
+                            self.getChildren().add(marker);
+                            self.setLeftAnchor(marker, xAnchor);
+                            self.setTopAnchor(marker, yAnchor);
+                            circleStage++;
+                        }
+                        else EditorAlerts.fleetingRedPopup("Text field has at most one circle annotation.");
                     } else {
                         self.getChildren().removeAll(circleMarkers);
                         circleStage = 0;
@@ -334,6 +337,7 @@ public class ABExpTreeFormulaBox extends AnchorPane {
         double minX = Math.min(circleXAnchors[0], circleXAnchors[1]);
         double maxX = Math.max(circleXAnchors[0], circleXAnchors[1]);
         self.getChildren().removeAll(circleMarkers);
+        circleStage = 0;
         self.getChildren().add(oval);
         oval.setWidth(maxX - minX);
 
