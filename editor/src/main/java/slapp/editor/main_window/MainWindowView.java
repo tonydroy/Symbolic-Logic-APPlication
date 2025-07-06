@@ -384,7 +384,7 @@ public class MainWindowView {
         mainScene.getStylesheets().add(DecoratedRTA.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
 
         stage.setScene(mainScene);
-        stage.setTitle("SLAPP Editor");
+        stage.setTitle("Symbolic Logic APP");
         stage.setMinWidth(minStageWidth);
 
         setMainWindowBounds();

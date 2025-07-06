@@ -722,7 +722,7 @@ public class ABExpTreeFormulaBox extends AnchorPane {
 
         BoxedDRTA annBDRTA = new BoxedDRTA();
         RichTextArea annRTA = annBDRTA.getRTA();
-        annRTA.setPrefWidth(40);
+        annRTA.setPrefWidth(42);
         annBDRTA.getBoxedRTA().setMaxHeight(20);
         annBDRTA.getDRTA().getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.BASE_AND_SANS);
         annRTA.addEventFilter(KeyEvent.ANY, e -> {

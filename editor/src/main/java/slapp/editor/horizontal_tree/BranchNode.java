@@ -69,7 +69,7 @@ public class BranchNode extends HBox {
     boolean formulaNode = true;
     boolean indefiniteNode = false;
     boolean dotDivider;
-    double annotationWidth  = 40;
+    double annotationWidth  = 42;
     double rootBump = 0;
     double annBump = 0;
     double formulaBoxHeight = 22.5;
