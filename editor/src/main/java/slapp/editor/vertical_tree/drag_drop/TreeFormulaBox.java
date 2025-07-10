@@ -592,8 +592,9 @@ public class TreeFormulaBox extends AnchorPane {
     public void relocateToGridPoint2 (Point2D p) {
         Point2D localCoords = getParent().sceneToLocal(p);
         double localY = Math.round((localCoords.getY() - 16) / 24.0) * 24.0 ;
-
         relocate ( (int) localCoords.getX(), (int) (localY - 7)  );
+
+
     }
 
     /**
