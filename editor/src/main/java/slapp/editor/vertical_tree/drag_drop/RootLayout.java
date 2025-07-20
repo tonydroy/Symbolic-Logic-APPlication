@@ -74,14 +74,11 @@ public class RootLayout extends AnchorPane {
         this.verticalTreeView = verticalTreeView;
         topPane = new HBox();
 
-
-
-
-
         mainPane = new AnchorPane();
         base_pane = new SplitPane();
         base_pane.getItems().addAll(topPane, mainPane);
         base_pane.setOrientation(Orientation.VERTICAL);
+
 
         this.getChildren().add(base_pane);
 

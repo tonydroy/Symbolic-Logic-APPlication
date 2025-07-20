@@ -23,6 +23,17 @@ public class ParseUtilities {
 
     public ParseUtilities() {}
 
+    public static List<Expression> parseSubDoc(Document doc, int startIndex, int endIndex, String langName) {
+        language = Languages.getLanguage(langName);
+        List<OriginalElement> elements = getSubElements(doc, startIndex, endIndex);
+
+        List<Expression> expressions = new ArrayList<>();
+        for (OriginalElement element : elements) {
+            expressions.add(element);
+        }
+        return parseExpressions(expressions);
+    }
+
     public static List<Expression> parseDoc(Document doc, String langName) {
         language = Languages.getLanguage(langName);
 
@@ -1352,14 +1363,20 @@ public class ParseUtilities {
         return sb.toString();
     }
 
+    public static List<OriginalElement> getElements(Document doc) {
+        String text = doc.getText();
+        int endIndex = text.length();
+        return getSubElements(doc, 0, endIndex);
+    }
+
 
     //get elements from document, strip space characters, and return list of remaining elements
-    public static List<OriginalElement> getElements(Document doc) {
+    public static List<OriginalElement> getSubElements(Document doc, int startIndex, int endIndex) {
         List<OriginalElement> elements = new ArrayList<OriginalElement>();
         String text = doc.getText();
         String s;
-        int i = 0;
-        while (i < text.length()) {
+        int i = startIndex;
+        while (i < endIndex) {
             int len = 1;
             if (i + 2 <= text.length() && text.codePointCount(i, i + 2) == 1) {
                 len = 2;

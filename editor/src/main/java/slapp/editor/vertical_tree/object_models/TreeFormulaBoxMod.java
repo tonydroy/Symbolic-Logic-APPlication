@@ -39,6 +39,7 @@ public class TreeFormulaBoxMod implements Serializable {
 //    String annotationText;
     Double[] circleXAnchors;
     boolean circled;
+    private int[] circleIndexes;
     double rtaBoundsHeight;
     double rtaBoundsMinY;
     List<UnderlineMod> underlineList = new ArrayList<>();
@@ -48,6 +49,7 @@ public class TreeFormulaBoxMod implements Serializable {
 
     public TreeFormulaBoxMod() {
         printWidth = 0;
+        circleIndexes = new int[2];
     }
 
     /**
@@ -232,5 +234,14 @@ public class TreeFormulaBoxMod implements Serializable {
 
     public void setPrintWidth(double printWidth) {
         this.printWidth = printWidth;
+    }
+
+    public int[] getCircleIndexes() {
+        if (circleIndexes != null) return circleIndexes;
+        else return new int[2];
+    }
+
+    public void setCircleIndexes(int[] circleIndexes) {
+        this.circleIndexes = circleIndexes;
     }
 }

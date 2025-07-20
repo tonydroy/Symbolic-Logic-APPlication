@@ -91,6 +91,7 @@ public class TreeFormulaBox extends AnchorPane {
     private int circleStage = 0;
     private Label[] circleMarkers;
     private Double[] circleXAnchors = new Double[2];
+    private int[] circleIndexes = new int[2];
     private double rtaBoundsHeight;
     private double rtaBoundsMinY;
     private boolean circled = false;
@@ -226,6 +227,20 @@ public class TreeFormulaBox extends AnchorPane {
                 if (code == KeyCode.F10) {
                     if (circleStage < 2) {
                         if (!circled) {
+
+
+                            int xPos = (int) Math.round(rta.getCaretRowColumn().getX());
+                            circleIndexes[circleStage] = xPos;
+
+                            //test
+                         //   System.out.print("x = " + xPos);
+                         //   rta.getActionFactory().saveNow().execute(new ActionEvent());
+                         //   String s = rta.getDocument().getText();
+                         //   System.out.println(" char: " + s.substring(xPos, 10));
+
+                            //
+
+
                             Bounds caretBounds = ((RichTextAreaSkin) formulaBox.getRTA().getSkin()).getCaretPosition();
                             Bounds newCaretBounds = rta.sceneToLocal(caretBounds);
                             double xAnchor = newCaretBounds.getMaxX() + rtaBounds.getMinX() - 1.0;
@@ -815,6 +830,7 @@ public class TreeFormulaBox extends AnchorPane {
             undoCircleRequest();
             self.getChildren().remove(oval);
             circled = false;
+            circleIndexes = new int[2];
             verticalTreeView.setUndoRedoFlag(true);
             verticalTreeView.setUndoRedoFlag(false);
         }
@@ -949,6 +965,15 @@ public class TreeFormulaBox extends AnchorPane {
      */
     public void setCircleXAnchors(Double[] circleXAnchors) {     this.circleXAnchors = circleXAnchors;   }
 
+
+    public int[] getCircleIndexes() {
+        return circleIndexes;
+
+    }
+
+    public void setCircleIndexes(int[] circleIndexes) {
+        this.circleIndexes = circleIndexes;
+    }
 
     /**
      * Height of the RTA in the tree formula box

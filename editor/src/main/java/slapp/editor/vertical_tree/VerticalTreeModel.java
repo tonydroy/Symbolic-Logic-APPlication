@@ -33,6 +33,7 @@ public class VerticalTreeModel implements ExerciseModel<Document>, Serializable 
     private String exerciseName = new String("");
     private ExerciseType exerciseType = ExerciseType.VERTICAL_TREE;
     private RichTextAreaSkin.KeyMapValue defaultKeyboardType;
+    private RichTextAreaSkin.KeyMapValue defaultMapKeyboardType;
     private ExerciseModel<Document> originalModel = null;
     private boolean started = false;
     private Document exerciseStatement = new Document();
@@ -60,12 +61,24 @@ public class VerticalTreeModel implements ExerciseModel<Document>, Serializable 
     private int pointsPossible;
     private int pointsEarned;
 
+    private VTcheckSetup checkSetup;
+
+
 
     public VerticalTreeModel(){
         pointsPossible = 0;
         pointsEarned = -1;
+        checkSetup = new VTcheckSetup();
+        defaultMapKeyboardType = RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS;
     }
 
+    public VTcheckSetup getCheckSetup() {
+        return checkSetup;
+    }
+
+    public void setCheckSetup(VTcheckSetup checkSetup) {
+        this.checkSetup = checkSetup;
+    }
 
     void setExerciseName(String exerciseName) { this.exerciseName = exerciseName;    }
 
@@ -96,6 +109,14 @@ public class VerticalTreeModel implements ExerciseModel<Document>, Serializable 
     public RichTextAreaSkin.KeyMapValue getDefaultKeyboardType() {    return defaultKeyboardType;  }
 
     public void setDefaultKeyboardType(RichTextAreaSkin.KeyMapValue defaultKeyboardType) {   this.defaultKeyboardType = defaultKeyboardType;  }
+
+    public RichTextAreaSkin.KeyMapValue getDefaultMapKeyboardType() {
+        return defaultMapKeyboardType;
+    }
+
+    public void setDefaultMapKeyboardType(RichTextAreaSkin.KeyMapValue defaultMapKeyboardType) {
+        this.defaultMapKeyboardType = defaultMapKeyboardType;
+    }
 
     double getCommentPrefHeight() {     return commentPrefHeight;  }
 

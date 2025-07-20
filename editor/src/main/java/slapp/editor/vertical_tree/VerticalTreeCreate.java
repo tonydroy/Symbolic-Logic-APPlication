@@ -67,21 +67,24 @@ public class VerticalTreeCreate {
     private TextArea helpArea;
     private ChangeListener nameListener;
     private boolean modified = false;
-    private CheckBox treeFormulaBoxCheck;
+    private CheckBox treeBoxBaseItalicCheck;
+    private CheckBox treeBoxItalicSansCheck;
+    private CheckBox treeBoxScriptItalicCheck;
+    private CheckBox mapBoxBaseItalicCheck;
+    private CheckBox mapBoxItalicSansCheck;
+    private CheckBox mapBoxScriptItalicCheck;
     private CheckBox verticalBracketCheck;
     private CheckBox dashedLineCheck;
-    private CheckBox mapFormulaBoxCheck;
     private CheckBox boxingFormulaCheck;
     private CheckBox circleCheck;
     private CheckBox starCheck;
     private CheckBox annotationCheck;
     private CheckBox underlineCheck;
     private CheckBox mappingCheck;
-    private CheckBox baseItalicCheck;
-    private CheckBox italicSansCheck;
-    private CheckBox scriptItalicCheck;
 
-    private RichTextAreaSkin.KeyMapValue keyboardSelector;
+
+    private RichTextAreaSkin.KeyMapValue treeBoxKeyboardSelector;
+    private RichTextAreaSkin.KeyMapValue mapBoxKeyboardSelector;
     private double scale = 1.0;
     private Stage stage;
     private Scene scene;
@@ -112,16 +115,20 @@ public class VerticalTreeCreate {
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         statementTextHeight = originalModel.getStatementTextHeight();
         nameField.setText(originalModel.getExerciseName());
-        keyboardSelector = originalModel.getDefaultKeyboardType();
-        italicSansCheck.setSelected(keyboardSelector == ITALIC_AND_SANS);
-        baseItalicCheck.setSelected(keyboardSelector == RichTextAreaSkin.KeyMapValue.BASE);
-        scriptItalicCheck.setSelected(keyboardSelector == SCRIPT_AND_ITALIC);
-        pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
+        treeBoxKeyboardSelector = originalModel.getDefaultKeyboardType();
+        mapBoxKeyboardSelector = originalModel.getDefaultMapKeyboardType();
+
         List<DragIconType> dragIconList = originalModel.getDragIconList();
-        treeFormulaBoxCheck.setSelected(dragIconList.contains(tree_field));
+        treeBoxItalicSansCheck.setSelected(dragIconList.contains(tree_field) && treeBoxKeyboardSelector == ITALIC_AND_SANS);
+        treeBoxBaseItalicCheck.setSelected(dragIconList.contains(tree_field) && treeBoxKeyboardSelector == BASE);
+        treeBoxScriptItalicCheck.setSelected(dragIconList.contains(tree_field) && treeBoxKeyboardSelector == SCRIPT_AND_ITALIC);
+        mapBoxItalicSansCheck.setSelected(dragIconList.contains(map_field) && mapBoxKeyboardSelector == ITALIC_AND_SANS);
+        mapBoxBaseItalicCheck.setSelected(dragIconList.contains(map_field) && mapBoxKeyboardSelector == BASE);
+        mapBoxScriptItalicCheck.setSelected(dragIconList.contains(map_field) && mapBoxKeyboardSelector == SCRIPT_AND_ITALIC);
+
+        pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
         verticalBracketCheck.setSelected(dragIconList.contains(bracket));
         dashedLineCheck.setSelected(dragIconList.contains(dashed_line));
-        mapFormulaBoxCheck.setSelected(dragIconList.contains(map_field));
         List<ObjectControlType> objectControlList = originalModel.getObjectControlList();
         boxingFormulaCheck.setSelected(objectControlList.contains(FORMULA_BOX));
         circleCheck.setSelected(objectControlList.contains(CIRCLE));
@@ -223,69 +230,94 @@ public class VerticalTreeCreate {
         pointsBox.setAlignment(Pos.BASELINE_LEFT);
 
 
-        Label keyboardLabel = new Label("Default Keyboard: ");
-        keyboardLabel.setPrefWidth(100);
-        baseItalicCheck = new CheckBox("Base/Italic");
-        baseItalicCheck.setSelected(false);
-        baseItalicCheck.selectedProperty().addListener((ob, ov, nv) -> {
+        Label dragBarLabel = new Label("Drag Bar: ");
+        dragBarLabel.setPrefWidth(80);
+
+        Label treeBoxLabel = new Label("Tree Box: ");
+        treeBoxBaseItalicCheck = new CheckBox("Base/Italic");
+        treeBoxBaseItalicCheck.setSelected(false);
+        treeBoxBaseItalicCheck.selectedProperty().addListener((ob, ov, nv) -> {
             boolean selected = (boolean) nv;
             if (selected) {
                 modified = true;
-                keyboardSelector = BASE;
-                italicSansCheck.setSelected(false);
-                scriptItalicCheck.setSelected(false);
+                treeBoxItalicSansCheck.setSelected(false);
+                treeBoxScriptItalicCheck.setSelected(false);
             }
         });
-        italicSansCheck = new CheckBox("Italic/Sans");
-        italicSansCheck.setSelected(true);
-        italicSansCheck.selectedProperty().addListener((ob, ov, nv) -> {
+        treeBoxItalicSansCheck = new CheckBox("Italic/Sans");
+        treeBoxItalicSansCheck.setSelected(false);
+        treeBoxItalicSansCheck.selectedProperty().addListener((ob, ov, nv) -> {
             boolean selected = (boolean) nv;
             if (selected) {
                 modified = true;
-                keyboardSelector = ITALIC_AND_SANS;
-                baseItalicCheck.setSelected(false);
-                scriptItalicCheck.setSelected(false);
+                treeBoxBaseItalicCheck.setSelected(false);
+                treeBoxScriptItalicCheck.setSelected(false);
             }
         });
-        scriptItalicCheck = new CheckBox("Script/Italic");
-        scriptItalicCheck.setSelected(false);
-        scriptItalicCheck.selectedProperty().addListener((ob, ov, nv) -> {
+        treeBoxScriptItalicCheck = new CheckBox("Script/Italic");
+        treeBoxScriptItalicCheck.setSelected(false);
+        treeBoxScriptItalicCheck.selectedProperty().addListener((ob, ov, nv) -> {
             boolean selected = (boolean) nv;
             if (selected) {
                 modified = true;
-                keyboardSelector = SCRIPT_AND_ITALIC;
-                baseItalicCheck.setSelected(false);
-                italicSansCheck.setSelected(false);
+                treeBoxBaseItalicCheck.setSelected(false);
+                treeBoxItalicSansCheck.setSelected(false);
             }
         });
+        HBox treeFormulaBox = new HBox(20, treeBoxLabel, treeBoxBaseItalicCheck, treeBoxItalicSansCheck, treeBoxScriptItalicCheck);
+        treeFormulaBox.setAlignment(Pos.BASELINE_LEFT);
 
-        HBox keyboardBox = new HBox(20, keyboardLabel, baseItalicCheck, italicSansCheck, scriptItalicCheck);
-        keyboardBox.setAlignment(Pos.BASELINE_LEFT);
+        Label mapBoxLabel = new Label("Map Box: ");
+        mapBoxBaseItalicCheck = new CheckBox("Base/Italic");
+        mapBoxBaseItalicCheck.setSelected(false);
+        mapBoxBaseItalicCheck.selectedProperty().addListener((ob, ov, nv) -> {
+            boolean selected = (boolean) nv;
+            if (selected) {
+                modified = true;
+                mapBoxItalicSansCheck.setSelected(false);
+                mapBoxScriptItalicCheck.setSelected(false);
+            }
+        });
+        mapBoxItalicSansCheck = new CheckBox("Italic/Sans");
+        mapBoxItalicSansCheck.setSelected(false);
+        mapBoxItalicSansCheck.selectedProperty().addListener((ob, ov, nv) -> {
+            boolean selected = (boolean) nv;
+            if (selected) {
+                modified = true;
+                mapBoxBaseItalicCheck.setSelected(false);
+                mapBoxScriptItalicCheck.setSelected(false);
+            }
+        });
+        mapBoxScriptItalicCheck = new CheckBox("Script/Italic");
+        mapBoxScriptItalicCheck.setSelected(false);
+        mapBoxScriptItalicCheck.selectedProperty().addListener((ob, ov, nv) -> {
+            boolean selected = (boolean) nv;
+            if (selected) {
+                modified = true;
+                mapBoxBaseItalicCheck.setSelected(false);
+                mapBoxItalicSansCheck.setSelected(false);
+            }
+        });
+        HBox mapFormulaBox = new HBox(20, mapBoxLabel, mapBoxBaseItalicCheck, mapBoxItalicSansCheck, mapBoxScriptItalicCheck);
+        mapFormulaBox.setAlignment(Pos.BASELINE_LEFT);
 
-
-
-        //drag bar
-        Label dragLabel = new Label("Drag Bar: ");
-        dragLabel.setPrefWidth(100);
-
-        treeFormulaBoxCheck = new CheckBox("Tree Formula");
-        treeFormulaBoxCheck.setSelected(false);
-        treeFormulaBoxCheck.selectedProperty().addListener((ob, ov, nv) -> { modified = true; });
         verticalBracketCheck = new CheckBox("Vertical Bracket");
         verticalBracketCheck.setSelected(false);
         verticalBracketCheck.selectedProperty().addListener((ob, ov, nv) -> { modified = true; });
         dashedLineCheck = new CheckBox("Dashed Line");
         dashedLineCheck.setSelected(false);
         dashedLineCheck.selectedProperty().addListener((ob, ov, nv) -> { modified = true; });
-        mapFormulaBoxCheck = new CheckBox("Maping Formula");
-        mapFormulaBoxCheck.setSelected(false);
-        mapFormulaBoxCheck.selectedProperty().addListener((ob, ov, nv) -> { modified = true; });
-        HBox dragBox = new HBox(20, dragLabel, treeFormulaBoxCheck, verticalBracketCheck, dashedLineCheck, mapFormulaBoxCheck);
-        dragBox.setAlignment(Pos.BASELINE_LEFT);
+
+        HBox bracketLineChecks = new HBox(20, verticalBracketCheck, dashedLineCheck);
+
+        VBox formulaBoxes = new VBox(15, treeFormulaBox, mapFormulaBox, bracketLineChecks);
+        formulaBoxes.setAlignment(Pos.TOP_LEFT);
+        HBox dragBox = new HBox(20, dragBarLabel, formulaBoxes);
+        dragBox.setAlignment(Pos.TOP_LEFT);
 
         //control pane
         Label controlLabel = new Label("Controls Pane: ");
-        controlLabel.setPrefWidth(100);
+        controlLabel.setPrefWidth(80);
 
         boxingFormulaCheck = new CheckBox("Box Button");
         boxingFormulaCheck.setSelected(false);
@@ -308,8 +340,8 @@ public class VerticalTreeCreate {
         HBox controlBox = new HBox(20,controlLabel, boxingFormulaCheck, circleCheck, starCheck, annotationCheck, underlineCheck, mappingCheck);
         controlBox.setAlignment(Pos.BASELINE_LEFT);
 
-        fieldsBox = new VBox(15, nameBox, pointsBox, dragBox, controlBox, keyboardBox);
-        fieldsBox.setPadding(new Insets(20,0, 0, 20));
+        fieldsBox = new VBox(15, nameBox, pointsBox, dragBox, controlBox);
+        fieldsBox.setPadding(new Insets(20,0, 0, 0));
 
         //center
         String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
@@ -388,24 +420,6 @@ public class VerticalTreeCreate {
         sizeToolBar.setPrefHeight(38);
         sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     V Sz:"), statementHeightSpinner);
 
-/*
-        ToolBar editToolbar = statementDRTA.getKbdSelectorToolbar();
-        ToolBar fontsToolbar = statementDRTA.getEditToolbar();
-        ToolBar paragraphToolbar = statementDRTA.getParagraphToolbar();
-        ToolBar kbdDiaToolBar = statementDRTA.getKbdDiaToolbar();
-        kbdDiaToolBar.setPrefHeight(38);
-
-        if (kbdDiaToolBar.getItems().isEmpty()) {
-            kbdDiaToolBar.getItems().addAll(statementDRTA.getKeyboardDiagramButton());
-        }
-
-        HBox editAndKbdBox = new HBox(editToolbar, sizeToolBar, kbdDiaToolBar);
-        editAndKbdBox.setHgrow(kbdDiaToolBar, Priority.ALWAYS);
-
-        VBox topBox = new VBox(menuBar, paragraphToolbar, fontsToolbar, editAndKbdBox, fieldsBox);
-        borderPane.topProperty().setValue(topBox);
-
- */
 
         //generate view
         scene = new Scene(borderPane);
@@ -512,15 +526,39 @@ public class VerticalTreeCreate {
     private VerticalTreeModel extractModelFromWindow() {
         VerticalTreeModel model = new VerticalTreeModel();
         model.setExerciseName(nameField.getText());
-        if (italicSansCheck.isSelected()) model.setDefaultKeyboardType(ITALIC_AND_SANS);
-        else if (baseItalicCheck.isSelected()) model.setDefaultKeyboardType(BASE);
-        else model.setDefaultKeyboardType(SCRIPT_AND_ITALIC);
 
         List<DragIconType> dragList = model.getDragIconList();
-        if (treeFormulaBoxCheck.isSelected()) dragList.add(tree_field);
+        if (treeBoxItalicSansCheck.isSelected()) {
+            model.setDefaultKeyboardType(ITALIC_AND_SANS);
+            dragList.add(tree_field);
+        }
+        else if (treeBoxBaseItalicCheck.isSelected()) {
+            model.setDefaultKeyboardType(BASE);
+            dragList.add(tree_field);
+        }
+        else if (treeBoxScriptItalicCheck.isSelected()) {
+            model.setDefaultKeyboardType(SCRIPT_AND_ITALIC);
+            dragList.add(tree_field);
+        }
+
         if (verticalBracketCheck.isSelected()) dragList.add(bracket);
         if (dashedLineCheck.isSelected()) dragList.add(dashed_line);
-        if (mapFormulaBoxCheck.isSelected()) dragList.add(map_field);
+
+        if (mapBoxItalicSansCheck.isSelected()) {
+            model.setDefaultMapKeyboardType(ITALIC_AND_SANS);
+            dragList.add(map_field);
+        }
+        else if (mapBoxBaseItalicCheck.isSelected()) {
+            model.setDefaultMapKeyboardType(BASE);
+            dragList.add(map_field);
+        }
+        else if (mapBoxScriptItalicCheck.isSelected()) {
+            model.setDefaultMapKeyboardType(SCRIPT_AND_ITALIC);
+            dragList.add(map_field);
+        }
+
+
+
 
         List<ObjectControlType> controlList = model.getObjectControlList();
         if (boxingFormulaCheck.isSelected()) controlList.add(FORMULA_BOX);
@@ -553,34 +591,6 @@ public class VerticalTreeCreate {
             keyboardDiagram.updateAndShow();
         }
 
-        /*
-        ToolBar editToolbar = decoratedRTA.getKbdSelectorToolbar();
-        ToolBar fontsToolbar = decoratedRTA.getEditToolbar();
-        ToolBar paragraphToolbar = decoratedRTA.getParagraphToolbar();
-        ToolBar kbdDiaToolBar = decoratedRTA.getKbdDiaToolbar();
-        kbdDiaToolBar.setPrefHeight(38);
-
-        switch (control) {
-            case NONE: {
-                kbdDiaToolBar.setDisable(true);
-            }
-            case STATEMENT: {
-                editToolbar.setDisable(true);
-                fontsToolbar.setDisable(true);
-            }
-            case FIELD: {
-                paragraphToolbar.setDisable(true);
-            }
-            case AREA: { }
-        }
-        sizeToolBar.setDisable(kbdDiaToolBar.isDisable());
-
-
-        HBox editAndKbdBox = new HBox(editToolbar, sizeToolBar, kbdDiaToolBar);
-        editAndKbdBox.setHgrow(kbdDiaToolBar, Priority.ALWAYS);
-        editAndKbdBox.layout();
-
-         */
         ToolBar paragraphToolbar = decoratedRTA.getParagraphToolbar();
         paragraphToolbar.setMinWidth(870);
 

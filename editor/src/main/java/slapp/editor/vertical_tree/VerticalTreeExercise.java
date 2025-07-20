@@ -50,6 +50,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
     private MainWindowView mainView;
     private VerticalTreeModel verticalTreeModel;
     private VerticalTreeView verticalTreeView;
+    private VTcheck vtCheck;
     private boolean exerciseModified = false;
     private UndoRedoList<VerticalTreeModel> undoRedoList = new UndoRedoList<>(50);
 
@@ -64,6 +65,9 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         this.mainView = mainWindow.getMainView();
         this.verticalTreeView = new VerticalTreeView(mainView);
         setVerticalTreeView();
+        vtCheck = new VTcheck(this);
+
+
         undoRedoFlag.set(false);
         undoRedoFlag.bind(verticalTreeView.undoRedoFlagProperty());
         undoRedoFlag.addListener((ob, ov, nv) -> {
@@ -77,6 +81,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
 
     private void setVerticalTreeView() {
         verticalTreeView.setDefaultKeyboard(verticalTreeModel.getDefaultKeyboardType());
+        verticalTreeView.setDefaultMapKeyboard(verticalTreeModel.getDefaultMapKeyboardType());
         verticalTreeView.setStatementPrefHeight(verticalTreeModel.getStatementPrefHeight());
         verticalTreeView.setCommentPrefHeight(verticalTreeModel.getCommentPrefHeight());
         verticalTreeView.setMainPanePrefHeight(verticalTreeModel.getMainPanePrefHeight());
@@ -127,6 +132,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         }
         populateMainPaneNodes();
         verticalTreeView.initializeViewDetails();
+        verticalTreeView.setRightControlBox();
     }
 
     private void populateMainPaneNodes() {
@@ -173,6 +179,8 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
             treeFormulaBox.setLayoutY(treeBoxMod.getLayoutY());
             treeFormulaBox.setIdString(treeBoxMod.getIdString());
             treeFormulaBox.setmLinkIds(treeBoxMod.getLinkIdStrings());
+
+            treeFormulaBox.setCircleIndexes(treeBoxMod.getCircleIndexes());
 
             treeFormulaBox.setPrintWidth(treeBoxMod.getPrintWidth());
 
@@ -411,6 +419,8 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         AnchorPane mainPane = printExercise.getExerciseView().getRootLayout().getMainPane();
         mainPane.setStyle("-fx-background-color: transparent");
 
+        mainPane.setMinHeight(0);
+
 
         VerticalTreeModel originalVTmod = (VerticalTreeModel) printModel;
         mainPane.setMinWidth(originalVTmod.getMainPanePrefWidth());
@@ -570,6 +580,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
 
         model.setExerciseName(verticalTreeModel.getExerciseName());
         model.setDefaultKeyboardType(verticalTreeModel.getDefaultKeyboardType());
+        model.setDefaultMapKeyboardType(verticalTreeModel.getDefaultMapKeyboardType());
         model.setOriginalModel(verticalTreeModel.getOriginalModel());
         model.setDragIconList(verticalTreeModel.getDragIconList());
         model.setObjectControlList(verticalTreeModel.getObjectControlList());
@@ -602,6 +613,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
                 newTreeMod.setLayoutX(originalTreeBox.getLayoutX());
                 newTreeMod.setLayoutY(originalTreeBox.getLayoutY());
                 newTreeMod.setLinkIdStrings(originalTreeBox.getmLinkIds());
+                newTreeMod.setCircleIndexes(originalTreeBox.getCircleIndexes());
 
                 BoxedDRTA treeFormulaBox = originalTreeBox.getFormulaBox();
                 RichTextArea treeRTA = treeFormulaBox.getRTA();
@@ -686,4 +698,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         return model;
     }
 
+    public MainWindow getMainWindow() {
+        return mainWindow;
+    }
 }
