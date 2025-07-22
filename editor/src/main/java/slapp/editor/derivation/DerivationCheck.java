@@ -3,7 +3,6 @@ package slapp.editor.derivation;
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.text.*;
@@ -169,7 +168,8 @@ public class DerivationCheck implements DCheck {
         checkSuccess = true;
         derivationView.activateBigCheck();
 
-        //set check on model
+        //set check on mode+
+        // l
         return true;
     }
 
@@ -627,14 +627,14 @@ public class DerivationCheck implements DCheck {
 
             ViewLine line = viewLines.get(index);
             BoxedDRTA bdrta = line.getLineContentBoxedDRTA();
-            bdrta.setBackgroundColor();
+            bdrta.setDerHighlight();
             markedLine = line;
     }
 
     private void resetHighlights() {
         ViewLine line = markedLine;
         BoxedDRTA bdrta = line.getLineContentBoxedDRTA();
-        bdrta.resetBackgroundColor();
+        bdrta.resetDerHighlight();
         line.getJustificationFlow().setStyle("-fx-background-color: transparent");
         line.setLineHighlight(false);
     }

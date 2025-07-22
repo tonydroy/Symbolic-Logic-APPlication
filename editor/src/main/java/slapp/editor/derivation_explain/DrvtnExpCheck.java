@@ -15,7 +15,6 @@ import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.derivation.*;
 import slapp.editor.derivation.der_systems.*;
-import slapp.editor.derivation.der_systems.DerExpRule;
 import slapp.editor.derivation.theorems.Theorem;
 import slapp.editor.main_window.Exercise;
 import slapp.editor.parser.Expression;
@@ -627,14 +626,14 @@ public class DrvtnExpCheck implements DCheck {
 
             ViewLine line = viewLines.get(index);
             BoxedDRTA bdrta = line.getLineContentBoxedDRTA();
-            bdrta.setBackgroundColor();
+            bdrta.setDerHighlight();
             markedLine = line;
     }
 
     private void resetHighlights() {
         ViewLine line = markedLine;
         BoxedDRTA bdrta = line.getLineContentBoxedDRTA();
-        bdrta.resetBackgroundColor();
+        bdrta.resetDerHighlight();
         line.getJustificationFlow().setStyle("-fx-background-color: transparent");
         line.setLineHighlight(false);
     }

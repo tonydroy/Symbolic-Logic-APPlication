@@ -17,12 +17,8 @@ package slapp.editor.decorated_rta;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 
 /**
  * DecoratedRTA and HBox with editor as member.  The RTA is very hard to focus by mouse when it is formatted like
@@ -50,15 +46,38 @@ public class BoxedDRTA {
         boxedRTA.addEventFilter(MouseEvent.MOUSE_CLICKED, mouseEventHandler);
     }
 
+    public void setVTmapBoxHighlight() {
+        RichTextArea rta = drta.getEditor();
+        rta.getStylesheets().clear();
+        rta.getStylesheets().add("greenFormulaBoxHighlight.css");
+    }
+    public void setVTtreeBoxHighlight() {
+        RichTextArea rta = drta.getEditor();
+        rta.getStylesheets().clear();
+        rta.getStylesheets().add("blueFormulaBoxHighlight.css");
+    }
+
+    public void resetVTmapBoxHighlight() {
+        RichTextArea rta = drta.getEditor();
+        rta.getStylesheets().clear();
+        rta.getStylesheets().add("greenFormulaBox.css");
+    }
+    public void resetVTtreeBoxHighlight() {
+        RichTextArea rta = drta.getEditor();
+        rta.getStylesheets().clear();
+        rta.getStylesheets().add("blueFormulaBox.css");
+    }
 
 
-    public void setBackgroundColor() {
+
+
+    public void setDerHighlight() {
         RichTextArea rta = drta.getEditor();
         rta.getStylesheets().clear();
         rta.getStylesheets().add("slappDerivationHighlight.css");
     }
 
-    public void resetBackgroundColor() {
+    public void resetDerHighlight() {
         RichTextArea rta = drta.getEditor();
         rta.getStylesheets().clear();
         rta.getStylesheets().add("slappDerivation.css");

@@ -23,7 +23,7 @@ public class VTcheckSetup implements Serializable {
         objLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (abv)
         metLangName = "LM Meta";
         checkSuccess = false;
-        checkFinal = false;
+        checkFinal = true;
         checkMax = -1;              //0
         checkTries = 0;
         staticHelpButton = true;      //false
