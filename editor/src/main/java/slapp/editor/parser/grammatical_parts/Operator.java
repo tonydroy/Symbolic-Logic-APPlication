@@ -4,6 +4,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
+import slapp.editor.parser.symbols.ConditionalSym;
 import slapp.editor.parser.symbols.OperatorSym;
 
 import java.util.List;
@@ -80,6 +81,17 @@ public class Operator implements Expression {
     @Override
     public int hashCode() {
         return mainSymbol.hashCode();
+    }
+
+
+    //
+    public boolean is(Object o) {
+        if (o == this) return true;
+        if ((o instanceof Operator)) {
+            Operator other = (Operator) o;
+            return ((ConditionalSym) mainSymbol).is(other.mainSymbol);
+        }
+        return false;
     }
 
 }

@@ -5,14 +5,22 @@ import com.gluonhq.richtextarea.model.Document;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.event.ActionEvent;
+import javafx.scene.text.Text;
 import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.parser.Expression;
+import slapp.editor.parser.Language;
+import slapp.editor.parser.Languages;
 import slapp.editor.parser.ParseUtilities;
+import slapp.editor.parser.grammatical_parts.*;
+import slapp.editor.parser.symbols.FunctionSymbol;
+import slapp.editor.parser.symbols.RelationSymbol;
+import slapp.editor.parser.symbols.SentenceLetter;
 import slapp.editor.vertical_tree.drag_drop.ClickableNodeLink;
 import slapp.editor.vertical_tree.drag_drop.MapFormulaBox;
 import slapp.editor.vertical_tree.drag_drop.TreeFormulaBox;
 
+import javax.sound.midi.Sequence;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -37,8 +45,15 @@ public class VTcheck {
     private double equalsEpsilon = 10.0;
     private boolean isCheckJustification = true;
     private List<TreeNode> connectedNodes;
+    private String objLangName;
+    private Language objLang;
+    private boolean langAllowDP;
+    private Expression targetExpression = null;
+
 
     VTcheck(VerticalTreeExercise vtExercise) {
+
+
         this.vtExercise = vtExercise;
         this.vtView = vtExercise.getExerciseView();
         this.vtModel = vtExercise.getExerciseModel();
@@ -46,6 +61,10 @@ public class VTcheck {
 
         checkSetup = vtExercise.getExerciseModel().getCheckSetup();
         if (checkSetup == null) { checkSetup = new VTcheckSetup(); }
+        objLangName = checkSetup.getObjLangName();
+        objLang = Languages.getLanguage(objLangName);
+        langAllowDP = objLang.isAllowDroppedBrackets();
+
         checkSuccess = checkSetup.isCheckSuccess();
         checkFinal = checkSetup.isCheckFinal();
         if (checkFinal) {
@@ -71,8 +90,7 @@ public class VTcheck {
     private void setRightControlBox() {
 
         vtView.getCheckButton().setOnAction(e -> {
-
-            System.out.println("check");
+            checkFormulaTree();
         });
 
 //        vtView.getCheckProgButton().setOnAction(e -> {
@@ -82,7 +100,7 @@ public class VTcheck {
         vtView.getstaticHelpButton().setDisable(!vtModel.getCheckSetup().isStaticHelpButton());
 
         vtView.getstaticHelpButton().setOnAction(e -> {
-            checkFormulaTree();
+            System.out.println("static help");
         });
     }
 
@@ -126,10 +144,326 @@ public class VTcheck {
         if (!populateTreeLists(sortedFormulaBoxes)) return;
         if (!setParentsAndChildren()) return;
         if (!checkTrueTree()) return;
+        if (!checkContents()) return;
 
 
         checkSuccess = true;
         vtView.activateBigCheck();
+    }
+
+    private boolean checkContents() {
+        boolean hasTerms = false;
+        boolean hasFormulas = false;
+        double minTermY = -1;
+        double maxTermY = -1;
+        double minFormulaY = -1;
+        double maxFormulaY = -1;
+        TreeNode rootNode = formulaTree.get(formulaTree.size() - 1).get(0);
+
+        for (int j = 0; j < formulaTree.size(); j++) {
+            List<TreeNode> treeList = formulaTree.get(j);
+            for (int i = 0; i < treeList.size(); i++) {
+                TreeNode treeNode = treeList.get(i);
+
+                RichTextArea rta = treeNode.getMainTreeBox().getFormulaBox().getRTA();
+                rta.getActionFactory().saveNow().execute(new ActionEvent());
+                Document doc = rta.getDocument();
+                objLang.setAllowDroppedBrackets(false);
+                List<Expression> parseExp = ParseUtilities.parseDoc(doc, objLang);
+
+                if (parseExp.isEmpty()) {
+                    treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                    EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Empty node.")));
+                    treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                    return false;
+                }
+
+                List<Expression> parseExpDP = new ArrayList<>();
+                if (parseExp.size() > 1) {
+                    objLang.setAllowDroppedBrackets(true);
+                    parseExpDP = ParseUtilities.parseDoc(doc, objLang);
+                    if (parseExpDP.size() != 1) {
+                        treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                        EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Not a grammatical expression of " + objLangName + ".")));
+                        treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                        return false;
+                    } else {
+                        if (treeNode != rootNode || !langAllowDP) {
+                            treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                            EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Not a grammatical expression (check outer parentheses).")));
+                            treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                            return false;
+                        }
+                    }
+                }
+
+                Expression exp = null;
+                if (parseExp.size() == 1) exp = parseExp.get(0);
+                else if (parseExpDP.size() == 1) exp = parseExpDP.get(0);
+
+                if (!(exp instanceof Term) && !(exp instanceof Formula)) {
+
+                    System.out.println("exp:" + exp.toString());
+
+                    treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                    EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Not a grammatical expression of " + objLangName + ".")));
+                    treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                    return false;
+                }
+
+                if (exp instanceof Term) {
+                    Term term = (Term) exp;
+                    TermType termType = term.getTermType();
+                    hasTerms = true;
+                    double layoutY = treeNode.getMainTreeBox().getLayoutY();
+                    double maxLayoutY = treeNode.getMainTreeBox().getLayoutBounds().getMaxY();
+                    if (layoutY < 0 || layoutY < minTermY) minTermY = layoutY;
+                    if (layoutY > maxTermY) maxTermY = maxLayoutY;
+
+                    if (termType == TermType.VARIABLE) {
+                        if (treeNode.getParents().size() != 0) {
+                            treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                            EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("This is variable and so must be a basic member of the tree.")));
+                            treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                            return false;
+                        }
+                        if (isCheckJustification && !lineJustifications.get(j).get(i).equals("TR(v)")) {
+                            treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                            EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Variable node has incorrect justification.")));
+                            treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                            return false;
+                        }
+                    } else if (termType == TermType.CONSTANT) {
+                        if (treeNode.getParents().size() != 0) {
+                            treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                            EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("This is constant and so must be a basic member of the tree.")));
+                            treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                            return false;
+                        }
+                        if (isCheckJustification && !lineJustifications.get(j).get(i).equals("TR(c)")) {
+                            treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                            EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Constant node has incorrect justification.")));
+                            treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                            return false;
+                        }
+                    } else if (termType == TermType.COMPLEX) {
+                        FunctionSymbol fnSym = term.getMainFnSymbol();
+                        int places = fnSym.getPlaces();
+                        String placesString = String.valueOf(places);
+/*
+                        No need since is grammatical
+                        if (term.getChildren().size() != places) {
+                            treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                            EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText(placesString +"-place function symbol must be followed by " + placesString + " terms.")));
+                            treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                            return false;
+                        }
+ */
+
+                        if (treeNode.getParents().size() != term.getChildren().size()) {
+                            treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                            EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText(placesString + "-place function symbol must be linked to " + placesString + " term(s).")));
+                            treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                            return false;
+                        } else {
+                            for (int k = 0; k < term.getChildren().size(); k++) {
+                                Expression subTerm = term.getChildren().get(k);
+                                RichTextArea termRTA = treeNode.getParents().get(k).getMainTreeBox().getFormulaBox().getRTA();
+                                termRTA.getActionFactory().saveNow().execute(new ActionEvent());
+                                Document termDoc = termRTA.getDocument();
+                                objLang.setAllowDroppedBrackets(false);
+                                Expression linkTerm = ParseUtilities.parseDoc(termDoc, objLang).get(0);
+                                if (!subTerm.equals(linkTerm)) {
+                                    treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                                    List<Text> textList = new ArrayList<>();
+
+                                    textList.add(ParseUtilities.newRegularText("Subterm "));
+                                    textList.addAll(subTerm.toTextList());
+                                    textList.add(ParseUtilities.newRegularText(" improperly linked."));
+
+                                    EditorAlerts.showSimpleTxtListAlert("TreeContent", textList);
+                                    treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                                    return false;
+                                }
+                            }
+                        }
+                        if (isCheckJustification && !lineJustifications.get(j).get(i).equals("TR(f)")) {
+                            treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                            EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Complex term has incorrect justification.")));
+                            treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                            return false;
+                        }
+                    }
+                } else if (exp instanceof Formula) {
+                    Formula formula = (Formula) exp;
+                    hasFormulas = true;
+                    double layoutY = treeNode.getMainTreeBox().getLayoutY();
+                    double maxLayoutY = treeNode.getMainTreeBox().getLayoutBounds().getMaxY();
+                    if (layoutY < 0 || layoutY < minFormulaY) minFormulaY = layoutY;
+                    if (layoutY > maxFormulaY) maxFormulaY = maxLayoutY;
+
+                    if (formula instanceof SentenceAtomic) {
+                        if (treeNode.getParents().size() != 0) {
+                            treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                            EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("This is sentence letter and so must be a basic member of the tree.")));
+                            treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                            return false;
+                        }
+                        if (isCheckJustification && !lineJustifications.get(j).get(i).equals("FR(s)")) {
+                            treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                            EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Sentence letter has incorrect justification.")));
+                            treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                            return false;
+                        }
+                    } else if (formula instanceof PrefixAtomic || formula instanceof InfixAtomic) {
+                        RelationSymbol relSym = null;
+                        if (formula instanceof PrefixAtomic) relSym = ((PrefixAtomic) formula).getMainRelation();
+                        else relSym = ((InfixAtomic) formula).getMainRelation();
+                        int places = relSym.getPlaces();
+                        String placesString = String.valueOf(places);
+
+                        if (treeNode.getParents().size() != formula.getChildren().size()) {
+                            treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                            EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText(placesString + "-place relation symbol must be linked to " + placesString + " term(s).")));
+                            treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                            return false;
+                        } else {
+                            for (int k = 0; k < formula.getChildren().size(); k++) {
+                                Expression subTerm = formula.getChildren().get(k);
+                                RichTextArea termRTA = treeNode.getParents().get(k).getMainTreeBox().getFormulaBox().getRTA();
+                                termRTA.getActionFactory().saveNow().execute(new ActionEvent());
+                                Document termDoc = termRTA.getDocument();
+                                objLang.setAllowDroppedBrackets(false);
+                                Expression linkTerm = ParseUtilities.parseDoc(termDoc, objLang).get(0);
+                                if (!subTerm.equals(linkTerm)) {
+                                    treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+
+                                    List<Text> textList = new ArrayList<>();
+                                    textList.add(ParseUtilities.newRegularText("Subterm "));
+                                    textList.addAll(subTerm.toTextList());
+                                    textList.add(ParseUtilities.newRegularText(" improperly linked."));
+                                    EditorAlerts.showSimpleTxtListAlert("TreeContent", textList);
+                                    treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                                    return false;
+                                }
+                            }
+                        }
+                        if (isCheckJustification && !lineJustifications.get(j).get(i).equals("FR(r)")) {
+                            treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                            EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Atomic formula has incorrect justification.")));
+                            treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                            return false;
+                        }
+                    } else {
+                        Operator mainOp = formula.getMainOperator();
+                        if (treeNode.getParents().size() != formula.getChildren().size()) {
+
+                            treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                            if (mainOp.isUnary())
+                                EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Formula with unary main operator must be linked to a single formula.")));
+                            else
+                                EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Formula with binary main operator must be linked to two formulas.")));
+                            treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                            return false;
+                        } else {
+                            for (int k = 0; k < formula.getChildren().size(); k++) {
+                                Expression subForm = formula.getChildren().get(k);
+                                RichTextArea termRTA = treeNode.getParents().get(k).getMainTreeBox().getFormulaBox().getRTA();
+                                termRTA.getActionFactory().saveNow().execute(new ActionEvent());
+                                Document formDoc = termRTA.getDocument();
+                                objLang.setAllowDroppedBrackets(false);
+                                Expression linkForm = ParseUtilities.parseDoc(formDoc, objLang).get(0);
+                                if (!subForm.equals(linkForm)) {
+                                    treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+
+                                    List<Text> textList = new ArrayList<>();
+                                    textList.add(ParseUtilities.newRegularText("Subformula "));
+                                    textList.addAll(subForm.toTextList());
+                                    textList.add(ParseUtilities.newRegularText(" improperly linked."));
+                                    EditorAlerts.showSimpleTxtListAlert("TreeContent", textList);
+                                    treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                                    return false;
+                                }
+                            }
+                        }
+                        if (isCheckJustification) {
+                            String justificationString ="";
+                            if (mainOp instanceof NegationOp || mainOp instanceof ConditionalOp || mainOp instanceof UniversalOp)
+                                justificationString = "FR(" + mainOp.getMainSymbol().toString() + ")";
+                            else if (mainOp instanceof ConjunctionOp || mainOp instanceof DisjunctionOp || mainOp instanceof BiconditionalOp || mainOp instanceof ExistentialOp)
+                                justificationString = "FR\u2032(" + mainOp.getMainSymbol().toString() + ")";
+
+                            if (!lineJustifications.get(j).get(i).equals(justificationString)) {
+                                treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                                List<Text> messageList = new ArrayList<>();
+                                messageList.add(ParseUtilities.newRegularText("Formula with main operator "));
+                                messageList.addAll(mainOp.toTextList());
+                                messageList.add(ParseUtilities.newRegularText(" has incorrect justification."));
+                                EditorAlerts.showSimpleTxtListAlert("Tree Content", messageList);
+                                treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                                return false;
+                            }
+                        }
+
+                    }
+
+                }
+            }
+        }
+
+        //test with create to set target
+        if (targetExpression != null) {
+            RichTextArea rootRTA = rootNode.getMainTreeBox().getFormulaBox().getRTA();
+            rootRTA.getActionFactory().saveNow().execute(new ActionEvent());
+            Document rootDoc = rootRTA.getDocument();
+            objLang.setAllowDroppedBrackets(langAllowDP);
+            Expression rootExp = ParseUtilities.parseDoc(rootDoc, objLang).get(0);
+            if (!rootExp.equals(targetExpression)) {
+                rootNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Good tree, but this is not the assigned target expression.")));
+                rootNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                return false;
+            }
+        }
+
+        //check markup
+        RichTextArea rootRTA = rootNode.getMainTreeBox().getFormulaBox().getRTA();
+        rootRTA.getActionFactory().saveNow().execute(new ActionEvent());
+        Document rootDoc = rootRTA.getDocument();
+        objLang.setAllowDroppedBrackets(langAllowDP);
+        Expression rootExp = ParseUtilities.parseDoc(rootDoc, objLang).get(0);
+
+        //check circle
+        if (rootExp instanceof Formula && !((Formula) rootExp).isAtomic()) {
+            List<Expression> circleExpressions = getCircleText(rootNode.getMainTreeBox());
+            if (circleExpressions.size() == 0) {
+                rootNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("No circled text.")));
+                rootNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                return false;
+            } else if (circleExpressions.size() > 1) {
+                rootNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Circled text is not a grammatical expression.")));
+                rootNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                return false;
+            }
+            Expression circleExp = circleExpressions.get(0);
+            if (!(circleExp instanceof Operator)) {
+                rootNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Circled text is not an operator.")));
+                rootNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                return false;
+            }
+
+            if (!(((Formula) rootExp).getMainOperator().is(circleExp))) {
+                rootNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Circled text is not the main operator of the root node.")));
+                rootNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private boolean checkTrueTree() {
@@ -167,7 +501,7 @@ public class VTcheck {
             for (TreeNode treeNode : row) {
                 if (!connectedNodes.contains(treeNode)) {
                     treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
-                    EditorAlerts.showSimpleTxtListAlert("Tree Structure", Collections.singletonList(ParseUtilities.newRegularText("Node is not an an ancestor of the root node.")));
+                    EditorAlerts.showSimpleTxtListAlert("Tree Structure", Collections.singletonList(ParseUtilities.newRegularText("Node is not an an ancestor connected to the root node.")));
                     treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
                     return false;
                 }
@@ -288,7 +622,7 @@ public class VTcheck {
                         List<String> justifications = getJustificationStrings(boxText);
                         if (justifications.size() != treeList.size()) {
                             bdrta.setVTmapBoxHighlight();
-                            EditorAlerts.showSimpleTxtListAlert("Tree Structure", Collections.singletonList(ParseUtilities.newRegularText("Should be one justification, as FR(\u223c), for each member of row.")));
+                            EditorAlerts.showSimpleTxtListAlert("Tree Structure", Collections.singletonList(ParseUtilities.newRegularText("Should be one (allowable) justification, as FR(\u223c), for each member of row.")));
                             bdrta.resetVTmapBoxHighlight();
                             return false;
                         }
@@ -317,7 +651,7 @@ public class VTcheck {
 
     List<String> getJustificationStrings(String inputString) {
 
-        String regexTarget = "FR\\(s\\)|FR\\(r\\)|FR\\(\\u223c\\)|FR\\(\\u2192\\)|FR\\u2032\\(\\u2227\\)|FR\\u2032\\(\\u2228\\)|FR\\u2032\\(\\u2194\\)|FR\\(\\u2200\\)|FR\\u2032\\(\\u2203\\)";
+        String regexTarget = "FR\\(s\\)|FR\\(r\\)|FR\\(\\u223c\\)|FR\\(\\u2192\\)|FR\\u2032\\(\\u2227\\)|FR\\u2032\\(\\u2228\\)|FR\\u2032\\(\\u2194\\)|FR\\(\\u2200\\)|FR\\u2032\\(\\u2203\\)|TR\\(v\\)|TR\\(c\\)|TR\\(f\\)";
         Pattern pattern = Pattern.compile(regexTarget);
         Matcher matcher = pattern.matcher(inputString);
 

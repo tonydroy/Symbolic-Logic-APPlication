@@ -35,7 +35,11 @@ public class ParseUtilities {
     }
 
     public static List<Expression> parseDoc(Document doc, String langName) {
-        language = Languages.getLanguage(langName);
+        return parseDoc(doc, Languages.getLanguage(langName));
+    }
+
+    public static List<Expression> parseDoc(Document doc, Language lang) {
+        language = lang;
 
         List<OriginalElement> elements = getElements(doc);
         List<Expression> expressions = new ArrayList<>();

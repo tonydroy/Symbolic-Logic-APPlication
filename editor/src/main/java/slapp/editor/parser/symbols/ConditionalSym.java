@@ -56,6 +56,15 @@ public class ConditionalSym extends OperatorSym implements Expression {
         return textString.hashCode();
     }
 
+    //
+    public boolean is(Object o) {
+        if (this == o) return true;
+        if (o instanceof ConditionalSym) {
+            ConditionalSym other = (ConditionalSym) o;
+            return textString == other.textString;
+        }
+        return false;
+    }
 
 
 }

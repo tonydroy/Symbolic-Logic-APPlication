@@ -5,6 +5,8 @@ import com.gluonhq.richtextarea.model.Document;
 import java.io.Serializable;
 
 public class VTcheckSetup implements Serializable {
+    private static final long serialVersionUID = 100L;
+
     String objLangName;
     String metLangName;
 
@@ -20,7 +22,8 @@ public class VTcheckSetup implements Serializable {
     Document formulaTarget;
 
     public VTcheckSetup() {
-        objLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (abv)
+    //    objLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (abv)
+        objLangName = "\u2112\ud835\udcc8"; //Ls
         metLangName = "LM Meta";
         checkSuccess = false;
         checkFinal = true;
