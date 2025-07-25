@@ -15,11 +15,13 @@ public class OriginalElement implements Expression {
     ExpressionType type = ORIGINAL_ELEMENT;
     TextDecoration decoration;
     String elementStr;
+    int position;
 
 
-    OriginalElement(String elementStr, TextDecoration decoration) {
+    OriginalElement(String elementStr, TextDecoration decoration, int position) {
         this.elementStr = elementStr;
         this.decoration = decoration;
+        this.position = position;
     }
 
     public String getElementStr() {     return elementStr;  }
@@ -42,6 +44,14 @@ public class OriginalElement implements Expression {
 
     public boolean isNormal() {
         return !isSubscript() && !isSuperscript();
+    }
+
+    public int getPosition() {
+        return position;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
     }
 
     @Override

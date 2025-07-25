@@ -15,13 +15,17 @@ public class Operator implements Expression {
     private OperatorSym mainSymbol;
     private boolean permitInfix = false;
     private boolean unary;
+    private int position;
 
 
     public Operator(ExpressionType type, OperatorSym mainSymbol, boolean unary) {
         this.type = type;
         this.unary = unary;
         this.mainSymbol = mainSymbol;
+        this.position = mainSymbol.getPosition();
     }
+
+    public int getPosition() {  return position;  }
 
     public Term getVariableTerm() { return null; }
 
@@ -84,14 +88,5 @@ public class Operator implements Expression {
     }
 
 
-    //
-    public boolean is(Object o) {
-        if (o == this) return true;
-        if ((o instanceof Operator)) {
-            Operator other = (Operator) o;
-            return ((ConditionalSym) mainSymbol).is(other.mainSymbol);
-        }
-        return false;
-    }
 
 }

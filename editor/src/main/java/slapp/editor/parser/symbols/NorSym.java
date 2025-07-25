@@ -19,7 +19,9 @@ public class NorSym extends OperatorSym implements Expression {
     private ExpressionType type = NOR_SYM;
     private String textString;
 
-    public NorSym(String textString) {
+
+    public NorSym(String textString, int position) {
+        super(position);
         this.textString = textString;
     }
 

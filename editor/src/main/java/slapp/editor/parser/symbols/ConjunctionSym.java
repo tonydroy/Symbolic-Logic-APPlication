@@ -19,8 +19,11 @@ public class ConjunctionSym extends OperatorSym implements Expression {
     private ExpressionType type = CONJ_SYM;
     private String textString;
 
-    public ConjunctionSym(String textString) {
+
+    public ConjunctionSym(String textString, int position) {
+        super(position);
         this.textString = textString;
+
     }
 
     @Override

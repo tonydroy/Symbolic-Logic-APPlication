@@ -19,8 +19,11 @@ public class BiconditionalSym extends OperatorSym implements Expression {
     private ExpressionType type = BICOND_SYM;
     private String textString;
 
-    public BiconditionalSym(String textString) {
+
+    public BiconditionalSym(String textString, int position) {
+        super(position);
         this.textString = textString;
+
     }
 
     @Override

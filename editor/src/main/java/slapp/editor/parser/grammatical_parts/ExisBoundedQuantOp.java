@@ -20,7 +20,7 @@ public class ExisBoundedQuantOp extends Operator implements Expression {
     private Term boundingTerm;
 
     public ExisBoundedQuantOp(OpenBracket openBracket, CloseBracket closeBracket, ExistentialOp existentialOp, RelationSymbol infixRelation, Term boundingTerm) {
-        super(ExpressionType.EXIS_BOUNDED_OP, new UniversalQuantifierSym(""), true);
+        super(ExpressionType.EXIS_BOUNDED_OP, new UniversalQuantifierSym("", -1), true);
         this.openBracket = openBracket;
         this.closeBracket = closeBracket;
         this.existentialOp = existentialOp;

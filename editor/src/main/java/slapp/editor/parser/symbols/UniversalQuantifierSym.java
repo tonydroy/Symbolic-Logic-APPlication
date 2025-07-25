@@ -19,9 +19,12 @@ public class UniversalQuantifierSym extends OperatorSym implements Expression {
     private ExpressionType type = UNIVERSAL_SYM;
     private String textString;
 
-    public UniversalQuantifierSym(String textString) {
+
+    public UniversalQuantifierSym(String textString, int position) {
+        super(position);
         this.textString = textString;
     }
+
 
     @Override
     public ExpressionType getType() {return type;}

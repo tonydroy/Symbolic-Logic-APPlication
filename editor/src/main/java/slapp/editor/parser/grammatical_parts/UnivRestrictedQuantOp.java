@@ -21,7 +21,7 @@ public class UnivRestrictedQuantOp extends Operator implements Expression {
 
 
     public UnivRestrictedQuantOp(OpenBracket openBracket, CloseBracket closeBracket, UniversalOp universalOp, DividerSym divider, Formula restrictingFormula) {
-        super(ExpressionType.UNIV_RESTRICTED_OP, new UniversalQuantifierSym(""), true);
+        super(ExpressionType.UNIV_RESTRICTED_OP, new UniversalQuantifierSym("", -1), true);
         this.openBracket = openBracket;
         this.closeBracket = closeBracket;
         this.divider = divider;

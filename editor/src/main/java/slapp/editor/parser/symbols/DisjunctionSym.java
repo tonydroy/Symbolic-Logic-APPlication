@@ -19,8 +19,11 @@ public class DisjunctionSym extends OperatorSym implements Expression {
     private ExpressionType type = DISJ_SYM;
     private String textString;
 
-    public DisjunctionSym(String textString) {
+
+    public DisjunctionSym(String textString, int position) {
+        super(position);
         this.textString = textString;
+
     }
 
     @Override

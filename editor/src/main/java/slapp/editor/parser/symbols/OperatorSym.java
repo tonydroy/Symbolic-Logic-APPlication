@@ -9,9 +9,15 @@ import java.util.List;
 
 public class OperatorSym implements Expression {
 
+    private int position;
 
+    public OperatorSym(int position) {
+        this.position = position;
+    }
 
-
+    public int getPosition() {
+        return position;
+    }
 
     @Override
     public ExpressionType getType() {

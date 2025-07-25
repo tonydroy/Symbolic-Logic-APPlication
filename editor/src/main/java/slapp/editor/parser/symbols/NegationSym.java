@@ -19,9 +19,13 @@ public class NegationSym extends OperatorSym implements Expression {
     private ExpressionType type = NEG_SYM;
     private String textString;
 
-    public NegationSym(String textString) {
+
+    public NegationSym(String textString, int position) {
+        super(position);
         this.textString = textString;
+
     }
+
 
     @Override
     public ExpressionType getType() {return type;}

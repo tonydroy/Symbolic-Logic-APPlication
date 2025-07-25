@@ -251,7 +251,7 @@ public class ParseUtilities {
                     prefixAtomic.setCombines(true);
 
                     Formula negForm = new Formula();
-                    negForm.setMainOperator(new NegationOp(new NegationSym(language.getNegation())));
+                    negForm.setMainOperator(new NegationOp(new NegationSym(language.getNegation(), -1)));
                     negForm.setLevel(prefixAtomic.getLevel() + 1);
                     negForm.setChildren(Collections.singletonList(prefixAtomic));
 
@@ -332,7 +332,7 @@ public class ParseUtilities {
                             infixAtomic.setOpenBracket((OpenBracket) expressions.get(i - 2));
                             infixAtomic.setCloseBracket((CloseBracket) expressions.get(i + 2));
                             Formula negForm = new Formula();
-                            negForm.setMainOperator(new NegationOp(new NegationSym(language.getNegation())));
+                            negForm.setMainOperator(new NegationOp(new NegationSym(language.getNegation(), -1)));
                             negForm.setLevel(infixAtomic.getLevel() + 1);
                             negForm.setChildren(Collections.singletonList(infixAtomic));
                             expressions.set(i - 2, negForm);
@@ -345,7 +345,7 @@ public class ParseUtilities {
                         }
                         else {
                             Formula negForm = new Formula();
-                            negForm.setMainOperator(new NegationOp(new NegationSym(language.getNegation())));
+                            negForm.setMainOperator(new NegationOp(new NegationSym(language.getNegation(), -1)));
                             negForm.setLevel(infixAtomic.getLevel() + 1);
                             negForm.setChildren(Collections.singletonList(infixAtomic));
                             expressions.set(i - 1, negForm);
@@ -1038,9 +1038,6 @@ public class ParseUtilities {
                 if (language.getOnePlaceFunctionSymbols() != null && language.getOnePlaceFunctionSymbols().contains(elementStr)) {
                     FunctionSymbol functionSymbol;
 
-              //      if (!language.isMetalanguage()) functionSymbol = new FunctionSymbol(elementStr, "", "", 1, false);
-              //      else functionSymbol = MFunctionSymbol.getInstance(elementStr, "", "", 1, false);
-
                     functionSymbol = new FunctionSymbol(elementStr, "", "", 1, false);
 
                     expressions.set(i, functionSymbol);
@@ -1049,11 +1046,7 @@ public class ParseUtilities {
                 if (language.getTwoPlaceFunctionSymbols() != null && language.getTwoPlaceFunctionSymbols().contains(elementStr)) {
                     FunctionSymbol functionSymbol;
 
-               //     if (!language.isMetalanguage()) functionSymbol = new FunctionSymbol(elementStr, "", "", 2, language.isAllowBinaryInfixFunctions());
-               //     else functionSymbol = MFunctionSymbol.getInstance(elementStr, "", "", 2, language.isAllowBinaryInfixFunctions());
-
                     functionSymbol = new FunctionSymbol(elementStr, "", "", 2, language.isAllowBinaryInfixFunctions());
-
                     expressions.set(i, functionSymbol);
                     continue;
                 }
@@ -1206,6 +1199,7 @@ public class ParseUtilities {
         for (int i = 0; i < expressions.size(); i++) {
             if (expressions.get(i) instanceof OriginalElement) {
                 String elementStr = ((OriginalElement) expressions.get(i)).getElementStr();
+                int position = ((OriginalElement) expressions.get(i)).getPosition();
 
                 if (elementStr.equals(language.getOpenBracket1()) && ((OriginalElement) expressions.get(i)).isNormal()) {
                     expressions.set(i, new OpenBracket1(elementStr));
@@ -1232,39 +1226,39 @@ public class ParseUtilities {
                     continue;
                 }
                 if (elementStr.equals(language.getNegation()) && ((OriginalElement) expressions.get(i)).isNormal()) {
-                    expressions.set(i, new NegationSym(elementStr));
+                    expressions.set(i, new NegationSym(elementStr, position));
                     continue;
                 }
                 if (elementStr.equals(language.getConditional()) && ((OriginalElement) expressions.get(i)).isNormal()) {
-                    expressions.set(i, new ConditionalSym(elementStr));
+                    expressions.set(i, new ConditionalSym(elementStr, position));
                     continue;
                 }
                 if (elementStr.equals(language.getBiconditional()) && ((OriginalElement) expressions.get(i)).isNormal()) {
-                    expressions.set(i, new BiconditionalSym(elementStr));
+                    expressions.set(i, new BiconditionalSym(elementStr, position));
                     continue;
                 }
                 if (elementStr.equals(language.getConjunction()) && ((OriginalElement) expressions.get(i)).isNormal()) {
-                    expressions.set(i, new ConjunctionSym(elementStr));
+                    expressions.set(i, new ConjunctionSym(elementStr, position));
                     continue;
                 }
                 if (elementStr.equals(language.getDisjunction()) && ((OriginalElement) expressions.get(i)).isNormal()) {
-                    expressions.set(i, new DisjunctionSym(elementStr));
+                    expressions.set(i, new DisjunctionSym(elementStr, position));
                     continue;
                 }
                 if (elementStr.equals(language.getNand()) && ((OriginalElement) expressions.get(i)).isNormal()) {
-                    expressions.set(i, new NandSym(elementStr));
+                    expressions.set(i, new NandSym(elementStr, position));
                     continue;
                 }
                 if (elementStr.equals(language.getNor()) && ((OriginalElement) expressions.get(i)).isNormal()) {
-                    expressions.set(i, new NorSym(elementStr));
+                    expressions.set(i, new NorSym(elementStr, position));
                     continue;
                 }
                 if (elementStr.equals(language.getUniversalQuant()) && ((OriginalElement) expressions.get(i)).isNormal()) {
-                    expressions.set(i, new UniversalQuantifierSym(elementStr));
+                    expressions.set(i, new UniversalQuantifierSym(elementStr, position));
                     continue;
                 }
                 if (elementStr.equals(language.getExistentialQuant()) && ((OriginalElement) expressions.get(i)).isNormal()) {
-                    expressions.set(i, new ExistentialQuantifierSym(elementStr));
+                    expressions.set(i, new ExistentialQuantifierSym(elementStr, position));
                     continue;
                 }
                 if (elementStr.equals(language.getDividerSymbol()) && ((OriginalElement) expressions.get(i)).isNormal()) {
@@ -1387,7 +1381,7 @@ public class ParseUtilities {
             }
             s = text.substring(i, i + len);
             TextDecoration dec = (TextDecoration) (getDecorationAtIndex(i, doc.getDecorations()).getDecoration());
-            OriginalElement element = new OriginalElement(s, dec);
+            OriginalElement element = new OriginalElement(s, dec, i);
             elements.add(element);
             i = i + len;
         }

@@ -19,9 +19,12 @@ public class NandSym extends OperatorSym implements Expression {
     private ExpressionType type = NAND_SYM;
     private String textString;
 
-    public NandSym(String textString) {
+
+    public NandSym(String textString, int position) {
+        super(position);
         this.textString = textString;
     }
+
 
     @Override
     public ExpressionType getType() {return type;}

@@ -18,7 +18,7 @@ public class UnivBoundedQuantOp extends Operator implements Expression {
 
 
     public UnivBoundedQuantOp(OpenBracket openBracket, CloseBracket closeBracket, UniversalOp universalOp, RelationSymbol infixRelation, Term boundingTerm) {
-        super(ExpressionType.UNIV_BOUNDED_OP, new UniversalQuantifierSym(""), true);
+        super(ExpressionType.UNIV_BOUNDED_OP, new UniversalQuantifierSym("", -1), true);
         this.openBracket = openBracket;
         this.closeBracket = closeBracket;
         this.universalOp = universalOp;

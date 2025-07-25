@@ -19,8 +19,11 @@ public class ConditionalSym extends OperatorSym implements Expression {
     private ExpressionType type = COND_SYM;
     private String textString;
 
-    public ConditionalSym(String textString) {
+
+    public ConditionalSym(String textString, int position) {
+        super(position);
         this.textString = textString;
+
     }
 
     @Override
@@ -56,15 +59,6 @@ public class ConditionalSym extends OperatorSym implements Expression {
         return textString.hashCode();
     }
 
-    //
-    public boolean is(Object o) {
-        if (this == o) return true;
-        if (o instanceof ConditionalSym) {
-            ConditionalSym other = (ConditionalSym) o;
-            return textString == other.textString;
-        }
-        return false;
-    }
 
 
 }

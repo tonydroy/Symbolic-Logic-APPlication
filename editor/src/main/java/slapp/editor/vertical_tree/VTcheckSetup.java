@@ -22,8 +22,8 @@ public class VTcheckSetup implements Serializable {
     Document formulaTarget;
 
     public VTcheckSetup() {
-    //    objLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (abv)
-        objLangName = "\u2112\ud835\udcc8"; //Ls
+        objLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (abv)
+    //    objLangName = "\u2112\ud835\udcc8"; //Ls
         metLangName = "LM Meta";
         checkSuccess = false;
         checkFinal = true;

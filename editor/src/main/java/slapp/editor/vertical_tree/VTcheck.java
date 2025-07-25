@@ -13,12 +13,8 @@ import slapp.editor.parser.Language;
 import slapp.editor.parser.Languages;
 import slapp.editor.parser.ParseUtilities;
 import slapp.editor.parser.grammatical_parts.*;
-import slapp.editor.parser.symbols.FunctionSymbol;
-import slapp.editor.parser.symbols.RelationSymbol;
-import slapp.editor.parser.symbols.SentenceLetter;
-import slapp.editor.vertical_tree.drag_drop.ClickableNodeLink;
-import slapp.editor.vertical_tree.drag_drop.MapFormulaBox;
-import slapp.editor.vertical_tree.drag_drop.TreeFormulaBox;
+import slapp.editor.parser.symbols.*;
+import slapp.editor.vertical_tree.drag_drop.*;
 
 import javax.sound.midi.Sequence;
 import java.util.ArrayList;
@@ -49,6 +45,14 @@ public class VTcheck {
     private Language objLang;
     private boolean langAllowDP;
     private Expression targetExpression = null;
+
+    private boolean hasTerms;
+    private boolean hasFormulas;
+    private double minTermY;
+    private double maxTermY;
+    private double minFormulaY;
+    private double maxFormulaY;
+    private TreeNode rootNode;
 
 
     VTcheck(VerticalTreeExercise vtExercise) {
@@ -145,20 +149,191 @@ public class VTcheck {
         if (!setParentsAndChildren()) return;
         if (!checkTrueTree()) return;
         if (!checkContents()) return;
+        if (!checkMarkup()) return;
 
 
         checkSuccess = true;
         vtView.activateBigCheck();
     }
 
+    private boolean checkMarkup() {
+
+        if (hasFormulas) {
+
+            List<TreeNode> immediateSubs = rootNode.getParents();
+
+            //check root for circle immediate subs boxed
+            TreeFormulaBox rootBox = rootNode.getMainTreeBox();
+            RichTextArea rootRTA = rootBox.getFormulaBox().getRTA();
+            rootRTA.getActionFactory().saveNow().execute(new ActionEvent());
+            Document rootDoc = rootRTA.getDocument();
+            objLang.setAllowDroppedBrackets(langAllowDP);
+            List<Expression> rootParseList = ParseUtilities.parseDoc(rootDoc, objLang);
+            Expression rootNodeExp = rootParseList.get(0);
+
+            //check for circle
+            if (rootNodeExp instanceof Formula && !((Formula) rootNodeExp).isAtomic()) {
+                List<Expression> circleExpressions = getCircleText(rootNode.getMainTreeBox());
+                if (circleExpressions.size() == 0) {
+                    rootNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                    EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("No circled text.")));
+                    rootNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                    return false;
+                } else if (circleExpressions.size() > 1) {
+                    rootNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                    EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Circled text is not a grammatical expression.")));
+                    rootNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                    return false;
+                }
+                Expression circleExp = circleExpressions.get(0);
+                if (!(circleExp instanceof Operator)) {
+                    rootNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                    EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Circled text is not an operator.")));
+                    rootNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                    return false;
+                }
+
+                if (!(((Formula) rootNodeExp).getMainOperator().equals(circleExp)) || ((Operator) circleExp).getPosition() != ((Formula) rootNodeExp).getMainOperator().getPosition()) {
+                    rootNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                    EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Circled text is not the main operator of the root node.")));
+                    rootNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                    return false;
+                }
+
+                //check for boxes
+                for (TreeNode immediateSub : immediateSubs) {
+                    if (!immediateSub.getMainTreeBox().isBoxed()) {
+                        rootNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                        EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Immediate subformula not boxed.")));
+                        rootNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                        return false;
+                    }
+
+                }
+            }
+
+            for (int j = 0; j < formulaTree.size(); j++) {
+                List<TreeNode> treeList = formulaTree.get(j);
+                for (int i = 0; i < treeList.size(); i++) {
+                    TreeNode treeNode = treeList.get(i);
+                    TreeFormulaBox  treeFormulaBox = treeNode.getMainTreeBox();
+
+                    RichTextArea rta = treeFormulaBox.getFormulaBox().getRTA();
+                    rta.getActionFactory().saveNow().execute(new ActionEvent());
+                    Document doc = rta.getDocument();
+                    objLang.setAllowDroppedBrackets(langAllowDP);
+                    List<Expression> parseList = ParseUtilities.parseDoc(doc, objLang);
+                    Expression treeNodeExp = parseList.get(0);
+
+                    if (treeNodeExp instanceof Formula) {
+                        Formula treeNodeFormula = (Formula) treeNodeExp;
+
+                        //check star
+                        if (treeNodeFormula.isAtomic() && !treeFormulaBox.isStarred()) {
+                            treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                            EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Atomic not marked with star.")));
+                            treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                            return false;
+                        }
+                        if (!treeNodeFormula.isAtomic() && treeFormulaBox.isStarred()) {
+                            treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                            EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Star applied to non-atomic formula.")));
+                            treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                            return false;
+                        }
+
+                        //check extra circle
+                        if (treeNode != rootNode && treeFormulaBox.isCircled()) {
+                            treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                            EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Circle applied node other than root.")));
+                            treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                            return false;
+                        }
+
+                        //check extra boxes
+                        if (treeFormulaBox.isBoxed() && !immediateSubs.contains(treeNode)) {
+                            System.out.println("TFbox: " + treeFormulaBox + " immediate: " +  immediateSubs);
+
+                            treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                            EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Box applied to node other than an immediate subformula.")));
+                            treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            if (hasFormulas) {
+                List<DashedLine> dashedLines = new ArrayList<>();
+                List<VerticalBracket> verticalBrackets = new ArrayList<>();
+
+                for (Node node : checkNodeList) {
+                    if (node instanceof DashedLine) dashedLines.add((DashedLine) node);
+                    if (node instanceof VerticalBracket) verticalBrackets.add((VerticalBracket) node);
+                }
+
+
+
+                //dashed line
+                if (!hasTerms) {
+                    if (!dashedLines.isEmpty()) {
+                        EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("No need for dashed term/formula separator in tree without terms.")));
+                        return false;
+                    }
+                }
+                else {
+                    if (dashedLines.isEmpty()) {
+                        EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Missing dashed term/formula separator line.")));
+                        return false;
+                    }
+                    if (dashedLines.size() > 1) {
+                        EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Just one dashed term/formula separator line.")));
+                        return false;
+                    }
+                    DashedLine dashedLine = dashedLines.get(0);
+                    if (dashedLine.getLayoutY() < maxTermY || dashedLine.getLayoutY() > minFormulaY) {
+                        EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Dashed line does not separate terms from formulas.")));
+                        return false;
+                    }
+
+                }
+
+
+                //vertical bracket
+                if (verticalBrackets.isEmpty()) {
+                    EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Missing vertical bracket on subformulas.")));
+                    return false;
+                }
+                if (verticalBrackets.size() > 1) {
+                    EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Just one vertical bracket for subformulas.")));
+                    return false;
+                }
+                VerticalBracket bracket = verticalBrackets.get(0);
+                if (hasTerms && bracket.getLayoutY() < maxTermY) {
+                    EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Vertical bracket includes more than just subformulas.")));
+                    return false;
+                }
+                if (bracket.getLayoutY() > minFormulaY || bracket.getBoundsInParent().getMaxY() < maxFormulaY) {
+
+             //       System.out.println("bY: " + bracket.getLayoutY() + " minFY: " + minFormulaY + " bMaxY: " + bracket.getBoundsInParent().getMaxY() +  " maxFY: " + maxFormulaY);
+                    EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Vertical bracket does not include all subformulas.")));
+                    return false;
+                }
+
+            }
+        }
+        return true;
+    }
+
+
     private boolean checkContents() {
-        boolean hasTerms = false;
-        boolean hasFormulas = false;
-        double minTermY = -1;
-        double maxTermY = -1;
-        double minFormulaY = -1;
-        double maxFormulaY = -1;
-        TreeNode rootNode = formulaTree.get(formulaTree.size() - 1).get(0);
+        hasTerms = false;
+        hasFormulas = false;
+        minTermY = -1;
+        maxTermY = -1;
+        minFormulaY = -1;
+        maxFormulaY = -1;
+        rootNode = formulaTree.get(formulaTree.size() - 1).get(0);
 
         for (int j = 0; j < formulaTree.size(); j++) {
             List<TreeNode> treeList = formulaTree.get(j);
@@ -203,8 +378,6 @@ public class VTcheck {
 
                 if (!(exp instanceof Term) && !(exp instanceof Formula)) {
 
-                    System.out.println("exp:" + exp.toString());
-
                     treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
                     EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Not a grammatical expression of " + objLangName + ".")));
                     treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
@@ -216,9 +389,9 @@ public class VTcheck {
                     TermType termType = term.getTermType();
                     hasTerms = true;
                     double layoutY = treeNode.getMainTreeBox().getLayoutY();
-                    double maxLayoutY = treeNode.getMainTreeBox().getLayoutBounds().getMaxY();
-                    if (layoutY < 0 || layoutY < minTermY) minTermY = layoutY;
-                    if (layoutY > maxTermY) maxTermY = maxLayoutY;
+                    double maxLayoutY = treeNode.getMainTreeBox().getBoundsInParent().getMaxY();
+                    if (minTermY < 0 || layoutY < minTermY) minTermY = layoutY;
+                    if (maxLayoutY > maxTermY) maxTermY = maxLayoutY;
 
                     if (termType == TermType.VARIABLE) {
                         if (treeNode.getParents().size() != 0) {
@@ -298,9 +471,9 @@ public class VTcheck {
                     Formula formula = (Formula) exp;
                     hasFormulas = true;
                     double layoutY = treeNode.getMainTreeBox().getLayoutY();
-                    double maxLayoutY = treeNode.getMainTreeBox().getLayoutBounds().getMaxY();
-                    if (layoutY < 0 || layoutY < minFormulaY) minFormulaY = layoutY;
-                    if (layoutY > maxFormulaY) maxFormulaY = maxLayoutY;
+                    double maxLayoutY = treeNode.getMainTreeBox().getBoundsInParent().getMaxY();
+                    if (minFormulaY < 0 || layoutY < minFormulaY) minFormulaY = layoutY;
+                    if (maxLayoutY > maxFormulaY) maxFormulaY = maxLayoutY;
 
                     if (formula instanceof SentenceAtomic) {
                         if (treeNode.getParents().size() != 0) {
@@ -411,7 +584,7 @@ public class VTcheck {
             }
         }
 
-        //test with create to set target
+        //this needs testing once we have with create to set target
         if (targetExpression != null) {
             RichTextArea rootRTA = rootNode.getMainTreeBox().getFormulaBox().getRTA();
             rootRTA.getActionFactory().saveNow().execute(new ActionEvent());
@@ -426,45 +599,10 @@ public class VTcheck {
             }
         }
 
-        //check markup
-        RichTextArea rootRTA = rootNode.getMainTreeBox().getFormulaBox().getRTA();
-        rootRTA.getActionFactory().saveNow().execute(new ActionEvent());
-        Document rootDoc = rootRTA.getDocument();
-        objLang.setAllowDroppedBrackets(langAllowDP);
-        Expression rootExp = ParseUtilities.parseDoc(rootDoc, objLang).get(0);
-
-        //check circle
-        if (rootExp instanceof Formula && !((Formula) rootExp).isAtomic()) {
-            List<Expression> circleExpressions = getCircleText(rootNode.getMainTreeBox());
-            if (circleExpressions.size() == 0) {
-                rootNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
-                EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("No circled text.")));
-                rootNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
-                return false;
-            } else if (circleExpressions.size() > 1) {
-                rootNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
-                EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Circled text is not a grammatical expression.")));
-                rootNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
-                return false;
-            }
-            Expression circleExp = circleExpressions.get(0);
-            if (!(circleExp instanceof Operator)) {
-                rootNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
-                EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Circled text is not an operator.")));
-                rootNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
-                return false;
-            }
-
-            if (!(((Formula) rootExp).getMainOperator().is(circleExp))) {
-                rootNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
-                EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Circled text is not the main operator of the root node.")));
-                rootNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
-                return false;
-            }
-        }
-
         return true;
     }
+
+
 
     private boolean checkTrueTree() {
 
@@ -686,7 +824,6 @@ public class VTcheck {
         if (0 < endIndex && endIndex + 1 < text.length() && text.codePointCount(endIndex -1, endIndex +1) == 1) endIndex++;
 
         return ParseUtilities.parseSubDoc(doc, startIndex, endIndex, checkSetup.getObjLangName());
-
     }
 
     private void updateCheckCounter() {

@@ -3,10 +3,7 @@ package slapp.editor.parser.grammatical_parts;
 import javafx.scene.text.Text;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.ExpressionType;
-import slapp.editor.parser.symbols.CloseBracket;
-import slapp.editor.parser.symbols.DividerSym;
-import slapp.editor.parser.symbols.OpenBracket;
-import slapp.editor.parser.symbols.UniversalQuantifierSym;
+import slapp.editor.parser.symbols.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +18,7 @@ public class ExisRestrictedQuantOp extends Operator implements Expression {
 
 
     public ExisRestrictedQuantOp(OpenBracket openBracket, CloseBracket closeBracket, ExistentialOp existentialOp, DividerSym divider, Formula restrictingFormula) {
-        super(ExpressionType.EXIS_RESTRICTED_OP, new UniversalQuantifierSym(""), true);
+        super(ExpressionType.EXIS_RESTRICTED_OP, new ExistentialQuantifierSym("", -1), true);
         this.openBracket = openBracket;
         this.closeBracket = closeBracket;
         this.divider = divider;

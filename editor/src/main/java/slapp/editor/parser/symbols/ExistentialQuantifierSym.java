@@ -19,9 +19,12 @@ public class ExistentialQuantifierSym extends OperatorSym implements Expression 
     private ExpressionType type = EXISTENTIAL_SYM;
     private String textString;
 
-    public ExistentialQuantifierSym(String textString) {
+
+    public ExistentialQuantifierSym(String textString, int position) {
+        super(position);
         this.textString = textString;
     }
+
 
     @Override
     public ExpressionType getType() {return type;}
