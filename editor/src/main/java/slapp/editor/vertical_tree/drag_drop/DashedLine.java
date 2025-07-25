@@ -35,7 +35,7 @@ public class DashedLine extends AnchorPane {
     private Label closeLabel;
     private EventHandler<DragEvent> mContextDragOver;
     private EventHandler <DragEvent> mContextDragDropped;
-    private DragIconType mType = DragIconType.dashed_line;
+    private DragIconType mType = DragIconType.DASHED_LINE;
     private Point2D mDragOffset = new Point2D (0.0, 0.0);
     private final DashedLine self;
     private AnchorPane mainPane;

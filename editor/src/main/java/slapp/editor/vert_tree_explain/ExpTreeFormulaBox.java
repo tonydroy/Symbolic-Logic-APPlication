@@ -22,7 +22,6 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
@@ -32,12 +31,10 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
 import javafx.scene.transform.Scale;
 import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
@@ -71,7 +68,7 @@ public class ExpTreeFormulaBox extends AnchorPane {
     private AnchorPane right_pane = null;
     private List<String> mLinkIds = new ArrayList<>();
 
-    private DragIconType mType = DragIconType.tree_field;
+    private DragIconType mType = DragIconType.TREE_FIELD;
 
     private Point2D mDragOffset = new Point2D (0.0, 0.0);
 

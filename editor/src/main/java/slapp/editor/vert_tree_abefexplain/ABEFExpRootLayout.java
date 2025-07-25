@@ -34,7 +34,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
-import slapp.editor.vert_tree_abefexplain.*;
 import slapp.editor.vertical_tree.drag_drop.DragContainer;
 import slapp.editor.vertical_tree.drag_drop.DragIcon;
 import slapp.editor.vertical_tree.drag_drop.DragIconType;
@@ -574,7 +573,7 @@ public class ABEFExpRootLayout extends AnchorPane {
                 if (container != null) {
                     if (container.getValue("scene_coords") != null) {
 
-                        if (container.getValue("type").equals(DragIconType.dashed_line.toString())) {
+                        if (container.getValue("type").equals(DragIconType.DASHED_LINE.toString())) {
                             ABEFExpDashedLine line = new ABEFExpDashedLine(verticalTreeView);
                             main_pane.getChildren().add(line);
                             Point2D cursorPoint = container.getValue("scene_coords");
@@ -583,7 +582,7 @@ public class ABEFExpRootLayout extends AnchorPane {
                             verticalTreeView.setUndoRedoFlag(false);
                         }
 
-                        else if (container.getValue("type").equals(DragIconType.bracket.toString())) {
+                        else if (container.getValue("type").equals(DragIconType.BRACKET.toString())) {
                             ABEFExpVerticalBracket bracket = new ABEFExpVerticalBracket(verticalTreeView);
                             main_pane.getChildren().add(bracket);
                             Point2D cursorPoint = container.getValue("scene_coords");
@@ -592,7 +591,7 @@ public class ABEFExpRootLayout extends AnchorPane {
                             verticalTreeView.setUndoRedoFlag(false);
                         }
 
-                        else if (container.getValue("type").equals(DragIconType.tree_field.toString())) {
+                        else if (container.getValue("type").equals(DragIconType.TREE_FIELD.toString())) {
                             ABEFExpTreeFormulaBox treeFormulaBox = new ABEFExpTreeFormulaBox(verticalTreeView);
                             main_pane.getChildren().add(treeFormulaBox);
                             Point2D cursorPoint = container.getValue("scene_coords");
@@ -601,7 +600,7 @@ public class ABEFExpRootLayout extends AnchorPane {
                             verticalTreeView.setUndoRedoFlag(false);
                         }
 
-                        else if (container.getValue("type").equals(DragIconType.map_field.toString())) {
+                        else if (container.getValue("type").equals(DragIconType.MAP_FIELD.toString())) {
                             ABEFExpMapFormulaBox mapFormulaBox = new ABEFExpMapFormulaBox(verticalTreeView);
                             main_pane.getChildren().add(mapFormulaBox);
                             Point2D cursorPoint = container.getValue("scene_coords");

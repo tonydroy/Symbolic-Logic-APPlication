@@ -572,7 +572,7 @@ public class RootLayout extends AnchorPane {
                 if (container != null) {
                     if (container.getValue("scene_coords") != null) {
 
-                        if (container.getValue("type").equals(DragIconType.dashed_line.toString())) {
+                        if (container.getValue("type").equals(DragIconType.DASHED_LINE.toString())) {
                             DashedLine line = new DashedLine(verticalTreeView);
                             mainPane.getChildren().add(line);
                             Point2D cursorPoint = container.getValue("scene_coords");
@@ -581,7 +581,7 @@ public class RootLayout extends AnchorPane {
                             verticalTreeView.setUndoRedoFlag(false);
                         }
 
-                        else if (container.getValue("type").equals(DragIconType.bracket.toString())) {
+                        else if (container.getValue("type").equals(DragIconType.BRACKET.toString())) {
                             VerticalBracket bracket = new VerticalBracket(verticalTreeView);
                             mainPane.getChildren().add(bracket);
                             Point2D cursorPoint = container.getValue("scene_coords");
@@ -590,7 +590,7 @@ public class RootLayout extends AnchorPane {
                             verticalTreeView.setUndoRedoFlag(false);
                         }
 
-                        else if (container.getValue("type").equals(DragIconType.tree_field.toString())) {
+                        else if (container.getValue("type").equals(DragIconType.TREE_FIELD.toString())) {
                             TreeFormulaBox treeFormulaBox = new TreeFormulaBox(verticalTreeView);
                             mainPane.getChildren().add(treeFormulaBox);
                             Point2D cursorPoint = container.getValue("scene_coords");
@@ -599,7 +599,7 @@ public class RootLayout extends AnchorPane {
                             verticalTreeView.setUndoRedoFlag(false);
                         }
 
-                        else if (container.getValue("type").equals(DragIconType.map_field.toString())) {
+                        else if (container.getValue("type").equals(DragIconType.MAP_FIELD.toString())) {
                             MapFormulaBox mapFormulaBox = new MapFormulaBox(verticalTreeView);
                             mainPane.getChildren().add(mapFormulaBox);
                             Point2D cursorPoint = container.getValue("scene_coords");

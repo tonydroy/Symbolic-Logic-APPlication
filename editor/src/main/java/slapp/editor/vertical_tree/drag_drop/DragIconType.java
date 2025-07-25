@@ -20,9 +20,9 @@ package slapp.editor.vertical_tree.drag_drop;
  */
 public enum DragIconType {
 
-    tree_field,
-    bracket,
-    dashed_line,
-    map_field
+    TREE_FIELD,
+    BRACKET,
+    DASHED_LINE,
+    MAP_FIELD
 
 }

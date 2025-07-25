@@ -31,20 +31,16 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
 import javafx.scene.transform.Scale;
 import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.ControlType;
-import slapp.editor.vert_tree_abefexplain.ABEFExpRightDragResizer;
-import slapp.editor.vert_tree_abefexplain.VerticalTreeABEFExpView;
 import slapp.editor.vertical_tree.drag_drop.DragContainer;
 import slapp.editor.vertical_tree.drag_drop.DragIconType;
 import slapp.editor.vertical_tree.drag_drop.NodeLink;
@@ -75,7 +71,7 @@ public class ABEFExpTreeFormulaBox extends AnchorPane {
     private AnchorPane right_pane = null;
     private List<String> mLinkIds = new ArrayList<>();
 
-    private DragIconType mType = DragIconType.tree_field;
+    private DragIconType mType = DragIconType.TREE_FIELD;
 
     private Point2D mDragOffset = new Point2D (0.0, 0.0);
 

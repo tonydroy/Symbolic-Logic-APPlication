@@ -218,9 +218,9 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
         });
 
         mainView.scalePageWidthProperty().addListener((ob, ov, nv) -> {
-            mainPane.prefWidthProperty().unbind();
+     //       mainPane.minWidthProperty().unbind();
             mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round(mainPaneWidthSpinner.getValue() * ov.doubleValue() / nv.doubleValue() / 5.0) * 5.0);
-            mainPane.prefWidthProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(mainPaneWidthSpinner.getValueFactory().valueProperty()).divide(100.0))));
+     //       mainPane.minWidthProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(mainPaneWidthSpinner.getValueFactory().valueProperty()).divide(100.0))));
         });
 
         setSizeSpinners();

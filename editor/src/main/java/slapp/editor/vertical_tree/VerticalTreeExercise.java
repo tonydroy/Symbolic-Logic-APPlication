@@ -67,7 +67,6 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         setVerticalTreeView();
         vtCheck = new VTcheck(this);
 
-
         undoRedoFlag.set(false);
         undoRedoFlag.bind(verticalTreeView.undoRedoFlagProperty());
         undoRedoFlag.addListener((ob, ov, nv) -> {

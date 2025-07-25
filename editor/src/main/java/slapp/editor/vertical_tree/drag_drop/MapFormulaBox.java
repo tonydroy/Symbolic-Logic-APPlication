@@ -52,7 +52,7 @@ public class MapFormulaBox extends AnchorPane {
     private EventHandler <DragEvent> mContextDragDropped;
     private AnchorPane right_pane = null;
     private List<String> mLinkIds = new ArrayList<>();
-    private DragIconType mType = DragIconType.map_field;
+    private DragIconType mType = DragIconType.MAP_FIELD;
     private Point2D mDragOffset = new Point2D (0.0, 0.0);
     private final MapFormulaBox self;
     private BoxedDRTA formulaBox;

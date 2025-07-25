@@ -24,8 +24,6 @@ import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Line;
 import slapp.editor.EditorMain;
-import slapp.editor.vert_tree_abexplain.ABExpRightDragResizer;
-import slapp.editor.vert_tree_abexplain.VerticalTreeABExpView;
 import slapp.editor.vertical_tree.drag_drop.DragContainer;
 import slapp.editor.vertical_tree.drag_drop.DragIconType;
 import slapp.editor.vertical_tree.drag_drop.Point2dSerial;
@@ -39,7 +37,7 @@ public class ABExpDashedLine extends AnchorPane {
     private EventHandler<DragEvent> mContextDragOver;
     private EventHandler <DragEvent> mContextDragDropped;
 
-    private DragIconType mType = DragIconType.dashed_line;
+    private DragIconType mType = DragIconType.DASHED_LINE;
 
     private Point2D mDragOffset = new Point2D (0.0, 0.0);
 

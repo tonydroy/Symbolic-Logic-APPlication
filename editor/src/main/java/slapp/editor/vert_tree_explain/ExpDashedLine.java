@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public License along with SLA
 
 package slapp.editor.vert_tree_explain;
 
-import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
@@ -28,7 +27,6 @@ import slapp.editor.EditorMain;
 import slapp.editor.vertical_tree.drag_drop.DragContainer;
 import slapp.editor.vertical_tree.drag_drop.DragIconType;
 import slapp.editor.vertical_tree.drag_drop.Point2dSerial;
-import slapp.editor.vertical_tree.drag_drop.RightDragResizer;
 
 public class ExpDashedLine extends AnchorPane {
 
@@ -39,7 +37,7 @@ public class ExpDashedLine extends AnchorPane {
     private EventHandler<DragEvent> mContextDragOver;
     private EventHandler <DragEvent> mContextDragDropped;
 
-    private DragIconType mType = DragIconType.dashed_line;
+    private DragIconType mType = DragIconType.DASHED_LINE;
 
     private Point2D mDragOffset = new Point2D (0.0, 0.0);
 

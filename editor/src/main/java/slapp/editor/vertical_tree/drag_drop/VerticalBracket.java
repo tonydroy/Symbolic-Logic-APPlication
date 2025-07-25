@@ -34,7 +34,7 @@ public class VerticalBracket extends AnchorPane {
     private Label closeLabel;
     private EventHandler<DragEvent> mContextDragOver;
     private EventHandler <DragEvent> mContextDragDropped;
-    private DragIconType mType = DragIconType.bracket;
+    private DragIconType mType = DragIconType.BRACKET;
     private Point2D mDragOffset = new Point2D (0.0, 0.0);
     private final VerticalBracket self;
     private VBox mainPane;

@@ -29,17 +29,12 @@ import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
 import javafx.scene.transform.Scale;
 import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
@@ -71,7 +66,7 @@ public class TreeFormulaBox extends AnchorPane {
     private NodeLink mDragLink = null;
     private AnchorPane right_pane = null;
     private List<String> mLinkIds = new ArrayList<>();
-    private DragIconType mType = DragIconType.tree_field;
+    private DragIconType mType = DragIconType.TREE_FIELD;
     private Point2D mDragOffset = new Point2D (0.0, 0.0);
     private final TreeFormulaBox self;
     private BoxedDRTA formulaBox;
@@ -228,17 +223,8 @@ public class TreeFormulaBox extends AnchorPane {
                     if (circleStage < 2) {
                         if (!circled) {
 
-
                             int xPos = (int) Math.round(rta.getCaretRowColumn().getX());
                             circleIndexes[circleStage] = xPos;
-
-                            //test
-                         //   System.out.print("x = " + xPos);
-                         //   rta.getActionFactory().saveNow().execute(new ActionEvent());
-                         //   String s = rta.getDocument().getText();
-                         //   System.out.println(" char: " + s.substring(xPos, 10));
-
-                            //
 
 
                             Bounds caretBounds = ((RichTextAreaSkin) formulaBox.getRTA().getSkin()).getCaretPosition();

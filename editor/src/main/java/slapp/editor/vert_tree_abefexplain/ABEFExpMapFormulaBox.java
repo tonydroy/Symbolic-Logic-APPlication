@@ -37,8 +37,6 @@ import slapp.editor.EditorMain;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.ControlType;
-import slapp.editor.vert_tree_abefexplain.ABEFExpRightDragResizer;
-import slapp.editor.vert_tree_abefexplain.VerticalTreeABEFExpView;
 import slapp.editor.vertical_tree.drag_drop.DragContainer;
 import slapp.editor.vertical_tree.drag_drop.DragIconType;
 import slapp.editor.vertical_tree.drag_drop.Point2dSerial;
@@ -59,7 +57,7 @@ public class ABEFExpMapFormulaBox extends AnchorPane {
     private AnchorPane right_pane = null;
     private List<String> mLinkIds = new ArrayList<>();
 
-    private DragIconType mType = DragIconType.map_field;
+    private DragIconType mType = DragIconType.MAP_FIELD;
 
     private Point2D mDragOffset = new Point2D (0.0, 0.0);
 

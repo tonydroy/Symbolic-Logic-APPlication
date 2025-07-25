@@ -40,7 +40,6 @@ import slapp.editor.main_window.ControlType;
 import slapp.editor.vertical_tree.drag_drop.DragContainer;
 import slapp.editor.vertical_tree.drag_drop.DragIconType;
 import slapp.editor.vertical_tree.drag_drop.Point2dSerial;
-import slapp.editor.vertical_tree.drag_drop.RightDragResizer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +57,7 @@ public class ExpMapFormulaBox extends AnchorPane {
     private AnchorPane right_pane = null;
     private List<String> mLinkIds = new ArrayList<>();
 
-    private DragIconType mType = DragIconType.map_field;
+    private DragIconType mType = DragIconType.MAP_FIELD;
 
     private Point2D mDragOffset = new Point2D (0.0, 0.0);
 

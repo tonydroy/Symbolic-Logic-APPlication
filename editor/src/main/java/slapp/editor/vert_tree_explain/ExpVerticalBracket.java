@@ -23,7 +23,6 @@ import javafx.scene.control.Label;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import slapp.editor.EditorMain;
-import slapp.editor.vertical_tree.drag_drop.BottomDragResizer;
 import slapp.editor.vertical_tree.drag_drop.DragContainer;
 import slapp.editor.vertical_tree.drag_drop.DragIconType;
 import slapp.editor.vertical_tree.drag_drop.Point2dSerial;
@@ -36,7 +35,7 @@ public class ExpVerticalBracket extends AnchorPane {
     private EventHandler<DragEvent> mContextDragOver;
     private EventHandler <DragEvent> mContextDragDropped;
 
-    private DragIconType mType = DragIconType.bracket;
+    private DragIconType mType = DragIconType.BRACKET;
 
     private Point2D mDragOffset = new Point2D (0.0, 0.0);
 
