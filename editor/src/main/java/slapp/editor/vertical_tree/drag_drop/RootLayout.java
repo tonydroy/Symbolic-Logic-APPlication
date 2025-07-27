@@ -638,7 +638,7 @@ public class RootLayout extends AnchorPane {
                     String sourceId = container.getValue("source");
                     String targetId = container.getValue("target");
 
-                    if (sourceId != null && targetId != null) {
+                    if (sourceId != null && targetId != null && !sourceId.equals(targetId)) {
 
      //                   //	System.out.println(container.getData());
      //                  NodeLink link = new NodeLink();

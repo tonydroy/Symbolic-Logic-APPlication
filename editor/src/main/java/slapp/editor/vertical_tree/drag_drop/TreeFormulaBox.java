@@ -36,6 +36,7 @@ import javafx.scene.layout.*;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Scale;
+import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
 import slapp.editor.decorated_rta.BoxedDRTA;
@@ -94,6 +95,9 @@ public class TreeFormulaBox extends AnchorPane {
     private int ulineStage = 0;
     private Label[] ulineMarkers;
     private Double[] ulineXAnchors = new Double[2];
+    private List<Integer[]> ulineIndexes = new ArrayList<>();
+    private Integer[] ulineIndexTemp = new Integer[2];
+    private boolean ulineInclusion = true;
     private double ulineSpace = 3.0;
     private List<Integer> baseline = new ArrayList<>();
 
@@ -269,6 +273,10 @@ public class TreeFormulaBox extends AnchorPane {
                 Bounds rtaBounds = self.sceneToLocal(rta.localToScene(rta.getBoundsInLocal()));
                 if (code == KeyCode.F10) {
                     if (ulineStage < 2) {
+
+                        int xPos = (int) Math.round(rta.getCaretRowColumn().getX());
+                        ulineIndexTemp[ulineStage] = xPos;
+
                         Bounds caretBounds = ((RichTextAreaSkin) formulaBox.getRTA().getSkin()).getCaretPosition();
                         Bounds newCaretBounds = rta.sceneToLocal(caretBounds);
                         double xAnchor = newCaretBounds.getMaxX() + rtaBounds.getMinX() - 2.0;
@@ -292,6 +300,7 @@ public class TreeFormulaBox extends AnchorPane {
                         double maxX = Math.max(ulineXAnchors[0], ulineXAnchors[1]);
                         self.getChildren().removeAll(ulineMarkers);
                         setLine(minX - rtaBounds.getMinX(), maxX - rtaBounds.getMinX());
+                        setLineIndexes();
                         ulineStage = 0;
                     } else {
                         EditorAlerts.fleetingRedPopup("Underline requires two markers.");
@@ -300,6 +309,8 @@ public class TreeFormulaBox extends AnchorPane {
                 }
             }
         };
+
+
 
         //close button click
         closeLabel.setOnMouseClicked( new EventHandler <MouseEvent> () {
@@ -343,6 +354,21 @@ public class TreeFormulaBox extends AnchorPane {
 
     }
 
+    private void setLineIndexes() {
+        int minX = Math.min(ulineIndexTemp[0], ulineIndexTemp[1]);
+        int maxX = Math.max(ulineIndexTemp[0], ulineIndexTemp[1]);
+
+        if (minX != maxX) {
+            for (Integer[] index : ulineIndexes) {
+                if (index[0] > minX && index[0] < maxX) ulineInclusion = false;
+                if (index[1] > minX && index[1] < maxX) ulineInclusion = false;
+            }
+            if (ulineInclusion) {
+                ulineIndexes.add(new Integer[]{minX, maxX});
+            }
+        }
+    }
+
     /*
      * Add circle at anchor points
      */
@@ -353,6 +379,7 @@ public class TreeFormulaBox extends AnchorPane {
         circleStage = 0;
         self.getChildren().add(oval);
         oval.setWidth(maxX - minX);
+        oval.setMouseTransparent(true);
 
         oval.setHeight(rtaBoundsHeight - 6.0);
         oval.setStyle("-fx-fill: transparent; -fx-stroke: black; -fx-stroke-width: 1;");
@@ -844,6 +871,9 @@ public class TreeFormulaBox extends AnchorPane {
             undoUnderlineRequest();
             linesPane.getChildren().clear();
             baseline.clear();
+            ulineIndexes = new ArrayList<>();
+            ulineInclusion = true;
+
             verticalTreeView.setUndoRedoFlag(true);
             verticalTreeView.setUndoRedoFlag(false);
         }
@@ -1009,5 +1039,21 @@ public class TreeFormulaBox extends AnchorPane {
 
     public void setPrintWidth(double printWidth) {
         this.printWidth = printWidth;
+    }
+
+    public List<Integer[]> getUlineIndexes() {
+        return ulineIndexes;
+    }
+
+    public void setUlineIndexes(List<Integer[]> ulineIndexes) {
+        this.ulineIndexes = ulineIndexes;
+    }
+
+    public boolean isUlineInclusion() {
+        return ulineInclusion;
+    }
+
+    public void setUlineInclusion(boolean ulineInclusion) {
+        this.ulineInclusion = ulineInclusion;
     }
 }

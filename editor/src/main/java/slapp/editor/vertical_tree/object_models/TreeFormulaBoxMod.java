@@ -40,6 +40,8 @@ public class TreeFormulaBoxMod implements Serializable {
     Double[] circleXAnchors;
     boolean circled;
     private int[] circleIndexes;
+    private List<Integer[]> ulineIndexes;
+    private boolean ulineInclusion;
     double rtaBoundsHeight;
     double rtaBoundsMinY;
     List<UnderlineMod> underlineList = new ArrayList<>();
@@ -50,6 +52,24 @@ public class TreeFormulaBoxMod implements Serializable {
     public TreeFormulaBoxMod() {
         printWidth = 0;
         circleIndexes = new int[2];
+        ulineIndexes = new ArrayList<>();
+        ulineInclusion = true;
+    }
+
+    public List<Integer[]> getUlineIndexes() {
+        return ulineIndexes;
+    }
+
+    public void setUlineIndexes(List<Integer[]> ulineIndexes) {
+        this.ulineIndexes = ulineIndexes;
+    }
+
+    public boolean isUlineInclusion() {
+        return ulineInclusion;
+    }
+
+    public void setUlineInclusion(boolean ulineInclusion) {
+        this.ulineInclusion = ulineInclusion;
     }
 
     /**

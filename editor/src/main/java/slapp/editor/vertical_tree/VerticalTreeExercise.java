@@ -180,6 +180,8 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
             treeFormulaBox.setmLinkIds(treeBoxMod.getLinkIdStrings());
 
             treeFormulaBox.setCircleIndexes(treeBoxMod.getCircleIndexes());
+            treeFormulaBox.setUlineIndexes(treeBoxMod.getUlineIndexes());
+            treeFormulaBox.setUlineInclusion(treeBoxMod.isUlineInclusion());
 
             treeFormulaBox.setPrintWidth(treeBoxMod.getPrintWidth());
 
@@ -613,6 +615,8 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
                 newTreeMod.setLayoutY(originalTreeBox.getLayoutY());
                 newTreeMod.setLinkIdStrings(originalTreeBox.getmLinkIds());
                 newTreeMod.setCircleIndexes(originalTreeBox.getCircleIndexes());
+                newTreeMod.setUlineIndexes(originalTreeBox.getUlineIndexes());
+                newTreeMod.setUlineInclusion(originalTreeBox.isUlineInclusion());
 
                 BoxedDRTA treeFormulaBox = originalTreeBox.getFormulaBox();
                 RichTextArea treeRTA = treeFormulaBox.getRTA();

@@ -81,6 +81,8 @@ public class BottomDragResizer {
         region.setCursor(Cursor.DEFAULT);
         verticalTreeView.setUndoRedoFlag(true);
         verticalTreeView.setUndoRedoFlag(false);
+
+        region.setPrefHeight(Math.round((float) region.getPrefHeight() / 24) * 24 + 3) ;  //make bottom of vertical bracket snap to center of grid row
     }
 
     protected void mouseOver(MouseEvent event) {

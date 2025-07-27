@@ -6,6 +6,7 @@ import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.event.ActionEvent;
 import javafx.scene.text.Text;
+import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.parser.Expression;
@@ -42,6 +43,8 @@ public class VTcheck {
     private double equalsEpsilon = 10.0;
     private boolean isCheckJustification = true;
     private List<TreeNode> connectedNodes;
+    private List<Formula> quantifiedSubformulas;
+
     private String objLangName;
     private Language objLang;
     private boolean langAllowDP;
@@ -64,6 +67,7 @@ public class VTcheck {
     private boolean checkUnderline;
 
 
+
     VTcheck(VerticalTreeExercise vtExercise) {
 
 
@@ -76,7 +80,7 @@ public class VTcheck {
         if (checkSetup == null) { checkSetup = new VTcheckSetup(); }
         objLangName = checkSetup.getObjLangName();
         objLang = Languages.getLanguage(objLangName);
-        langAllowDP = objLang.isAllowDroppedBrackets();
+        setLangAllowDP(objLang.isAllowDroppedBrackets());
 
         checkBracket = vtModel.getDragIconList().contains(DragIconType.BRACKET);
         checkDashedLine = vtModel.getDragIconList().contains(DragIconType.DASHED_LINE);
@@ -249,6 +253,14 @@ public class VTcheck {
                     List<Expression> parseList = ParseUtilities.parseDoc(doc, objLang);
                     Expression treeNodeExp = parseList.get(0);
 
+                    //check no underline on term
+                    if (treeNodeExp instanceof Term && !treeFormulaBox.getUlineIndexes().isEmpty()) {
+                        treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                        EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("No underline on terms.")));
+                        treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                        return false;
+                    }
+
                     if (treeNodeExp instanceof Formula) {
                         Formula treeNodeFormula = (Formula) treeNodeExp;
 
@@ -285,6 +297,83 @@ public class VTcheck {
 
                                 treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
                                 EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Box applied to node other than an immediate subformula.")));
+                                treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                                return false;
+                            }
+                        }
+
+                        //check underlines
+                        if (checkUnderline) {
+                            if (!treeFormulaBox.isUlineInclusion()) {
+                                treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                                EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Underline not completely \"included\" in ones below.")));
+                                treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                                return false;
+                            }
+
+
+                            List<List<Expression>> underlineTexts = getUnderlineTexts(treeFormulaBox);
+                            List<Formula> underlineFormulas = new ArrayList<>();
+
+                            //get quantified expressions with underline: underlineFormulas
+                            for (List<Expression> underlineExpressions : underlineTexts) {
+                                if (underlineExpressions.size() > 1) {
+                                    treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                                    EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Underline text is not a grammatical expression.")));
+                                    treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                                    return false;
+                                }
+                                Expression underlineExp = underlineExpressions.get(0);
+                                if (!(underlineExp instanceof Formula)) {
+                                    treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                                    EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Underline text is not a (sub-)formula.")));
+                                    treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                                    return false;
+                                }
+                                else {
+                                    Formula underlineFormula = (Formula) underlineExp;
+                                    if (!(underlineFormula.getMainOperator() instanceof UniversalOp) && !(underlineFormula.getMainOperator() instanceof ExistentialOp))   {
+                                        treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                                        EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Main operator of underline text not a quantifier.")));
+                                        treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                                        return false;
+                                    }
+                                    underlineFormulas.add(underlineFormula);
+                                }
+                            }
+
+                            //check hava all quantified subformulas.
+                            quantifiedSubformulas = new ArrayList<>();
+                            populateQuantifiedSubformulas(treeNode);
+
+                            boolean[] found = new boolean[quantifiedSubformulas.size()];
+
+                       //     System.out.println("q subs: " + quantifiedSubformulas + " u subs: " + underlineFormulas);
+
+                            for (int a = 0; a < quantifiedSubformulas.size(); a++) {
+                                if (!found[a]) {
+                                    Formula subformula = quantifiedSubformulas.get(a);
+
+                                    for (int m = 0; m < underlineFormulas.size(); m++) {
+                                        Formula ulineFormula = underlineFormulas.get(m);
+                                        if (subformula.equals(ulineFormula)) {
+                                            found[a] = true;
+                                            underlineFormulas.remove(m);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            boolean good = true;
+                            for (int b = 0; b < quantifiedSubformulas.size(); b++) {
+                                if (found[b] == false) {
+                                    good = false;
+                                    break;
+                                }
+                            }
+                            if (!good) {
+                                treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                                EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Not every quantified subformula has underline.")));
                                 treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
                                 return false;
                             }
@@ -341,11 +430,11 @@ public class VTcheck {
                         return false;
                     }
                     VerticalBracket bracket = verticalBrackets.get(0);
-                    if (hasTerms && bracket.getLayoutY() < maxTermY) {
+                    if (hasTerms && (bracket.getLayoutY() + 10) < maxTermY) {
                         EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Vertical bracket includes more than just subformulas.")));
                         return false;
                     }
-                    if (bracket.getLayoutY() > minFormulaY || bracket.getBoundsInParent().getMaxY() < maxFormulaY) {
+                    if ((bracket.getLayoutY() + 10) > minFormulaY || bracket.getBoundsInParent().getMaxY() < maxFormulaY) {
 
                         //       System.out.println("bY: " + bracket.getLayoutY() + " minFY: " + minFormulaY + " bMaxY: " + bracket.getBoundsInParent().getMaxY() +  " maxFY: " + maxFormulaY);
                         EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Vertical bracket does not include all subformulas.")));
@@ -396,6 +485,7 @@ public class VTcheck {
                         treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
                         return false;
                     } else {
+             //           System.out.println("allow dp: " + langAllowDP);
                         if (treeNode != rootNode || !langAllowDP) {
                             treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
                             EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Not a grammatical expression (check outer parentheses).")));
@@ -423,8 +513,8 @@ public class VTcheck {
                     hasTerms = true;
                     double layoutY = treeNode.getMainTreeBox().getLayoutY();
                     double maxLayoutY = treeNode.getMainTreeBox().getBoundsInParent().getMaxY();
-                    if (minTermY < 0 || layoutY < minTermY) minTermY = layoutY;
-                    if (maxLayoutY > maxTermY) maxTermY = maxLayoutY;
+                    if (minTermY < 0 || (layoutY + 9) < minTermY) minTermY = (layoutY + 9);
+                    if ((maxLayoutY - 9) > maxTermY) maxTermY = (maxLayoutY - 9);
 
                     if (termType == TermType.VARIABLE) {
                         if (treeNode.getParents().size() != 0) {
@@ -505,8 +595,8 @@ public class VTcheck {
                     hasFormulas = true;
                     double layoutY = treeNode.getMainTreeBox().getLayoutY();
                     double maxLayoutY = treeNode.getMainTreeBox().getBoundsInParent().getMaxY();
-                    if (minFormulaY < 0 || layoutY < minFormulaY) minFormulaY = layoutY;
-                    if (maxLayoutY > maxFormulaY) maxFormulaY = maxLayoutY;
+                    if (minFormulaY < 0 || (layoutY + 9) < minFormulaY) minFormulaY = layoutY + 9;
+                    if ((maxLayoutY - 9) > maxFormulaY) maxFormulaY = (maxLayoutY - 9);
 
                     if (formula instanceof SentenceAtomic) {
                         if (treeNode.getParents().size() != 0) {
@@ -672,7 +762,7 @@ public class VTcheck {
             for (TreeNode treeNode : row) {
                 if (!connectedNodes.contains(treeNode)) {
                     treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
-                    EditorAlerts.showSimpleTxtListAlert("Tree Structure", Collections.singletonList(ParseUtilities.newRegularText("Node is not an an ancestor connected to the root node.")));
+                    EditorAlerts.showSimpleTxtListAlert("Tree Structure", Collections.singletonList(ParseUtilities.newRegularText("Node is not an an ancestor connected all the way to the root node.")));
                     treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
                     return false;
                 }
@@ -688,6 +778,26 @@ public class VTcheck {
             populateConnectedNodes(parent);
         }
     }
+
+    private void populateQuantifiedSubformulas(TreeNode node) {
+        TreeFormulaBox nodeBox = node.getMainTreeBox();
+        RichTextArea rootRTA = nodeBox.getFormulaBox().getRTA();
+        rootRTA.getActionFactory().saveNow().execute(new ActionEvent());
+        Document nodeDoc = rootRTA.getDocument();
+        objLang.setAllowDroppedBrackets(langAllowDP);
+        List<Expression> nodeParseList = ParseUtilities.parseDoc(nodeDoc, objLang);
+        Expression nodeExp = nodeParseList.get(0);
+
+        if (nodeExp instanceof Formula) {
+            Formula formula = (Formula) nodeExp;
+            if (formula.getMainOperator() instanceof UniversalOp || formula.getMainOperator() instanceof ExistentialOp) quantifiedSubformulas.add(formula);
+        }
+
+        for (TreeNode parent : node.getParents()) {
+            populateQuantifiedSubformulas(parent);
+        }
+    }
+
 
     private boolean setParentsAndChildren() {
         for (List<TreeNode> rowList : formulaTree) {
@@ -859,6 +969,27 @@ public class VTcheck {
         return ParseUtilities.parseSubDoc(doc, startIndex, endIndex, checkSetup.getObjLangName());
     }
 
+    private List<List<Expression>> getUnderlineTexts(TreeFormulaBox treeFormulaBox) {
+        List<List<Expression>> underlineTexts = new ArrayList<>();
+
+
+        RichTextArea rta = treeFormulaBox.getFormulaBox().getRTA();
+        rta.getActionFactory().saveNow().execute(new ActionEvent());
+        Document doc = rta.getDocument();
+        String text = doc.getText();
+
+        for (Integer[] index : treeFormulaBox.getUlineIndexes()) {
+            int startIndex = index[0];
+            int endIndex = index[1];
+            if (0 < startIndex && startIndex + 1 < text.length() && text.codePointCount(startIndex -1, startIndex +1) == 1) startIndex++;
+            if (0 < endIndex && endIndex + 1 < text.length() && text.codePointCount(endIndex -1, endIndex +1) == 1) endIndex++;
+            List<Expression> lineList = ParseUtilities.parseSubDoc(doc, startIndex, endIndex, checkSetup.getObjLangName());
+            underlineTexts.add(lineList);
+        }
+        return underlineTexts;
+    }
+
+
     private void updateCheckCounter() {
         if (checkMax != -1 && checkTries >= checkMax && !vtExercise.getMainWindow().isInstructorFunctions()) {
             vtView.getCheckButton().setDisable(true);
@@ -872,4 +1003,9 @@ public class VTcheck {
         vtView.getCheckTriesLabel().setText(checkString);
     }
 
+
+    public void setLangAllowDP(boolean langAllowDP) {
+        if (langAllowDP) this.langAllowDP = true;
+        else this.langAllowDP = false;
+    }
 }

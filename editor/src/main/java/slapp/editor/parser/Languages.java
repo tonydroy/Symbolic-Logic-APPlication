@@ -11,7 +11,7 @@ import static java.util.Map.entry;
 public class Languages {
 
     private static List<Language> fixedLanguages = new ArrayList<Language>();
-    private static List<Language> optionalLanguages = new ArrayList<Language>();
+ //   private static List<Language> optionalLanguages = new ArrayList<Language>();
 
     static {
         loadFixedLanguages();
@@ -36,6 +36,7 @@ public class Languages {
         return fixedLanguages;
     }
 
+    /*
     public static Language getLanguage(String name) {
         for (Language l : fixedLanguages){
             if (l.getNameString().equals(name)) return l;
@@ -44,6 +45,30 @@ public class Languages {
             if (l.getNameString().equals(name)) return l;
         }
         return null;
+    }
+
+     */
+
+    public static Language getLanguage(String name) {
+        switch(name){
+            case "\u2112\ud835\udcc8": return Ls();
+
+            case "\u2112\ud835\udcc8 (w/abv)": return Ls_abv();
+
+            case "\u2112\ud835\udcc6": return Lq();
+
+            case "\u2112\ud835\udcc6 (w/abv)": return Lq_abv();
+
+            case "\u2112\u0274\u1d1b<": return Lnt_lessthan();
+
+            case "\u2112\u0274\u1d1b": return Lnt();
+
+            case "LM Meta": return MetaL();
+
+            case "\u2133\u2112": return MetaO();
+
+            default: return Lq_abv();
+        }
     }
 
     private static Language Ls() {
