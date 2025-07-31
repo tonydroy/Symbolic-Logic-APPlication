@@ -1381,4 +1381,8 @@ public class MainWindowView {
     public Node getCommentNode() {
         return commentNode;
     }
+
+    public Node getLeftControlNode() {
+        return leftControlNode;
+    }
 }

@@ -96,4 +96,10 @@ public interface Exercise<T,U> {
 
     default void clearStandingPopups() {};
 
+    default String getAuxExerName() {return "";}
+
+    default void setAuxExerA(Exercise exercise) {}
+
+    default void setAuxExerB(Exercise exercise) {}
+
 }

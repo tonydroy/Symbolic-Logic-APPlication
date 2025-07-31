@@ -909,12 +909,9 @@ public class SyntacticalFns {
 
 
 
-
     public static Expression unabbreviate(Document doc, String langName) {
         lang = Languages.getLanguage(langName);
 
-
-        //get parsed expression
         List<Expression> parsedList = ParseUtilities.parseDoc(doc, langName);
         if (parsedList.size() == 0) {
             return null;
@@ -924,9 +921,19 @@ public class SyntacticalFns {
             return null;
         }
 
+        return unabbreviate(expression, langName);
+    }
+
+
+
+    public static Expression unabbreviate(Expression expression, String langName) {
+        lang = Languages.getLanguage(langName);
+
+
+
         //sort nodes of parsed expression by level
         nodeList = new ArrayList<Expression>();
-        listNodes(parsedList.get(0));
+        listNodes(expression);
         Collections.sort(nodeList, new SortByLevel());
 
 
@@ -937,10 +944,7 @@ public class SyntacticalFns {
         //get unabbreviated expressions for members of the sorted node list
         List<Expression> expressionList = listUnabbExpressions(formList);
 
-
-
         return expressionList.get(expressionList.size() - 1);
-
     }
 
     private static List<Expression> listUnabbExpressions(List<List<OriginalElement>> formsList) {

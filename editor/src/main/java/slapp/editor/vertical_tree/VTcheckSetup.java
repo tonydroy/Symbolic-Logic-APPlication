@@ -12,19 +12,21 @@ public class VTcheckSetup implements Serializable {
 
     boolean checkSuccess;
     boolean checkFinal;
-
     int checkMax;
     int checkTries;
+    boolean checkJustifications;
 
     boolean staticHelpButton;
     Document staticHelpDoc;
 
     Document formulaTarget;
+    String auxExerName;
+    VTCheckType checkType;
 
     public VTcheckSetup() {
-        objLangName = "\u2112\u0274\u1d1b<";
+      //  objLangName = "\u2112\u0274\u1d1b<"; //Lnt<>
      //   objLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (abv)
-    //    objLangName = "\u2112\ud835\udcc6";   //Lq
+        objLangName = "\u2112\ud835\udcc6";   //Lq
     //    objLangName = "\u2112\ud835\udcc8 (w/abv)";
     //    objLangName = "\u2112\ud835\udcc8"; //Ls
         metLangName = "LM Meta";
@@ -32,9 +34,15 @@ public class VTcheckSetup implements Serializable {
         checkFinal = true;
         checkMax = -1;              //0
         checkTries = 0;
+        checkJustifications = true;
         staticHelpButton = true;      //false
         staticHelpDoc = new Document();
+        auxExerName = "VTLq-abv";
+        checkType = VTCheckType.UNABB;
+
     }
+
+    public String getAuxExerName() {return auxExerName;}
 
     public String getObjLangName() {
         return objLangName;
@@ -106,5 +114,25 @@ public class VTcheckSetup implements Serializable {
 
     public void setFormulaTarget(Document formulaTarget) {
         this.formulaTarget = formulaTarget;
+    }
+
+    public VTCheckType getCheckType() {
+        return checkType;
+    }
+
+    public boolean isCheckJustifications() {
+        return checkJustifications;
+    }
+
+    public void setCheckJustifications(boolean checkJustifications) {
+        this.checkJustifications = checkJustifications;
+    }
+
+    public void setAuxExerName(String auxExerName) {
+        this.auxExerName = auxExerName;
+    }
+
+    public void setCheckType(VTCheckType checkType) {
+        this.checkType = checkType;
     }
 }

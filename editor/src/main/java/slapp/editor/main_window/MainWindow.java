@@ -696,7 +696,7 @@ public class MainWindow {
 
                         if (currentExercise != null) currentExercise.clearStandingPopups();
                         currentExercise = typeFactory.getExerciseFromModelObject(currentAssignment.getExerciseModels().get(assignmentIndex));
-
+                        setAuxExercise();
 
                         mainView.setupExercise();
                         mainView.setUpLowerAssignmentBar();
@@ -909,6 +909,7 @@ public class MainWindow {
                 TypeSelectorFactories typeFactory = new TypeSelectorFactories(this);
 
                 currentExercise = typeFactory.getExerciseFromModelObject(currentAssignment.getExerciseModels().get(assignmentIndex));
+                setAuxExercise();
                 mainView.setupExercise();
                 mainView.setUpLowerAssignmentBar();
             }
@@ -932,6 +933,7 @@ public class MainWindow {
                 assignmentIndex = nextIndex;
                 TypeSelectorFactories typeFactory = new TypeSelectorFactories(this);
                 currentExercise = typeFactory.getExerciseFromModelObject(currentAssignment.getExerciseModels().get(assignmentIndex));
+                setAuxExercise();
                 mainView.setupExercise();
                 mainView.setUpLowerAssignmentBar();
             }
@@ -978,6 +980,7 @@ public class MainWindow {
                         assignmentIndex = exerciseList.getItems().indexOf(nv);
                         TypeSelectorFactories typeFactory = new TypeSelectorFactories(mainWindow);
                         currentExercise = typeFactory.getExerciseFromModelObject(currentAssignment.getExerciseModels().get(assignmentIndex));
+                        setAuxExercise();
                         mainView.setupExercise();
                         mainView.setUpLowerAssignmentBar();
                         exercisePopup.hide();
@@ -996,6 +999,20 @@ public class MainWindow {
             exercisePopup.getContent().add(jumpBox);
             jumpBox.setStyle("-fx-border-color: lightblue; -fx-border-width: 5; -fx-opacity: 1.0");
             exercisePopup.show(EditorMain.mainStage);
+        }
+    }
+
+    private void setAuxExercise() {
+        List<ExerciseModel> exerModels = currentAssignment.getExerciseModels();
+        for (ExerciseModel exerModel : exerModels) {
+            if (exerModel.getExerciseName().equals(currentExercise.getAuxExerName())) {
+                ExerciseModel auxModel = exerModel;
+                TypeSelectorFactories typeFactory = new TypeSelectorFactories(this);
+                Exercise auxExerA = typeFactory.getExerciseFromModelObject(auxModel);
+                currentExercise.setAuxExerA(auxExerA);
+                Exercise auxExerB = typeFactory.getExerciseFromModelObject(auxModel);
+                currentExercise.setAuxExerB(auxExerB);
+            }
         }
     }
 

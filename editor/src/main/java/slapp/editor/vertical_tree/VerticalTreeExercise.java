@@ -17,9 +17,12 @@ package slapp.editor.vertical_tree;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -28,17 +31,30 @@ import javafx.scene.Node;
 import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
+import javafx.scene.transform.Scale;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import org.apache.commons.lang3.SerializationUtils;
 import slapp.editor.DiskUtilities;
+import slapp.editor.EditorMain;
 import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.*;
+import slapp.editor.vert_tree_abefexplain.VerticalTreeABEFExpExercise;
+import slapp.editor.vert_tree_abefexplain.VerticalTreeABEFExpView;
+import slapp.editor.vert_tree_abexplain.VerticalTreeABExpExercise;
+import slapp.editor.vert_tree_abexplain.VerticalTreeABExpView;
+import slapp.editor.vert_tree_explain.VerticalTreeExpExercise;
+import slapp.editor.vert_tree_explain.VerticalTreeExpView;
 import slapp.editor.vertical_tree.drag_drop.*;
 import slapp.editor.vertical_tree.object_models.*;
 import java.util.ArrayList;
@@ -53,8 +69,11 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
     private VTcheck vtCheck;
     private boolean exerciseModified = false;
     private UndoRedoList<VerticalTreeModel> undoRedoList = new UndoRedoList<>(50);
-
     public BooleanProperty undoRedoFlag = new SimpleBooleanProperty();
+    private Exercise auxExerciseA;
+    private Exercise auxExerciseB;
+    Stage tStage;
+
 
 
 
@@ -282,6 +301,8 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
 
     private void populateControlBox() {
         VBox controlBox = verticalTreeView.getControlBox();
+        controlBox.setAlignment(Pos.TOP_CENTER);
+
         RootLayout layout = verticalTreeView.getRootLayout();
         ToggleGroup buttonGroup = verticalTreeView.getRootLayout().getButtonGroup();
 
@@ -326,6 +347,75 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
                 }
             }
         }
+
+        Platform.runLater(() -> {
+            if (verticalTreeModel.getCheckSetup().getCheckType() == VTCheckType.UNABB && auxExerciseA != null) {
+                Pane thumbPane = auxImage();
+                verticalTreeView.getControlBox().getChildren().add(thumbPane);
+            }
+        });
+
+    }
+
+    private Pane auxImage() {
+        AnchorPane mainPane = null;
+        Pane thumbPane = new Pane();
+        if (auxExerciseA instanceof VerticalTreeExercise)  mainPane = ((VerticalTreeView) auxExerciseA.getExerciseView()).getRootLayout().getMainPane();
+        if (auxExerciseA instanceof VerticalTreeExpExercise)  mainPane = ((VerticalTreeExpView) auxExerciseA.getExerciseView()).getRootLayout().getMain_pane();
+        if (auxExerciseA instanceof VerticalTreeABExpExercise)  mainPane = ((VerticalTreeABExpView) auxExerciseA.getExerciseView()).getRootLayout().getMain_pane();
+        if (auxExerciseA instanceof VerticalTreeABEFExpExercise)  mainPane = ((VerticalTreeABEFExpView) auxExerciseA.getExerciseView()).getRootLayout().getMain_pane();
+
+        if(mainPane != null) {
+            mainPane.setStyle("-fx-border-color: black; -fx-border-width: 1; -fx-background-color: FAFAFA;");
+            thumbPane.getChildren().add(mainPane);
+
+            Group thumbRoot = new Group();
+            Scene scene = new Scene(thumbRoot);
+            thumbRoot.getChildren().add(thumbPane);
+            thumbRoot.applyCss();
+            thumbRoot.layout();
+            Bounds bounds = thumbPane.getLayoutBounds();
+            double scale = 90.0 / bounds.getWidth();
+
+            thumbPane.getTransforms().clear();
+            thumbPane.getTransforms().add(new Scale(scale, scale));
+
+            thumbPane.setOnMouseClicked(event -> {
+                if (tStage == null || !tStage.isShowing()) {
+                    Pane tPane = null;
+                    if (auxExerciseB instanceof VerticalTreeExercise) tPane = new Pane(((VerticalTreeView) auxExerciseB.getExerciseView()).getRootLayout().getMainPane());
+                    if (auxExerciseB instanceof VerticalTreeExpExercise)  tPane = new Pane(((VerticalTreeExpView) auxExerciseB.getExerciseView()).getRootLayout().getMain_pane());
+                    if (auxExerciseB instanceof VerticalTreeABExpExercise)  tPane = new Pane(((VerticalTreeABExpView) auxExerciseB.getExerciseView()).getRootLayout().getMain_pane());
+                    if (auxExerciseB instanceof VerticalTreeABEFExpExercise)  tPane = new Pane(((VerticalTreeABEFExpView) auxExerciseB.getExerciseView()).getRootLayout().getMain_pane());
+
+                    if (tPane != null) {
+
+                        Scene tScene = new Scene(tPane);
+                        tPane.setDisable(true);
+
+                        tStage = new Stage();
+                        tStage.setScene(tScene);
+                        tStage.setTitle(((ExerciseModel) auxExerciseB.getExerciseModel()).getExerciseName());
+                        tStage.initStyle(StageStyle.UTILITY);
+
+                        tStage.initOwner(EditorMain.mainStage);
+                        tStage.initModality(Modality.NONE);
+                        Stage mainStage = EditorMain.mainStage;
+                        tStage.setX(mainStage.getX() + mainStage.getWidth()  - 500);
+                        tStage.setY(mainStage.getY() + mainStage.getHeight()  - 300);
+                        tStage.show();
+
+                        tStage.setX(mainStage.getX() + mainStage.getWidth() - tStage.getWidth() + 50);
+                        tStage.setY(mainStage.getY() + mainStage.getHeight() - tStage.getHeight() + 50);
+                    }
+                } else {
+                    tStage.close();
+                }
+            });
+
+        }
+
+        return thumbPane;
     }
 
 
@@ -587,6 +677,11 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         model.setObjectControlList(verticalTreeModel.getObjectControlList());
         model.setStarted(verticalTreeModel.isStarted() || exerciseModified);
 
+        VTcheckSetup checkSetup = verticalTreeModel.getCheckSetup();
+        checkSetup.setCheckTries(vtCheck.getCheckTries());
+        checkSetup.setCheckSuccess(vtCheck.isCheckSuccess());
+        model.setCheckSetup(verticalTreeModel.getCheckSetup());
+
         model.setStatementPrefHeight(verticalTreeView.getExerciseStatement().getEditor().getPrefHeight());
         model.setCommentPrefHeight(verticalTreeView.getCommentPrefHeight());
         model.setStatementTextHeight(verticalTreeModel.getStatementTextHeight());
@@ -703,5 +798,33 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
 
     public MainWindow getMainWindow() {
         return mainWindow;
+    }
+
+    @Override
+    public String getAuxExerName() {
+        return getExerciseModel().getCheckSetup().getAuxExerName();
+    }
+
+    @Override
+    public void setAuxExerA(Exercise exer) {
+        auxExerciseA = exer;
+    }
+
+    @Override
+    public void setAuxExerB(Exercise exer) {
+        auxExerciseB = exer;
+    }
+
+    @Override
+    public void clearStandingPopups() {
+        if (tStage != null) tStage.close();
+    }
+
+    public Exercise getAuxExerciseA() {
+        return auxExerciseA;
+    }
+
+    public VTcheck getVtCheck() {
+        return vtCheck;
     }
 }
