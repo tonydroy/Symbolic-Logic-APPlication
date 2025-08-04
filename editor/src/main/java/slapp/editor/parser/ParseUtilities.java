@@ -1374,7 +1374,7 @@ public class ParseUtilities {
         String text = doc.getText();
         String s;
         int i = startIndex;
-        while (i < endIndex) {
+        while (i < endIndex && i < text.length()) {
             int len = 1;
             if (i + 2 <= text.length() && text.codePointCount(i, i + 2) == 1) {
                 len = 2;

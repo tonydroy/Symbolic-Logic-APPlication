@@ -65,7 +65,8 @@ public class VTcheck {
     private boolean checkUnderline;
 
     private boolean silent;
-    VerticalTreeExercise auxExerA;
+    private VerticalTreeExercise auxExerA;
+    private VTcheck vtCheckA;
 
 
     VTcheck(VerticalTreeExercise vtExercise) {
@@ -219,7 +220,7 @@ public class VTcheck {
             return false;
         }
 
-        VTcheck vtCheckA = auxExerA.getVtCheck();
+        vtCheckA = auxExerA.getVtCheck();
         vtCheckA.setCheckType(VTCheckType.UNABB_AUX);
         if (!vtCheckA.checkTree()) {
             if (!silent) {
@@ -235,6 +236,7 @@ public class VTcheck {
         List<List<TreeNode>> auxFormulaTree = auxExerA.getVtCheck().getFormulaTree();
 
         try {
+
             checkParallelTrees(formulaTree.get(formulaTree.size() - 1).get(0), auxFormulaTree.get(auxFormulaTree.size() - 1).get(0) );
         }
         catch (TreeNodeException e) {
@@ -246,6 +248,8 @@ public class VTcheck {
             return false;
         }
 
+        if (!checkAbbContent()) return false;
+
 
 
         checkSuccess = true;
@@ -254,12 +258,159 @@ public class VTcheck {
 
     }
 
+    private boolean checkAbbContent() {
+
+        for (int j = 0; j < formulaTree.size(); j++) {
+            List<TreeNode> treeRowList = formulaTree.get(j);
+            for (int i = 0; i < treeRowList.size(); i++) {
+
+                TreeNode treeNode = treeRowList.get(i);
+                RichTextArea unabbRTA = treeNode.getMainTreeBox().getFormulaBox().getRTA();
+                unabbRTA.getActionFactory().saveNow().execute(new ActionEvent());
+                Document unabbDoc = unabbRTA.getDocument();
+                List<Expression> unabbParse = ParseUtilities.parseDoc(unabbDoc, objLangName);
+                Expression unabbExpr = unabbParse.get(0);
+
+
+                TreeNode abbNode = treeNode.getMate();
+                RichTextArea abbRTA = abbNode.getMainTreeBox().getFormulaBox().getRTA();
+                abbRTA.getActionFactory().saveNow().execute(new ActionEvent());
+                Document abbDoc = abbRTA.getDocument();
+                List<Expression> abbParse = ParseUtilities.parseDoc(abbDoc, vtCheckA.getObjLangName());
+                Expression abbExpr = abbParse.get(0);
+
+                if (!unabbExpr.equals(SyntacticalFns.unabbreviate(abbExpr, vtCheckA.getObjLangName()))) {
+                 //   System.out.println(unabbExpr + " / " + SyntacticalFns.unabbreviate(abbExpr, vtCheckA.getObjLangName()));
+
+                    if (!silent) {
+                        treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                        EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Not the unabbreviation of the corresponding node from the auxiliary tree.")));
+                        treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                    }
+                    return false;
+                }
+
+                if (isCheckJustification) {
+                    if (abbExpr instanceof Term) {
+                        Term abbTerm = (Term) abbExpr;
+                        TermType abbTermType = abbTerm.getTermType();
+
+                        if (abbTermType == TermType.VARIABLE) {
+                            if (!lineJustifications.get(j).get(i).equals("TR(v)")) {
+                                if (!silent) {
+                                    treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                                    EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("If term results from (nothing or) linked nodes by TR use that justification.")));
+                                    treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                                }
+                                return false;
+                            }
+                        }
+
+                        else if (abbTermType == TermType.CONSTANT) {
+                            if (!lineJustifications.get(j).get(i).equals("TR(c)")) {
+                                if (!silent) {
+                                    treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                                    EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("If term results from (nothing or) linked nodes by TR use that justification.")));
+                                    treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                                }
+                                return false;
+                            }
+                        }
+
+                        else if (abbTermType == TermType.COMPLEX) {
+                            if (abbTerm instanceof InfixTerm) {
+                                if (!lineJustifications.get(j).get(i).equals("AB(i)")) {
+                                    if (!silent) {
+                                        treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                                        EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Unabbreviation of infix term has incorrect justification.")));
+                                        treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                                    }
+                                    return false;
+                                }
+                            } else if (!lineJustifications.get(j).get(i).equals("TR(f)")) {
+                                if (!silent) {
+                                    treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                                    EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("If term results from (nothing or) linked nodes by TR use that justification.")));
+                                    treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                                }
+                                return false;
+                            }
+                        }
+                    }
+                    else if (abbExpr instanceof Formula) {
+                        Formula abbFormula = (Formula) abbExpr;
+
+                        if (abbFormula instanceof SentenceAtomic) {
+                            if (!lineJustifications.get(j).get(i).equals("FR(s)")) {
+                                if (!silent) {
+                                    treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                                    EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("If formula results from (nothing or) linked nodes by FR use that justification.")));
+                                    treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                                }
+                                return false;
+                            }
+                        } else if (abbFormula instanceof PrefixAtomic) {
+                            if (!lineJustifications.get(j).get(i).equals("FR(r)")) {
+                                if (!silent) {
+                                    treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                                    EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("If formula results from (nothing or) linked nodes by FR use that justification.")));
+                                    treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                                }
+                                return false;
+                            }
+                        } else if (abbFormula instanceof InfixAtomic) {
+                            if (!lineJustifications.get(j).get(i).equals("AB(i)")) {
+                                if (!silent) {
+                                    treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                                    EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Unabbreviation of infix atomic has incorrect justification..")));
+                                    treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                                }
+                                return false;
+                            }
+                        } else {
+                            //have complex formula
+                            Operator abbOp = abbFormula.getMainOperator();
+                            String justificationString = "";
+                            if (abbOp instanceof NegationOp || abbOp instanceof ConditionalOp || abbOp instanceof UniversalOp) {
+                                justificationString = "FR(" + abbOp.getMainSymbol().toString() + ")";
+                                if (!lineJustifications.get(j).get(i).equals(justificationString)) {
+                                    if (!silent) {
+                                        treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                                        EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("If formula results from (nothing or) linked nodes by FR use that justification.")));
+                                        treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                                    }
+                                    return false;
+                                }
+                            } else if (abbOp instanceof ConjunctionOp || abbOp instanceof DisjunctionOp || abbOp instanceof BiconditionalOp || abbOp instanceof ExistentialOp) {
+                                justificationString = "AB(" + abbOp.getMainSymbol().toString() + ")";
+                                if (!lineJustifications.get(j).get(i).equals(justificationString)) {
+                                    if (!silent) {
+                                        treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                                        List<Text> messageList = new ArrayList<>();
+                                        messageList.add(ParseUtilities.newRegularText("Unabbreviation of formula with main operator "));
+                                        messageList.addAll(abbOp.toTextList());
+                                        messageList.add(ParseUtilities.newRegularText(" has incorrect justification."));
+                                        EditorAlerts.showSimpleTxtListAlert("Tree Content", messageList);
+                                        treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                                    }
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
 
     private void checkParallelTrees(TreeNode mainNode, TreeNode auxNode) throws TreeNodeException {
         mainNode.setMate(auxNode);
 
         if (mainNode.getParents().size() != auxNode.getParents().size()) {
-            throw new TreeNodeException(mainNode, Collections.singletonList(ParseUtilities.newRegularText("Working up from the bottom, this and and the corresponding node of the auxiliary tree not linked to the same number of (parent) nodes.  Trees not parallel.")));
+            throw new TreeNodeException(mainNode, Collections.singletonList(ParseUtilities.newRegularText("Structures of this and the auxiliary tree are not parallel.")));
         }
         else {
             for (int i = 0; i < mainNode.getParents().size(); i++) {
@@ -348,11 +499,11 @@ public class VTcheck {
                         if (treeNode != rootNode || !langAllowDP) {
                             if (!silent) {
                                 treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
-                                EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Not a grammatical expression (check outer parentheses).")));
+                                EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Not a grammatical expression of " + objLangName + " - check outer parentheses.")));
                                 treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
                             }
                             return false;
-                        }
+                       }
                     }
                 }
 
@@ -1347,5 +1498,9 @@ public class VTcheck {
 
     public List<List<TreeNode>> getFormulaTree() {
         return formulaTree;
+    }
+
+    public String getObjLangName() {
+        return objLangName;
     }
 }

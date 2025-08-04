@@ -435,6 +435,8 @@ public class MainWindow {
 
             Exercise clearExercise = currentExercise.resetExercise();
             setUpExercise(clearExercise);
+            setAuxExercise();
+            if (currentAssignment != null) mainView.setUpLowerAssignmentBar();
         }
     }
 
@@ -1003,15 +1005,17 @@ public class MainWindow {
     }
 
     private void setAuxExercise() {
-        List<ExerciseModel> exerModels = currentAssignment.getExerciseModels();
-        for (ExerciseModel exerModel : exerModels) {
-            if (exerModel.getExerciseName().equals(currentExercise.getAuxExerName())) {
-                ExerciseModel auxModel = exerModel;
-                TypeSelectorFactories typeFactory = new TypeSelectorFactories(this);
-                Exercise auxExerA = typeFactory.getExerciseFromModelObject(auxModel);
-                currentExercise.setAuxExerA(auxExerA);
-                Exercise auxExerB = typeFactory.getExerciseFromModelObject(auxModel);
-                currentExercise.setAuxExerB(auxExerB);
+        if (currentAssignment != null) {
+            List<ExerciseModel> exerModels = currentAssignment.getExerciseModels();
+            for (ExerciseModel exerModel : exerModels) {
+                if (exerModel.getExerciseName().equals(currentExercise.getAuxExerName())) {
+                    ExerciseModel auxModel = exerModel;
+                    TypeSelectorFactories typeFactory = new TypeSelectorFactories(this);
+                    Exercise auxExerA = typeFactory.getExerciseFromModelObject(auxModel);
+                    currentExercise.setAuxExerA(auxExerA);
+                    Exercise auxExerB = typeFactory.getExerciseFromModelObject(auxModel);
+                    currentExercise.setAuxExerB(auxExerB);
+                }
             }
         }
     }

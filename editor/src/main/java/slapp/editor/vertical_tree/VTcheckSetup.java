@@ -24,11 +24,12 @@ public class VTcheckSetup implements Serializable {
     VTCheckType checkType;
 
     public VTcheckSetup() {
-      //  objLangName = "\u2112\u0274\u1d1b<"; //Lnt<>
+        objLangName = "\u2112\u0274\u1d1b<"; //Lnt<
+     //  objLangName = "\u2112\u0274\u1d1b< (w/abv)"; //Lnt< (abv)
      //   objLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (abv)
-        objLangName = "\u2112\ud835\udcc6";   //Lq
-    //    objLangName = "\u2112\ud835\udcc8 (w/abv)";
-    //    objLangName = "\u2112\ud835\udcc8"; //Ls
+      //  objLangName = "\u2112\ud835\udcc6";   //Lq
+     //   objLangName = "\u2112\ud835\udcc8 (w/abv)";  //Ls (abv)
+     //   objLangName = "\u2112\ud835\udcc8"; //Ls
         metLangName = "LM Meta";
         checkSuccess = false;
         checkFinal = true;
@@ -37,7 +38,7 @@ public class VTcheckSetup implements Serializable {
         checkJustifications = true;
         staticHelpButton = true;      //false
         staticHelpDoc = new Document();
-        auxExerName = "VTLq-abv";
+        auxExerName = "E2.21";
         checkType = VTCheckType.UNABB;
 
     }

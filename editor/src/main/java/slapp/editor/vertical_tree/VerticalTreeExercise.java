@@ -73,6 +73,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
     private Exercise auxExerciseA;
     private Exercise auxExerciseB;
     Stage tStage;
+    Pane thumbPane = new Pane();
 
 
 
@@ -83,8 +84,10 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         if (model.getOriginalModel() == null) {model.setOriginalModel(model); }
         this.mainView = mainWindow.getMainView();
         this.verticalTreeView = new VerticalTreeView(mainView);
+
         setVerticalTreeView();
         vtCheck = new VTcheck(this);
+
 
         undoRedoFlag.set(false);
         undoRedoFlag.bind(verticalTreeView.undoRedoFlagProperty());
@@ -348,13 +351,14 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
             }
         }
 
+
+
         Platform.runLater(() -> {
-            if (verticalTreeModel.getCheckSetup().getCheckType() == VTCheckType.UNABB && auxExerciseA != null) {
-                Pane thumbPane = auxImage();
+            if (auxExerciseA != null) {
+                thumbPane = auxImage();
                 verticalTreeView.getControlBox().getChildren().add(thumbPane);
             }
         });
-
     }
 
     private Pane auxImage() {
@@ -374,11 +378,12 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
             thumbRoot.getChildren().add(thumbPane);
             thumbRoot.applyCss();
             thumbRoot.layout();
-            Bounds bounds = thumbPane.getLayoutBounds();
-            double scale = 90.0 / bounds.getWidth();
+            double scale = 85.0 / mainPane.getLayoutBounds().getWidth();   //
 
             thumbPane.getTransforms().clear();
             thumbPane.getTransforms().add(new Scale(scale, scale));
+            thumbPane.setMaxWidth(85);
+
 
             thumbPane.setOnMouseClicked(event -> {
                 if (tStage == null || !tStage.isShowing()) {
@@ -392,6 +397,10 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
 
                         Scene tScene = new Scene(tPane);
                         tPane.setDisable(true);
+                        tPane.applyCss();
+                        tPane.layout();
+
+
 
                         tStage = new Stage();
                         tStage.setScene(tScene);
@@ -405,8 +414,14 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
                         tStage.setY(mainStage.getY() + mainStage.getHeight()  - 300);
                         tStage.show();
 
-                        tStage.setX(mainStage.getX() + mainStage.getWidth() - tStage.getWidth() + 50);
-                        tStage.setY(mainStage.getY() + mainStage.getHeight() - tStage.getHeight() + 50);
+             //           tStage.setX(mainStage.getX() + mainStage.getWidth() - tStage.getWidth() + 50);
+              //          tStage.setY(mainStage.getY() + mainStage.getHeight() - tStage.getHeight() + 50);
+                        Platform.runLater(() -> {
+                            tStage.sizeToScene();
+                            tStage.setX(mainStage.getX() + mainStage.getWidth() - tStage.getWidth() + 50);
+                            tStage.setY(mainStage.getY() + mainStage.getHeight() - tStage.getHeight() + 50);
+
+                        });
                     }
                 } else {
                     tStage.close();

@@ -28,6 +28,7 @@ public class Languages {
         fixedLanguages.add(Lq_abv());
         fixedLanguages.add(Lnt());
         fixedLanguages.add(Lnt_lessthan());
+        fixedLanguages.add(Lnt_lessthan_abv());
         fixedLanguages.add(MetaO());
         fixedLanguages.add(MetaL());
     }
@@ -60,6 +61,8 @@ public class Languages {
             case "\u2112\ud835\udcc6 (w/abv)": return Lq_abv();
 
             case "\u2112\u0274\u1d1b<": return Lnt_lessthan();
+
+            case "\u2112\u0274\u1d1b< (w/abv)": return Lnt_lessthan_abv();
 
             case "\u2112\u0274\u1d1b": return Lnt();
 
@@ -231,6 +234,45 @@ public class Languages {
     private static Language Lnt_lessthan() {
         Language lang = new Language("\u2112\u0274\u1d1b<");
         lang.setNameTexts("\u2112", "","NT<");
+
+        lang.setOpenBracket1("("); lang.setCloseBracket1(")");
+        lang.setAllowDroppedBrackets(false);
+
+        lang.setNegation("\u223c");
+        lang.setConditional("\u2192");
+        lang.setUniversalQuant("\u2200");
+        lang.setContradictionSymbol("\u22a5");
+
+        lang.setVariables(Alphabets.getCharacterRange("\ud835\udc56", "\ud835\udc67"));
+        lang.setVariableSubs(true);
+        lang.setConstants(Collections.singletonList("\ue886"));
+
+        lang.setOnePlaceFunctionSymbols(Collections.singletonList("\ud835\udc46"));
+        lang.setTwoPlaceFunctionSymbols(Arrays.asList("\ue8b8", "\ue8ba"));
+        lang.setAllowBinaryInfixFunctions(false);
+
+        lang.setAllowBinaryInfixRelations(false);
+        lang.setAllowBinaryInfixNegations(false);
+        lang.setInfixRelations( Map.ofEntries(entry("\ue8ac", ""), entry("\ue8a4", "")) );
+
+        lang.setUnabbForms( Map.ofEntries(
+                entry(UnabbType.NEGATION, new Document("\u223c|0|")),
+                entry(UnabbType.CONDITIONAL, new Document("(|0| \u2192 |1|)")),
+                entry(UnabbType.UNIVERSAL, new Document("\u2200\u2039v\u203a|0|")),
+                entry(UnabbType.VARIABLE, new Document("\u2039s\u203a")),
+                entry(UnabbType.CONSTANT, new Document("\u2039s\u203a")),
+                entry(UnabbType.COMPLEX_TERM, new Document("\u2039f\u203a|n|")),
+                entry(UnabbType.RELATION_ATOMIC, new Document("\u2039r\u203a|n|"))
+
+        ));
+
+        return lang;
+    }
+
+
+    private static Language Lnt_lessthan_abv() {
+        Language lang = new Language("\u2112\u0274\u1d1b< (w/abv)");
+        lang.setNameTexts("\u2112", "","NT< (w/abv)");
 
         lang.setOpenBracket1("("); lang.setCloseBracket1(")");
         lang.setOpenBracket2("["); lang.setCloseBracket2("]");
