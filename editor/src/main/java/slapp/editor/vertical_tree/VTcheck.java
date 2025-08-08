@@ -71,13 +71,12 @@ public class VTcheck {
 
     VTcheck(VerticalTreeExercise vtExercise) {
 
-
         this.vtExercise = vtExercise;
         this.vtView = vtExercise.getExerciseView();
         this.vtModel = vtExercise.getExerciseModel();
         setRightControlBox();
 
-        checkSetup = vtExercise.getExerciseModel().getCheckSetup();
+        checkSetup = vtModel.getCheckSetup();
         if (checkSetup == null) { checkSetup = new VTcheckSetup(); }
         objLangName = checkSetup.getObjLangName();
         objLang = Languages.getLanguage(objLangName);
