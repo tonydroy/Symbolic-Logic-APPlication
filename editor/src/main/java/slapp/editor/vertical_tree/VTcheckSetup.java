@@ -15,31 +15,31 @@ public class VTcheckSetup implements Serializable {
     int checkMax;
     int checkTries;
     boolean checkJustifications;
+    boolean checkMarkup;
 
-    boolean staticHelpButton;
+    boolean staticHelp;
     Document staticHelpDoc;
 
     Document formulaTarget;
     String auxExerName;
     VTCheckType checkType;
 
+
     public VTcheckSetup() {
-        objLangName = "\u2112\u0274\u1d1b<"; //Lnt<
-     //  objLangName = "\u2112\u0274\u1d1b< (w/abv)"; //Lnt< (abv)
-     //   objLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (abv)
-      //  objLangName = "\u2112\ud835\udcc6";   //Lq
-     //   objLangName = "\u2112\ud835\udcc8 (w/abv)";  //Ls (abv)
-     //   objLangName = "\u2112\ud835\udcc8"; //Ls
+
+        objLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (abv)
         metLangName = "LM Meta";
         checkSuccess = false;
         checkFinal = true;
-        checkMax = -1;              //0
+        checkMax = 0;              //0
         checkTries = 0;
-        checkJustifications = true;
-        staticHelpButton = true;      //false
+        checkJustifications = false;
+        staticHelp = false;      //false
         staticHelpDoc = new Document();
-        auxExerName = "E2.21";
-        checkType = VTCheckType.UNABB;
+        auxExerName = "";
+        checkType = VTCheckType.NONE;
+        checkMarkup = false;
+        formulaTarget = new Document();
 
     }
 
@@ -93,12 +93,12 @@ public class VTcheckSetup implements Serializable {
         this.checkTries = checkTries;
     }
 
-    public boolean isStaticHelpButton() {
-        return staticHelpButton;
+    public boolean isStaticHelp() {
+        return staticHelp;
     }
 
-    public void setStaticHelpButton(boolean staticHelpButton) {
-        this.staticHelpButton = staticHelpButton;
+    public void setStaticHelp(boolean staticHelp) {
+        this.staticHelp = staticHelp;
     }
 
     public Document getStaticHelpDoc() {
@@ -136,4 +136,14 @@ public class VTcheckSetup implements Serializable {
     public void setCheckType(VTCheckType checkType) {
         this.checkType = checkType;
     }
+
+    public boolean isCheckMarkup() {
+        return checkMarkup;
+    }
+
+    public void setCheckMarkup(boolean checkMarkup) {
+        this.checkMarkup = checkMarkup;
+    }
+
+
 }

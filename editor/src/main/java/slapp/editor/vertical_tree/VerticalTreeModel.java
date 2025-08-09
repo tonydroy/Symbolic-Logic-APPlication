@@ -66,10 +66,10 @@ public class VerticalTreeModel implements ExerciseModel<Document>, Serializable 
 
 
     public VerticalTreeModel(){
-        pointsPossible = 0;
-        pointsEarned = -1;
-        checkSetup = new VTcheckSetup();
-        defaultMapKeyboardType = RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS;
+        this.pointsPossible = 0;
+        this.pointsEarned = -1;
+        this.checkSetup = new VTcheckSetup();
+        this.defaultMapKeyboardType = RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS;
     }
 
     public VTcheckSetup getCheckSetup() {

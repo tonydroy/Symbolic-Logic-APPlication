@@ -6,7 +6,7 @@ import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.event.ActionEvent;
 import javafx.scene.text.Text;
-import javafx.util.Pair;
+import javafx.stage.Stage;
 import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.parser.*;
@@ -15,7 +15,6 @@ import slapp.editor.parser.symbols.*;
 import slapp.editor.vertical_tree.drag_drop.*;
 import slapp.editor.vertical_tree.object_models.ObjectControlType;
 
-import javax.sound.midi.Sequence;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -23,7 +22,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class VTcheck {
+public class VTcheck implements VTAuxCheck {
     private VerticalTreeExercise vtExercise;
     private VerticalTreeView vtView;
     private VerticalTreeModel vtModel;
@@ -38,7 +37,8 @@ public class VTcheck {
     private List<List<TreeNode>> formulaTree;
     private List<List<String>> lineJustifications;
     private double equalsEpsilon = 10.0;
-    private boolean isCheckJustification = true;
+    private boolean checkJustification = true;
+    private boolean checkMarkup = true;
     private List<TreeNode> connectedNodes;
     private List<Formula> quantifiedSubformulas;
 
@@ -65,8 +65,9 @@ public class VTcheck {
     private boolean checkUnderline;
 
     private boolean silent;
-    private VerticalTreeExercise auxExerA;
-    private VTcheck vtCheckA;
+    private VTAuxExer auxExerA;
+    private VTAuxCheck vtAuxCheckA;
+    private Expression getTargetExpression;
 
 
     VTcheck(VerticalTreeExercise vtExercise) {
@@ -85,12 +86,12 @@ public class VTcheck {
         Document targetDoc = checkSetup.getFormulaTarget();
         if (targetDoc != null) {
             List<Expression> targetParseList = ParseUtilities.parseDoc(targetDoc, objLang);
-            Expression targetExpression = targetParseList.get(0);
+            targetExpression = targetParseList.get(0);
         }
-        isCheckJustification = checkSetup.isCheckJustifications();
+        checkJustification = checkSetup.isCheckJustifications();
+        checkMarkup = checkSetup.isCheckMarkup();
         checkType = checkSetup.getCheckType();
-
-
+        checkJustification = checkSetup.isCheckJustifications();
 
         checkBracket = vtModel.getDragIconList().contains(DragIconType.BRACKET);
         checkDashedLine = vtModel.getDragIconList().contains(DragIconType.DASHED_LINE);
@@ -120,6 +121,8 @@ public class VTcheck {
         checkMax = checkSetup.getCheckMax();
         checkTries = checkSetup.getCheckTries();
         updateCheckCounter();
+
+
     }
 
 
@@ -134,10 +137,12 @@ public class VTcheck {
 //            System.out.println("check progress");
 //        });
 
-        vtView.getstaticHelpButton().setDisable(!vtModel.getCheckSetup().isStaticHelpButton());
+        vtView.getstaticHelpButton().setDisable(!vtModel.getCheckSetup().isStaticHelp());
 
         vtView.getstaticHelpButton().setOnAction(e -> {
-            System.out.println("static help");
+            Stage helpStage = vtView.getStaticHelpStage();
+            if (helpStage != null && helpStage.isShowing()) helpStage.close();
+            else vtView.showStaticHelp(vtModel.getCheckSetup().getStaticHelpDoc());
         });
     }
 
@@ -154,28 +159,23 @@ public class VTcheck {
 
     }
 
-    private boolean checkTree() {
+    public boolean checkTree() {
 
         switch (checkType) {
             case FORMULA:
                 this.silent = false;
                 //check justifications from VTcheckSetup
-                return checkFormulaTree(true);
-
-            case UNABB_AUX:
-                this.silent = true;
-                this.isCheckJustification = false;
-                return checkFormulaTree(false);
-
-            case UNABB_EXPAND:
-                this.silent = false;
-                //check justifications from VTcheckSetup
-                return checkFormulaTree(false);
+                return checkFormulaTree(checkMarkup);
 
             case UNABB:
                 this.silent = false;
                 //check justifications from VTcheckSetup
                 return checkUnabbTree(false);
+
+            case UNABB_AUX:
+                this.silent = true;
+                this.checkJustification = false;
+                return checkFormulaTree(false);
 
             case MAPPING:
                 return false;
@@ -211,7 +211,7 @@ public class VTcheck {
             return false;
         }
 
-        auxExerA = ((VerticalTreeExercise) vtExercise.getAuxExerciseA());  //what about other versions of the Vertical Tree??
+        auxExerA =  vtExercise.getVTAuxExer();
         if (auxExerA == null) {
             if (!silent) {
                 EditorAlerts.showSimpleTxtListAlert("Auxiliary Tree", Collections.singletonList(ParseUtilities.newRegularText("Missing auxiliary tree.  Cannot check unabbreviation.")));
@@ -219,9 +219,9 @@ public class VTcheck {
             return false;
         }
 
-        vtCheckA = auxExerA.getVtCheck();
-        vtCheckA.setCheckType(VTCheckType.UNABB_AUX);
-        if (!vtCheckA.checkTree()) {
+        vtAuxCheckA = auxExerA.getVTAuxCheck();
+        vtAuxCheckA.setCheckType(VTCheckType.UNABB_AUX);
+        if (!vtAuxCheckA.checkTree()) {
             if (!silent) {
                 EditorAlerts.showSimpleTxtListAlert("Auxiliary Tree", Collections.singletonList(ParseUtilities.newRegularText("Unabbreviation check requires (successfully) completed auxiliary tree.")));
             }
@@ -232,7 +232,7 @@ public class VTcheck {
         if (!setParentsAndChildren()) return false;
         if (!checkTrueTree()) return false;
         if (!checkFormulaContents()) return false;
-        List<List<TreeNode>> auxFormulaTree = auxExerA.getVtCheck().getFormulaTree();
+        List<List<TreeNode>> auxFormulaTree = vtAuxCheckA.getFormulaTree();
 
         try {
 
@@ -275,10 +275,10 @@ public class VTcheck {
                 RichTextArea abbRTA = abbNode.getMainTreeBox().getFormulaBox().getRTA();
                 abbRTA.getActionFactory().saveNow().execute(new ActionEvent());
                 Document abbDoc = abbRTA.getDocument();
-                List<Expression> abbParse = ParseUtilities.parseDoc(abbDoc, vtCheckA.getObjLangName());
+                List<Expression> abbParse = ParseUtilities.parseDoc(abbDoc, vtAuxCheckA.getObjLangName());
                 Expression abbExpr = abbParse.get(0);
 
-                if (!unabbExpr.equals(SyntacticalFns.unabbreviate(abbExpr, vtCheckA.getObjLangName()))) {
+                if (!unabbExpr.equals(SyntacticalFns.unabbreviate(abbExpr, vtAuxCheckA.getObjLangName()))) {
                  //   System.out.println(unabbExpr + " / " + SyntacticalFns.unabbreviate(abbExpr, vtCheckA.getObjLangName()));
 
                     if (!silent) {
@@ -289,7 +289,7 @@ public class VTcheck {
                     return false;
                 }
 
-                if (isCheckJustification) {
+                if (checkJustification) {
                     if (abbExpr instanceof Term) {
                         Term abbTerm = (Term) abbExpr;
                         TermType abbTermType = abbTerm.getTermType();
@@ -922,7 +922,7 @@ public class VTcheck {
                             }
                             return false;
                         }
-                        if (isCheckJustification && !lineJustifications.get(j).get(i).equals("TR(v)")) {
+                        if (checkJustification && !lineJustifications.get(j).get(i).equals("TR(v)")) {
                             if (!silent) {
                                 treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
                                 EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Variable node has incorrect justification.")));
@@ -939,7 +939,7 @@ public class VTcheck {
                             }
                             return false;
                         }
-                        if (isCheckJustification && !lineJustifications.get(j).get(i).equals("TR(c)")) {
+                        if (checkJustification && !lineJustifications.get(j).get(i).equals("TR(c)")) {
                             if (!silent) {
                                 treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
                                 EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Constant node has incorrect justification.")));
@@ -982,7 +982,7 @@ public class VTcheck {
                                 }
                             }
                         }
-                        if (isCheckJustification && !lineJustifications.get(j).get(i).equals("TR(f)")) {
+                        if (checkJustification && !lineJustifications.get(j).get(i).equals("TR(f)")) {
                             if (!silent) {
                                 treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
                                 EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Complex term has incorrect justification.")));
@@ -1008,7 +1008,7 @@ public class VTcheck {
                             }
                             return false;
                         }
-                        if (isCheckJustification && !lineJustifications.get(j).get(i).equals("FR(s)")) {
+                        if (checkJustification && !lineJustifications.get(j).get(i).equals("FR(s)")) {
                             if (!silent) {
                                 treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
                                 EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Sentence letter has incorrect justification.")));
@@ -1052,7 +1052,7 @@ public class VTcheck {
                                 }
                             }
                         }
-                        if (isCheckJustification && !lineJustifications.get(j).get(i).equals("FR(r)")) {
+                        if (checkJustification && !lineJustifications.get(j).get(i).equals("FR(r)")) {
                             if (!silent) {
                                 treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
                                 EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Atomic formula has incorrect justification.")));
@@ -1094,7 +1094,7 @@ public class VTcheck {
                                 }
                             }
                         }
-                        if (isCheckJustification) {
+                        if (checkJustification) {
                             String justificationString ="";
                             if (mainOp instanceof NegationOp || mainOp instanceof ConditionalOp || mainOp instanceof UniversalOp)
                                 justificationString = "FR(" + mainOp.getMainSymbol().toString() + ")";
@@ -1131,7 +1131,7 @@ public class VTcheck {
             if (!rootExp.equals(targetExpression)) {
                 if (!silent) {
                     rootNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
-                    EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Good tree, but this is not the assigned target expression.")));
+                    EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Good tree, but this is not the expected target expression.")));
                     rootNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
                 }
                 return false;
@@ -1302,7 +1302,7 @@ public class VTcheck {
                 treeList.sort(Comparator.comparingDouble((treeBox -> treeBox.getMainTreeBox().getLayoutX())));
                 formulaTree.add(treeList);
 
-                if (isCheckJustification)  {
+                if (checkJustification)  {
                     if (justificationList.size() == 0) {
                         if (!silent) {
                             for (TreeNode treeNode : treeList) {

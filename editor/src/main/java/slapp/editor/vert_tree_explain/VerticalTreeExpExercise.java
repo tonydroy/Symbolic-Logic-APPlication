@@ -39,16 +39,14 @@ import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.*;
-import slapp.editor.vertical_tree.VerticalTreeExercise;
-import slapp.editor.vertical_tree.VerticalTreeModel;
-import slapp.editor.vertical_tree.VerticalTreeView;
+import slapp.editor.vertical_tree.*;
 import slapp.editor.vertical_tree.drag_drop.*;
 import slapp.editor.vertical_tree.object_models.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class VerticalTreeExpExercise implements Exercise<VerticalTreeExpModel, VerticalTreeExpView> {
+public class VerticalTreeExpExercise implements Exercise<VerticalTreeExpModel, VerticalTreeExpView>, VTAuxExer {
 
     MainWindow mainWindow;
     MainWindowView mainView;
@@ -679,6 +677,21 @@ public class VerticalTreeExpExercise implements Exercise<VerticalTreeExpModel, V
         else model.setPointsEarned(-1);
 
         return model;
+    }
+
+    @Override
+    public AnchorPane getMainPane() {
+        return verticalTreeExpView.getRootLayout().getMain_pane();
+    }
+
+    @Override
+    public VTAuxCheck getVTAuxCheck() {
+        return null;
+    }
+
+    @Override
+    public VTAuxExer getVTAuxExer() {
+        return null;
     }
 
 }

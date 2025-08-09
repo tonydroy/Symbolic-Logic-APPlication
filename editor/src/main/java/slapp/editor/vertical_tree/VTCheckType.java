@@ -5,6 +5,6 @@ public enum VTCheckType {
     FORMULA,
     UNABB,
     UNABB_AUX,
-    UNABB_EXPAND,
+    NONE,
     MAPPING;
 }

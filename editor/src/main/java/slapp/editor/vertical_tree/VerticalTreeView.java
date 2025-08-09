@@ -17,6 +17,7 @@ package slapp.editor.vertical_tree;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
+import com.gluonhq.richtextarea.model.Document;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.animation.ParallelTransition;
@@ -24,22 +25,24 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import slapp.editor.EditorMain;
 import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.ExerciseView;
@@ -127,6 +130,8 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
         };
         TextFormatter<String> textFormatter = new TextFormatter<>(filter);
         pointsEarnedTextField.setTextFormatter(textFormatter);
+
+
     }
 
     void initializeViewDetails() {
@@ -256,6 +261,7 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
         staticHelpButton.setPrefWidth(105);
         staticHelpButton.setTooltip(new Tooltip("Get static help text"));
 
+
         VBox rightControlBox = new VBox(40, bigCheckBox, checksBox, staticHelpButton );
         rightControlBox.setAlignment(Pos.TOP_CENTER);
         rightControlBox.setPadding(new Insets(60,20,0,20));
@@ -295,6 +301,37 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
         bigCheck.setOpacity(0.0);
         checkedElements.setOpacity(0.0);
     }
+
+    public void showStaticHelp(Document doc) {
+
+        if (staticHelpStage == null || !staticHelpStage.isShowing()) {
+            RichTextArea hrta = new RichTextArea(EditorMain.mainStage);
+            hrta.getActionFactory().open(doc).execute(new ActionEvent());
+            hrta.setPadding(new Insets(20, 0, 20, 20));
+            hrta.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
+            hrta.setPrefWidth(400);
+            hrta.setPrefHeight(300);
+            hrta.setEditable(false);
+
+
+            Scene scene = new Scene(hrta);
+            scene.getStylesheets().add(RichTextArea.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
+            hrta.applyCss();
+            staticHelpStage = new Stage();
+            staticHelpStage.setScene(scene);
+            staticHelpStage.setTitle("SLAPP Text Help");
+            staticHelpStage.initModality(Modality.NONE);
+            staticHelpStage.getIcons().addAll(EditorMain.icons);
+            staticHelpStage.initOwner(EditorMain.mainStage);
+            Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
+            staticHelpStage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 420));
+            staticHelpStage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 320));
+
+            staticHelpStage.show();
+        }
+    }
+
+    public Stage getStaticHelpStage() { return staticHelpStage; }
 
 
 

@@ -48,6 +48,7 @@ import slapp.editor.EditorMain;
 import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
+import slapp.editor.derivation.CheckSetup;
 import slapp.editor.main_window.*;
 import slapp.editor.vert_tree_abefexplain.VerticalTreeABEFExpExercise;
 import slapp.editor.vert_tree_abefexplain.VerticalTreeABEFExpView;
@@ -60,7 +61,7 @@ import slapp.editor.vertical_tree.object_models.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VerticalTreeExercise implements Exercise<VerticalTreeModel, VerticalTreeView> {
+public class VerticalTreeExercise implements Exercise<VerticalTreeModel, VerticalTreeView>,  VTAuxExer {
 
     private MainWindow mainWindow;
     private MainWindowView mainView;
@@ -86,6 +87,10 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         this.verticalTreeView = new VerticalTreeView(mainView);
 
         setVerticalTreeView();
+
+        if (verticalTreeModel.getTreeFormulaBoxes() == null)
+            verticalTreeModel.setCheckSetup(new VTcheckSetup());
+
         vtCheck = new VTcheck(this);
 
 
@@ -364,10 +369,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
     private Pane auxImage() {
         AnchorPane mainPane = null;
         Pane thumbPane = new Pane();
-        if (auxExerciseA instanceof VerticalTreeExercise)  mainPane = ((VerticalTreeView) auxExerciseA.getExerciseView()).getRootLayout().getMainPane();
-        if (auxExerciseA instanceof VerticalTreeExpExercise)  mainPane = ((VerticalTreeExpView) auxExerciseA.getExerciseView()).getRootLayout().getMain_pane();
-        if (auxExerciseA instanceof VerticalTreeABExpExercise)  mainPane = ((VerticalTreeABExpView) auxExerciseA.getExerciseView()).getRootLayout().getMain_pane();
-        if (auxExerciseA instanceof VerticalTreeABEFExpExercise)  mainPane = ((VerticalTreeABEFExpView) auxExerciseA.getExerciseView()).getRootLayout().getMain_pane();
+        if (auxExerciseA instanceof VTAuxExer) mainPane = ((VTAuxExer) auxExerciseA).getMainPane();
 
         if(mainPane != null) {
             mainPane.setStyle("-fx-border-color: black; -fx-border-width: 1; -fx-background-color: FAFAFA;");
@@ -388,10 +390,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
             thumbPane.setOnMouseClicked(event -> {
                 if (tStage == null || !tStage.isShowing()) {
                     Pane tPane = null;
-                    if (auxExerciseB instanceof VerticalTreeExercise) tPane = new Pane(((VerticalTreeView) auxExerciseB.getExerciseView()).getRootLayout().getMainPane());
-                    if (auxExerciseB instanceof VerticalTreeExpExercise)  tPane = new Pane(((VerticalTreeExpView) auxExerciseB.getExerciseView()).getRootLayout().getMain_pane());
-                    if (auxExerciseB instanceof VerticalTreeABExpExercise)  tPane = new Pane(((VerticalTreeABExpView) auxExerciseB.getExerciseView()).getRootLayout().getMain_pane());
-                    if (auxExerciseB instanceof VerticalTreeABEFExpExercise)  tPane = new Pane(((VerticalTreeABEFExpView) auxExerciseB.getExerciseView()).getRootLayout().getMain_pane());
+                    if (auxExerciseB instanceof VTAuxExer) tPane = ((VTAuxExer) auxExerciseB).getMainPane();
 
                     if (tPane != null) {
 
@@ -606,6 +605,12 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         VerticalTreeModel originalModel = (VerticalTreeModel) (verticalTreeModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
         originalModel.setPointsEarned(pointsEarned);
+        VTcheckSetup setup = originalModel.getCheckSetup();
+        setup.setCheckTries(vtCheck.getCheckTries());
+        setup.setCheckSuccess(false);
+        originalModel.setCheckSetup(setup);
+
+
         VerticalTreeExercise clearExercise = new VerticalTreeExercise(originalModel, mainWindow);
         return clearExercise;
     }
@@ -808,6 +813,12 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         if (!verticalTreeView.getPointsEarnedTextField().getText().equals("")) model.setPointsEarned(Integer.parseInt(verticalTreeView.getPointsEarnedTextField().getText()));
         else model.setPointsEarned(-1);
 
+        VTcheckSetup setup = verticalTreeModel.getCheckSetup();
+        setup.setCheckSuccess(vtCheck.isCheckSuccess());
+        setup.setCheckTries(vtCheck.getCheckTries());
+        model.setCheckSetup(setup);
+        ///
+
         return model;
     }
 
@@ -832,7 +843,18 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
 
     @Override
     public void clearStandingPopups() {
+        if (verticalTreeView.getStaticHelpStage() != null) verticalTreeView.getStaticHelpStage().close();
         if (tStage != null) tStage.close();
+    }
+
+    @Override
+    public AnchorPane getMainPane() {
+        return verticalTreeView.getRootLayout().getMainPane();
+    }
+
+    @Override
+    public VTAuxCheck getVTAuxCheck() {
+        return (VTAuxCheck) vtCheck;
     }
 
     public Exercise getAuxExerciseA() {
@@ -841,5 +863,10 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
 
     public VTcheck getVtCheck() {
         return vtCheck;
+    }
+
+    @Override
+    public VTAuxExer getVTAuxExer() {
+        return (VTAuxExer) auxExerciseA;
     }
 }

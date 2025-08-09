@@ -20,6 +20,7 @@ import com.gluonhq.richtextarea.RichTextAreaSkin;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -31,6 +32,8 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.CheckBoxListCell;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.transform.Scale;
@@ -38,18 +41,24 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
 import slapp.editor.PrintUtilities;
+import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.decorated_rta.KeyboardDiagram;
 import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
+import slapp.editor.parser.Language;
+import slapp.editor.parser.Languages;
 import slapp.editor.vertical_tree.drag_drop.DragIconType;
 import slapp.editor.vertical_tree.object_models.ObjectControlType;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
@@ -102,10 +111,27 @@ public class VerticalTreeCreate {
     private Spinner<Double> statementHeightSpinner;
     private TextField pointsPossibleTextField;
 
+    private CheckBox staticHelpCheck;
+    private RichTextArea staticHelpRTA;
+    private DecoratedRTA staticHelpDRTA;
+    private Spinner checkMaxSpinner;
+    private CheckBox justificationCheck;
+    private Map<String, SimpleBooleanProperty> langMap;
+    private String defaultLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (w/abv)
+    CheckBox formulaCheck;
+    CheckBox unabbreviationCheck;
+    CheckBox checkMarkup;
+    BoxedDRTA targetBoxedDRTA;
+    TextField auxNameField;
+    Spinner<Double> staticHelpHeightSpinner;
+    private RichTextArea currentSpinnerNode;
+
+
 
     public VerticalTreeCreate(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
         setupWindow();
+        modified = false;
     }
 
     public VerticalTreeCreate(MainWindow mainWindow, VerticalTreeModel originalModel) {
@@ -136,6 +162,25 @@ public class VerticalTreeCreate {
         annotationCheck.setSelected(objectControlList.contains(ANNOTATION));
         underlineCheck.setSelected(objectControlList.contains(UNDERLINE));
         mappingCheck.setSelected(objectControlList.contains(MAPPING));
+
+        VTcheckSetup checkSetup = originalModel.getCheckSetup();
+        formulaCheck.setSelected(checkSetup.getCheckType() == VTCheckType.FORMULA);
+        unabbreviationCheck.setSelected(checkSetup.getCheckType() == VTCheckType.UNABB);
+        auxNameField.setText(checkSetup.getAuxExerName());
+        staticHelpCheck.setSelected(checkSetup.isStaticHelp());
+        staticHelpRTA.getActionFactory().open(checkSetup.getStaticHelpDoc()).execute(new ActionEvent());
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+        justificationCheck.setSelected(checkSetup.isCheckJustifications());
+        targetBoxedDRTA.getRTA().getActionFactory().open(checkSetup.getFormulaTarget()).execute(new ActionEvent());
+        targetBoxedDRTA.getRTA().getActionFactory().saveNow().execute(new ActionEvent());
+
+        for (String key : langMap.keySet()) {
+            if (key.equals(checkSetup.getObjLangName())) {
+                langMap.get(key).setValue(true);
+            }
+            else langMap.get(key).setValue(false);
+        }
+
         modified = false;
     }
 
@@ -189,6 +234,51 @@ public class VerticalTreeCreate {
                 editorInFocus(statementDRTA, ControlType.AREA);
             }
         });
+
+        //static help editor
+        staticHelpDRTA = new DecoratedRTA();
+        staticHelpDRTA.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.BASE_AND_SANS);
+        staticHelpRTA = staticHelpDRTA.getEditor();
+        staticHelpRTA.setPromptText("Static Help (complete if static help selected)");
+        staticHelpRTA.getStylesheets().add("slappTextArea.css");
+        staticHelpRTA.setPrefWidth(350);
+        staticHelpRTA.setMinWidth(350);
+        staticHelpRTA.setMaxWidth(350);
+        staticHelpRTA.setMinHeight(100);
+
+        double staticHelpInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
+
+
+        staticHelpHeightSpinner = new Spinner<>(0.0, 999.0, staticHelpInitialHeight, 1.0);
+        staticHelpHeightSpinner.setPrefWidth(60);
+        staticHelpHeightSpinner.setDisable(false);
+        staticHelpHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
+        staticHelpRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        staticHelpHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            Node increment = staticHelpHeightSpinner.lookup(".increment-arrow-button");
+            if (increment != null) increment.getOnMouseReleased().handle(null);
+            Node decrement = staticHelpHeightSpinner.lookup(".decrement-arrow-button");
+            if (decrement != null) decrement.getOnMouseReleased().handle(null);
+        });
+
+        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+            staticHelpRTA.prefHeightProperty().unbind();
+            staticHelpHeightSpinner.getValueFactory().setValue((double) Math.round(staticHelpHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
+            staticHelpRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+
+        });
+
+
+        staticHelpRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
+            modified = true;
+        });
+        staticHelpRTA.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) {
+                editorInFocus(staticHelpDRTA, ControlType.AREA);
+            }
+        });
+
+        HBox textBoxes = new HBox(10, statementRTA, staticHelpRTA);
 
         //name
         Label nameLabel = new Label("Exercise Name: ");
@@ -343,15 +433,179 @@ public class VerticalTreeCreate {
         fieldsBox = new VBox(15, nameBox, pointsBox, dragBox, controlBox);
         fieldsBox.setPadding(new Insets(20,0, 0, 0));
 
+        //check items
+
+        Label helpCheckLabel = new Label("Help/Check: ");
+        helpCheckLabel.setPrefWidth(80);
+
+        staticHelpCheck = new CheckBox();
+        staticHelpCheck.setSelected(false);
+        ChangeListener staticHelpCheckListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                modified = true;
+            }
+        };
+        staticHelpCheck.selectedProperty().addListener(staticHelpCheckListener);
+        Label staticHelpCheckLabel = new Label("Static Help:");
+        HBox staticHelpBox = new HBox(10, staticHelpCheckLabel, staticHelpCheck);
+        staticHelpBox.setAlignment(Pos.CENTER_LEFT);
+
+        checkMaxSpinner = new Spinner<>(-1, 99, 0);
+        checkMaxSpinner.setPrefWidth(60);
+        Label checkMaxLabel = new Label("Check Max:");
+        HBox checkMaxBox = new HBox(10, checkMaxLabel, checkMaxSpinner);
+        checkMaxBox.setAlignment(Pos.CENTER_LEFT);
+
+        justificationCheck = new CheckBox();
+        justificationCheck.setSelected(false);
+        ChangeListener justificationCheckListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                modified = true;
+            }
+        };
+        justificationCheck.selectedProperty().addListener(justificationCheckListener);
+        Label justificationCheckLabel = new Label("Check Justifications:");
+        HBox justificationCheckBox = new HBox(10, justificationCheckLabel, justificationCheck);
+        justificationCheckBox.setAlignment(Pos.CENTER_LEFT);
+
+        //language list view
+        Label languageLabel = new Label("   Language:");
+        langMap = new LinkedHashMap<>();
+        for (int i = 0; i < Languages.getFixedLanguages().size() - 1; i++) {
+            Language language = Languages.getFixedLanguages().get(i);
+            SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
+            if (language.getNameString().equals(defaultLangName)) booleanProperty.setValue(true); //default check
+            setSingleSelection(booleanProperty, langMap);
+            langMap.put(language.getNameString(), booleanProperty);
+        }
+        ListView<String> languageListView = new ListView<>();
+        languageListView.setPrefSize(120, 95);
+
+        languageListView.getItems().addAll(langMap.keySet());
+        Callback<String, ObservableValue<Boolean>> langToBoolean = (String item) -> langMap.get(item);
+        languageListView.setCellFactory(CheckBoxListCell.forListView(langToBoolean));
+
+        HBox checkLine1 = new HBox(30, staticHelpBox, checkMaxBox, justificationCheckBox, languageLabel, languageListView);
+        checkLine1.setAlignment(Pos.CENTER_LEFT);
+
+
+        formulaCheck = new CheckBox();
+        formulaCheck.setSelected(false);
+
+        formulaCheck.selectedProperty().addListener((ob, ov, nv) -> {
+            modified = true;
+            boolean selected = (boolean) nv;
+            if (selected) {
+                unabbreviationCheck.setSelected(false);
+            }
+        });
+        Label formulaCheckLabel = new Label("Formula Check:");
+  //      formulaCheckLabel.setPrefWidth(90);
+        HBox formulaCheckBox = new HBox(10, formulaCheckLabel, formulaCheck);
+        formulaCheckBox.setAlignment(Pos.CENTER_LEFT);
+
+        checkMarkup = new CheckBox();
+        checkMarkup.setSelected(false);
+        ChangeListener markupCheckListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                modified = true;
+            }
+        };
+        checkMarkup.selectedProperty().addListener(markupCheckListener);
+        Label markupCheckLabel = new Label("Check Markup:");
+        HBox markupCheckBox = new HBox(10, markupCheckLabel, checkMarkup);
+        markupCheckBox.setAlignment(Pos.CENTER_LEFT);
+
+        targetBoxedDRTA = new BoxedDRTA();
+        targetBoxedDRTA.getDRTA().getKeyboardSelector().valueProperty().setValue(ITALIC_AND_SANS);
+        RichTextArea targetRTA = targetBoxedDRTA.getRTA();
+
+        targetRTA.setMaxHeight(27);
+        targetRTA.setMinHeight(27);
+        targetRTA.setPrefWidth(400);
+        targetRTA.setContentAreaWidth(500);
+        targetRTA.getStylesheets().add("RichTextFieldWide.css");
+        targetRTA.setPromptText("Formula");
+
+        targetRTA.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) {
+                editorInFocus(targetBoxedDRTA.getDRTA(), ControlType.FIELD);
+            }
+        });
+        Label targetLabel = new Label("Target:");
+        HBox targetBox = new HBox(10, targetLabel, targetBoxedDRTA.getBoxedRTA());
+        targetBox.setAlignment(Pos.CENTER_LEFT);
+
+        HBox checkLine2 = new HBox(30, formulaCheckBox, markupCheckBox, targetBox);
+        checkLine2.setAlignment(Pos.TOP_LEFT);
+
+        unabbreviationCheck = new CheckBox();
+        unabbreviationCheck.setSelected(false);
+        unabbreviationCheck.selectedProperty().addListener((ob, ov, nv) -> {
+            modified = true;
+            boolean selected = (boolean) nv;
+            if (selected) {
+                formulaCheck.setSelected(false);
+            }
+        });
+
+        Label unabbCheckLabel = new Label("Unabbreviation Check:");
+   //     unabbCheckLabel.setPrefWidth(150);
+        HBox unabbCheckBox = new HBox(10, unabbCheckLabel, unabbreviationCheck);
+        unabbCheckBox.setAlignment(Pos.CENTER_LEFT);
+
+
+        Label auxNameLabel = new Label("Auxiliary Exercise Name: ");
+    //    auxNameLabel.setPrefWidth(150);
+        auxNameField  = new TextField();
+        auxNameField.setPromptText("(plain text)");
+        ChangeListener auxNameListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                modified = true;
+            }
+        };
+        auxNameField.textProperty().addListener(auxNameListener);
+        auxNameField.setPromptText("(plain text)");
+        auxNameField.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) textFieldInFocus();
+        });
+        HBox auxNameBox = new HBox(10, auxNameLabel, auxNameField);
+        auxNameBox.setAlignment(Pos.CENTER_LEFT);
+
+        HBox checkLine3 = new HBox(30, unabbCheckBox, auxNameBox);
+        checkLine3.setAlignment(Pos.CENTER_LEFT);
+
+        VBox checksVBox = new VBox(10, checkLine2, checkLine3, checkLine1);
+
+        HBox checksBox = new HBox(20, helpCheckLabel, checksVBox);
+        checksBox.setAlignment(Pos.TOP_LEFT);
+        checksBox.setPadding(new Insets(10,0,0,0));
+
+
+
+
         //center
         String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
-                "<p>The Vertical Tree Exercise is appropriate for any exercise that builds a tree diagram from the top down (or bottom up), as well as for 'mapping' exercises (as from chapter 2 of <em>Symbolic Logic</em>).</p>" +
+                "<p>The Vertical Tree Exercise is appropriate for any exercise that builds a tree diagram from the top down (or bottom up).  It includes checking for diagrams of the sort encountered in chapter 2 of <em>Symbolic Logic</em>.</p>" +
                 "<ul>" +
                 "<li><p>Start with the exercise name and points fields.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
-                "<li><p>Use checkboxes to select items that may be dragged into the work area (to appear across the top), and then to select controls for functions applied to the formula boxes (to appear down the left).</p>" +
+                "<li><p>Use checkboxes to select items that may be dragged into the work area (to appear across the top), including the default keyboard for Tree and Map boxes.  On a tree with checked justification fields, for nodes of the tree itself use TreeBox, and for justification fields use MapBox (so a typical configuration has Italic/Sans Tree box and Base/Italic Map Box).</p>" +
+                "<p>I always include both the vertical bracket and dashed line - as they can be used to \"push\" the work area beyond the bounds of the SLAPP window.</p></li>" +
+                "<li><p>Then select select controls for functions applied to the tree boxes (to appear down the left).</p>" +
                 "<p>It is unlikely that any one exercise will include all the drag and control options (especially \"star\" and \"annotation\" cannot both apply to the same node) -- but the different options make it possible to accomodate a wide variety of exercises.</p></li>" +
-                "<li><p>The keyboard options set the default keyboard for formula boxes.</p></li>" +
-                "<li><p>Finally provide the exercise statement.</p></li>" +
+                "<li><p>Checking applies to formula and unabbreviation trees.  Select the check type." +
+                "<ul>" +
+                "<li><p>For formula checking, select whether to check markup (bracket, dashed line, and functions represented by controls down the left), and give the target (root) formula for the tree.</li></p>" +
+                "<li><p>Unabbreviation check works only in the context of an assignment including a tree constructing the formula to be unabbreviated (the check compares these trees).  So state the auxiliary exercise name.  In some cases you may wish to include a (viewable) auxiliary exercise even without unabbreviation.</p></li>  " +
+                "</ul>" +
+                "For either sort of check, choose whether to check justification fields, and the object language.  If CheckMax is 0 checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.</li></p>" +
+
+                "<li><p>The static help check activates the Static Help button which pops up a message which you may state in the right hand text area below.</li></p>" +
+                "<li><p>Finally provide the exercise statement and, if desired the static help message..</p></li>" +
                 "</ul>";
         WebView helpArea = new WebView();
         WebEngine webEngine = helpArea.getEngine();
@@ -361,7 +615,7 @@ public class VerticalTreeCreate {
 
 
 
-        centerBox = new VBox(10, fieldsBox, statementRTA, helpArea);
+        centerBox = new VBox(10, fieldsBox, checksBox, textBoxes, helpArea);
         centerBox.setPadding(new Insets(10,0,10,20));
 
         spacerPane = new Pane();
@@ -425,18 +679,19 @@ public class VerticalTreeCreate {
         scene = new Scene(borderPane);
         scene.getStylesheets().add(DecoratedRTA.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
 
+        setSizeSpinners();
         stage = new Stage();
         stage.initOwner(EditorMain.mainStage);
         stage.setScene(scene);
         stage.setTitle("Create Vertical Tree Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
 
-        stage.setWidth(890);
-        stage.setHeight(820);
+        stage.setWidth(930);
+        stage.setHeight(1025);
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 890));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 820));
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 930));
+        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 1025));
         stage.initModality(Modality.WINDOW_MODAL);
         stage.setOnCloseRequest(e-> {
             e.consume();
@@ -445,13 +700,60 @@ public class VerticalTreeCreate {
 
         stage.show();
         statementRTA.getActionFactory().save().execute(new ActionEvent());
+        targetBoxedDRTA.getRTA().getActionFactory().save().execute(new ActionEvent());
+        staticHelpRTA.getActionFactory().save().execute(new ActionEvent());
         centerBox.layout();
 
         Platform.runLater(() -> nameField.requestFocus());
 
     }
 
+    //force single selection on list views
+    private void setSingleSelection(SimpleBooleanProperty booleanProperty, Map<String, SimpleBooleanProperty> map) {
+        booleanProperty.addListener((ob, ov, nv) -> {
+            if (nv.booleanValue() != ov.booleanValue()) modified = true;
+            if (nv) {
+                for (SimpleBooleanProperty prop : map.values()) {
+                    if (prop != booleanProperty) {
+                        prop.set(false);
+                    }
+                }
+            }
 
+        });
+    }
+
+    private void setSizeSpinners() {
+
+        scene.focusOwnerProperty().addListener((ob, ov, nv) -> {
+
+            if (inHierarchy(nv, statementRTA) && currentSpinnerNode != statementRTA) {
+                currentSpinnerNode = statementRTA;
+                sizeToolBar.getItems().remove(3);
+                sizeToolBar.getItems().add(3, statementHeightSpinner);
+                return;
+            }
+            if (inHierarchy(nv, staticHelpRTA) && currentSpinnerNode != staticHelpRTA) {
+                currentSpinnerNode = staticHelpRTA;
+                sizeToolBar.getItems().remove(3);
+                sizeToolBar.getItems().add(3, staticHelpHeightSpinner);
+                return;
+            }
+        });
+    }
+
+    private static boolean inHierarchy(Node node, Node potentialHierarchyElement) {
+        if (potentialHierarchyElement == null) {
+            return true;
+        }
+        while (node != null) {
+            if (node == potentialHierarchyElement) {
+                return true;
+            }
+            node = node.getParent();
+        }
+        return false;
+    }
 
 
     private void updateZoom() {
@@ -469,7 +771,7 @@ public class VerticalTreeCreate {
 
     private boolean checkContinue(String title, String content) {
         boolean okcontinue = true;
-        if (modified || statementRTA.isModified()) {
+        if (modified || statementRTA.isModified() || staticHelpRTA.isModified() || targetBoxedDRTA.getRTA().isModified()) {
             Alert confirm = EditorAlerts.confirmationAlert(title, content);
             Optional<ButtonType> result = confirm.showAndWait();
             if (result.get() != OK) okcontinue = false;
@@ -489,9 +791,10 @@ public class VerticalTreeCreate {
         if (checkContinue("Confirm Clear", "This exercise appears to have unsaved changes.\nContinue to clear exercise?")) {
             nameField.clear();
             nameField.textProperty().addListener(nameListener);
+            targetBoxedDRTA.getRTA().getActionFactory().newDocumentNow().execute(new ActionEvent());
             statementRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
- //           statementRTA.getActionFactory().open(new Document()).execute(new ActionEvent());
-  //          statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
+            staticHelpRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
+            auxNameField.clear();
             viewExercise();
             modified = false;
         }
@@ -557,9 +860,6 @@ public class VerticalTreeCreate {
             dragList.add(MAP_FIELD);
         }
 
-
-
-
         List<ObjectControlType> controlList = model.getObjectControlList();
         if (boxingFormulaCheck.isSelected()) controlList.add(FORMULA_BOX);
         if (circleCheck.isSelected()) controlList.add(CIRCLE);
@@ -578,6 +878,61 @@ public class VerticalTreeCreate {
         else {
             model.setPointsPossible(0);
             pointsPossibleTextField.setText("0");
+        }
+
+        VTcheckSetup checkSetup = model.getCheckSetup();
+        if (staticHelpRTA.isModified()) modified = true;
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+        checkSetup.setStaticHelpDoc(staticHelpRTA.getDocument());
+
+        if (targetBoxedDRTA.getRTA().isModified()) modified = true;
+        targetBoxedDRTA.getRTA().getActionFactory().saveNow().execute(new ActionEvent());
+        checkSetup.setFormulaTarget(targetBoxedDRTA.getRTA().getDocument());
+
+        checkSetup.setAuxExerName(auxNameField.getText());
+
+        VTCheckType checkType = VTCheckType.NONE;
+        if (formulaCheck.isSelected()) {
+            checkType = VTCheckType.FORMULA;
+        }
+        else if (unabbreviationCheck.isSelected()) {
+            checkType = VTCheckType.UNABB;
+        }
+        checkSetup.setCheckType(checkType);
+
+
+        checkSetup.setCheckMarkup(checkMarkup.isSelected());
+        checkSetup.setStaticHelp(staticHelpCheck.isSelected());
+        checkSetup.setCheckMax((Integer) checkMaxSpinner.getValue());
+        checkSetup.setCheckJustifications(justificationCheck.isSelected());
+
+        String langName = null;
+        for (String key : langMap.keySet()) {
+            ObservableValue<Boolean> value = langMap.get(key);
+            if (value.getValue()) {
+                langName = key;
+                break;
+            }
+        }
+        if (langName != null) {
+            checkSetup.setObjLangName(langName);
+        }
+        else {
+            EditorAlerts.showSimpleAlert("No language selected:", "Without a language selection, SLAPP will revert to the default, \u2112\ud835\udcc6 (w/abv).");
+        }
+
+        if (checkType == VTCheckType.UNABB && auxNameField.getText().equals("")) {
+            unabbreviationCheck.setSelected(false);
+            checkMaxSpinner.getValueFactory().setValue(0);
+            checkSetup.setCheckType(VTCheckType.NONE);
+            checkSetup.setCheckMax(0);
+            EditorAlerts.fleetingRedPopup("Unabbreviation check requires auxiliary exercise.  Check disabled.");
+        }
+
+        if (checkType == VTCheckType.NONE) {
+            checkSetup.setCheckMax(0);
+            checkMaxSpinner.getValueFactory().setValue(0);
+            EditorAlerts.fleetingRedPopup("No checking selected.  Check max set to zero.");
         }
 
         return model;
