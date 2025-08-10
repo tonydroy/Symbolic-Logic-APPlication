@@ -69,7 +69,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
     private VerticalTreeView verticalTreeView;
     private VTcheck vtCheck;
     private boolean exerciseModified = false;
-    private UndoRedoList<VerticalTreeModel> undoRedoList = new UndoRedoList<>(50);
+    private UndoRedoList<VerticalTreeModel> undoRedoList = new UndoRedoList<>(50);   //50
     public BooleanProperty undoRedoFlag = new SimpleBooleanProperty();
     private Exercise auxExerciseA;
     private Exercise auxExerciseB;
@@ -84,12 +84,12 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         this.verticalTreeModel = model;
         if (model.getOriginalModel() == null) {model.setOriginalModel(model); }
         this.mainView = mainWindow.getMainView();
-        this.verticalTreeView = new VerticalTreeView(mainView);
+        this.verticalTreeView = new VerticalTreeView(mainView, this);
 
         setVerticalTreeView();
 
-        if (verticalTreeModel.getTreeFormulaBoxes() == null)
-            verticalTreeModel.setCheckSetup(new VTcheckSetup());
+//        if (verticalTreeModel.getTreeFormulaBoxes() == null)
+//            verticalTreeModel.setCheckSetup(new VTcheckSetup());
 
         vtCheck = new VTcheck(this);
 
@@ -435,6 +435,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
 
     private void undoAction() {
         VerticalTreeModel undoElement = undoRedoList.getUndoElement();
+    //    System.out.println("undo: " + undoElement);
         if (undoElement != null) {
             verticalTreeModel = (VerticalTreeModel) SerializationUtils.clone(undoElement);
             populateMainPaneNodes();
@@ -456,11 +457,13 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         verticalTreeView.getRedoButton().setDisable(!undoRedoList.canRedo());
     }
 
-    private void pushUndoRedo() {
+    public void pushUndoRedo() {
+
         VerticalTreeModel model = getVerticalTreeModelFromView();
         VerticalTreeModel deepCopy = (VerticalTreeModel) SerializationUtils.clone(model);
         undoRedoList.push(deepCopy);
         updateUndoRedoButtons();
+        exerciseModified = true;
     }
 
 

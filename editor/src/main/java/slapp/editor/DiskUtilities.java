@@ -252,7 +252,7 @@ public class DiskUtilities {
                     if (recentExerciseFiles.size() == 0 || !recentExerciseFiles.get(recentExerciseFiles.size() - 1).getPath().equals(fileToOpen.getPath())) recentExerciseFiles.add(fileToOpen);
 
                 } catch (IOException | ClassNotFoundException e) {
-                    //                            e.printStackTrace();
+                   // e.printStackTrace();
                     EditorAlerts.showSimpleAlert("Error opening file", fileToOpen.getPath() + " is not compatible with this version of SLAPP.\nCannot open.");
                 }
             }

@@ -57,7 +57,7 @@ public class ExpMapFormulaBox extends AnchorPane {
     private AnchorPane right_pane = null;
     private List<String> mLinkIds = new ArrayList<>();
 
-    private DragIconType mType = DragIconType.MAP_FIELD;
+    private DragIconType mType = DragIconType.map_field;
 
     private Point2D mDragOffset = new Point2D (0.0, 0.0);
 

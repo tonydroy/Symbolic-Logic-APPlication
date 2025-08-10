@@ -575,7 +575,7 @@ public class ExpRootLayout extends AnchorPane {
                 if (container != null) {
                     if (container.getValue("scene_coords") != null) {
 
-                        if (container.getValue("type").equals(DragIconType.DASHED_LINE.toString())) {
+                        if (container.getValue("type").equals(DragIconType.dashed_line.toString())) {
                             ExpDashedLine line = new ExpDashedLine(verticalTreeView);
                             main_pane.getChildren().add(line);
                             Point2D cursorPoint = container.getValue("scene_coords");
@@ -584,7 +584,7 @@ public class ExpRootLayout extends AnchorPane {
                             verticalTreeView.setUndoRedoFlag(false);
                         }
 
-                        else if (container.getValue("type").equals(DragIconType.BRACKET.toString())) {
+                        else if (container.getValue("type").equals(DragIconType.bracket.toString())) {
                             ExpVerticalBracket bracket = new ExpVerticalBracket(verticalTreeView);
                             main_pane.getChildren().add(bracket);
                             Point2D cursorPoint = container.getValue("scene_coords");
@@ -593,7 +593,7 @@ public class ExpRootLayout extends AnchorPane {
                             verticalTreeView.setUndoRedoFlag(false);
                         }
 
-                        else if (container.getValue("type").equals(DragIconType.TREE_FIELD.toString())) {
+                        else if (container.getValue("type").equals(DragIconType.tree_field.toString())) {
                             ExpTreeFormulaBox treeFormulaBox = new ExpTreeFormulaBox(verticalTreeView);
                             main_pane.getChildren().add(treeFormulaBox);
                             Point2D cursorPoint = container.getValue("scene_coords");
@@ -604,7 +604,7 @@ public class ExpRootLayout extends AnchorPane {
 
                         }
 
-                        else if (container.getValue("type").equals(DragIconType.MAP_FIELD.toString())) {
+                        else if (container.getValue("type").equals(DragIconType.map_field.toString())) {
                             ExpMapFormulaBox mapFormulaBox = new ExpMapFormulaBox(verticalTreeView);
                             main_pane.getChildren().add(mapFormulaBox);
                             Point2D cursorPoint = container.getValue("scene_coords");

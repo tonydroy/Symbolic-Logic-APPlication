@@ -94,11 +94,15 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
     private Color checkElementsColor;
     private boolean checkShowing = false;
     private Button staticHelpButton;
-    private Stage  staticHelpStage;
+    private Stage  staticHelpStage;;
+
+    private VerticalTreeExercise vtExercise;
 
 
-    VerticalTreeView(MainWindowView mainView) {
+    VerticalTreeView(MainWindowView mainView, VerticalTreeExercise vtExercise) {
         this.mainView = mainView;
+        this.vtExercise = vtExercise;
+
         root = new BorderPane();
         rootLayout = new RootLayout(this);
         root.setCenter(rootLayout);
@@ -514,4 +518,7 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
         return pointsEarnedTextField;
     }
 
+    public VerticalTreeExercise getVTExercise() {
+        return vtExercise;
+    }
 }

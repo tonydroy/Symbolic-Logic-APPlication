@@ -121,10 +121,10 @@ public class VerticalTreeExpCreate {
         promptField.setText(originalModel.getExplainPrompt());
         pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
         List<DragIconType> dragIconList = originalModel.getDragIconList();
-        treeFormulaBoxCheck.setSelected(dragIconList.contains(TREE_FIELD));
-        verticalBracketCheck.setSelected(dragIconList.contains(BRACKET));
-        dashedLineCheck.setSelected(dragIconList.contains(DASHED_LINE));
-        mapFormulaBoxCheck.setSelected(dragIconList.contains(MAP_FIELD));
+        treeFormulaBoxCheck.setSelected(dragIconList.contains(tree_field));
+        verticalBracketCheck.setSelected(dragIconList.contains(bracket));
+        dashedLineCheck.setSelected(dragIconList.contains(dashed_line));
+        mapFormulaBoxCheck.setSelected(dragIconList.contains(map_field));
         List<ObjectControlType> objectControlList = originalModel.getObjectControlList();
         boxingFormulaCheck.setSelected(objectControlList.contains(FORMULA_BOX));
         circleCheck.setSelected(objectControlList.contains(CIRCLE));
@@ -543,10 +543,10 @@ public class VerticalTreeExpCreate {
         model.setExplainPrompt(promptField.getText());
 
         List<DragIconType> dragList = model.getDragIconList();
-        if (treeFormulaBoxCheck.isSelected()) dragList.add(TREE_FIELD);
-        if (verticalBracketCheck.isSelected()) dragList.add(BRACKET);
-        if (dashedLineCheck.isSelected()) dragList.add(DASHED_LINE);
-        if (mapFormulaBoxCheck.isSelected()) dragList.add(MAP_FIELD);
+        if (treeFormulaBoxCheck.isSelected()) dragList.add(tree_field);
+        if (verticalBracketCheck.isSelected()) dragList.add(bracket);
+        if (dashedLineCheck.isSelected()) dragList.add(dashed_line);
+        if (mapFormulaBoxCheck.isSelected()) dragList.add(map_field);
 
         List<ObjectControlType> controlList = model.getObjectControlList();
         if (boxingFormulaCheck.isSelected()) controlList.add(FORMULA_BOX);

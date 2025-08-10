@@ -33,7 +33,6 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxListCell;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.transform.Scale;
@@ -145,16 +144,16 @@ public class VerticalTreeCreate {
         mapBoxKeyboardSelector = originalModel.getDefaultMapKeyboardType();
 
         List<DragIconType> dragIconList = originalModel.getDragIconList();
-        treeBoxItalicSansCheck.setSelected(dragIconList.contains(TREE_FIELD) && treeBoxKeyboardSelector == ITALIC_AND_SANS);
-        treeBoxBaseItalicCheck.setSelected(dragIconList.contains(TREE_FIELD) && treeBoxKeyboardSelector == BASE);
-        treeBoxScriptItalicCheck.setSelected(dragIconList.contains(TREE_FIELD) && treeBoxKeyboardSelector == SCRIPT_AND_ITALIC);
-        mapBoxItalicSansCheck.setSelected(dragIconList.contains(MAP_FIELD) && mapBoxKeyboardSelector == ITALIC_AND_SANS);
-        mapBoxBaseItalicCheck.setSelected(dragIconList.contains(MAP_FIELD) && mapBoxKeyboardSelector == BASE);
-        mapBoxScriptItalicCheck.setSelected(dragIconList.contains(MAP_FIELD) && mapBoxKeyboardSelector == SCRIPT_AND_ITALIC);
+        treeBoxItalicSansCheck.setSelected(dragIconList.contains(tree_field) && treeBoxKeyboardSelector == ITALIC_AND_SANS);
+        treeBoxBaseItalicCheck.setSelected(dragIconList.contains(tree_field) && treeBoxKeyboardSelector == BASE);
+        treeBoxScriptItalicCheck.setSelected(dragIconList.contains(tree_field) && treeBoxKeyboardSelector == SCRIPT_AND_ITALIC);
+        mapBoxItalicSansCheck.setSelected(dragIconList.contains(map_field) && mapBoxKeyboardSelector == ITALIC_AND_SANS);
+        mapBoxBaseItalicCheck.setSelected(dragIconList.contains(map_field) && mapBoxKeyboardSelector == BASE);
+        mapBoxScriptItalicCheck.setSelected(dragIconList.contains(map_field) && mapBoxKeyboardSelector == SCRIPT_AND_ITALIC);
 
         pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
-        verticalBracketCheck.setSelected(dragIconList.contains(BRACKET));
-        dashedLineCheck.setSelected(dragIconList.contains(DASHED_LINE));
+        verticalBracketCheck.setSelected(dragIconList.contains(bracket));
+        dashedLineCheck.setSelected(dragIconList.contains(dashed_line));
         List<ObjectControlType> objectControlList = originalModel.getObjectControlList();
         boxingFormulaCheck.setSelected(objectControlList.contains(FORMULA_BOX));
         circleCheck.setSelected(objectControlList.contains(CIRCLE));
@@ -164,6 +163,7 @@ public class VerticalTreeCreate {
         mappingCheck.setSelected(objectControlList.contains(MAPPING));
 
         VTcheckSetup checkSetup = originalModel.getCheckSetup();
+        if (checkSetup == null) checkSetup = new VTcheckSetup();
         formulaCheck.setSelected(checkSetup.getCheckType() == VTCheckType.FORMULA);
         unabbreviationCheck.setSelected(checkSetup.getCheckType() == VTCheckType.UNABB);
         auxNameField.setText(checkSetup.getAuxExerName());
@@ -173,6 +173,8 @@ public class VerticalTreeCreate {
         justificationCheck.setSelected(checkSetup.isCheckJustifications());
         targetBoxedDRTA.getRTA().getActionFactory().open(checkSetup.getFormulaTarget()).execute(new ActionEvent());
         targetBoxedDRTA.getRTA().getActionFactory().saveNow().execute(new ActionEvent());
+        checkMaxSpinner.getValueFactory().setValue(checkSetup.getCheckMax());
+        checkMarkup.setSelected(checkSetup.isCheckMarkup());
 
         for (String key : langMap.keySet()) {
             if (key.equals(checkSetup.getObjLangName())) {
@@ -833,31 +835,31 @@ public class VerticalTreeCreate {
         List<DragIconType> dragList = model.getDragIconList();
         if (treeBoxItalicSansCheck.isSelected()) {
             model.setDefaultKeyboardType(ITALIC_AND_SANS);
-            dragList.add(TREE_FIELD);
+            dragList.add(tree_field);
         }
         else if (treeBoxBaseItalicCheck.isSelected()) {
             model.setDefaultKeyboardType(BASE);
-            dragList.add(TREE_FIELD);
+            dragList.add(tree_field);
         }
         else if (treeBoxScriptItalicCheck.isSelected()) {
             model.setDefaultKeyboardType(SCRIPT_AND_ITALIC);
-            dragList.add(TREE_FIELD);
+            dragList.add(tree_field);
         }
 
-        if (verticalBracketCheck.isSelected()) dragList.add(BRACKET);
-        if (dashedLineCheck.isSelected()) dragList.add(DASHED_LINE);
+        if (verticalBracketCheck.isSelected()) dragList.add(bracket);
+        if (dashedLineCheck.isSelected()) dragList.add(dashed_line);
 
         if (mapBoxItalicSansCheck.isSelected()) {
             model.setDefaultMapKeyboardType(ITALIC_AND_SANS);
-            dragList.add(MAP_FIELD);
+            dragList.add(map_field);
         }
         else if (mapBoxBaseItalicCheck.isSelected()) {
             model.setDefaultMapKeyboardType(BASE);
-            dragList.add(MAP_FIELD);
+            dragList.add(map_field);
         }
         else if (mapBoxScriptItalicCheck.isSelected()) {
             model.setDefaultMapKeyboardType(SCRIPT_AND_ITALIC);
-            dragList.add(MAP_FIELD);
+            dragList.add(map_field);
         }
 
         List<ObjectControlType> controlList = model.getObjectControlList();

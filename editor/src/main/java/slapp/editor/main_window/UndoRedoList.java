@@ -59,6 +59,7 @@ public class UndoRedoList<T> extends LinkedList<T> {
         while (this.size() >= maxSize) {
             this.removeLast();
         }
+      //  System.out.println("push: " + this + " " + currentIndex);
     }
 
     /**
@@ -72,6 +73,8 @@ public class UndoRedoList<T> extends LinkedList<T> {
             currentIndex++;
             element = this.get(currentIndex);
         }
+    //    System.out.println("undo: " + element + " " + currentIndex);
+
         return element;
     }
 
@@ -86,6 +89,7 @@ public class UndoRedoList<T> extends LinkedList<T> {
             currentIndex--;
             element = this.get(currentIndex);
         }
+ //       System.out.println("redo: " + element + " " + currentIndex);
         return element;
     }
 

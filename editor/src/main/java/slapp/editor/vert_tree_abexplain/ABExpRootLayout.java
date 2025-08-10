@@ -573,7 +573,7 @@ public class ABExpRootLayout extends AnchorPane {
                 if (container != null) {
                     if (container.getValue("scene_coords") != null) {
 
-                        if (container.getValue("type").equals(DragIconType.DASHED_LINE.toString())) {
+                        if (container.getValue("type").equals(DragIconType.dashed_line.toString())) {
                             ABExpDashedLine line = new ABExpDashedLine(verticalTreeView);
                             main_pane.getChildren().add(line);
                             Point2D cursorPoint = container.getValue("scene_coords");
@@ -582,7 +582,7 @@ public class ABExpRootLayout extends AnchorPane {
                             verticalTreeView.setUndoRedoFlag(false);
                         }
 
-                        else if (container.getValue("type").equals(DragIconType.BRACKET.toString())) {
+                        else if (container.getValue("type").equals(DragIconType.bracket.toString())) {
                             ABExpVerticalBracket bracket = new ABExpVerticalBracket(verticalTreeView);
                             main_pane.getChildren().add(bracket);
                             Point2D cursorPoint = container.getValue("scene_coords");
@@ -591,7 +591,7 @@ public class ABExpRootLayout extends AnchorPane {
                             verticalTreeView.setUndoRedoFlag(false);
                         }
 
-                        else if (container.getValue("type").equals(DragIconType.TREE_FIELD.toString())) {
+                        else if (container.getValue("type").equals(DragIconType.tree_field.toString())) {
                             ABExpTreeFormulaBox treeFormulaBox = new ABExpTreeFormulaBox(verticalTreeView);
                             main_pane.getChildren().add(treeFormulaBox);
                             Point2D cursorPoint = container.getValue("scene_coords");
@@ -600,7 +600,7 @@ public class ABExpRootLayout extends AnchorPane {
                             verticalTreeView.setUndoRedoFlag(false);
                         }
 
-                        else if (container.getValue("type").equals(DragIconType.MAP_FIELD.toString())) {
+                        else if (container.getValue("type").equals(DragIconType.map_field.toString())) {
                             ABExpMapFormulaBox mapFormulaBox = new ABExpMapFormulaBox(verticalTreeView);
                             main_pane.getChildren().add(mapFormulaBox);
                             Point2D cursorPoint = container.getValue("scene_coords");

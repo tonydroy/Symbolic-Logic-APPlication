@@ -68,7 +68,7 @@ public class ExpTreeFormulaBox extends AnchorPane {
     private AnchorPane right_pane = null;
     private List<String> mLinkIds = new ArrayList<>();
 
-    private DragIconType mType = DragIconType.TREE_FIELD;
+    private DragIconType mType = DragIconType.tree_field;
 
     private Point2D mDragOffset = new Point2D (0.0, 0.0);
 

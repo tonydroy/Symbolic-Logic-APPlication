@@ -16,7 +16,10 @@ You should have received a copy of the GNU General Public License along with SLA
 package slapp.editor.vertical_tree.drag_drop;
 
 
+import com.gluonhq.richtextarea.RichTextArea;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -54,6 +57,9 @@ public class RootLayout extends AnchorPane {
     EventHandler underlineClickFilter;
     EventHandler mappingClickFilter;
     EventHandler mappingKeyFilter;
+
+    EventHandler rtaClickFilter;
+
     ToggleButton boxToggle;
     ToggleButton starToggle;
     ToggleButton annotationToggle;
@@ -200,6 +206,34 @@ public class RootLayout extends AnchorPane {
         topPane.setMaxHeight(32);
 
         base_pane.setResizableWithParent(mainPane, true);
+
+
+        rtaClickFilter = new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                ObservableList<Node> nodesList = mainPane.getChildren();
+                for (Node node : nodesList) {
+                    if (node instanceof TreeFormulaBox) {
+                        RichTextArea treeRTA = ((TreeFormulaBox) node).getFormulaBox().getRTA();
+                        if (treeRTA.isModified()) {
+                            verticalTreeView.getVTExercise().setExerciseModified(true);
+                            verticalTreeView.getVTExercise().pushUndoRedo();
+                            treeRTA.getActionFactory().saveNow().execute(new ActionEvent());
+                        }
+                    }
+                    if (node instanceof MapFormulaBox) {
+                        RichTextArea mapRTA = ((MapFormulaBox) node).getFormulaBox().getRTA();
+                        if (mapRTA.isModified()) {
+                            verticalTreeView.getVTExercise().setExerciseModified(true);
+                            verticalTreeView.getVTExercise().pushUndoRedo();
+                            mapRTA.getActionFactory().saveNow().execute(new ActionEvent());
+                        }
+                    }
+                }
+
+            }
+        };
+        verticalTreeView.getMainView().getMainScene().addEventFilter(MouseEvent.MOUSE_PRESSED, rtaClickFilter);
 
 
         boxClickFilter = new EventHandler<MouseEvent>() {
@@ -572,7 +606,7 @@ public class RootLayout extends AnchorPane {
                 if (container != null) {
                     if (container.getValue("scene_coords") != null) {
 
-                        if (container.getValue("type").equals(DragIconType.DASHED_LINE.toString())) {
+                        if (container.getValue("type").equals(DragIconType.dashed_line.toString())) {
                             DashedLine line = new DashedLine(verticalTreeView);
                             mainPane.getChildren().add(line);
                             Point2D cursorPoint = container.getValue("scene_coords");
@@ -581,7 +615,7 @@ public class RootLayout extends AnchorPane {
                             verticalTreeView.setUndoRedoFlag(false);
                         }
 
-                        else if (container.getValue("type").equals(DragIconType.BRACKET.toString())) {
+                        else if (container.getValue("type").equals(DragIconType.bracket.toString())) {
                             VerticalBracket bracket = new VerticalBracket(verticalTreeView);
                             mainPane.getChildren().add(bracket);
                             Point2D cursorPoint = container.getValue("scene_coords");
@@ -590,7 +624,7 @@ public class RootLayout extends AnchorPane {
                             verticalTreeView.setUndoRedoFlag(false);
                         }
 
-                        else if (container.getValue("type").equals(DragIconType.TREE_FIELD.toString())) {
+                        else if (container.getValue("type").equals(DragIconType.tree_field.toString())) {
                             TreeFormulaBox treeFormulaBox = new TreeFormulaBox(verticalTreeView);
                             mainPane.getChildren().add(treeFormulaBox);
                             Point2D cursorPoint = container.getValue("scene_coords");
@@ -599,7 +633,7 @@ public class RootLayout extends AnchorPane {
                             verticalTreeView.setUndoRedoFlag(false);
                         }
 
-                        else if (container.getValue("type").equals(DragIconType.MAP_FIELD.toString())) {
+                        else if (container.getValue("type").equals(DragIconType.map_field.toString())) {
                             MapFormulaBox mapFormulaBox = new MapFormulaBox(verticalTreeView);
                             mainPane.getChildren().add(mapFormulaBox);
                             Point2D cursorPoint = container.getValue("scene_coords");

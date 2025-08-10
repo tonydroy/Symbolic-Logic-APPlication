@@ -75,10 +75,13 @@ public class VTcheck implements VTAuxCheck {
         this.vtExercise = vtExercise;
         this.vtView = vtExercise.getExerciseView();
         this.vtModel = vtExercise.getExerciseModel();
-        setRightControlBox();
+
 
         checkSetup = vtModel.getCheckSetup();
-        if (checkSetup == null) { checkSetup = new VTcheckSetup(); }
+        if (checkSetup == null) {
+            checkSetup = new VTcheckSetup();
+            vtModel.setCheckSetup(checkSetup);
+        }
         objLangName = checkSetup.getObjLangName();
         objLang = Languages.getLanguage(objLangName);
         setLangAllowDP(objLang.isAllowDroppedBrackets());
@@ -86,15 +89,15 @@ public class VTcheck implements VTAuxCheck {
         Document targetDoc = checkSetup.getFormulaTarget();
         if (targetDoc != null) {
             List<Expression> targetParseList = ParseUtilities.parseDoc(targetDoc, objLang);
-            targetExpression = targetParseList.get(0);
+            if (targetParseList.size() > 0) targetExpression = targetParseList.get(0);
         }
         checkJustification = checkSetup.isCheckJustifications();
         checkMarkup = checkSetup.isCheckMarkup();
         checkType = checkSetup.getCheckType();
         checkJustification = checkSetup.isCheckJustifications();
 
-        checkBracket = vtModel.getDragIconList().contains(DragIconType.BRACKET);
-        checkDashedLine = vtModel.getDragIconList().contains(DragIconType.DASHED_LINE);
+        checkBracket = vtModel.getDragIconList().contains(DragIconType.bracket);
+        checkDashedLine = vtModel.getDragIconList().contains(DragIconType.dashed_line);
         checkCircle = vtModel.getObjectControlList().contains(ObjectControlType.CIRCLE);
         checkStar = vtModel.getObjectControlList().contains(ObjectControlType.STAR);
         checkMapping = vtModel.getObjectControlList().contains(ObjectControlType.MAPPING);
@@ -122,6 +125,8 @@ public class VTcheck implements VTAuxCheck {
         checkTries = checkSetup.getCheckTries();
         updateCheckCounter();
 
+        setRightControlBox();
+
 
     }
 
@@ -137,7 +142,7 @@ public class VTcheck implements VTAuxCheck {
 //            System.out.println("check progress");
 //        });
 
-        vtView.getstaticHelpButton().setDisable(!vtModel.getCheckSetup().isStaticHelp());
+        vtView.getstaticHelpButton().setDisable(!checkSetup.isStaticHelp());
 
         vtView.getstaticHelpButton().setOnAction(e -> {
             Stage helpStage = vtView.getStaticHelpStage();

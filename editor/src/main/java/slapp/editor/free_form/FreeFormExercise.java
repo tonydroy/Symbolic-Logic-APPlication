@@ -505,7 +505,7 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
         freeFormModel = getFreeFormModelFromView();
         VerticalTreeModel newMod = new VerticalTreeModel();
 
-        newMod.getDragIconList().addAll(Arrays.asList(DragIconType.TREE_FIELD, DragIconType.BRACKET, DragIconType.DASHED_LINE, DragIconType.MAP_FIELD));
+        newMod.getDragIconList().addAll(Arrays.asList(DragIconType.tree_field, DragIconType.bracket, DragIconType.dashed_line, DragIconType.map_field));
         newMod.getObjectControlList().addAll(Arrays.asList(ObjectControlType.FORMULA_BOX, ObjectControlType.CIRCLE, ObjectControlType.STAR,
                 ObjectControlType.ANNOTATION, ObjectControlType.UNDERLINE, ObjectControlType.MAPPING));
         newMod.setDefaultKeyboardType(BASE);
@@ -527,7 +527,7 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
         freeFormModel = getFreeFormModelFromView();
         VerticalTreeModel newMod = new VerticalTreeModel();
 
-        newMod.getDragIconList().addAll(Arrays.asList(DragIconType.TREE_FIELD, DragIconType.BRACKET, DragIconType.DASHED_LINE, DragIconType.MAP_FIELD));
+        newMod.getDragIconList().addAll(Arrays.asList(DragIconType.tree_field, DragIconType.bracket, DragIconType.dashed_line, DragIconType.map_field));
         newMod.getObjectControlList().addAll(Arrays.asList(ObjectControlType.FORMULA_BOX, ObjectControlType.CIRCLE, ObjectControlType.STAR,
                 ObjectControlType.ANNOTATION, ObjectControlType.UNDERLINE, ObjectControlType.MAPPING));
         newMod.setDefaultKeyboardType(ITALIC_AND_SANS);
@@ -549,7 +549,7 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
         freeFormModel = getFreeFormModelFromView();
         VerticalTreeModel newMod = new VerticalTreeModel();
 
-        newMod.getDragIconList().addAll(Arrays.asList(DragIconType.TREE_FIELD, DragIconType.BRACKET, DragIconType.DASHED_LINE, DragIconType.MAP_FIELD));
+        newMod.getDragIconList().addAll(Arrays.asList(DragIconType.tree_field, DragIconType.bracket, DragIconType.dashed_line, DragIconType.map_field));
         newMod.getObjectControlList().addAll(Arrays.asList(ObjectControlType.FORMULA_BOX, ObjectControlType.CIRCLE, ObjectControlType.STAR,
                 ObjectControlType.ANNOTATION, ObjectControlType.UNDERLINE, ObjectControlType.MAPPING));
         newMod.setDefaultKeyboardType(SCRIPT_AND_ITALIC);

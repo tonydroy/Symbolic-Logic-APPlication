@@ -52,7 +52,7 @@ public class MapFormulaBox extends AnchorPane {
     private EventHandler <DragEvent> mContextDragDropped;
     private AnchorPane right_pane = null;
     private List<String> mLinkIds = new ArrayList<>();
-    private DragIconType mType = DragIconType.MAP_FIELD;
+    private DragIconType mType = DragIconType.map_field;
     private Point2D mDragOffset = new Point2D (0.0, 0.0);
     private final MapFormulaBox self;
     private BoxedDRTA formulaBox;
@@ -212,8 +212,7 @@ public class MapFormulaBox extends AnchorPane {
 
                 relocateToGridPoint2( new Point2D(event.getSceneX(), event.getSceneY()) );
                 self.setCursor(Cursor.DEFAULT);
-                verticalTreeView.setUndoRedoFlag(true);
-                verticalTreeView.setUndoRedoFlag(false);
+                pushUndoRedo();
             }
         };
 
@@ -250,8 +249,7 @@ public class MapFormulaBox extends AnchorPane {
                     }
                     iterId.remove();
                 }
-                verticalTreeView.setUndoRedoFlag(true);
-                verticalTreeView.setUndoRedoFlag(false);
+                pushUndoRedo();
 
                 parent.requestFocus();
             }
@@ -364,12 +362,6 @@ public class MapFormulaBox extends AnchorPane {
         rta.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 verticalTreeView.getMainView().editorInFocus(drta, ControlType.FIELD);
-            } else {
-                if (rta.isModified()) {
-                    verticalTreeView.setUndoRedoFlag(true);
-                    verticalTreeView.setUndoRedoFlag(false);
-                    rta.getActionFactory().saveNow().execute(new ActionEvent());
-                }
             }
         });
         return boxedDRTA;
@@ -445,4 +437,9 @@ public class MapFormulaBox extends AnchorPane {
     public void setPrintWidth(double printWidth) {
         this.printWidth = printWidth;
     }
+
+    private void pushUndoRedo() {
+        verticalTreeView.getVTExercise().pushUndoRedo();
+    }
+
 }

@@ -65,7 +65,7 @@ public class DragIcon extends AnchorPane {
 
         switch (mType) {
 
-            case TREE_FIELD:
+            case tree_field:
                 Rectangle rectangle = new Rectangle(48, 20);
                 rectangle.setFill(Color.rgb(230, 245, 255));
                 rectangle.setStrokeWidth(1.5);
@@ -95,7 +95,7 @@ public class DragIcon extends AnchorPane {
   //              this.setTopAnchor(fieldPane, 20.0);
                 break;
 
-            case MAP_FIELD:
+            case map_field:
                 Rectangle mrectangle = new Rectangle(48, 20);
                 mrectangle.setFill(Color.rgb(230, 255, 245));
                 mrectangle.setStrokeWidth(1.5);
@@ -125,7 +125,7 @@ public class DragIcon extends AnchorPane {
                 //              this.setTopAnchor(fieldPane, 20.0);
                 break;
 
-            case BRACKET:
+            case bracket:
                 Pane brackPane = new Pane();
                 brackPane.setMinWidth(8.0); brackPane.setMaxWidth(8.0);
                 brackPane.setMinHeight(24); brackPane.setMaxHeight(24);
@@ -147,7 +147,7 @@ public class DragIcon extends AnchorPane {
                 this.setLeftAnchor(bracketPane, 14.0);
                 break;
 
-            case DASHED_LINE:
+            case dashed_line:
 
                 Rectangle dashLineRec = new Rectangle(54, 24);
                 dashLineRec.setFill(Color.rgb(235, 235, 235));

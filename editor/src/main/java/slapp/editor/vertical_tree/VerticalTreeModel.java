@@ -163,6 +163,7 @@ public class VerticalTreeModel implements ExerciseModel<Document>, Serializable 
     @Override
     public String toString() { return exerciseName; }
 
+
     @Override
     public int getPointsPossible() {
         return pointsPossible;
