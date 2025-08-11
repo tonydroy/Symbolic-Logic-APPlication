@@ -17,6 +17,7 @@ package slapp.editor.vertical_tree;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
+import com.gluonhq.richtextarea.model.Document;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
@@ -50,8 +51,7 @@ import slapp.editor.decorated_rta.KeyboardDiagram;
 import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
-import slapp.editor.parser.Language;
-import slapp.editor.parser.Languages;
+import slapp.editor.parser.*;
 import slapp.editor.vertical_tree.drag_drop.DragIconType;
 import slapp.editor.vertical_tree.object_models.ObjectControlType;
 
@@ -889,7 +889,8 @@ public class VerticalTreeCreate {
 
         if (targetBoxedDRTA.getRTA().isModified()) modified = true;
         targetBoxedDRTA.getRTA().getActionFactory().saveNow().execute(new ActionEvent());
-        checkSetup.setFormulaTarget(targetBoxedDRTA.getRTA().getDocument());
+        Document targetDocument = targetBoxedDRTA.getRTA().getDocument();
+        checkSetup.setFormulaTarget(targetDocument);
 
         checkSetup.setAuxExerName(auxNameField.getText());
 
@@ -905,7 +906,8 @@ public class VerticalTreeCreate {
 
         checkSetup.setCheckMarkup(checkMarkup.isSelected());
         checkSetup.setStaticHelp(staticHelpCheck.isSelected());
-        checkSetup.setCheckMax((Integer) checkMaxSpinner.getValue());
+        int checkMax = (Integer) checkMaxSpinner.getValue();
+        checkSetup.setCheckMax(checkMax);
         checkSetup.setCheckJustifications(justificationCheck.isSelected());
 
         String langName = null;
@@ -923,7 +925,21 @@ public class VerticalTreeCreate {
             EditorAlerts.showSimpleAlert("No language selected:", "Without a language selection, SLAPP will revert to the default, \u2112\ud835\udcc6 (w/abv).");
         }
 
-        if (checkType == VTCheckType.UNABB && auxNameField.getText().equals("")) {
+        //consistency checks
+        if (checkMax == 0 && checkType != VTCheckType.NONE) {
+            formulaCheck.setSelected(false);
+            unabbreviationCheck.setSelected(false);
+            checkSetup.setCheckType(VTCheckType.NONE);
+            EditorAlerts.fleetingRedPopup("Check Max set to zero.  Checking deselected.");
+        }
+
+        else if (checkType == VTCheckType.NONE  && checkMax != 0) {
+            checkSetup.setCheckMax(0);
+            checkMaxSpinner.getValueFactory().setValue(0);
+            EditorAlerts.fleetingRedPopup("No checking selected.  Check max set to zero.");
+        }
+
+        else if (checkType == VTCheckType.UNABB && auxNameField.getText().equals("")) {
             unabbreviationCheck.setSelected(false);
             checkMaxSpinner.getValueFactory().setValue(0);
             checkSetup.setCheckType(VTCheckType.NONE);
@@ -931,11 +947,26 @@ public class VerticalTreeCreate {
             EditorAlerts.fleetingRedPopup("Unabbreviation check requires auxiliary exercise.  Check disabled.");
         }
 
-        if (checkType == VTCheckType.NONE) {
-            checkSetup.setCheckMax(0);
-            checkMaxSpinner.getValueFactory().setValue(0);
-            EditorAlerts.fleetingRedPopup("No checking selected.  Check max set to zero.");
+        else if (checkType == VTCheckType.FORMULA) {
+            boolean goodTarget = false;
+            Expression targetExpression = null;
+            if (targetDocument != null && langName != null) {
+                List<Expression> targetParseList = ParseUtilities.parseDoc(targetDocument, langName);
+                if (targetParseList.size() == 1) {
+                    targetExpression = targetParseList.get(0);
+                    if (targetExpression.getType() == ExpressionType.FORMULA) goodTarget = true;
+                }
+            }
+            if (!goodTarget) {
+                formulaCheck.setSelected(false);
+                checkMaxSpinner.getValueFactory().setValue(0);
+                checkSetup.setCheckType(VTCheckType.NONE);
+                checkSetup.setCheckMax(0);
+                EditorAlerts.fleetingRedPopup("Target is (empty or) not a formula of the selected language.  Check disabled.");
+            }
+
         }
+
 
         return model;
     }

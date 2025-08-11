@@ -49,6 +49,7 @@ import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.derivation.CheckSetup;
+import slapp.editor.derivation.DerivationModel;
 import slapp.editor.main_window.*;
 import slapp.editor.vert_tree_abefexplain.VerticalTreeABEFExpExercise;
 import slapp.editor.vert_tree_abefexplain.VerticalTreeABEFExpView;
@@ -69,21 +70,23 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
     private VerticalTreeView verticalTreeView;
     private VTcheck vtCheck;
     private boolean exerciseModified = false;
-    private UndoRedoList<VerticalTreeModel> undoRedoList = new UndoRedoList<>(50);   //50
+    private UndoRedoList<VerticalTreeModel> undoRedoList;   //50
     public BooleanProperty undoRedoFlag = new SimpleBooleanProperty();
     private Exercise auxExerciseA;
     private Exercise auxExerciseB;
     Stage tStage;
     Pane thumbPane = new Pane();
-
+    boolean setup;
 
 
 
     public VerticalTreeExercise(VerticalTreeModel model, MainWindow mainWindow) {
+        this.setup = false;
         this.mainWindow = mainWindow;
         this.verticalTreeModel = model;
         if (model.getOriginalModel() == null) {model.setOriginalModel(model); }
         this.mainView = mainWindow.getMainView();
+
         this.verticalTreeView = new VerticalTreeView(mainView, this);
 
         setVerticalTreeView();
@@ -94,6 +97,8 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         vtCheck = new VTcheck(this);
 
 
+        undoRedoList = new UndoRedoList<>(50);
+
         undoRedoFlag.set(false);
         undoRedoFlag.bind(verticalTreeView.undoRedoFlagProperty());
         undoRedoFlag.addListener((ob, ov, nv) -> {
@@ -102,7 +107,13 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
                 pushUndoRedo();
             }
         });
-        pushUndoRedo();
+        VerticalTreeModel deepCopy = (VerticalTreeModel) SerializationUtils.clone(verticalTreeModel);
+
+ //       this.setup = true;
+        undoRedoList.push(deepCopy);
+        updateUndoRedoButtons();
+
+
     }
 
     private void setVerticalTreeView() {
@@ -432,6 +443,29 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         return thumbPane;
     }
 
+    public void handleMouseEvent(MouseEvent event) {
+
+        ObservableList<Node> nodesList = verticalTreeView.getRootLayout().getMainPane().getChildren();
+        for (Node node : nodesList) {
+            if (node instanceof TreeFormulaBox) {
+                RichTextArea treeRTA = ((TreeFormulaBox) node).getFormulaBox().getRTA();
+                if (treeRTA.isModified()) {
+                    verticalTreeView.getVTExercise().setExerciseModified(true);
+                    verticalTreeView.getVTExercise().pushUndoRedo();
+                    treeRTA.getActionFactory().saveNow().execute(new ActionEvent());
+                }
+            }
+            if (node instanceof MapFormulaBox) {
+                RichTextArea mapRTA = ((MapFormulaBox) node).getFormulaBox().getRTA();
+                if (mapRTA.isModified()) {
+                    verticalTreeView.getVTExercise().setExerciseModified(true);
+                    verticalTreeView.getVTExercise().pushUndoRedo();
+                    mapRTA.getActionFactory().saveNow().execute(new ActionEvent());
+                }
+            }
+        }
+    }
+
 
     private void undoAction() {
         VerticalTreeModel undoElement = undoRedoList.getUndoElement();
@@ -458,10 +492,10 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
     }
 
     public void pushUndoRedo() {
-
+    //    System.out.println("push");
         VerticalTreeModel model = getVerticalTreeModelFromView();
         VerticalTreeModel deepCopy = (VerticalTreeModel) SerializationUtils.clone(model);
-        undoRedoList.push(deepCopy);
+        undoRedoList.push(deepCopy);  //deep copy
         updateUndoRedoButtons();
         exerciseModified = true;
     }
@@ -701,8 +735,8 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         model.setStarted(verticalTreeModel.isStarted() || exerciseModified);
 
         VTcheckSetup checkSetup = verticalTreeModel.getCheckSetup();
-        checkSetup.setCheckTries(vtCheck.getCheckTries());
-        checkSetup.setCheckSuccess(vtCheck.isCheckSuccess());
+        if (vtCheck != null) checkSetup.setCheckTries(vtCheck.getCheckTries());
+        if (vtCheck != null) checkSetup.setCheckSuccess(vtCheck.isCheckSuccess());
         model.setCheckSetup(verticalTreeModel.getCheckSetup());
 
         model.setStatementPrefHeight(verticalTreeView.getExerciseStatement().getEditor().getPrefHeight());
@@ -817,10 +851,12 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         else model.setPointsEarned(-1);
 
         VTcheckSetup setup = verticalTreeModel.getCheckSetup();
-        setup.setCheckSuccess(vtCheck.isCheckSuccess());
-        setup.setCheckTries(vtCheck.getCheckTries());
+        if (vtCheck != null) setup.setCheckSuccess(vtCheck.isCheckSuccess());
+        if (vtCheck != null) setup.setCheckTries(vtCheck.getCheckTries());
         model.setCheckSetup(setup);
         ///
+
+
 
         return model;
     }

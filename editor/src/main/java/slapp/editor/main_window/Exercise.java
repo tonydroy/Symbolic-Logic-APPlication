@@ -17,6 +17,7 @@ package slapp.editor.main_window;
 
 import javafx.scene.Node;
 import javafx.scene.control.Spinner;
+import javafx.scene.input.MouseEvent;
 
 import java.util.List;
 
@@ -101,5 +102,7 @@ public interface Exercise<T,U> {
     default void setAuxExerA(Exercise exercise) {}
 
     default void setAuxExerB(Exercise exercise) {}
+
+    default void handleMouseEvent(MouseEvent event) {}
 
 }

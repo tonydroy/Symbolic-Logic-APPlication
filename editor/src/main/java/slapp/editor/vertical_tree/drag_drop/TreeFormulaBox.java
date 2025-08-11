@@ -395,7 +395,7 @@ public class TreeFormulaBox extends AnchorPane {
         oval.setArcWidth((maxX - minX));
         self.setLeftAnchor(oval, minX);
         self.setTopAnchor(oval, rtaBoundsMinY + 2.0);
-        pushUndoRedo();
+   //     pushUndoRedo();
   //      verticalTreeView.setUndoRedoFlag(true);
   //      verticalTreeView.setUndoRedoFlag(false);
     }
@@ -427,7 +427,7 @@ public class TreeFormulaBox extends AnchorPane {
 
         //add line to linesPane
         addLineToPane(startX, endX - startX, yPos);
-        pushUndoRedo();
+    //    pushUndoRedo();
     //    verticalTreeView.setUndoRedoFlag(true);
     //    verticalTreeView.setUndoRedoFlag(false);
     }

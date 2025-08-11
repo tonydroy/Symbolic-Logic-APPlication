@@ -189,7 +189,7 @@ public class EditorAlerts {
         label.setMinHeight(100);
         popup.getContent().add(label);
 
-        PauseTransition delay = new PauseTransition(Duration.seconds(2.5));
+        PauseTransition delay = new PauseTransition(Duration.seconds(3));
         delay.setOnFinished(e -> popup.hide());
         popup.show(EditorMain.mainStage);
         delay.play();

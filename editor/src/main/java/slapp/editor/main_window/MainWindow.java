@@ -90,6 +90,8 @@ public class MainWindow {
     private int assignmentPointsEarned;
     private int assignmentPointsPossible;
 
+    private EventHandler mainSceneClickFilter;
+
 
 
 
@@ -128,6 +130,18 @@ public class MainWindow {
                 }
             }
         };
+
+        mainSceneClickFilter = new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                Platform.runLater(() -> {
+                    currentExercise.handleMouseEvent(event);
+                });
+
+            }
+        };
+        mainView.getMainScene().addEventFilter(MouseEvent.MOUSE_PRESSED, mainSceneClickFilter);
+
         setUpExercise(new FrontPageExercise(this));
         mainView.updateZoom(slappUsrData.getZoom());
         mainView.getMainScene().focusOwnerProperty().addListener(focusListener);
@@ -196,6 +210,8 @@ public class MainWindow {
      * Initialize main window controls
      */
     private void setupMainWindow() {
+
+
 
         mainView.scalePageHeightProperty().bind(Bindings.divide(PrintUtilities.pageHeightProperty(), mainWindow.baseScaleProperty()));
         mainView.scalePageWidthProperty().bind(Bindings.divide(PrintUtilities.pageWidthProperty(), mainWindow.baseScaleProperty()));

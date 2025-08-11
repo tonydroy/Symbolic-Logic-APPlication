@@ -207,35 +207,6 @@ public class RootLayout extends AnchorPane {
 
         base_pane.setResizableWithParent(mainPane, true);
 
-
-        rtaClickFilter = new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                ObservableList<Node> nodesList = mainPane.getChildren();
-                for (Node node : nodesList) {
-                    if (node instanceof TreeFormulaBox) {
-                        RichTextArea treeRTA = ((TreeFormulaBox) node).getFormulaBox().getRTA();
-                        if (treeRTA.isModified()) {
-                            verticalTreeView.getVTExercise().setExerciseModified(true);
-                            verticalTreeView.getVTExercise().pushUndoRedo();
-                            treeRTA.getActionFactory().saveNow().execute(new ActionEvent());
-                        }
-                    }
-                    if (node instanceof MapFormulaBox) {
-                        RichTextArea mapRTA = ((MapFormulaBox) node).getFormulaBox().getRTA();
-                        if (mapRTA.isModified()) {
-                            verticalTreeView.getVTExercise().setExerciseModified(true);
-                            verticalTreeView.getVTExercise().pushUndoRedo();
-                            mapRTA.getActionFactory().saveNow().execute(new ActionEvent());
-                        }
-                    }
-                }
-
-            }
-        };
-        verticalTreeView.getMainView().getMainScene().addEventFilter(MouseEvent.MOUSE_PRESSED, rtaClickFilter);
-
-
         boxClickFilter = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -757,5 +728,7 @@ public class RootLayout extends AnchorPane {
         return buttonGroup;
     }
 
-
+    public EventHandler getRtaClickFilter() {
+        return rtaClickFilter;
+    }
 }
