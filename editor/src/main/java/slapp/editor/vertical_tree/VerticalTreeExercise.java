@@ -21,8 +21,6 @@ import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
-import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -31,13 +29,14 @@ import javafx.scene.Node;
 import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
-import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.scene.transform.Scale;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -48,15 +47,7 @@ import slapp.editor.EditorMain;
 import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
-import slapp.editor.derivation.CheckSetup;
-import slapp.editor.derivation.DerivationModel;
 import slapp.editor.main_window.*;
-import slapp.editor.vert_tree_abefexplain.VerticalTreeABEFExpExercise;
-import slapp.editor.vert_tree_abefexplain.VerticalTreeABEFExpView;
-import slapp.editor.vert_tree_abexplain.VerticalTreeABExpExercise;
-import slapp.editor.vert_tree_abexplain.VerticalTreeABExpView;
-import slapp.editor.vert_tree_explain.VerticalTreeExpExercise;
-import slapp.editor.vert_tree_explain.VerticalTreeExpView;
 import slapp.editor.vertical_tree.drag_drop.*;
 import slapp.editor.vertical_tree.object_models.*;
 import java.util.ArrayList;
@@ -76,12 +67,11 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
     private Exercise auxExerciseB;
     Stage tStage;
     Pane thumbPane = new Pane();
-    boolean setup;
 
 
 
     public VerticalTreeExercise(VerticalTreeModel model, MainWindow mainWindow) {
-        this.setup = false;
+
         this.mainWindow = mainWindow;
         this.verticalTreeModel = model;
         if (model.getOriginalModel() == null) {model.setOriginalModel(model); }
@@ -91,12 +81,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
 
         setVerticalTreeView();
 
-//        if (verticalTreeModel.getTreeFormulaBoxes() == null)
-//            verticalTreeModel.setCheckSetup(new VTcheckSetup());
-
         vtCheck = new VTcheck(this);
-
-
         undoRedoList = new UndoRedoList<>(50);
 
         undoRedoFlag.set(false);
@@ -108,12 +93,8 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
             }
         });
         VerticalTreeModel deepCopy = (VerticalTreeModel) SerializationUtils.clone(verticalTreeModel);
-
- //       this.setup = true;
         undoRedoList.push(deepCopy);
         updateUndoRedoButtons();
-
-
     }
 
     private void setVerticalTreeView() {
@@ -524,8 +505,13 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         //header node
         Label exerciseName = new Label(printModel.getExerciseName());
         exerciseName.setStyle("-fx-font-weight: bold;");
-        HBox hbox = new HBox(exerciseName);
+        Region spacer = new Region();
+
+
+        HBox hbox = new HBox(exerciseName, spacer, printCheckNode());
+        hbox.setHgrow(spacer, Priority.ALWAYS);
         hbox.setPadding(new Insets(0,0,10,0));
+        hbox.setMinWidth(nodeWidth);
 
         Group headerRoot = new Group();
         Scene headerScene = new Scene(headerRoot);
@@ -632,6 +618,29 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         return nodeList;
     }
 
+    TextFlow printCheckNode() {
+        TextFlow flow = new TextFlow();
+        flow.setMaxWidth(200);
+        if (vtCheck.isCheckSuccess()) {
+            Text bigCheck = new Text("\ue89a");
+            bigCheck.setFont(Font.font("Noto Serif Combo", 14));
+            Text message = new Text("  " + verticalTreeView.getCheckMessage());
+            message.setFont(Font.font("Noto Serif Combo", 11));
+
+            if (vtCheck.isCheckFinal()) {
+                bigCheck.setFill(Color.LAWNGREEN);
+                message.setFill(Color.GREEN);
+            }
+            else {
+                bigCheck.setFill(Color.ORCHID);
+                message.setFill(Color.PURPLE);
+            }
+            flow.getChildren().addAll(bigCheck, message);
+        }
+        return flow;
+    }
+
+
     @Override
     public Exercise<VerticalTreeModel, VerticalTreeView> resetExercise() {
         RichTextArea commentRTA = verticalTreeView.getExerciseComment().getEditor();
@@ -646,7 +655,6 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         setup.setCheckTries(vtCheck.getCheckTries());
         setup.setCheckSuccess(false);
         originalModel.setCheckSetup(setup);
-
 
         VerticalTreeExercise clearExercise = new VerticalTreeExercise(originalModel, mainWindow);
         return clearExercise;
@@ -737,7 +745,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         VTcheckSetup checkSetup = verticalTreeModel.getCheckSetup();
         if (vtCheck != null) checkSetup.setCheckTries(vtCheck.getCheckTries());
         if (vtCheck != null) checkSetup.setCheckSuccess(vtCheck.isCheckSuccess());
-        model.setCheckSetup(verticalTreeModel.getCheckSetup());
+        model.setCheckSetup(checkSetup);
 
         model.setStatementPrefHeight(verticalTreeView.getExerciseStatement().getEditor().getPrefHeight());
         model.setCommentPrefHeight(verticalTreeView.getCommentPrefHeight());
@@ -850,10 +858,6 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         if (!verticalTreeView.getPointsEarnedTextField().getText().equals("")) model.setPointsEarned(Integer.parseInt(verticalTreeView.getPointsEarnedTextField().getText()));
         else model.setPointsEarned(-1);
 
-        VTcheckSetup setup = verticalTreeModel.getCheckSetup();
-        if (vtCheck != null) setup.setCheckSuccess(vtCheck.isCheckSuccess());
-        if (vtCheck != null) setup.setCheckTries(vtCheck.getCheckTries());
-        model.setCheckSetup(setup);
         ///
 
 
@@ -896,13 +900,6 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         return (VTAuxCheck) vtCheck;
     }
 
-    public Exercise getAuxExerciseA() {
-        return auxExerciseA;
-    }
-
-    public VTcheck getVtCheck() {
-        return vtCheck;
-    }
 
     @Override
     public VTAuxExer getVTAuxExer() {

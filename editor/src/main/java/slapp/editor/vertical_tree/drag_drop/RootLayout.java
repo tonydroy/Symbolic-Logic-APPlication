@@ -14,12 +14,7 @@ You should have received a copy of the GNU General Public License along with SLA
  */
 
 package slapp.editor.vertical_tree.drag_drop;
-
-
-import com.gluonhq.richtextarea.RichTextArea;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -58,7 +53,7 @@ public class RootLayout extends AnchorPane {
     EventHandler mappingClickFilter;
     EventHandler mappingKeyFilter;
 
-    EventHandler rtaClickFilter;
+
 
     ToggleButton boxToggle;
     ToggleButton starToggle;
@@ -728,7 +723,5 @@ public class RootLayout extends AnchorPane {
         return buttonGroup;
     }
 
-    public EventHandler getRtaClickFilter() {
-        return rtaClickFilter;
-    }
+
 }

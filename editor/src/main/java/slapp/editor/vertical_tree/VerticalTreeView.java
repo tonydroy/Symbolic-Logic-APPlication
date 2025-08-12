@@ -43,7 +43,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import slapp.editor.EditorMain;
-import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.ExerciseView;
 import slapp.editor.main_window.MainWindowView;
@@ -134,8 +133,6 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
         };
         TextFormatter<String> textFormatter = new TextFormatter<>(filter);
         pointsEarnedTextField.setTextFormatter(textFormatter);
-
-
     }
 
     void initializeViewDetails() {
@@ -227,9 +224,8 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
         });
 
         mainView.scalePageWidthProperty().addListener((ob, ov, nv) -> {
-     //       mainPane.minWidthProperty().unbind();
-            mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round(mainPaneWidthSpinner.getValue() * ov.doubleValue() / nv.doubleValue() / 5.0) * 5.0);
-     //       mainPane.minWidthProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(mainPaneWidthSpinner.getValueFactory().valueProperty()).divide(100.0))));
+            mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round(mainPane1.getWidth() / mainView.getScalePageWidth() * 100.0));
+            mainPane1.setMinWidth(mainView.getScalePageWidth());
         });
 
         setSizeSpinners();

@@ -19,6 +19,7 @@ import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.model.Document;
 import slapp.editor.main_window.ExerciseModel;
 import slapp.editor.main_window.ExerciseType;
+import slapp.editor.vertical_tree.VTcheckSetup;
 import slapp.editor.vertical_tree.drag_drop.DragIconType;
 import slapp.editor.vertical_tree.object_models.*;
 
@@ -31,6 +32,7 @@ public class VerticalTreeExpModel implements ExerciseModel<Document>, Serializab
     private String exerciseName = new String("");
     private ExerciseType exerciseType = ExerciseType.VERTICAL_TREE;
     private RichTextAreaSkin.KeyMapValue defaultKeyboardType;
+    private RichTextAreaSkin.KeyMapValue defaultMapKeyboardType;
     private ExerciseModel<Document> originalModel = null;
     private boolean started = false;
     private Document exerciseStatement = new Document();
@@ -45,10 +47,6 @@ public class VerticalTreeExpModel implements ExerciseModel<Document>, Serializab
     private double mainPanePrefHeight = 150;  //300
     private double mainPanePrefWidth;
 
-
-
-
-
     private List<DragIconType> dragIconList = new ArrayList<>();
     private List<ObjectControlType> objectControlList = new ArrayList<>();
     private List<TreeFormulaBoxMod> treeFormulaBoxes = new ArrayList<>();
@@ -62,10 +60,22 @@ public class VerticalTreeExpModel implements ExerciseModel<Document>, Serializab
     private int pointsPossible;
     private int pointsEarned;
 
+    private VTcheckSetup checkSetup;
+
 
     public VerticalTreeExpModel(){
-        pointsPossible = 0;
-        pointsEarned = -1;
+        this.pointsPossible = 0;
+        this.pointsEarned = -1;
+        this.checkSetup = new VTcheckSetup();
+        this.defaultMapKeyboardType = RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS;
+    }
+
+    public VTcheckSetup getCheckSetup() {
+        return checkSetup;
+    }
+
+    public void setCheckSetup(VTcheckSetup checkSetup) {
+        this.checkSetup = checkSetup;
     }
 
 
@@ -74,6 +84,14 @@ public class VerticalTreeExpModel implements ExerciseModel<Document>, Serializab
     RichTextAreaSkin.KeyMapValue getDefaultKeyboardType() {     return defaultKeyboardType;  }
 
     void setDefaultKeyboardType(RichTextAreaSkin.KeyMapValue defaultKeyboardType) {    this.defaultKeyboardType = defaultKeyboardType;  }
+
+    public RichTextAreaSkin.KeyMapValue getDefaultMapKeyboardType() {
+        return defaultMapKeyboardType;
+    }
+
+    public void setDefaultMapKeyboardType(RichTextAreaSkin.KeyMapValue defaultMapKeyboardType) {
+        this.defaultMapKeyboardType = defaultMapKeyboardType;
+    }
 
     void setExerciseStatement(Document exerciseStatement) { this.exerciseStatement = exerciseStatement;    }
     String getExplainPrompt() {return explainPrompt;}

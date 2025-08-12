@@ -22,7 +22,6 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
@@ -395,9 +394,6 @@ public class TreeFormulaBox extends AnchorPane {
         oval.setArcWidth((maxX - minX));
         self.setLeftAnchor(oval, minX);
         self.setTopAnchor(oval, rtaBoundsMinY + 2.0);
-   //     pushUndoRedo();
-  //      verticalTreeView.setUndoRedoFlag(true);
-  //      verticalTreeView.setUndoRedoFlag(false);
     }
 
     /*
@@ -427,9 +423,6 @@ public class TreeFormulaBox extends AnchorPane {
 
         //add line to linesPane
         addLineToPane(startX, endX - startX, yPos);
-    //    pushUndoRedo();
-    //    verticalTreeView.setUndoRedoFlag(true);
-    //    verticalTreeView.setUndoRedoFlag(false);
     }
 
     /**
@@ -700,11 +693,8 @@ public class TreeFormulaBox extends AnchorPane {
             else {
                 if (annRTA.isModified()) {
                     pushUndoRedo();
-             //       verticalTreeView.setUndoRedoFlag(true);
-              //      verticalTreeView.setUndoRedoFlag(false);
                     annRTA.getActionFactory().saveNow().execute(new ActionEvent());
                 }
-
             }
         });
         annBDRTA.getBoxedRTA().getTransforms().add(new Scale(.75,.75));
@@ -755,8 +745,6 @@ public class TreeFormulaBox extends AnchorPane {
             if (!starred) {
                 addStar();
                 pushUndoRedo();
-           //     verticalTreeView.setUndoRedoFlag(true);
-           //     verticalTreeView.setUndoRedoFlag(false);
             }
         } else {
             if (starred) {
@@ -764,8 +752,6 @@ public class TreeFormulaBox extends AnchorPane {
                 mainBox.getChildren().addAll(labelPane, centerBox);
                 starred = false;
                 pushUndoRedo();
-          //      verticalTreeView.setUndoRedoFlag(true);
-           //     verticalTreeView.setUndoRedoFlag(false);
             }
         }
     }
@@ -791,8 +777,6 @@ public class TreeFormulaBox extends AnchorPane {
             if (!annotation) {
                 addAnnotation();
                 pushUndoRedo();
-            //    verticalTreeView.setUndoRedoFlag(true);
-            //    verticalTreeView.setUndoRedoFlag(false);
             }
 
         } else {
@@ -801,8 +785,6 @@ public class TreeFormulaBox extends AnchorPane {
                 mainBox.getChildren().addAll(labelPane, centerBox);
                 annotation = false;
                 pushUndoRedo();
-            //   verticalTreeView.setUndoRedoFlag(true);
-            //    verticalTreeView.setUndoRedoFlag(false);
             }
         }
     }
@@ -859,8 +841,6 @@ public class TreeFormulaBox extends AnchorPane {
             circled = false;
             circleIndexes = new int[2];
             pushUndoRedo();
-        //    verticalTreeView.setUndoRedoFlag(true);
-        //    verticalTreeView.setUndoRedoFlag(false);
         }
     }
 
@@ -889,8 +869,6 @@ public class TreeFormulaBox extends AnchorPane {
             ulineIndexes = new ArrayList<>();
             ulineInclusion = true;
             pushUndoRedo();
-     //       verticalTreeView.setUndoRedoFlag(true);
-      //      verticalTreeView.setUndoRedoFlag(false);
         }
     }
 

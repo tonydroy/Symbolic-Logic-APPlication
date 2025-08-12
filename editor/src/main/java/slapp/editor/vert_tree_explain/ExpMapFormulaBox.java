@@ -47,7 +47,7 @@ import java.util.ListIterator;
 import java.util.UUID;
 
 public class ExpMapFormulaBox extends AnchorPane {
-    private VerticalTreeExpView verticalTreeView;
+    private VerticalTreeExpView verticalTreeExpView;
 
     private Label leftDragLabel;
     private Label closeLabel;
@@ -83,8 +83,8 @@ public class ExpMapFormulaBox extends AnchorPane {
     private double printWidth;
 
 
-    public ExpMapFormulaBox(VerticalTreeExpView verticalTreeView) {
-        this.verticalTreeView = verticalTreeView;
+    public ExpMapFormulaBox(VerticalTreeExpView verticalTreeExpView) {
+        this.verticalTreeExpView = verticalTreeExpView;
         self = this;
         mapMarkers = new Label[]{new Label("|"), new Label("|")};
 
@@ -232,8 +232,7 @@ public class ExpMapFormulaBox extends AnchorPane {
 
                 relocateToGridPoint2( new Point2D(event.getSceneX(), event.getSceneY()) );
                 self.setCursor(Cursor.DEFAULT);
-                verticalTreeView.setUndoRedoFlag(true);
-                verticalTreeView.setUndoRedoFlag(false);
+                pushUndoRedo();
             }
         };
 
@@ -270,8 +269,7 @@ public class ExpMapFormulaBox extends AnchorPane {
                     }
                     iterId.remove();
                 }
-                verticalTreeView.setUndoRedoFlag(true);
-                verticalTreeView.setUndoRedoFlag(false);
+                pushUndoRedo();
 
                 parent.requestFocus();
             }
@@ -361,7 +359,7 @@ public class ExpMapFormulaBox extends AnchorPane {
     private BoxedDRTA newFormulaBoxedDRTA() {
         BoxedDRTA boxedDRTA = new BoxedDRTA();
         DecoratedRTA drta = boxedDRTA.getDRTA();
-        drta.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS);
+        drta.getKeyboardSelector().valueProperty().setValue(verticalTreeExpView.getDefaultMapKeyboard());
         RichTextArea rta = boxedDRTA.getRTA();
         rta.setMaxHeight(24);
         rta.setMinHeight(24);
@@ -384,22 +382,11 @@ public class ExpMapFormulaBox extends AnchorPane {
  //       rta.getActionFactory().saveNow().execute(new ActionEvent());  messes up rta on reopen
         rta.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
-                verticalTreeView.getMainView().editorInFocus(drta, ControlType.FIELD);
-            } else {
-                if (rta.isModified()) {
-                    verticalTreeView.setUndoRedoFlag(true);
-                    verticalTreeView.setUndoRedoFlag(false);
-                    rta.getActionFactory().saveNow().execute(new ActionEvent());
-                }
+                verticalTreeExpView.getMainView().editorInFocus(drta, ControlType.FIELD);
             }
         });
         return boxedDRTA;
     }
-
-
-
-
-
 
     public void processMappingRequest(boolean add) {
         if (add) {
@@ -466,4 +453,9 @@ public class ExpMapFormulaBox extends AnchorPane {
     public void setPrintWidth(double printWidth) {
         this.printWidth = printWidth;
     }
+
+    private void pushUndoRedo() {
+        verticalTreeExpView.getVtExpExercise().pushUndoRedo();
+    }
+
 }

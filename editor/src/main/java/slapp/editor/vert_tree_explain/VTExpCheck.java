@@ -1,17 +1,19 @@
-package slapp.editor.vertical_tree;
+package slapp.editor.vert_tree_explain;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
+import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
-import javafx.event.ActionEvent;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.parser.*;
 import slapp.editor.parser.grammatical_parts.*;
-import slapp.editor.parser.symbols.*;
+import slapp.editor.parser.symbols.FunctionSymbol;
+import slapp.editor.parser.symbols.RelationSymbol;
+import slapp.editor.vertical_tree.*;
 import slapp.editor.vertical_tree.drag_drop.*;
 import slapp.editor.vertical_tree.object_models.ObjectControlType;
 
@@ -22,10 +24,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class VTcheck implements VTAuxCheck {
-    private VerticalTreeExercise vtExercise;
-    private VerticalTreeView vtView;
-    private VerticalTreeModel vtModel;
+public class VTExpCheck implements VTAuxCheck {
+    private VerticalTreeExpExercise vtExpExercise;
+    private VerticalTreeExpView vtExpView;
+    private VerticalTreeExpModel vtExpModel;
     private VTcheckSetup checkSetup;
 
     private int checkMax;
@@ -34,12 +36,12 @@ public class VTcheck implements VTAuxCheck {
     private boolean checkSuccess;
 
     List<Node> checkNodeList;
-    private List<List<TreeNode>> formulaTree;
+    private List<List<ExpTreeNode>> formulaTree;
     private List<List<String>> lineJustifications;
     private double equalsEpsilon = 10.0;
     private boolean checkJustification = true;
     private boolean checkMarkup = true;
-    private List<TreeNode> connectedNodes;
+    private List<ExpTreeNode> connectedNodes;
     private List<Formula> quantifiedSubformulas;
 
     private String objLangName;
@@ -54,7 +56,7 @@ public class VTcheck implements VTAuxCheck {
     private double maxTermY;
     private double minFormulaY;
     private double maxFormulaY;
-    private TreeNode rootNode;
+    private ExpTreeNode rootNode;
 
     private boolean checkBracket;
     private boolean checkDashedLine;
@@ -70,17 +72,17 @@ public class VTcheck implements VTAuxCheck {
     private Expression getTargetExpression;
 
 
-    VTcheck(VerticalTreeExercise vtExercise) {
+    VTExpCheck(VerticalTreeExpExercise vtExpExercise) {
 
-        this.vtExercise = vtExercise;
-        this.vtView = vtExercise.getExerciseView();
-        this.vtModel = vtExercise.getExerciseModel();
+        this.vtExpExercise = vtExpExercise;
+        this.vtExpView = vtExpExercise.getExerciseView();
+        this.vtExpModel = vtExpExercise.getExerciseModel();
 
 
-        checkSetup = vtModel.getCheckSetup();
+        checkSetup = vtExpModel.getCheckSetup();
         if (checkSetup == null) {
             checkSetup = new VTcheckSetup();
-            vtModel.setCheckSetup(checkSetup);
+            vtExpModel.setCheckSetup(checkSetup);
         }
         objLangName = checkSetup.getObjLangName();
         objLang = Languages.getLanguage(objLangName);
@@ -96,30 +98,30 @@ public class VTcheck implements VTAuxCheck {
         checkType = checkSetup.getCheckType();
         checkJustification = checkSetup.isCheckJustifications();
 
-        checkBracket = vtModel.getDragIconList().contains(DragIconType.bracket);
-        checkDashedLine = vtModel.getDragIconList().contains(DragIconType.dashed_line);
-        checkCircle = vtModel.getObjectControlList().contains(ObjectControlType.CIRCLE);
-        checkStar = vtModel.getObjectControlList().contains(ObjectControlType.STAR);
-        checkMapping = vtModel.getObjectControlList().contains(ObjectControlType.MAPPING);
-        checkBoxing = vtModel.getObjectControlList().contains(ObjectControlType.FORMULA_BOX);
-        checkUnderline = vtModel.getObjectControlList().contains(ObjectControlType.UNDERLINE);
+        checkBracket = vtExpModel.getDragIconList().contains(DragIconType.bracket);
+        checkDashedLine = vtExpModel.getDragIconList().contains(DragIconType.dashed_line);
+        checkCircle = vtExpModel.getObjectControlList().contains(ObjectControlType.CIRCLE);
+        checkStar = vtExpModel.getObjectControlList().contains(ObjectControlType.STAR);
+        checkMapping = vtExpModel.getObjectControlList().contains(ObjectControlType.MAPPING);
+        checkBoxing = vtExpModel.getObjectControlList().contains(ObjectControlType.FORMULA_BOX);
+        checkUnderline = vtExpModel.getObjectControlList().contains(ObjectControlType.UNDERLINE);
 
 
 
         checkSuccess = checkSetup.isCheckSuccess();
         checkFinal = checkSetup.isCheckFinal();
         if (checkFinal) {
-            vtView.setCheckColor(Color.LAWNGREEN);
-            vtView.setCheckElementsColor(Color.GREEN);
-            vtView.setCheckMessage("Full Tree");
+            vtExpView.setCheckColor(Color.LAWNGREEN);
+            vtExpView.setCheckElementsColor(Color.GREEN);
+            vtExpView.setCheckMessage("Full Tree");
         }
         else {
-            vtView.setCheckColor(Color.ORCHID);
-            vtView.setCheckElementsColor(Color.PURPLE);
-            vtView.setCheckMessage("Nodes: Good");
+            vtExpView.setCheckColor(Color.ORCHID);
+            vtExpView.setCheckElementsColor(Color.PURPLE);
+            vtExpView.setCheckMessage("Nodes: Good");
         }
-        if (checkSuccess) vtView.activateBigCheck();
-        else vtView.deactivateBigCheck();
+        if (checkSuccess) vtExpView.activateBigCheck();
+        else vtExpView.deactivateBigCheck();
 
         checkMax = checkSetup.getCheckMax();
         checkTries = checkSetup.getCheckTries();
@@ -134,7 +136,7 @@ public class VTcheck implements VTAuxCheck {
 
     private void setRightControlBox() {
 
-        vtView.getCheckButton().setOnAction(e -> {
+        vtExpView.getCheckButton().setOnAction(e -> {
             checkTree();
         });
 
@@ -142,25 +144,25 @@ public class VTcheck implements VTAuxCheck {
 //            System.out.println("check progress");
 //        });
 
-        vtView.getstaticHelpButton().setDisable(!checkSetup.isStaticHelp());
+        vtExpView.getstaticHelpButton().setDisable(!checkSetup.isStaticHelp());
 
-        vtView.getstaticHelpButton().setOnAction(e -> {
-            Stage helpStage = vtView.getStaticHelpStage();
+        vtExpView.getstaticHelpButton().setOnAction(e -> {
+            Stage helpStage = vtExpView.getStaticHelpStage();
             if (helpStage != null && helpStage.isShowing()) helpStage.close();
-            else vtView.showStaticHelp(vtModel.getCheckSetup().getStaticHelpDoc());
+            else vtExpView.showStaticHelp(vtExpModel.getCheckSetup().getStaticHelpDoc());
         });
     }
 
     private void setChecksCounter() {
-        if (checkMax != -1 && checkTries >= checkMax && !vtExercise.getMainWindow().isInstructorFunctions()) {
-            vtView.getCheckButton().setDisable(true);
+        if (checkMax != -1 && checkTries >= checkMax && !vtExpExercise.getMainWindow().isInstructorFunctions()) {
+            vtExpView.getCheckButton().setDisable(true);
         }
         String checkString;
         if (checkMax == -1) checkString = "(unlimited)";
         else if (checkMax == 0) checkString = "(none)";
         else checkString = "(" + String.valueOf(checkTries) + "/" + String.valueOf(checkMax) + ")";
 
-        vtView.getCheckTriesLabel().setText(checkString);
+        vtExpView.getCheckTriesLabel().setText(checkString);
 
     }
 
@@ -191,8 +193,8 @@ public class VTcheck implements VTAuxCheck {
     private boolean checkUnabbTree(boolean checkMarkup) {
 
         checkSuccess = false;
-        vtView.deactivateBigCheck();
-        if (!vtExercise.getMainWindow().isInstructorFunctions()) {
+        vtExpView.deactivateBigCheck();
+        if (!vtExpExercise.getMainWindow().isInstructorFunctions()) {
             checkTries++;
             setChecksCounter();
         }
@@ -200,7 +202,7 @@ public class VTcheck implements VTAuxCheck {
         formulaTree = new ArrayList<>();
         lineJustifications = new ArrayList<>();
 
-        checkNodeList = vtView.getRootLayout().getMainPane().getChildren();
+        checkNodeList = vtExpView.getRootLayout().getMain_pane().getChildren();
         if (checkNodeList.isEmpty()) {
             if (!silent) {
                 EditorAlerts.showSimpleTxtListAlert("Tree Structure", Collections.singletonList(ParseUtilities.newRegularText("Nothing to evaluate.")));
@@ -216,7 +218,7 @@ public class VTcheck implements VTAuxCheck {
             return false;
         }
 
-        auxExerA =  vtExercise.getVTAuxExer();
+        auxExerA =  vtExpExercise.getVTAuxExer();
         if (auxExerA == null) {
             if (!silent) {
                 EditorAlerts.showSimpleTxtListAlert("Auxiliary Tree", Collections.singletonList(ParseUtilities.newRegularText("Missing auxiliary tree.  Cannot check unabbreviation.")));
@@ -237,17 +239,17 @@ public class VTcheck implements VTAuxCheck {
         if (!setParentsAndChildren()) return false;
         if (!checkTrueTree()) return false;
         if (!checkFormulaContents()) return false;
-        List<List<TreeNode>> auxFormulaTree = vtAuxCheckA.getFormulaTree();
+        List<List<ExpTreeNode>> auxFormulaTree = vtAuxCheckA.getFormulaTree();
 
         try {
 
             checkParallelTrees(formulaTree.get(formulaTree.size() - 1).get(0), auxFormulaTree.get(auxFormulaTree.size() - 1).get(0) );
         }
-        catch (TreeNodeException e) {
+        catch (ExpTreeNodeException e) {
             if (!silent) {
-                e.getTreeNode().getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                e.getExpTreeNode().getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
                 EditorAlerts.showSimpleTxtListAlert("Trees Structure", e.getMessageList());
-                e.getTreeNode().getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                e.getExpTreeNode().getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
             }
             return false;
         }
@@ -257,7 +259,7 @@ public class VTcheck implements VTAuxCheck {
 
 
         checkSuccess = true;
-        vtView.activateBigCheck();
+        vtExpView.activateBigCheck();
         return true;
 
     }
@@ -265,10 +267,10 @@ public class VTcheck implements VTAuxCheck {
     private boolean checkAbbContent() {
 
         for (int j = 0; j < formulaTree.size(); j++) {
-            List<TreeNode> treeRowList = formulaTree.get(j);
+            List<ExpTreeNode> treeRowList = formulaTree.get(j);
             for (int i = 0; i < treeRowList.size(); i++) {
 
-                TreeNode treeNode = treeRowList.get(i);
+                ExpTreeNode treeNode = treeRowList.get(i);
                 RichTextArea unabbRTA = treeNode.getMainTreeBox().getFormulaBox().getRTA();
                 unabbRTA.getActionFactory().saveNow().execute(new ActionEvent());
                 Document unabbDoc = unabbRTA.getDocument();
@@ -276,7 +278,7 @@ public class VTcheck implements VTAuxCheck {
                 Expression unabbExpr = unabbParse.get(0);
 
 
-                TreeNode abbNode = treeNode.getMate();
+                ExpTreeNode abbNode = treeNode.getMate();
                 RichTextArea abbRTA = abbNode.getMainTreeBox().getFormulaBox().getRTA();
                 abbRTA.getActionFactory().saveNow().execute(new ActionEvent());
                 Document abbDoc = abbRTA.getDocument();
@@ -410,11 +412,11 @@ public class VTcheck implements VTAuxCheck {
     }
 
 
-    private void checkParallelTrees(TreeNode mainNode, TreeNode auxNode) throws TreeNodeException {
+    private void checkParallelTrees(ExpTreeNode mainNode, ExpTreeNode auxNode) throws ExpTreeNodeException {
         mainNode.setMate(auxNode);
 
         if (mainNode.getParents().size() != auxNode.getParents().size()) {
-            throw new TreeNodeException(mainNode, Collections.singletonList(ParseUtilities.newRegularText("Structures of this and the auxiliary tree are not parallel.")));
+            throw new ExpTreeNodeException(mainNode, Collections.singletonList(ParseUtilities.newRegularText("Structures of this and the auxiliary tree are not parallel.")));
         }
         else {
             for (int i = 0; i < mainNode.getParents().size(); i++) {
@@ -425,8 +427,8 @@ public class VTcheck implements VTAuxCheck {
 
     private boolean checkFormulaTree(boolean checkMarkup) {
         checkSuccess = false;
-        vtView.deactivateBigCheck();
-        if (!vtExercise.getMainWindow().isInstructorFunctions()) {
+        vtExpView.deactivateBigCheck();
+        if (!vtExpExercise.getMainWindow().isInstructorFunctions()) {
             checkTries++;
             setChecksCounter();
         }
@@ -435,7 +437,7 @@ public class VTcheck implements VTAuxCheck {
         formulaTree = new ArrayList<>();
         lineJustifications = new ArrayList<>();
 
-        checkNodeList = vtView.getRootLayout().getMainPane().getChildren();
+        checkNodeList = vtExpView.getRootLayout().getMain_pane().getChildren();
         if (checkNodeList.isEmpty()) {
             if (!silent) {
                 EditorAlerts.showSimpleTxtListAlert("Tree Structure", Collections.singletonList(ParseUtilities.newRegularText("Nothing to evaluate.")));
@@ -459,7 +461,7 @@ public class VTcheck implements VTAuxCheck {
 
 
         checkSuccess = true;
-        vtView.activateBigCheck();
+        vtExpView.activateBigCheck();
 
         return true;
     }
@@ -469,9 +471,9 @@ public class VTcheck implements VTAuxCheck {
         rootNode = formulaTree.get(formulaTree.size() - 1).get(0);
 
         for (int j = 0; j < formulaTree.size(); j++) {
-            List<TreeNode> treeList = formulaTree.get(j);
+            List<ExpTreeNode> treeList = formulaTree.get(j);
             for (int i = 0; i < treeList.size(); i++) {
-                TreeNode treeNode = treeList.get(i);
+                ExpTreeNode treeNode = treeList.get(i);
 
                 RichTextArea rta = treeNode.getMainTreeBox().getFormulaBox().getRTA();
                 rta.getActionFactory().saveNow().execute(new ActionEvent());
@@ -534,10 +536,10 @@ public class VTcheck implements VTAuxCheck {
 
         if (hasFormulas) {
 
-            List<TreeNode> immediateSubs = rootNode.getParents();
+            List<ExpTreeNode> immediateSubs = rootNode.getParents();
 
             //check root for circle immediate subs boxed
-            TreeFormulaBox rootBox = rootNode.getMainTreeBox();
+            ExpTreeFormulaBox rootBox = rootNode.getMainTreeBox();
             RichTextArea rootRTA = rootBox.getFormulaBox().getRTA();
             rootRTA.getActionFactory().saveNow().execute(new ActionEvent());
             Document rootDoc = rootRTA.getDocument();
@@ -588,7 +590,7 @@ public class VTcheck implements VTAuxCheck {
 
                 //check for boxes
                 if (checkBoxing) {
-                    for (TreeNode immediateSub : immediateSubs) {
+                    for (ExpExpTreeNode immediateSub : immediateSubs) {
                         if (!immediateSub.getMainTreeBox().isBoxed()) {
                             if (!silent) {
                                 rootNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
@@ -602,12 +604,12 @@ public class VTcheck implements VTAuxCheck {
             }
 
             for (int j = 0; j < formulaTree.size(); j++) {
-                List<TreeNode> treeList = formulaTree.get(j);
+                List<ExpTreeNode> treeList = formulaTree.get(j);
                 for (int i = 0; i < treeList.size(); i++) {
-                    TreeNode treeNode = treeList.get(i);
-                    TreeFormulaBox  treeFormulaBox = treeNode.getMainTreeBox();
+                    ExpTreeNode treeNode = treeList.get(i);
+                    ExpTreeFormulaBox  expTreeFormulaBox = treeNode.getMainTreeBox();
 
-                    RichTextArea rta = treeFormulaBox.getFormulaBox().getRTA();
+                    RichTextArea rta = expTreeFormulaBox.getFormulaBox().getRTA();
                     rta.getActionFactory().saveNow().execute(new ActionEvent());
                     Document doc = rta.getDocument();
                     objLang.setAllowDroppedBrackets(langAllowDP);
@@ -615,11 +617,11 @@ public class VTcheck implements VTAuxCheck {
                     Expression treeNodeExp = parseList.get(0);
 
                     //check no underline on term
-                    if (treeNodeExp instanceof Term && !treeFormulaBox.getUlineIndexes().isEmpty()) {
+                    if (treeNodeExp instanceof Term && !expTreeFormulaBox.getUlineIndexes().isEmpty()) {
                         if (!silent) {
-                            treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                            expTreeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
                             EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("No underline on terms.")));
-                            treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                            expTreeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
                         }
                         return false;
                     }
@@ -629,19 +631,19 @@ public class VTcheck implements VTAuxCheck {
 
                         //check star
                         if (checkStar) {
-                            if (treeNodeFormula.isAtomic() && !treeFormulaBox.isStarred()) {
+                            if (treeNodeFormula.isAtomic() && !expTreeFormulaBox.isStarred()) {
                                 if (!silent) {
-                                    treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                                    expTreeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
                                     EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Atomic not marked with star.")));
-                                    treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                                    expTreeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
                                 }
                                 return false;
                             }
-                            if (!treeNodeFormula.isAtomic() && treeFormulaBox.isStarred()) {
+                            if (!treeNodeFormula.isAtomic() && expTreeFormulaBox.isStarred()) {
                                 if (!silent) {
-                                    treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                                    expTreeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
                                     EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Star applied to non-atomic formula.")));
-                                    treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                                    expTreeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
                                 }
                                 return false;
                             }
@@ -649,11 +651,11 @@ public class VTcheck implements VTAuxCheck {
 
                         //check extra circle
                         if (checkCircle) {
-                            if (treeNode != rootNode && treeFormulaBox.isCircled()) {
+                            if (treeNode != rootNode && expTreeFormulaBox.isCircled()) {
                                 if (!silent) {
-                                    treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                                    expTreeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
                                     EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Circle applied node other than root.")));
-                                    treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                                    expTreeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
                                 }
                                 return false;
                             }
@@ -661,11 +663,11 @@ public class VTcheck implements VTAuxCheck {
 
                         //check extra boxes
                         if (checkBoxing) {
-                            if (treeFormulaBox.isBoxed() && !immediateSubs.contains(treeNode)) {
+                            if (expTreeFormulaBox.isBoxed() && !immediateSubs.contains(treeNode)) {
                                 if (!silent) {
-                                    treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                                    expTreeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
                                     EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Box applied to node other than an immediate subformula.")));
-                                    treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                                    expTreeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
                                 }
                                 return false;
                             }
@@ -673,35 +675,35 @@ public class VTcheck implements VTAuxCheck {
 
                         //check underlines
                         if (checkUnderline) {
-                            if (!treeFormulaBox.isUlineInclusion()) {
+                            if (!expTreeFormulaBox.isUlineInclusion()) {
                                 if (!silent) {
-                                    treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                                    expTreeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
                                     EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Underline not completely \"included\" in ones below.")));
-                                    treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                                    expTreeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
                                 }
                                 return false;
                             }
 
 
-                            List<List<Expression>> underlineTexts = getUnderlineTexts(treeFormulaBox);
+                            List<List<Expression>> underlineTexts = getUnderlineTexts(expTreeFormulaBox);
                             List<Formula> underlineFormulas = new ArrayList<>();
 
                             //get quantified expressions with underline: underlineFormulas
                             for (List<Expression> underlineExpressions : underlineTexts) {
                                 if (underlineExpressions.size() > 1) {
                                     if (!silent) {
-                                        treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                                        expTreeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
                                         EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Underline text is not a grammatical expression.")));
-                                        treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                                        expTreeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
                                     }
                                     return false;
                                 }
                                 Expression underlineExp = underlineExpressions.get(0);
                                 if (!(underlineExp instanceof Formula)) {
                                     if (!silent) {
-                                        treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                                        expTreeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
                                         EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Underline text is not a (sub-)formula.")));
-                                        treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                                        expTreeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
                                     }
                                     return false;
                                 }
@@ -709,9 +711,9 @@ public class VTcheck implements VTAuxCheck {
                                     Formula underlineFormula = (Formula) underlineExp;
                                     if (!(underlineFormula.getMainOperator() instanceof UniversalOp) && !(underlineFormula.getMainOperator() instanceof ExistentialOp))   {
                                         if (!silent) {
-                                            treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                                            expTreeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
                                             EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Main operator of underline text not a quantifier.")));
-                                            treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                                            expTreeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
                                         }
                                         return false;
                                     }
@@ -750,9 +752,9 @@ public class VTcheck implements VTAuxCheck {
                             }
                             if (!good) {
                                 if (!silent) {
-                                    treeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
+                                    expTreeFormulaBox.getFormulaBox().setVTtreeBoxHighlight();
                                     EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Not every quantified subformula has underline.")));
-                                    treeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
+                                    expTreeFormulaBox.getFormulaBox().resetVTtreeBoxHighlight();
                                 }
                                 return false;
                             }
@@ -853,9 +855,9 @@ public class VTcheck implements VTAuxCheck {
         rootNode = formulaTree.get(formulaTree.size() - 1).get(0);
 
         for (int j = 0; j < formulaTree.size(); j++) {
-            List<TreeNode> treeList = formulaTree.get(j);
+            List<ExpTreeNode> treeList = formulaTree.get(j);
             for (int i = 0; i < treeList.size(); i++) {
-                TreeNode treeNode = treeList.get(i);
+                ExpTreeNode treeNode = treeList.get(i);
 
                 RichTextArea rta = treeNode.getMainTreeBox().getFormulaBox().getRTA();
                 rta.getActionFactory().saveNow().execute(new ActionEvent());
@@ -1155,14 +1157,14 @@ public class VTcheck implements VTAuxCheck {
     private boolean checkTrueTree() {
 
         //check one root
-        List<TreeNode> bottomRow = formulaTree.get(formulaTree.size() - 1);
+        List<ExpTreeNode> bottomRow = formulaTree.get(formulaTree.size() - 1);
         if (bottomRow.size() > 1 ) {
             if (!silent) {
-                for (TreeNode treeNode : bottomRow) {
+                for (ExpTreeNode treeNode : bottomRow) {
                     treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
                 }
                 EditorAlerts.showSimpleTxtListAlert("Tree Structure", Collections.singletonList(ParseUtilities.newRegularText("A tree can have only one bottom (root) node.")));
-                for (TreeNode treeNode : bottomRow) {
+                for (ExpTreeNode treeNode : bottomRow) {
                     treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
                 }
             }
@@ -1170,9 +1172,9 @@ public class VTcheck implements VTAuxCheck {
         }
 
         //check nodes have at most one child
-        for (List<TreeNode> row : formulaTree) {
-            for (TreeNode treeNode : row) {
-                List<TreeNode> children = treeNode.getChildren();
+        for (List<ExpTreeNode> row : formulaTree) {
+            for (ExpTreeNode treeNode : row) {
+                List<ExpTreeNode> children = treeNode.getChildren();
                 if (children.size() > 1) {
                     if (!silent) {
                         treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
@@ -1187,8 +1189,8 @@ public class VTcheck implements VTAuxCheck {
         //check all nodes connected to root
         connectedNodes = new ArrayList<>();
         populateConnectedNodes(formulaTree.get(formulaTree.size() - 1).get(0));
-        for (List<TreeNode> row : formulaTree) {
-            for (TreeNode treeNode : row) {
+        for (List<ExpTreeNode> row : formulaTree) {
+            for (ExpTreeNode treeNode : row) {
                 if (!connectedNodes.contains(treeNode)) {
                     if (!silent) {
                         treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
@@ -1203,15 +1205,15 @@ public class VTcheck implements VTAuxCheck {
         return true;
     }
 
-    private void populateConnectedNodes(TreeNode node) {
+    private void populateConnectedNodes(ExpTreeNode node) {
         connectedNodes.add(node);
-        for (TreeNode parent : node.getParents()) {
+        for (ExpTreeNode parent : node.getParents()) {
             populateConnectedNodes(parent);
         }
     }
 
-    private void populateQuantifiedSubformulas(TreeNode node) {
-        TreeFormulaBox nodeBox = node.getMainTreeBox();
+    private void populateQuantifiedSubformulas(ExpTreeNode node) {
+        ExpTreeFormulaBox nodeBox = node.getMainTreeBox();
         RichTextArea rootRTA = nodeBox.getFormulaBox().getRTA();
         rootRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document nodeDoc = rootRTA.getDocument();
@@ -1224,7 +1226,7 @@ public class VTcheck implements VTAuxCheck {
             if (formula.getMainOperator() instanceof UniversalOp || formula.getMainOperator() instanceof ExistentialOp) quantifiedSubformulas.add(formula);
         }
 
-        for (TreeNode parent : node.getParents()) {
+        for (ExpTreeNode parent : node.getParents()) {
             populateQuantifiedSubformulas(parent);
         }
     }
@@ -1234,11 +1236,11 @@ public class VTcheck implements VTAuxCheck {
     Set parents and children for tree boxes in the formula tree list.  Sort parents by xPos.
      */
     private boolean setParentsAndChildren() {
-        for (List<TreeNode> rowList : formulaTree) {
-            for (TreeNode node : rowList) {
+        for (List<ExpTreeNode> rowList : formulaTree) {
+            for (ExpTreeNode node : rowList) {
                 node.setParents(new ArrayList<>());
                 node.setChildren(new ArrayList<>());
-                TreeFormulaBox mainTBox = node.getMainTreeBox();
+                ExpTreeFormulaBox mainTBox = node.getMainTreeBox();
                 String formulaID = mainTBox.getId();
                 String relativeID = "";
                 for (Node link : checkNodeList ) {
@@ -1253,9 +1255,9 @@ public class VTcheck implements VTAuxCheck {
                         }
                     }
                     if (!relativeID.equals("")) {
-                        for (List<TreeNode> rList : formulaTree) {
-                            for (TreeNode tNode : rList) {
-                                TreeFormulaBox tBox = tNode.getMainTreeBox();
+                        for (List<ExpTreeNode> rList : formulaTree) {
+                            for (ExpTreeNode tNode : rList) {
+                                ExpTreeFormulaBox tBox = tNode.getMainTreeBox();
                                 if (tBox.getId().equals(relativeID)) {
                                     if (tBox.getLayoutY() - mainTBox.getLayoutY() > equalsEpsilon)
                                         node.getChildren().add(tNode);
@@ -1279,8 +1281,8 @@ public class VTcheck implements VTAuxCheck {
             }
         }
 
-        for (List<TreeNode> rowList : formulaTree) {
-            for (TreeNode node : rowList) {
+        for (List<ExpTreeNode> rowList : formulaTree) {
+            for (ExpTreeNode node : rowList) {
                 node.getParents().sort(Comparator.comparingDouble(parent -> parent.getMainTreeBox().getLayoutX()));
             }
         }
@@ -1295,12 +1297,12 @@ public class VTcheck implements VTAuxCheck {
      */
     private boolean populateTreeLists(List<Node> sortedFormulaBoxes) {
         int j = 0;
-        List<TreeNode> treeList = new ArrayList<>();
-        List<MapFormulaBox> justificationList = new ArrayList<>();
+        List<ExpTreeNode> treeList = new ArrayList<>();
+        List<ExpMapFormulaBox> justificationList = new ArrayList<>();
         lineJustifications = new ArrayList<>();
         for (int i = 0; i < sortedFormulaBoxes.size(); i++) {
-            if (sortedFormulaBoxes.get(i) instanceof TreeFormulaBox) treeList.add(new TreeNode((TreeFormulaBox) sortedFormulaBoxes.get(i)));
-            if (sortedFormulaBoxes.get(i) instanceof MapFormulaBox) {justificationList.add((MapFormulaBox) sortedFormulaBoxes.get(i));}
+            if (sortedFormulaBoxes.get(i) instanceof ExpTreeFormulaBox) treeList.add(new ExpTreeNode((ExpTreeFormulaBox) sortedFormulaBoxes.get(i)));
+            if (sortedFormulaBoxes.get(i) instanceof ExpMapFormulaBox) {justificationList.add((ExpMapFormulaBox) sortedFormulaBoxes.get(i));}
 
             if ((i + 1 < sortedFormulaBoxes.size() && Math.abs(sortedFormulaBoxes.get(i + 1).getLayoutY() - sortedFormulaBoxes.get(i).getLayoutY()) > equalsEpsilon) || i + 1 >= sortedFormulaBoxes.size()) {
 
@@ -1310,14 +1312,14 @@ public class VTcheck implements VTAuxCheck {
                 if (checkJustification)  {
                     if (justificationList.size() == 0) {
                         if (!silent) {
-                            for (TreeNode treeNode : treeList) {
+                            for (ExpTreeNode treeNode : treeList) {
                                 treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
                             }
                             List<Text> messageList = new ArrayList<>();
                             messageList.add(ParseUtilities.newRegularText("Missing justification on row."));
                             if (checkType == VTCheckType.UNABB) messageList.add(ParseUtilities.newRegularText("\n\nIf formula results from (nothing or) linked nodes by TR or FR cite that rule.  Otherwise cite the AB rule (including an AB(i) to convert from abbreviating infix forms)."));
                             EditorAlerts.showSimpleTxtListAlert("Tree Structure", messageList);
-                            for (TreeNode treeNode : treeList) {
+                            for (ExpTreeNode treeNode : treeList) {
                                 treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
                             }
                         }
@@ -1325,11 +1327,11 @@ public class VTcheck implements VTAuxCheck {
                     }
                     else if (justificationList.size() > 1) {
                         if (!silent) {
-                            for (MapFormulaBox justificationBox : justificationList) {
+                            for (ExpMapFormulaBox justificationBox : justificationList) {
                                 justificationBox.getFormulaBox().setVTmapBoxHighlight();
                             }
                             EditorAlerts.showSimpleTxtListAlert("Tree Structure", Collections.singletonList(ParseUtilities.newRegularText("Only one justification field for each row.")));
-                            for (MapFormulaBox justificationBox : justificationList) {
+                            for (ExpMapFormulaBox justificationBox : justificationList) {
                                 justificationBox.getFormulaBox().resetVTmapBoxHighlight();
                             }
                         }
@@ -1426,19 +1428,19 @@ public class VTcheck implements VTAuxCheck {
     private List<Node> getSortedFormulaBoxes() {
         List<Node> sortedFormulaBoxes = new ArrayList<>();
         for (Node node : checkNodeList) {
-            if (node instanceof TreeFormulaBox || node instanceof MapFormulaBox) sortedFormulaBoxes.add(node);
+            if (node instanceof ExpTreeFormulaBox || node instanceof ExpMapFormulaBox) sortedFormulaBoxes.add(node);
         }
         sortedFormulaBoxes.sort(Comparator.comparingDouble(node -> node.getLayoutY()));
         return sortedFormulaBoxes;
     }
 
-    private List<Expression> getCircleText(TreeFormulaBox treeFormulaBox) {
-        RichTextArea rta = treeFormulaBox.getFormulaBox().getRTA();
+    private List<Expression> getCircleText(ExpTreeFormulaBox expTreeFormulaBox) {
+        RichTextArea rta = expTreeFormulaBox.getFormulaBox().getRTA();
         rta.getActionFactory().saveNow().execute(new ActionEvent());
         Document doc = rta.getDocument();
         String text = doc.getText();
 
-        int[] indexes = treeFormulaBox.getCircleIndexes();
+        int[] indexes = expTreeFormulaBox.getCircleIndexes();
         int startIndex = Math.min(indexes[0], indexes[1]);
         if (0 < startIndex && startIndex + 1 < text.length() && text.codePointCount(startIndex -1, startIndex +1) == 1) startIndex++;
 
@@ -1448,7 +1450,7 @@ public class VTcheck implements VTAuxCheck {
         return ParseUtilities.parseSubDoc(doc, startIndex, endIndex, checkSetup.getObjLangName());
     }
 
-    private List<List<Expression>> getUnderlineTexts(TreeFormulaBox treeFormulaBox) {
+    private List<List<Expression>> getUnderlineTexts(ExpTreeFormulaBox treeFormulaBox) {
         List<List<Expression>> underlineTexts = new ArrayList<>();
 
 
@@ -1470,16 +1472,16 @@ public class VTcheck implements VTAuxCheck {
 
 
     private void updateCheckCounter() {
-        if (checkMax != -1 && checkTries >= checkMax && !vtExercise.getMainWindow().isInstructorFunctions()) {
-            vtView.getCheckButton().setDisable(true);
-            vtView.getCheckProgButton().setDisable(true);
+        if (checkMax != -1 && checkTries >= checkMax && !vtExpExercise.getMainWindow().isInstructorFunctions()) {
+            vtExpView.getCheckButton().setDisable(true);
+            vtExpView.getCheckProgButton().setDisable(true);
         }
         String checkString;
         if (checkMax == -1) checkString = "(unlimited)";
         else if (checkMax == 0) checkString = "(none)";
         else checkString = "(" + String.valueOf(checkTries) + "/" + String.valueOf(checkMax) + ")";
 
-        vtView.getCheckTriesLabel().setText(checkString);
+        vtExpView.getCheckTriesLabel().setText(checkString);
     }
 
 
@@ -1500,7 +1502,7 @@ public class VTcheck implements VTAuxCheck {
         this.checkType = checkType;
     }
 
-    public List<List<TreeNode>> getFormulaTree() {
+    public List<List<ExpTreeNode>> getFormulaTree() {
         return formulaTree;
     }
 

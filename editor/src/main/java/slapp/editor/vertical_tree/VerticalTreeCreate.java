@@ -947,22 +947,22 @@ public class VerticalTreeCreate {
             EditorAlerts.fleetingRedPopup("Unabbreviation check requires auxiliary exercise.  Check disabled.");
         }
 
-        else if (checkType == VTCheckType.FORMULA) {
+        else if (checkType == VTCheckType.FORMULA && !targetDocument.getText().equals("")) {
             boolean goodTarget = false;
             Expression targetExpression = null;
-            if (targetDocument != null && langName != null) {
-                List<Expression> targetParseList = ParseUtilities.parseDoc(targetDocument, langName);
-                if (targetParseList.size() == 1) {
-                    targetExpression = targetParseList.get(0);
-                    if (targetExpression.getType() == ExpressionType.FORMULA) goodTarget = true;
-                }
+
+            List<Expression> targetParseList = ParseUtilities.parseDoc(targetDocument, langName);
+            if (targetParseList.size() == 1) {
+                targetExpression = targetParseList.get(0);
+                if (targetExpression.getType() == ExpressionType.FORMULA) goodTarget = true;
             }
+
             if (!goodTarget) {
                 formulaCheck.setSelected(false);
                 checkMaxSpinner.getValueFactory().setValue(0);
                 checkSetup.setCheckType(VTCheckType.NONE);
                 checkSetup.setCheckMax(0);
-                EditorAlerts.fleetingRedPopup("Target is (empty or) not a formula of the selected language.  Check disabled.");
+                EditorAlerts.fleetingRedPopup("Target is (not empty and) not a formula of the selected language.  Check disabled.");
             }
 
         }
