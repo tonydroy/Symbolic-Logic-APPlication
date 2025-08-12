@@ -239,7 +239,7 @@ public class VTExpCheck implements VTAuxCheck {
         if (!setParentsAndChildren()) return false;
         if (!checkTrueTree()) return false;
         if (!checkFormulaContents()) return false;
-        List<List<ExpTreeNode>> auxFormulaTree = vtAuxCheckA.getFormulaTree();
+        List<List<? extends VTAuxTreeNode>> auxFormulaTree = vtAuxCheckA.getAuxFormulaTree();
 
         try {
 
@@ -278,8 +278,8 @@ public class VTExpCheck implements VTAuxCheck {
                 Expression unabbExpr = unabbParse.get(0);
 
 
-                ExpTreeNode abbNode = treeNode.getMate();
-                RichTextArea abbRTA = abbNode.getMainTreeBox().getFormulaBox().getRTA();
+                VTAuxTreeNode abbNode = treeNode.getMate();
+                RichTextArea abbRTA = abbNode.getMainFormulaBox().getRTA();
                 abbRTA.getActionFactory().saveNow().execute(new ActionEvent());
                 Document abbDoc = abbRTA.getDocument();
                 List<Expression> abbParse = ParseUtilities.parseDoc(abbDoc, vtAuxCheckA.getObjLangName());
@@ -412,7 +412,7 @@ public class VTExpCheck implements VTAuxCheck {
     }
 
 
-    private void checkParallelTrees(ExpTreeNode mainNode, ExpTreeNode auxNode) throws ExpTreeNodeException {
+    private void checkParallelTrees(ExpTreeNode mainNode, VTAuxTreeNode auxNode) throws ExpTreeNodeException {
         mainNode.setMate(auxNode);
 
         if (mainNode.getParents().size() != auxNode.getParents().size()) {
@@ -590,7 +590,7 @@ public class VTExpCheck implements VTAuxCheck {
 
                 //check for boxes
                 if (checkBoxing) {
-                    for (ExpExpTreeNode immediateSub : immediateSubs) {
+                    for (ExpTreeNode immediateSub : immediateSubs) {
                         if (!immediateSub.getMainTreeBox().isBoxed()) {
                             if (!silent) {
                                 rootNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
@@ -1504,6 +1504,21 @@ public class VTExpCheck implements VTAuxCheck {
 
     public List<List<ExpTreeNode>> getFormulaTree() {
         return formulaTree;
+    }
+
+    public List<List<? extends VTAuxTreeNode>> getAuxFormulaTree() {
+        List<List<? extends VTAuxTreeNode>> newFormulaTree = new ArrayList<>();
+        for (int i = 0; i < formulaTree.size(); i++) {
+            List<ExpTreeNode> newRow = new ArrayList<>();
+            List<ExpTreeNode> rowList = formulaTree.get(i);
+            for (int j = 0; j < rowList.size(); j++) {
+                newRow.add(rowList.get(j));
+            }
+            newFormulaTree.add(newRow);
+        }
+        return newFormulaTree;
+
+
     }
 
     public String getObjLangName() {

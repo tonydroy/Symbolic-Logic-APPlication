@@ -8,7 +8,7 @@ public interface VTAuxCheck {
 
     boolean checkTree();
 
-    List<List<TreeNode>> getFormulaTree();
+    List<List<? extends VTAuxTreeNode>> getAuxFormulaTree();
 
     String getObjLangName();
 }

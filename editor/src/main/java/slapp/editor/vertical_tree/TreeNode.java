@@ -1,13 +1,14 @@
 package slapp.editor.vertical_tree;
 
+import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.vertical_tree.drag_drop.TreeFormulaBox;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class TreeNode {
+public class TreeNode implements VTAuxTreeNode {
     TreeFormulaBox mainTreeBox;
-    TreeNode mate;
+    VTAuxTreeNode mate;
     List<TreeNode> children;
     List<TreeNode> parents;
 
@@ -19,11 +20,11 @@ public class TreeNode {
         return mainTreeBox;
     }
 
-    public TreeNode getMate() {
+    public VTAuxTreeNode getMate() {
         return mate;
     }
 
-    public void setMate(TreeNode mate) {
+    public void setMate(VTAuxTreeNode mate) {
         this.mate = mate;
     }
 
@@ -41,5 +42,10 @@ public class TreeNode {
 
     public void setParents(List<TreeNode> parents) {
         this.parents = parents;
+    }
+
+    @Override
+    public BoxedDRTA getMainFormulaBox() {
+        return mainTreeBox.getFormulaBox();
     }
 }

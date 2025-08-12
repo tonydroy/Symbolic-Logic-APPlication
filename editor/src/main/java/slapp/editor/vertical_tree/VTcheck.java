@@ -237,17 +237,16 @@ public class VTcheck implements VTAuxCheck {
         if (!setParentsAndChildren()) return false;
         if (!checkTrueTree()) return false;
         if (!checkFormulaContents()) return false;
-        List<List<TreeNode>> auxFormulaTree = vtAuxCheckA.getFormulaTree();
+        List<List<? extends VTAuxTreeNode>> auxFormulaTree = vtAuxCheckA.getAuxFormulaTree();
 
         try {
-
             checkParallelTrees(formulaTree.get(formulaTree.size() - 1).get(0), auxFormulaTree.get(auxFormulaTree.size() - 1).get(0) );
         }
         catch (TreeNodeException e) {
             if (!silent) {
-                e.getTreeNode().getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
+                e.getAuxTreeNode().getMainFormulaBox().setVTtreeBoxHighlight();
                 EditorAlerts.showSimpleTxtListAlert("Trees Structure", e.getMessageList());
-                e.getTreeNode().getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
+                e.getAuxTreeNode().getMainFormulaBox().resetVTtreeBoxHighlight();
             }
             return false;
         }
@@ -276,8 +275,8 @@ public class VTcheck implements VTAuxCheck {
                 Expression unabbExpr = unabbParse.get(0);
 
 
-                TreeNode abbNode = treeNode.getMate();
-                RichTextArea abbRTA = abbNode.getMainTreeBox().getFormulaBox().getRTA();
+                VTAuxTreeNode abbNode = treeNode.getMate();
+                RichTextArea abbRTA = abbNode.getMainFormulaBox().getRTA();
                 abbRTA.getActionFactory().saveNow().execute(new ActionEvent());
                 Document abbDoc = abbRTA.getDocument();
                 List<Expression> abbParse = ParseUtilities.parseDoc(abbDoc, vtAuxCheckA.getObjLangName());
@@ -410,7 +409,7 @@ public class VTcheck implements VTAuxCheck {
     }
 
 
-    private void checkParallelTrees(TreeNode mainNode, TreeNode auxNode) throws TreeNodeException {
+    private void checkParallelTrees(TreeNode mainNode, VTAuxTreeNode auxNode) throws TreeNodeException {
         mainNode.setMate(auxNode);
 
         if (mainNode.getParents().size() != auxNode.getParents().size()) {
@@ -1502,6 +1501,19 @@ public class VTcheck implements VTAuxCheck {
 
     public List<List<TreeNode>> getFormulaTree() {
         return formulaTree;
+    }
+
+    public List<List<? extends VTAuxTreeNode>> getAuxFormulaTree() {
+        List<List<? extends VTAuxTreeNode>> newFormulaTree = new ArrayList<>();
+        for (int i = 0; i < formulaTree.size(); i++) {
+            List<TreeNode> newRow = new ArrayList<>();
+            List<TreeNode> rowList = formulaTree.get(i);
+            for (int j = 0; j < rowList.size(); j++) {
+                newRow.add(rowList.get(j));
+            }
+            newFormulaTree.add(newRow);
+        }
+        return newFormulaTree;
     }
 
     public String getObjLangName() {

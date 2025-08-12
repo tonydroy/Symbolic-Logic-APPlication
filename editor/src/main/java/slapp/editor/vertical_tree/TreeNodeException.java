@@ -8,11 +8,11 @@ import java.util.List;
 public class TreeNodeException extends Exception {
 
     private List<Text> messageList = new ArrayList<Text>();
-    private TreeNode treeNode;
+    private VTAuxTreeNode auxTreeNode;
 
-    public TreeNodeException(TreeNode treeNode, List<Text> messageList) {
+    public TreeNodeException(VTAuxTreeNode auxTreeNode, List<Text> messageList) {
         super();
-        this.treeNode = treeNode;
+        this.auxTreeNode = auxTreeNode;
         this.messageList = messageList;
     }
 
@@ -21,7 +21,7 @@ public class TreeNodeException extends Exception {
         return messageList;
     }
 
-    public TreeNode getTreeNode() {
-        return treeNode;
+    public VTAuxTreeNode getAuxTreeNode() {
+        return auxTreeNode;
     }
 }
