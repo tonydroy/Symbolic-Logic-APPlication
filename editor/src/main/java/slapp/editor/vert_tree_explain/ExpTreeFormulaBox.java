@@ -125,8 +125,6 @@ public class ExpTreeFormulaBox extends AnchorPane {
         circleMarkers = new Label[]{new Label("|"), new Label("|")};
         ulineMarkers = new Label[]{new Label("|"), new Label("|")};
 
-
-
         top_link_handle = new AnchorPane();
         top_link_handle.setPrefHeight(9);
         top_link_handle.setMaxWidth(30);

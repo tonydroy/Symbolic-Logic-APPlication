@@ -17,6 +17,7 @@ package slapp.editor.vert_tree_abexplain;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
@@ -31,19 +32,29 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import javafx.scene.shape.Line;
 import javafx.scene.text.Font;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+import javafx.scene.transform.Scale;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import org.apache.commons.lang3.SerializationUtils;
 import slapp.editor.DiskUtilities;
+import slapp.editor.EditorMain;
 import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.*;
 import slapp.editor.vertical_tree.*;
-import slapp.editor.vertical_tree.drag_drop.DragIconType;
+
+import slapp.editor.vertical_tree.drag_drop.*;
 import slapp.editor.vertical_tree.object_models.*;
 
 import java.util.ArrayList;
@@ -55,9 +66,15 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
     MainWindowView mainView;
     VerticalTreeABExpModel verticalTreeABExpModel;
     VerticalTreeABExpView verticalTreeABExpView;
+    private VTABExpCheck vtABExpCheck;
     private boolean exerciseModified = false;
     private UndoRedoList<VerticalTreeABExpModel> undoRedoList = new UndoRedoList<>(50);
     public BooleanProperty undoRedoFlag = new SimpleBooleanProperty();
+    private Exercise auxExerciseA;
+    private Exercise auxExerciseB;
+    Stage tStage;
+    Pane thumbPane = new Pane();
+    Scene tScene = new Scene(new Pane());
 
 
     public VerticalTreeABExpExercise(VerticalTreeABExpModel model, MainWindow mainWindow) {
@@ -65,8 +82,12 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
         this.verticalTreeABExpModel = model;
         if (model.getOriginalModel() == null) {model.setOriginalModel(model); }
         this.mainView = mainWindow.getMainView();
-        this.verticalTreeABExpView = new VerticalTreeABExpView(mainView);
+        this.verticalTreeABExpView = new VerticalTreeABExpView(mainView, this);
         setVerticalTreeView();
+
+        vtABExpCheck = new VTABExpCheck(this);
+        undoRedoList = new UndoRedoList<>(50);
+
         undoRedoFlag.set(false);
         undoRedoFlag.bind(verticalTreeABExpView.undoRedoFlagProperty());
         undoRedoFlag.addListener((ob, ov, nv) -> {
@@ -75,12 +96,16 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
                 pushUndoRedo();
             }
         });
-        pushUndoRedo();
+        VerticalTreeABExpModel deepCopy = (VerticalTreeABExpModel) SerializationUtils.clone(verticalTreeABExpModel);
+        undoRedoList.push(deepCopy);
+        updateUndoRedoButtons();
+
     }
 
     private void setVerticalTreeView() {
         verticalTreeABExpView.setExplainPrompt(verticalTreeABExpModel.getExplainPrompt());
         verticalTreeABExpView.setDefaultKeyboard(verticalTreeABExpModel.getDefaultKeyboardType());
+        verticalTreeABExpView.setDefaultMapKeyboard(verticalTreeABExpModel.getDefaultMapKeyboardType());
         verticalTreeABExpView.setStatementPrefHeight(verticalTreeABExpModel.getStatementPrefHeight());
         verticalTreeABExpView.setCommentPrefHeight(verticalTreeABExpModel.getCommentPrefHeight());
         verticalTreeABExpView.setExplainPrefHeight(verticalTreeABExpModel.getExplainPrefHeight());
@@ -174,6 +199,7 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
         }
         populateMainPaneNodes();
         verticalTreeABExpView.initializeViewDetails();
+        verticalTreeABExpView.setRightControlBox();
     }
 
     private void populateMainPaneNodes() {
@@ -220,6 +246,10 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
             treeFormulaBox.setLayoutY(treeBoxMod.getLayoutY());
             treeFormulaBox.setIdString(treeBoxMod.getIdString());
             treeFormulaBox.setmLinkIds(treeBoxMod.getLinkIdStrings());
+
+            treeFormulaBox.setCircleIndexes(treeBoxMod.getCircleIndexes());
+            treeFormulaBox.setUlineIndexes(treeBoxMod.getUlineIndexes());
+            treeFormulaBox.setUlineInclusion(treeBoxMod.isUlineInclusion());
 
             treeFormulaBox.setPrintWidth(treeBoxMod.getPrintWidth());
 
@@ -320,6 +350,8 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
 
     private void populateControlBox() {
         VBox controlBox = verticalTreeABExpView.getControlBox();
+        controlBox.setAlignment(Pos.TOP_LEFT);
+
         ABExpRootLayout layout = verticalTreeABExpView.getRootLayout();
         ToggleGroup buttonGroup = verticalTreeABExpView.getRootLayout().getButtonGroup();
 
@@ -364,6 +396,100 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
                 }
             }
         }
+
+        Platform.runLater(() -> {
+            if (auxExerciseA != null) {
+                thumbPane = auxImage();
+                verticalTreeABExpView.getControlBox().getChildren().add(thumbPane);
+            }
+        });
+
+    }
+
+    private Pane auxImage() {
+        AnchorPane mainPane = null;
+        Pane thumbPane = new Pane();
+        if (auxExerciseA instanceof VTAuxExer) mainPane = ((VTAuxExer) auxExerciseA).getMainPane();
+
+        if(mainPane != null) {
+            mainPane.setStyle("-fx-border-color: black; -fx-border-width: 1; -fx-background-color: FAFAFA;");
+            thumbPane.getChildren().add(mainPane);
+
+            Group thumbRoot = new Group();
+            Scene scene = new Scene(thumbRoot);
+            thumbRoot.getChildren().add(thumbPane);
+            thumbRoot.applyCss();
+            thumbRoot.layout();
+            double scale = 85.0 / mainPane.getLayoutBounds().getWidth();   //
+
+            thumbPane.getTransforms().clear();
+            thumbPane.getTransforms().add(new Scale(scale, scale));
+            thumbPane.setMaxWidth(85);
+
+
+            thumbPane.setOnMouseClicked(event -> {
+                if (tStage == null || !tStage.isShowing()) {
+                    Pane tPane = null;
+                    if (auxExerciseB instanceof VTAuxExer) tPane = ((VTAuxExer) auxExerciseB).getMainPane();
+
+                    if (tPane != null) {
+                        tScene.setRoot(tPane);
+                        tPane.setDisable(true);
+                        tPane.applyCss();
+                        tPane.layout();
+
+                        tStage = new Stage();
+                        tStage.setScene(tScene);
+                        tStage.setTitle(((ExerciseModel) auxExerciseB.getExerciseModel()).getExerciseName());
+                        tStage.initStyle(StageStyle.UTILITY);
+
+                        tStage.initOwner(EditorMain.mainStage);
+                        tStage.initModality(Modality.NONE);
+                        Stage mainStage = EditorMain.mainStage;
+                        tStage.setX(mainStage.getX() + mainStage.getWidth()  - 500);
+                        tStage.setY(mainStage.getY() + mainStage.getHeight()  - 300);
+                        tStage.show();
+
+                        //           tStage.setX(mainStage.getX() + mainStage.getWidth() - tStage.getWidth() + 50);
+                        //          tStage.setY(mainStage.getY() + mainStage.getHeight() - tStage.getHeight() + 50);
+                        Platform.runLater(() -> {
+                            tStage.sizeToScene();
+                            tStage.setX(mainStage.getX() + mainStage.getWidth() - tStage.getWidth() + 50);
+                            tStage.setY(mainStage.getY() + mainStage.getHeight() - tStage.getHeight() + 50);
+
+                        });
+                    }
+                } else {
+                    tStage.close();
+                }
+            });
+
+        }
+
+        return thumbPane;
+    }
+
+    public void handleMouseEvent(MouseEvent event) {
+
+        ObservableList<Node> nodesList = verticalTreeABExpView.getRootLayout().getMain_pane().getChildren();
+        for (Node node : nodesList) {
+            if (node instanceof TreeFormulaBox) {
+                RichTextArea treeRTA = ((TreeFormulaBox) node).getFormulaBox().getRTA();
+                if (treeRTA.isModified()) {
+                    verticalTreeABExpView.getVtABExpExercise().setExerciseModified(true);
+                    verticalTreeABExpView.getVtABExpExercise().pushUndoRedo();
+                    treeRTA.getActionFactory().saveNow().execute(new ActionEvent());
+                }
+            }
+            if (node instanceof MapFormulaBox) {
+                RichTextArea mapRTA = ((MapFormulaBox) node).getFormulaBox().getRTA();
+                if (mapRTA.isModified()) {
+                    verticalTreeABExpView.getVtABExpExercise().setExerciseModified(true);
+                    verticalTreeABExpView.getVtABExpExercise().pushUndoRedo();
+                    mapRTA.getActionFactory().saveNow().execute(new ActionEvent());
+                }
+            }
+        }
     }
 
 
@@ -390,11 +516,12 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
         verticalTreeABExpView.getRedoButton().setDisable(!undoRedoList.canRedo());
     }
 
-    private void pushUndoRedo() {
+    public void pushUndoRedo() {
         VerticalTreeABExpModel model = getVerticalTreeModelFromView();
         VerticalTreeABExpModel deepCopy = (VerticalTreeABExpModel) SerializationUtils.clone(model);
         undoRedoList.push(deepCopy);
         updateUndoRedoButtons();
+        exerciseModified = true;
     }
 
 
@@ -420,7 +547,10 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
         //header node
         Label exerciseName = new Label(printModel.getExerciseName());
         exerciseName.setStyle("-fx-font-weight: bold;");
-        HBox hbox = new HBox(exerciseName);
+        Region spacer = new Region();
+
+        HBox hbox = new HBox(exerciseName, spacer, printCheckNode());
+        hbox.setHgrow(spacer, Priority.ALWAYS);
         hbox.setPadding(new Insets(0,0,10,0));
 
         Group headerRoot = new Group();
@@ -456,6 +586,7 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
         //content node
         AnchorPane mainPane = printExercise.getExerciseView().getRootLayout().getMain_pane();
         mainPane.setStyle("-fx-background-color: transparent");
+        mainPane.setMinHeight(0);
 
         VerticalTreeABExpModel originalVTmod = (VerticalTreeABExpModel) originalModel;
         mainPane.setMinWidth(originalVTmod.getMainPanePrefWidth());
@@ -538,6 +669,28 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
         return nodeList;
     }
 
+    TextFlow printCheckNode() {
+        TextFlow flow = new TextFlow();
+        flow.setMaxWidth(200);
+        if (vtABExpCheck.isCheckSuccess()) {
+            Text bigCheck = new Text("\ue89a");
+            bigCheck.setFont(Font.font("Noto Serif Combo", 14));
+            Text message = new Text("  " + verticalTreeABExpView.getCheckMessage());
+            message.setFont(Font.font("Noto Serif Combo", 11));
+
+            if (vtABExpCheck.isCheckFinal()) {
+                bigCheck.setFill(Color.LAWNGREEN);
+                message.setFill(Color.GREEN);
+            }
+            else {
+                bigCheck.setFill(Color.ORCHID);
+                message.setFill(Color.PURPLE);
+            }
+            flow.getChildren().addAll(bigCheck, message);
+        }
+        return flow;
+    }
+
     @Override
     public Exercise<VerticalTreeABExpModel, VerticalTreeABExpView> resetExercise() {
         RichTextArea commentRTA = verticalTreeABExpView.getExerciseComment().getEditor();
@@ -547,6 +700,13 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
         if (!verticalTreeABExpView.getPointsEarnedTextField().getText().equals("")) pointsEarned = Integer.parseInt(verticalTreeABExpView.getPointsEarnedTextField().getText());
         VerticalTreeABExpModel originalModel = (VerticalTreeABExpModel) (verticalTreeABExpModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
+        originalModel.setPointsEarned(pointsEarned);
+
+        VTcheckSetup setup = originalModel.getCheckSetup();
+        setup.setCheckTries(vtABExpCheck.getCheckTries());
+        setup.setCheckSuccess(false);
+        originalModel.setCheckSetup(setup);
+
         VerticalTreeABExpExercise clearExercise = new VerticalTreeABExpExercise(originalModel, mainWindow);
         return clearExercise;
     }
@@ -593,6 +753,7 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
 
         model.setExerciseName(verticalTreeABExpModel.getExerciseName());
         model.setDefaultKeyboardType(verticalTreeABExpModel.getDefaultKeyboardType());
+        model.setDefaultMapKeyboardType(verticalTreeABExpModel.getDefaultMapKeyboardType());
         model.setExplainPrompt(verticalTreeABExpModel.getExplainPrompt());
         model.setOriginalModel(verticalTreeABExpModel.getOriginalModel());
         model.setChoiceLead(verticalTreeABExpModel.getChoiceLead());
@@ -600,6 +761,14 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
         model.setaSelected(verticalTreeABExpView.getaCheckBox().isSelected());
         model.setbPrompt(verticalTreeABExpModel.getbPrompt());
         model.setbSelected(verticalTreeABExpView.getbCheckBox().isSelected());
+        model.setDragIconList(verticalTreeABExpModel.getDragIconList());
+        model.setObjectControlList(verticalTreeABExpModel.getObjectControlList());
+        model.setStarted(verticalTreeABExpModel.isStarted() || exerciseModified);
+
+        VTcheckSetup checkSetup = verticalTreeABExpModel.getCheckSetup();
+        if (vtABExpCheck != null) checkSetup.setCheckTries(vtABExpCheck.getCheckTries());
+        if (vtABExpCheck != null) checkSetup.setCheckSuccess(vtABExpCheck.isCheckSuccess());
+        model.setCheckSetup(checkSetup);
 
         model.setStatementPrefHeight(verticalTreeABExpView.getExerciseStatement().getEditor().getPrefHeight());
         model.setCommentPrefHeight(verticalTreeABExpView.getCommentPrefHeight());
@@ -612,9 +781,7 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
         model.setMainPanePrefHeight(verticalTreeABExpView.getMainPanePrefHeight());
         model.setMainPanePrefWidth(verticalTreeABExpView.getRootLayout().getMain_pane().getWidth());
 
-        model.setDragIconList(verticalTreeABExpModel.getDragIconList());
-        model.setObjectControlList(verticalTreeABExpModel.getObjectControlList());
-        model.setStarted(verticalTreeABExpModel.isStarted() || exerciseModified);
+
 
         RichTextArea commentRTA = verticalTreeABExpView.getExerciseComment().getEditor();
         commentRTA.getActionFactory().saveNow().execute(new ActionEvent());
@@ -638,6 +805,9 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
                 newTreeMod.setLayoutY(originalTreeBox.getLayoutY());
                 newTreeMod.setLinkIdStrings(originalTreeBox.getmLinkIds());
 
+                newTreeMod.setCircleIndexes(originalTreeBox.getCircleIndexes());
+                newTreeMod.setUlineIndexes(originalTreeBox.getUlineIndexes());
+                newTreeMod.setUlineInclusion(originalTreeBox.isUlineInclusion());
 
                 BoxedDRTA treeFormulaBox = originalTreeBox.getFormulaBox();
                 RichTextArea treeRTA = treeFormulaBox.getRTA();
@@ -722,6 +892,30 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
 
         return model;
     }
+    public MainWindow getMainWindow() {
+        return mainWindow;
+    }
+
+    @Override
+    public String getAuxExerName() {
+        return getExerciseModel().getCheckSetup().getAuxExerName();
+    }
+
+    @Override
+    public void setAuxExerA(Exercise exer) {
+        auxExerciseA = exer;
+    }
+
+    @Override
+    public void setAuxExerB(Exercise exer) {
+        auxExerciseB = exer;
+    }
+
+    @Override
+    public void clearStandingPopups() {
+        if (verticalTreeABExpView.getStaticHelpStage() != null) verticalTreeABExpView.getStaticHelpStage().close();
+        if (tStage != null) tStage.close();
+    }
 
     @Override
     public AnchorPane getMainPane() {
@@ -730,12 +924,13 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
 
     @Override
     public VTAuxCheck getVTAuxCheck() {
-        return null;
+        return (VTAuxCheck) vtABExpCheck;
     }
 
     @Override
     public VTAuxExer getVTAuxExer() {
-        return null;
+        return (VTAuxExer) auxExerciseA;
     }
+
 
 }

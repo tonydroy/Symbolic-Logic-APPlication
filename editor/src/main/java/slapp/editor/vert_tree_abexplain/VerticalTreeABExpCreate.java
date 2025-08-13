@@ -17,9 +17,11 @@ package slapp.editor.vert_tree_abexplain;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
+import com.gluonhq.richtextarea.model.Document;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -31,6 +33,7 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.transform.Scale;
@@ -38,18 +41,25 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
 import slapp.editor.PrintUtilities;
+import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.decorated_rta.KeyboardDiagram;
 import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
+import slapp.editor.parser.*;
+import slapp.editor.vertical_tree.VTCheckType;
+import slapp.editor.vertical_tree.VTcheckSetup;
 import slapp.editor.vertical_tree.drag_drop.DragIconType;
 import slapp.editor.vertical_tree.object_models.ObjectControlType;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
@@ -75,20 +85,23 @@ public class VerticalTreeABExpCreate {
     ChangeListener bPromptListener;
     ChangeListener explainPromptListener;
     private boolean modified = false;
-    private CheckBox treeFormulaBoxCheck;
+    private CheckBox treeBoxBaseItalicCheck;
+    private CheckBox treeBoxItalicSansCheck;
+    private CheckBox treeBoxScriptItalicCheck;
+    private CheckBox mapBoxBaseItalicCheck;
+    private CheckBox mapBoxItalicSansCheck;
+    private CheckBox mapBoxScriptItalicCheck;
     private CheckBox verticalBracketCheck;
     private CheckBox dashedLineCheck;
-    private CheckBox mapFormulaBoxCheck;
     private CheckBox boxingFormulaCheck;
     private CheckBox circleCheck;
     private CheckBox starCheck;
     private CheckBox annotationCheck;
     private CheckBox underlineCheck;
     private CheckBox mappingCheck;
-    private CheckBox baseItalicCheck;
-    private CheckBox italicSansCheck;
-    private CheckBox scriptItalicCheck;
-    private RichTextAreaSkin.KeyMapValue keyboardSelector;
+
+    private RichTextAreaSkin.KeyMapValue treeBoxKeyboardSelector;
+    private RichTextAreaSkin.KeyMapValue mapBoxKeyboardSelector;
     private double scale = 1.0;
     private Stage stage;
     private Scene scene;
@@ -106,10 +119,26 @@ public class VerticalTreeABExpCreate {
     private Spinner<Double> statementHeightSpinner;
     private TextField pointsPossibleTextField;
 
+    private CheckBox staticHelpCheck;
+    private RichTextArea staticHelpRTA;
+    private DecoratedRTA staticHelpDRTA;
+    private Spinner checkMaxSpinner;
+    private CheckBox justificationCheck;
+    private Map<String, SimpleBooleanProperty> langMap;
+    private String defaultLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (w/abv)
+    CheckBox formulaCheck;
+    CheckBox unabbreviationCheck;
+    CheckBox checkMarkup;
+    BoxedDRTA targetBoxedDRTA;
+    TextField auxNameField;
+    Spinner<Double> staticHelpHeightSpinner;
+    private RichTextArea currentSpinnerNode;
+
 
     public VerticalTreeABExpCreate(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
         setupWindow();
+        modified = false;
     }
 
     public VerticalTreeABExpCreate(MainWindow mainWindow, VerticalTreeABExpModel originalModel) {
@@ -119,21 +148,25 @@ public class VerticalTreeABExpCreate {
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         statementTextHeight = originalModel.getStatementTextHeight();
         nameField.setText(originalModel.getExerciseName());
-        keyboardSelector = originalModel.getDefaultKeyboardType();
-        italicSansCheck.setSelected(keyboardSelector == ITALIC_AND_SANS);
-        baseItalicCheck.setSelected(keyboardSelector == RichTextAreaSkin.KeyMapValue.BASE);
-        scriptItalicCheck.setSelected(keyboardSelector == SCRIPT_AND_ITALIC);
+        treeBoxKeyboardSelector = originalModel.getDefaultKeyboardType();
+        mapBoxKeyboardSelector = originalModel.getDefaultMapKeyboardType();
+
         choiceLeadField.setText(originalModel.getChoiceLead());
         aPromptField.setText(originalModel.getaPrompt());
         bPromptField.setText(originalModel.getbPrompt());
         explainPromptField.setText(originalModel.getExplainPrompt());
-        pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
 
         List<DragIconType> dragIconList = originalModel.getDragIconList();
-        treeFormulaBoxCheck.setSelected(dragIconList.contains(tree_field));
+        treeBoxItalicSansCheck.setSelected(dragIconList.contains(tree_field) && treeBoxKeyboardSelector == ITALIC_AND_SANS);
+        treeBoxBaseItalicCheck.setSelected(dragIconList.contains(tree_field) && treeBoxKeyboardSelector == BASE);
+        treeBoxScriptItalicCheck.setSelected(dragIconList.contains(tree_field) && treeBoxKeyboardSelector == SCRIPT_AND_ITALIC);
+        mapBoxItalicSansCheck.setSelected(dragIconList.contains(map_field) && mapBoxKeyboardSelector == ITALIC_AND_SANS);
+        mapBoxBaseItalicCheck.setSelected(dragIconList.contains(map_field) && mapBoxKeyboardSelector == BASE);
+        mapBoxScriptItalicCheck.setSelected(dragIconList.contains(map_field) && mapBoxKeyboardSelector == SCRIPT_AND_ITALIC);
+
+        pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
         verticalBracketCheck.setSelected(dragIconList.contains(bracket));
         dashedLineCheck.setSelected(dragIconList.contains(dashed_line));
-        mapFormulaBoxCheck.setSelected(dragIconList.contains(map_field));
         List<ObjectControlType> objectControlList = originalModel.getObjectControlList();
         boxingFormulaCheck.setSelected(objectControlList.contains(FORMULA_BOX));
         circleCheck.setSelected(objectControlList.contains(CIRCLE));
@@ -141,6 +174,28 @@ public class VerticalTreeABExpCreate {
         annotationCheck.setSelected(objectControlList.contains(ANNOTATION));
         underlineCheck.setSelected(objectControlList.contains(UNDERLINE));
         mappingCheck.setSelected(objectControlList.contains(MAPPING));
+
+        VTcheckSetup checkSetup = originalModel.getCheckSetup();
+        if (checkSetup == null) checkSetup = new VTcheckSetup();
+        formulaCheck.setSelected(checkSetup.getCheckType() == VTCheckType.FORMULA);
+        unabbreviationCheck.setSelected(checkSetup.getCheckType() == VTCheckType.UNABB);
+        auxNameField.setText(checkSetup.getAuxExerName());
+        staticHelpCheck.setSelected(checkSetup.isStaticHelp());
+        staticHelpRTA.getActionFactory().open(checkSetup.getStaticHelpDoc()).execute(new ActionEvent());
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+        justificationCheck.setSelected(checkSetup.isCheckJustifications());
+        targetBoxedDRTA.getRTA().getActionFactory().open(checkSetup.getFormulaTarget()).execute(new ActionEvent());
+        targetBoxedDRTA.getRTA().getActionFactory().saveNow().execute(new ActionEvent());
+        checkMaxSpinner.getValueFactory().setValue(checkSetup.getCheckMax());
+        checkMarkup.setSelected(checkSetup.isCheckMarkup());
+
+        for (String key : langMap.keySet()) {
+            if (key.equals(checkSetup.getObjLangName())) {
+                langMap.get(key).setValue(true);
+            }
+            else langMap.get(key).setValue(false);
+        }
+
         modified = false;
     }
 
@@ -194,6 +249,49 @@ public class VerticalTreeABExpCreate {
             }
         });
 
+        //static help editor
+        staticHelpDRTA = new DecoratedRTA();
+        staticHelpDRTA.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.BASE_AND_SANS);
+        staticHelpRTA = staticHelpDRTA.getEditor();
+        staticHelpRTA.setPromptText("Static Help (complete if static help selected)");
+        staticHelpRTA.getStylesheets().add("slappTextArea.css");
+        staticHelpRTA.setPrefWidth(350);
+        staticHelpRTA.setMinWidth(350);
+        staticHelpRTA.setMaxWidth(350);
+        staticHelpRTA.setMinHeight(100);
+
+        double staticHelpInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
+
+        staticHelpHeightSpinner = new Spinner<>(0.0, 999.0, staticHelpInitialHeight, 1.0);
+        staticHelpHeightSpinner.setPrefWidth(60);
+        staticHelpHeightSpinner.setDisable(false);
+        staticHelpHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
+        staticHelpRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        staticHelpHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            Node increment = staticHelpHeightSpinner.lookup(".increment-arrow-button");
+            if (increment != null) increment.getOnMouseReleased().handle(null);
+            Node decrement = staticHelpHeightSpinner.lookup(".decrement-arrow-button");
+            if (decrement != null) decrement.getOnMouseReleased().handle(null);
+        });
+
+        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+            staticHelpRTA.prefHeightProperty().unbind();
+            staticHelpHeightSpinner.getValueFactory().setValue((double) Math.round(staticHelpHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
+            staticHelpRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        });
+
+        staticHelpRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
+            modified = true;
+        });
+        staticHelpRTA.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) {
+                editorInFocus(staticHelpDRTA, ControlType.AREA);
+            }
+        });
+
+        HBox textBoxes = new HBox(10, statementRTA, staticHelpRTA);
+
+
         //name
         Label nameLabel = new Label("Exercise Name: ");
         nameLabel.setPrefWidth(100);
@@ -210,25 +308,11 @@ public class VerticalTreeABExpCreate {
         nameField.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) textFieldInFocus();
         });
-
-        Label explainPromptLabel = new Label("Explain Prompt: ");
-        explainPromptLabel.setPrefWidth(95);
-        explainPromptLabel.setAlignment(Pos.CENTER_RIGHT);
-        explainPromptField  = new TextField();
-        explainPromptField.setPromptText("(plain text)");
-        explainPromptListener = new ChangeListener() {
-            @Override
-            public void changed(ObservableValue ob, Object ov, Object nv) {
-                modified = true;
-            }
-        };
-        explainPromptField.textProperty().addListener(nameListener);
-        explainPromptField.focusedProperty().addListener((ob, ov, nv) -> {
-            if (nv) textFieldInFocus();
-        });
+        HBox nameBox = new HBox(nameLabel, nameField);
+        nameBox.setAlignment(Pos.BASELINE_LEFT);
 
         Label pointsPossibleLabel = new Label("Points Possible: ");
-        pointsPossibleLabel.setPrefWidth(95);
+        pointsPossibleLabel.setPrefWidth(100);
         pointsPossibleTextField = new TextField();
         pointsPossibleTextField.setPrefWidth(35);
         pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
@@ -244,52 +328,106 @@ public class VerticalTreeABExpCreate {
         pointsPossibleTextField.setText("0");
         pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { modified = true; });
         pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
+        HBox pointsBox = new HBox(pointsPossibleLabel, pointsPossibleTextField);
+        pointsBox.setAlignment(Pos.BASELINE_LEFT);
 
+        Label dragBarLabel = new Label("Drag Bar: ");
+        dragBarLabel.setPrefWidth(80);
 
-        HBox nameBox = new HBox(10, nameLabel, nameField, explainPromptLabel, explainPromptField, pointsPossibleLabel, pointsPossibleTextField);
-        nameBox.setAlignment(Pos.BASELINE_LEFT);
-
-        Label keyboardLabel = new Label("Default Keyboard: ");
-        keyboardLabel.setPrefWidth(100);
-        baseItalicCheck = new CheckBox("Base/Italic");
-        baseItalicCheck.setSelected(false);
-        baseItalicCheck.selectedProperty().addListener((ob, ov, nv) -> {
+        Label treeBoxLabel = new Label("Tree Box: ");
+        treeBoxBaseItalicCheck = new CheckBox("Base/Italic");
+        treeBoxBaseItalicCheck.setSelected(false);
+        treeBoxBaseItalicCheck.selectedProperty().addListener((ob, ov, nv) -> {
             boolean selected = (boolean) nv;
             if (selected) {
                 modified = true;
-                keyboardSelector = BASE;
-                italicSansCheck.setSelected(false);
-                scriptItalicCheck.setSelected(false);
+                treeBoxItalicSansCheck.setSelected(false);
+                treeBoxScriptItalicCheck.setSelected(false);
             }
         });
-        italicSansCheck = new CheckBox("Italic/Sans");
-        italicSansCheck.setSelected(true);
-        italicSansCheck.selectedProperty().addListener((ob, ov, nv) -> {
+        treeBoxItalicSansCheck = new CheckBox("Italic/Sans");
+        treeBoxItalicSansCheck.setSelected(false);
+        treeBoxItalicSansCheck.selectedProperty().addListener((ob, ov, nv) -> {
             boolean selected = (boolean) nv;
             if (selected) {
                 modified = true;
-                keyboardSelector = ITALIC_AND_SANS;
-                baseItalicCheck.setSelected(false);
-                scriptItalicCheck.setSelected(false);
+                treeBoxBaseItalicCheck.setSelected(false);
+                treeBoxScriptItalicCheck.setSelected(false);
             }
         });
-        scriptItalicCheck = new CheckBox("Script/Italic");
-        scriptItalicCheck.setSelected(false);
-        scriptItalicCheck.selectedProperty().addListener((ob, ov, nv) -> {
+        treeBoxScriptItalicCheck = new CheckBox("Script/Italic");
+        treeBoxScriptItalicCheck.setSelected(false);
+        treeBoxScriptItalicCheck.selectedProperty().addListener((ob, ov, nv) -> {
             boolean selected = (boolean) nv;
             if (selected) {
                 modified = true;
-                keyboardSelector = SCRIPT_AND_ITALIC;
-                baseItalicCheck.setSelected(false);
-                italicSansCheck.setSelected(false);
+                treeBoxBaseItalicCheck.setSelected(false);
+                treeBoxItalicSansCheck.setSelected(false);
             }
         });
-        HBox keyboardBox = new HBox(20, keyboardLabel, baseItalicCheck, italicSansCheck, scriptItalicCheck);
-        keyboardBox.setAlignment(Pos.BASELINE_LEFT);
+        HBox treeFormulaBox = new HBox(20, treeBoxLabel, treeBoxBaseItalicCheck, treeBoxItalicSansCheck, treeBoxScriptItalicCheck);
+        treeFormulaBox.setAlignment(Pos.BASELINE_LEFT);
+
+        Label mapBoxLabel = new Label("Map Box: ");
+        mapBoxBaseItalicCheck = new CheckBox("Base/Italic");
+        mapBoxBaseItalicCheck.setSelected(false);
+        mapBoxBaseItalicCheck.selectedProperty().addListener((ob, ov, nv) -> {
+            boolean selected = (boolean) nv;
+            if (selected) {
+                modified = true;
+                mapBoxBaseItalicCheck.setSelected(false);
+                mapBoxItalicSansCheck.setSelected(false);
+            }
+        });
+        mapBoxItalicSansCheck = new CheckBox("Italic/Sans");
+        mapBoxItalicSansCheck.setSelected(false);
+        mapBoxItalicSansCheck.selectedProperty().addListener((ob, ov, nv) -> {
+            boolean selected = (boolean) nv;
+            if (selected) {
+                modified = true;
+                mapBoxBaseItalicCheck.setSelected(false);
+                mapBoxScriptItalicCheck.setSelected(false);
+            }
+        });
+        mapBoxScriptItalicCheck = new CheckBox("Script/Italic");
+        mapBoxScriptItalicCheck.setSelected(false);
+        mapBoxScriptItalicCheck.selectedProperty().addListener((ob, ov, nv) -> {
+            boolean selected = (boolean) nv;
+            if (selected) {
+                modified = true;
+                mapBoxBaseItalicCheck.setSelected(false);
+                mapBoxItalicSansCheck.setSelected(false);
+            }
+        });
+        HBox mapFormulaBox = new HBox(20, mapBoxLabel, mapBoxBaseItalicCheck, mapBoxItalicSansCheck, mapBoxScriptItalicCheck);
+        mapFormulaBox.setAlignment(Pos.BASELINE_LEFT);
+
+        //prompt
+        Label promptLabel = new Label("Explain Prompt: ");
+        promptLabel.setPrefWidth(100);
+        explainPromptField = new TextField();
+        explainPromptField.setPromptText("(plain text)");
+        explainPromptListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                modified = true;
+            }
+        };
+        explainPromptField.textProperty().addListener(explainPromptListener);
+
+        explainPromptField.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) textFieldInFocus();
+        });
+
+        HBox promptBox = new HBox(promptLabel, explainPromptField);
+        promptBox.setAlignment(Pos.BASELINE_LEFT);
+
+
+
 
         //choice fields
         Label choiceLeadLabel = new Label("Checkbox lead: ");
-        choiceLeadLabel.setPrefWidth(95);
+        choiceLeadLabel.setPrefWidth(90);
         choiceLeadField  = new TextField();
         choiceLeadField.setPromptText("(plain text)");
         choiceLeadListener = new ChangeListener() {
@@ -306,7 +444,7 @@ public class VerticalTreeABExpCreate {
         });
 
         Label aPromptLabel = new Label("A prompt: ");
-        aPromptLabel.setPrefWidth(95);
+        aPromptLabel.setPrefWidth(90);
         aPromptLabel.setAlignment(Pos.CENTER_RIGHT);
         aPromptField  = new TextField();
         aPromptField.setPromptText("(plain text)");
@@ -342,29 +480,27 @@ public class VerticalTreeABExpCreate {
         HBox choicesBox = new HBox(10, choiceLeadLabel, choiceLeadField, aPromptLabel, aPromptField, bPromptLabel, bPromptField);
         choicesBox.setAlignment(Pos.CENTER_LEFT);
 
+        VBox topFieldsBox = new VBox(10, nameBox, pointsBox, promptBox, choicesBox);
 
         //drag bar
-        Label dragLabel = new Label("Drag Bar: ");
-        dragLabel.setPrefWidth(100);
 
-        treeFormulaBoxCheck = new CheckBox("Tree Formula");
-        treeFormulaBoxCheck.setSelected(false);
-        treeFormulaBoxCheck.selectedProperty().addListener((ob, ov, nv) -> { modified = true; });
         verticalBracketCheck = new CheckBox("Vertical Bracket");
         verticalBracketCheck.setSelected(false);
         verticalBracketCheck.selectedProperty().addListener((ob, ov, nv) -> { modified = true; });
         dashedLineCheck = new CheckBox("Dashed Line");
         dashedLineCheck.setSelected(false);
         dashedLineCheck.selectedProperty().addListener((ob, ov, nv) -> { modified = true; });
-        mapFormulaBoxCheck = new CheckBox("Maping Formula");
-        mapFormulaBoxCheck.setSelected(false);
-        mapFormulaBoxCheck.selectedProperty().addListener((ob, ov, nv) -> { modified = true; });
-        HBox dragBox = new HBox(20, dragLabel, treeFormulaBoxCheck, verticalBracketCheck, dashedLineCheck, mapFormulaBoxCheck);
-        dragBox.setAlignment(Pos.BASELINE_LEFT);
+
+        HBox bracketLineChecks = new HBox(20, verticalBracketCheck, dashedLineCheck);
+        VBox formulaBoxes = new VBox(15, treeFormulaBox, mapFormulaBox, bracketLineChecks);
+        formulaBoxes.setAlignment(Pos.TOP_LEFT);
+        HBox dragBox = new HBox(20, dragBarLabel, formulaBoxes);
+        dragBox.setAlignment(Pos.TOP_LEFT);
+
 
         //control pane
         Label controlLabel = new Label("Controls Pane: ");
-        controlLabel.setPrefWidth(100);
+        controlLabel.setPrefWidth(80);
 
         boxingFormulaCheck = new CheckBox("Box Button");
         boxingFormulaCheck.setSelected(false);
@@ -387,19 +523,182 @@ public class VerticalTreeABExpCreate {
         HBox controlBox = new HBox(20,controlLabel, boxingFormulaCheck, circleCheck, starCheck, annotationCheck, underlineCheck, mappingCheck);
         controlBox.setAlignment(Pos.BASELINE_LEFT);
 
-        fieldsBox = new VBox(15, nameBox, choicesBox, dragBox, controlBox, keyboardBox);
+        fieldsBox = new VBox(15, topFieldsBox, dragBox, controlBox);
         fieldsBox.setPadding(new Insets(20,0, 0, 20));
+
+        //check items
+
+        Label helpCheckLabel = new Label("Help/Check: ");
+        helpCheckLabel.setPrefWidth(80);
+
+        staticHelpCheck = new CheckBox();
+        staticHelpCheck.setSelected(false);
+        ChangeListener staticHelpCheckListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                modified = true;
+            }
+        };
+        staticHelpCheck.selectedProperty().addListener(staticHelpCheckListener);
+        Label staticHelpCheckLabel = new Label("Static Help:");
+        HBox staticHelpBox = new HBox(10, staticHelpCheckLabel, staticHelpCheck);
+        staticHelpBox.setAlignment(Pos.CENTER_LEFT);
+
+        checkMaxSpinner = new Spinner<>(-1, 99, 0);
+        checkMaxSpinner.setPrefWidth(60);
+        Label checkMaxLabel = new Label("Check Max:");
+        HBox checkMaxBox = new HBox(10, checkMaxLabel, checkMaxSpinner);
+        checkMaxBox.setAlignment(Pos.CENTER_LEFT);
+
+        justificationCheck = new CheckBox();
+        justificationCheck.setSelected(false);
+        ChangeListener justificationCheckListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                modified = true;
+            }
+        };
+        justificationCheck.selectedProperty().addListener(justificationCheckListener);
+        Label justificationCheckLabel = new Label("Check Justifications:");
+        HBox justificationCheckBox = new HBox(10, justificationCheckLabel, justificationCheck);
+        justificationCheckBox.setAlignment(Pos.CENTER_LEFT);
+
+        //language list view
+        Label languageLabel = new Label("   Language:");
+        langMap = new LinkedHashMap<>();
+        for (int i = 0; i < Languages.getFixedLanguages().size() - 1; i++) {
+            Language language = Languages.getFixedLanguages().get(i);
+            SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
+            if (language.getNameString().equals(defaultLangName)) booleanProperty.setValue(true); //default check
+            setSingleSelection(booleanProperty, langMap);
+            langMap.put(language.getNameString(), booleanProperty);
+        }
+        ListView<String> languageListView = new ListView<>();
+        languageListView.setPrefSize(120, 95);
+
+        languageListView.getItems().addAll(langMap.keySet());
+        Callback<String, ObservableValue<Boolean>> langToBoolean = (String item) -> langMap.get(item);
+        languageListView.setCellFactory(CheckBoxListCell.forListView(langToBoolean));
+
+        HBox checkLine1 = new HBox(30, staticHelpBox, checkMaxBox, justificationCheckBox, languageLabel, languageListView);
+        checkLine1.setAlignment(Pos.CENTER_LEFT);
+
+
+        formulaCheck = new CheckBox();
+        formulaCheck.setSelected(false);
+
+        formulaCheck.selectedProperty().addListener((ob, ov, nv) -> {
+            modified = true;
+            boolean selected = (boolean) nv;
+            if (selected) {
+                unabbreviationCheck.setSelected(false);
+            }
+        });
+        Label formulaCheckLabel = new Label("Formula Check:");
+        //      formulaCheckLabel.setPrefWidth(90);
+        HBox formulaCheckBox = new HBox(10, formulaCheckLabel, formulaCheck);
+        formulaCheckBox.setAlignment(Pos.CENTER_LEFT);
+
+        checkMarkup = new CheckBox();
+        checkMarkup.setSelected(false);
+        ChangeListener markupCheckListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                modified = true;
+            }
+        };
+        checkMarkup.selectedProperty().addListener(markupCheckListener);
+        Label markupCheckLabel = new Label("Check Markup:");
+        HBox markupCheckBox = new HBox(10, markupCheckLabel, checkMarkup);
+        markupCheckBox.setAlignment(Pos.CENTER_LEFT);
+
+        targetBoxedDRTA = new BoxedDRTA();
+        targetBoxedDRTA.getDRTA().getKeyboardSelector().valueProperty().setValue(ITALIC_AND_SANS);
+        RichTextArea targetRTA = targetBoxedDRTA.getRTA();
+
+        targetRTA.setMaxHeight(27);
+        targetRTA.setMinHeight(27);
+        targetRTA.setPrefWidth(400);
+        targetRTA.setContentAreaWidth(500);
+        targetRTA.getStylesheets().add("RichTextFieldWide.css");
+        targetRTA.setPromptText("Formula");
+
+        targetRTA.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) {
+                editorInFocus(targetBoxedDRTA.getDRTA(), ControlType.FIELD);
+            }
+        });
+        Label targetLabel = new Label("Target:");
+        HBox targetBox = new HBox(10, targetLabel, targetBoxedDRTA.getBoxedRTA());
+        targetBox.setAlignment(Pos.CENTER_LEFT);
+
+        HBox checkLine2 = new HBox(30, formulaCheckBox, markupCheckBox, targetBox);
+        checkLine2.setAlignment(Pos.TOP_LEFT);
+
+        unabbreviationCheck = new CheckBox();
+        unabbreviationCheck.setSelected(false);
+        unabbreviationCheck.selectedProperty().addListener((ob, ov, nv) -> {
+            modified = true;
+            boolean selected = (boolean) nv;
+            if (selected) {
+                formulaCheck.setSelected(false);
+            }
+        });
+
+        Label unabbCheckLabel = new Label("Unabbreviation Check:");
+        //     unabbCheckLabel.setPrefWidth(150);
+        HBox unabbCheckBox = new HBox(10, unabbCheckLabel, unabbreviationCheck);
+        unabbCheckBox.setAlignment(Pos.CENTER_LEFT);
+
+
+        Label auxNameLabel = new Label("Auxiliary Exercise Name: ");
+        //    auxNameLabel.setPrefWidth(150);
+        auxNameField  = new TextField();
+        auxNameField.setPromptText("(plain text)");
+        ChangeListener auxNameListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                modified = true;
+            }
+        };
+        auxNameField.textProperty().addListener(auxNameListener);
+        auxNameField.setPromptText("(plain text)");
+        auxNameField.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) textFieldInFocus();
+        });
+        HBox auxNameBox = new HBox(10, auxNameLabel, auxNameField);
+        auxNameBox.setAlignment(Pos.CENTER_LEFT);
+
+        HBox checkLine3 = new HBox(30, unabbCheckBox, auxNameBox);
+        checkLine3.setAlignment(Pos.CENTER_LEFT);
+
+        VBox checksVBox = new VBox(10, checkLine2, checkLine3, checkLine1);
+
+        HBox checksBox = new HBox(20, helpCheckLabel, checksVBox);
+        checksBox.setAlignment(Pos.TOP_LEFT);
+        checksBox.setPadding(new Insets(10,0,0,20));
+
+
 
         //center
         String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
-                "<p>Vertical Tree AB/Explain Exercise is like Vertical Tree Explain Exercise except that it requires a binary choice.  It is appropriate for any exercise that builds tree or map diagrams and requires a choice together with an explanation of the choice.</p>" +
+                "<p>The Vertical Tree Explain Exercise is like Vertical Tree Explain Exercise except that it requires a binary choice.  It is appropriate for any exercise that builds tree diagrams and requires a choice together with an explanation of some sort.  It includes checking for diagrams of the sort encountered in chapter 2 of <em>Symbolic Logic</em> and possible check of the choice.</p>" +
                 "<ul>" +
-                "<li><p>Start with the exercise name, explain prompt, and points fields.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
+                "<li><p>Start with the exercise name, point possible, and explain prompt fields.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
                 "<li><p>The checkbox lead appears before the choice boxes, the A prompt with the first box, and the B prompt with the second.</p></li>" +
-                "<li><p>Use checkboxes to select items that may be dragged into the work area (to appear across the top), and then to select controls for functions applied to the formula boxes (to appear down the left).</p>" +
+                "<li><p>Use checkboxes to select items that may be dragged into the work area (to appear across the top), including the default keyboard for Tree and Map boxes.  For nodes of the tree use TreeBox, and for justification fields use MapBox (so a typical configuration has Italic/Sans Tree box and Base/Italic Map Box).</p>" +
+                "<p>I always include both the vertical bracket and dashed line - as they can be used to \"push\" the work area beyond the bounds of the SLAPP window.</p></li>" +
+                "<li><p>Then select select controls for functions applied to the tree boxes (to appear down the left).</p>" +
                 "<p>It is unlikely that any one exercise will include all the drag and control options (especially \"star\" and \"annotation\" cannot both apply to the same node) -- but the different options make it possible to accomodate a wide variety of exercises.</p></li>" +
-                "<li><p>The keyboard options set the default keyboard for formula boxes.</p></li>" +
-                "<li><p>Finally provide the exercise statement.</p></li>" +
+                "<li><p>Checking applies to formula and unabbreviation trees.  First select the check type." +
+                "<ul>" +
+                "<li><p>For formula checking, select whether to check markup (bracket, dashed line, and functions represented by controls down the left), and give the target (root) formula for the tree.</li></p>" +
+                "<li><p>Unabbreviation check works only in the context of an assignment including a vertical tree exercise (of some sort) that constructs the formula to be unabbreviated.  So state the auxiliary exercise name.  In some cases you may wish to include a (viewable) auxiliary vertical tree exercise even without unabbreviation.</p></li>  " +
+                "</ul>" +
+                "For either sort of check, choose whether to check justification fields, and the object language.  If CheckMax is 0 checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.</li></p>" +
+
+                "<li><p>The static help check activates the Static Help button which pops up a message which you may state in the right hand text area below.</li></p>" +
+                "<li><p>Finally provide the exercise statement and, if desired the static help message..</p></li>" +
                 "</ul>";
 
         WebView helpArea = new WebView();
@@ -408,8 +707,7 @@ public class VerticalTreeABExpCreate {
         webEngine.loadContent(helpText);
         helpArea.setPrefHeight(230);
 
-
-        centerBox = new VBox(10, fieldsBox, statementRTA, helpArea);
+        centerBox = new VBox(10, fieldsBox, checksBox, textBoxes, helpArea);
         centerBox.setPadding(new Insets(10,0,10,20));
 
         spacerPane = new Pane();
@@ -468,40 +766,23 @@ public class VerticalTreeABExpCreate {
         sizeToolBar.setPrefHeight(38);
         sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     V Sz:"), statementHeightSpinner);
 
-/*
-        ToolBar editToolbar = statementDRTA.getKbdSelectorToolbar();
-        ToolBar fontsToolbar = statementDRTA.getEditToolbar();
-        ToolBar paragraphToolbar = statementDRTA.getParagraphToolbar();
-        ToolBar kbdDiaToolBar = statementDRTA.getKbdDiaToolbar();
-        kbdDiaToolBar.setPrefHeight(38);
-
-        if (kbdDiaToolBar.getItems().isEmpty()) {
-            kbdDiaToolBar.getItems().addAll(statementDRTA.getKeyboardDiagramButton());
-        }
-
-        HBox editAndKbdBox = new HBox(editToolbar, sizeToolBar, kbdDiaToolBar);
-        editAndKbdBox.setHgrow(kbdDiaToolBar, Priority.ALWAYS);
-
-        VBox topBox = new VBox(menuBar, paragraphToolbar, fontsToolbar, editAndKbdBox, fieldsBox);
-        borderPane.topProperty().setValue(topBox);
-
- */
 
         //generate view
         scene = new Scene(borderPane);
         scene.getStylesheets().add(DecoratedRTA.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
 
+        setSizeSpinners();
         stage = new Stage();
         stage.initOwner(EditorMain.mainStage);
         stage.setScene(scene);
         stage.setTitle("Create Vertical Tree AB Explain Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
 
-        stage.setWidth(890);
-        stage.setHeight(820);
+        stage.setWidth(930);
+        stage.setHeight(1025);
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 890));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 820));
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 930));
+        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 1025));
 
         stage.initModality(Modality.WINDOW_MODAL);
         stage.setOnCloseRequest(e-> {
@@ -511,11 +792,62 @@ public class VerticalTreeABExpCreate {
 
         stage.show();
         statementRTA.getActionFactory().save().execute(new ActionEvent());
+        targetBoxedDRTA.getRTA().getActionFactory().save().execute(new ActionEvent());
+        staticHelpRTA.getActionFactory().save().execute(new ActionEvent());
         centerBox.layout();
 
         Platform.runLater(() -> nameField.requestFocus());
 
     }
+
+    //force single selection on list views
+    private void setSingleSelection(SimpleBooleanProperty booleanProperty, Map<String, SimpleBooleanProperty> map) {
+        booleanProperty.addListener((ob, ov, nv) -> {
+            if (nv.booleanValue() != ov.booleanValue()) modified = true;
+            if (nv) {
+                for (SimpleBooleanProperty prop : map.values()) {
+                    if (prop != booleanProperty) {
+                        prop.set(false);
+                    }
+                }
+            }
+
+        });
+    }
+
+    private void setSizeSpinners() {
+
+        scene.focusOwnerProperty().addListener((ob, ov, nv) -> {
+
+            if (inHierarchy(nv, statementRTA) && currentSpinnerNode != statementRTA) {
+                currentSpinnerNode = statementRTA;
+                sizeToolBar.getItems().remove(3);
+                sizeToolBar.getItems().add(3, statementHeightSpinner);
+                return;
+            }
+            if (inHierarchy(nv, staticHelpRTA) && currentSpinnerNode != staticHelpRTA) {
+                currentSpinnerNode = staticHelpRTA;
+                sizeToolBar.getItems().remove(3);
+                sizeToolBar.getItems().add(3, staticHelpHeightSpinner);
+                return;
+            }
+        });
+    }
+
+    private static boolean inHierarchy(Node node, Node potentialHierarchyElement) {
+        if (potentialHierarchyElement == null) {
+            return true;
+        }
+        while (node != null) {
+            if (node == potentialHierarchyElement) {
+                return true;
+            }
+            node = node.getParent();
+        }
+        return false;
+    }
+
+
 
 
 
@@ -535,7 +867,7 @@ public class VerticalTreeABExpCreate {
 
     private boolean checkContinue(String title, String content) {
         boolean okcontinue = true;
-        if (modified || statementRTA.isModified()) {
+        if (modified || statementRTA.isModified() || staticHelpRTA.isModified() || targetBoxedDRTA.getRTA().isModified()) {
             Alert confirm = EditorAlerts.confirmationAlert(title, content);
             Optional<ButtonType> result = confirm.showAndWait();
             if (result.get() != OK) okcontinue = false;
@@ -555,13 +887,15 @@ public class VerticalTreeABExpCreate {
         if (checkContinue("Confirm Clear", "This exercise appears to have unsaved changes.\nContinue to clear exercise?")) {
             nameField.clear();
             nameField.textProperty().addListener(nameListener);
+            targetBoxedDRTA.getRTA().getActionFactory().newDocumentNow().execute(new ActionEvent());
+            statementRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
+            staticHelpRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
+            auxNameField.clear();
+
             choiceLeadField.textProperty().addListener(choiceLeadListener);
             aPromptField.textProperty().addListener(aPromptListener);
             bPromptField.textProperty().addListener(bPromptListener);
 
-            statementRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
- //           statementRTA.getActionFactory().open(new Document()).execute(new ActionEvent());
- //           statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
             viewExercise();
             modified = false;
         }
@@ -599,10 +933,6 @@ public class VerticalTreeABExpCreate {
     private VerticalTreeABExpModel extractModelFromWindow() {
         VerticalTreeABExpModel model = new VerticalTreeABExpModel();
         model.setExerciseName(nameField.getText());
-        if (italicSansCheck.isSelected()) model.setDefaultKeyboardType(ITALIC_AND_SANS);
-        else if (baseItalicCheck.isSelected()) model.setDefaultKeyboardType(BASE);
-        else model.setDefaultKeyboardType(SCRIPT_AND_ITALIC);
-
 
         model.setChoiceLead(choiceLeadField.getText());
         model.setaPrompt(aPromptField.getText());
@@ -610,10 +940,35 @@ public class VerticalTreeABExpCreate {
         model.setExplainPrompt(explainPromptField.getText());
 
         List<DragIconType> dragList = model.getDragIconList();
-        if (treeFormulaBoxCheck.isSelected()) dragList.add(tree_field);
+        if (treeBoxItalicSansCheck.isSelected()) {
+            model.setDefaultKeyboardType(ITALIC_AND_SANS);
+            dragList.add(tree_field);
+        }
+        else if (treeBoxBaseItalicCheck.isSelected()) {
+            model.setDefaultKeyboardType(BASE);
+            dragList.add(tree_field);
+        }
+        else if (treeBoxScriptItalicCheck.isSelected()) {
+            model.setDefaultKeyboardType(SCRIPT_AND_ITALIC);
+            dragList.add(tree_field);
+        }
+
         if (verticalBracketCheck.isSelected()) dragList.add(bracket);
         if (dashedLineCheck.isSelected()) dragList.add(dashed_line);
-        if (mapFormulaBoxCheck.isSelected()) dragList.add(map_field);
+
+        if (mapBoxItalicSansCheck.isSelected()) {
+            model.setDefaultMapKeyboardType(ITALIC_AND_SANS);
+            dragList.add(map_field);
+        }
+        else if (mapBoxBaseItalicCheck.isSelected()) {
+            model.setDefaultMapKeyboardType(BASE);
+            dragList.add(map_field);
+        }
+        else if (mapBoxScriptItalicCheck.isSelected()) {
+            model.setDefaultMapKeyboardType(SCRIPT_AND_ITALIC);
+            dragList.add(map_field);
+        }
+
 
         List<ObjectControlType> controlList = model.getObjectControlList();
         if (boxingFormulaCheck.isSelected()) controlList.add(FORMULA_BOX);
@@ -635,6 +990,89 @@ public class VerticalTreeABExpCreate {
             pointsPossibleTextField.setText("0");
         }
 
+        VTcheckSetup checkSetup = model.getCheckSetup();
+        if (staticHelpRTA.isModified()) modified = true;
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+        checkSetup.setStaticHelpDoc(staticHelpRTA.getDocument());
+
+        if (targetBoxedDRTA.getRTA().isModified()) modified = true;
+        targetBoxedDRTA.getRTA().getActionFactory().saveNow().execute(new ActionEvent());
+        Document targetDocument = targetBoxedDRTA.getRTA().getDocument();
+        checkSetup.setFormulaTarget(targetDocument);
+
+        checkSetup.setAuxExerName(auxNameField.getText());
+
+        VTCheckType checkType = VTCheckType.NONE;
+        if (formulaCheck.isSelected()) {
+            checkType = VTCheckType.FORMULA;
+        }
+        else if (unabbreviationCheck.isSelected()) {
+            checkType = VTCheckType.UNABB;
+        }
+        checkSetup.setCheckType(checkType);
+
+
+        checkSetup.setCheckMarkup(checkMarkup.isSelected());
+        checkSetup.setStaticHelp(staticHelpCheck.isSelected());
+        int checkMax = (Integer) checkMaxSpinner.getValue();
+        checkSetup.setCheckMax(checkMax);
+        checkSetup.setCheckJustifications(justificationCheck.isSelected());
+
+        String langName = null;
+        for (String key : langMap.keySet()) {
+            ObservableValue<Boolean> value = langMap.get(key);
+            if (value.getValue()) {
+                langName = key;
+                break;
+            }
+        }
+        if (langName != null) {
+            checkSetup.setObjLangName(langName);
+        }
+        else {
+            EditorAlerts.showSimpleAlert("No language selected:", "Without a language selection, SLAPP will revert to the default, \u2112\ud835\udcc6 (w/abv).");
+        }
+
+        //consistency checks
+        if (checkMax == 0 && checkType != VTCheckType.NONE) {
+            formulaCheck.setSelected(false);
+            unabbreviationCheck.setSelected(false);
+            checkSetup.setCheckType(VTCheckType.NONE);
+            EditorAlerts.fleetingRedPopup("Check Max set to zero.  Checking deselected.");
+        }
+
+        else if (checkType == VTCheckType.NONE  && checkMax != 0) {
+            checkSetup.setCheckMax(0);
+            checkMaxSpinner.getValueFactory().setValue(0);
+            EditorAlerts.fleetingRedPopup("No checking selected.  Check max set to zero.");
+        }
+
+        else if (checkType == VTCheckType.UNABB && auxNameField.getText().equals("")) {
+            unabbreviationCheck.setSelected(false);
+            checkMaxSpinner.getValueFactory().setValue(0);
+            checkSetup.setCheckType(VTCheckType.NONE);
+            checkSetup.setCheckMax(0);
+            EditorAlerts.fleetingRedPopup("Unabbreviation check requires auxiliary exercise.  Check disabled.");
+        }
+
+        else if (checkType == VTCheckType.FORMULA && !targetDocument.getText().equals("")) {
+            boolean goodTarget = false;
+            Expression targetExpression = null;
+
+            List<Expression> targetParseList = ParseUtilities.parseDoc(targetDocument, langName);
+            if (targetParseList.size() == 1) {
+                targetExpression = targetParseList.get(0);
+                if (targetExpression.getType() == ExpressionType.FORMULA) goodTarget = true;
+            }
+            if (!goodTarget) {
+                formulaCheck.setSelected(false);
+                checkMaxSpinner.getValueFactory().setValue(0);
+                checkSetup.setCheckType(VTCheckType.NONE);
+                checkSetup.setCheckMax(0);
+                EditorAlerts.fleetingRedPopup("Target is (not empty and) not a formula of the selected language.  Check disabled.");
+            }
+
+        }
         return model;
     }
 
@@ -646,34 +1084,7 @@ public class VerticalTreeABExpCreate {
             keyboardDiagram.updateAndShow();
         }
 
-        /*
-        ToolBar editToolbar = decoratedRTA.getKbdSelectorToolbar();
-        ToolBar fontsToolbar = decoratedRTA.getEditToolbar();
-        ToolBar paragraphToolbar = decoratedRTA.getParagraphToolbar();
-        ToolBar kbdDiaToolBar = decoratedRTA.getKbdDiaToolbar();
-        kbdDiaToolBar.setPrefHeight(38);
 
-        switch (control) {
-            case NONE: {
-                kbdDiaToolBar.setDisable(true);
-            }
-            case STATEMENT: {
-                editToolbar.setDisable(true);
-                fontsToolbar.setDisable(true);
-            }
-            case FIELD: {
-                paragraphToolbar.setDisable(true);
-            }
-            case AREA: { }
-        }
-        sizeToolBar.setDisable(kbdDiaToolBar.isDisable());
-
-
-        HBox editAndKbdBox = new HBox(editToolbar, sizeToolBar, kbdDiaToolBar);
-        editAndKbdBox.setHgrow(kbdDiaToolBar, Priority.ALWAYS);
-        editAndKbdBox.layout();
-
-         */
         ToolBar paragraphToolbar = decoratedRTA.getParagraphToolbar();
         paragraphToolbar.setMinWidth(870);
 

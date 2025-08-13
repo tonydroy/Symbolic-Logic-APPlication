@@ -621,17 +621,17 @@ public class VerticalTreeExpCreate {
 
         //center
         String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
-                "<p>The Vertical Tree Explain Exercise is like Vertical Tree Exercise except that it adds an explanation field after the tree space.  It is appropriate for any exercise that builds tree diagrams and requires an explanation of some sort.</p>\"  It includes checking for diagrams of the sort encountered in chapter 2 of <em>Symbolic Logic</em>.</p>" +
+                "<p>The Vertical Tree Explain Exercise is like Vertical Tree Exercise except that it adds an explanation field after the tree space.  It is appropriate for any exercise that builds tree diagrams and requires an explanation of some sort.  It includes checking for diagrams of the sort encountered in chapter 2 of <em>Symbolic Logic</em>.</p>" +
                 "<ul>" +
                 "<li><p>Start with the exercise name, explain prompt, and points fields.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
-                "<li><p>Use checkboxes to select items that may be dragged into the work area (to appear across the top), including the default keyboard for Tree and Map boxes.  On a tree with checked justification fields, for nodes of the tree itself use TreeBox, and for justification fields use MapBox (so a typical configuration has Italic/Sans Tree box and Base/Italic Map Box).</p>" +
+                "<li><p>Use checkboxes to select items that may be dragged into the work area (to appear across the top), including the default keyboard for Tree and Map boxes.  For nodes of the tree use TreeBox, and for justification fields use MapBox (so a typical configuration has Italic/Sans Tree box and Base/Italic Map Box).</p>" +
                 "<p>I always include both the vertical bracket and dashed line - as they can be used to \"push\" the work area beyond the bounds of the SLAPP window.</p></li>" +
                 "<li><p>Then select select controls for functions applied to the tree boxes (to appear down the left).</p>" +
                 "<p>It is unlikely that any one exercise will include all the drag and control options (especially \"star\" and \"annotation\" cannot both apply to the same node) -- but the different options make it possible to accomodate a wide variety of exercises.</p></li>" +
-                "<li><p>Checking applies to formula and unabbreviation trees.  Select the check type." +
+                "<li><p>Checking applies to formula and unabbreviation trees.  First select the check type." +
                 "<ul>" +
                 "<li><p>For formula checking, select whether to check markup (bracket, dashed line, and functions represented by controls down the left), and give the target (root) formula for the tree.</li></p>" +
-                "<li><p>Unabbreviation check works only in the context of an assignment including a tree constructing the formula to be unabbreviated (the check compares these trees).  So state the auxiliary exercise name.  In some cases you may wish to include a (viewable) auxiliary exercise even without unabbreviation.</p></li>  " +
+                "<li><p>Unabbreviation check works only in the context of an assignment including a vertical tree exercise (of some sort) that constructs the formula to be unabbreviated.  So state the auxiliary exercise name.  In some cases you may wish to include a (viewable) auxiliary vertical tree exercise even without unabbreviation.</p></li>  " +
                 "</ul>" +
                 "For either sort of check, choose whether to check justification fields, and the object language.  If CheckMax is 0 checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.</li></p>" +
 

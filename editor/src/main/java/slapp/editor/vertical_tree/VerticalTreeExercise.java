@@ -67,6 +67,8 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
     private Exercise auxExerciseB;
     Stage tStage;
     Pane thumbPane = new Pane();
+    Scene tScene = new Scene(new Pane());
+
 
 
 
@@ -385,8 +387,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
                     if (auxExerciseB instanceof VTAuxExer) tPane = ((VTAuxExer) auxExerciseB).getMainPane();
 
                     if (tPane != null) {
-
-                        Scene tScene = new Scene(tPane);
+                        tScene.setRoot(tPane);
                         tPane.setDisable(true);
                         tPane.applyCss();
                         tPane.layout();

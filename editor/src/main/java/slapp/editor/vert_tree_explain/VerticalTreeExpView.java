@@ -50,8 +50,6 @@ import slapp.editor.EditorMain;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.ExerciseView;
 import slapp.editor.main_window.MainWindowView;
-import slapp.editor.vertical_tree.VerticalTreeExercise;
-import slapp.editor.vertical_tree.drag_drop.RootLayout;
 
 import java.util.function.UnaryOperator;
 
@@ -104,7 +102,7 @@ public class VerticalTreeExpView implements ExerciseView<DecoratedRTA> {
     private Button staticHelpButton;
     private Stage  staticHelpStage;;
 
-    private VerticalTreeExercise vtExercise;
+
 
 
     VerticalTreeExpView(MainWindowView mainView, VerticalTreeExpExercise vtExpExercise) {

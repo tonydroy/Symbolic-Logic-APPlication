@@ -1506,12 +1506,7 @@ public class VTcheck implements VTAuxCheck {
     public List<List<? extends VTAuxTreeNode>> getAuxFormulaTree() {
         List<List<? extends VTAuxTreeNode>> newFormulaTree = new ArrayList<>();
         for (int i = 0; i < formulaTree.size(); i++) {
-            List<TreeNode> newRow = new ArrayList<>();
-            List<TreeNode> rowList = formulaTree.get(i);
-            for (int j = 0; j < rowList.size(); j++) {
-                newRow.add(rowList.get(j));
-            }
-            newFormulaTree.add(newRow);
+            newFormulaTree.add(formulaTree.get(i));
         }
         return newFormulaTree;
     }

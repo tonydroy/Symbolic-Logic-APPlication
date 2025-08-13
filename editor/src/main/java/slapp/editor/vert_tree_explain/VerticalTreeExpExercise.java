@@ -68,6 +68,7 @@ public class VerticalTreeExpExercise implements Exercise<VerticalTreeExpModel, V
     private Exercise auxExerciseB;
     Stage tStage;
     Pane thumbPane = new Pane();
+    Scene tScene = new Scene(new Pane());
 
 
     public VerticalTreeExpExercise(VerticalTreeExpModel model, MainWindow mainWindow) {
@@ -95,6 +96,7 @@ public class VerticalTreeExpExercise implements Exercise<VerticalTreeExpModel, V
     }
 
     private void setVerticalTreeView() {
+
         verticalTreeExpView.setDefaultKeyboard(verticalTreeExpModel.getDefaultKeyboardType());
         verticalTreeExpView.setDefaultMapKeyboard(verticalTreeExpModel.getDefaultMapKeyboardType());
         verticalTreeExpView.setStatementPrefHeight(verticalTreeExpModel.getStatementPrefHeight());
@@ -401,13 +403,10 @@ public class VerticalTreeExpExercise implements Exercise<VerticalTreeExpModel, V
                     if (auxExerciseB instanceof VTAuxExer) tPane = ((VTAuxExer) auxExerciseB).getMainPane();
 
                     if (tPane != null) {
-
-                        Scene tScene = new Scene(tPane);
+                        tScene.setRoot(tPane);
                         tPane.setDisable(true);
                         tPane.applyCss();
                         tPane.layout();
-
-
 
                         tStage = new Stage();
                         tStage.setScene(tScene);
@@ -877,12 +876,12 @@ public class VerticalTreeExpExercise implements Exercise<VerticalTreeExpModel, V
 
     @Override
     public VTAuxCheck getVTAuxCheck() {
-        return null;
+        return (VTAuxCheck) vtExpCheck;
     }
 
     @Override
     public VTAuxExer getVTAuxExer() {
-        return null;
+        return (VTAuxExer) auxExerciseA;
     }
 
 }

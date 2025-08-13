@@ -17,33 +17,51 @@ package slapp.editor.vert_tree_abexplain;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
+import com.gluonhq.richtextarea.model.Document;
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.ParallelTransition;
+import com.gluonhq.richtextarea.model.Document;
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.ParallelTransition;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import slapp.editor.PrintUtilities;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+import javafx.scene.text.TextFlow;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+import slapp.editor.EditorMain;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.ExerciseView;
 import slapp.editor.main_window.MainWindowView;
-import slapp.editor.vert_tree_abefexplain.ABEFExpRootLayout;
-import slapp.editor.vert_tree_abexplain.ABExpRootLayout;
+import slapp.editor.vert_tree_explain.VerticalTreeExpExercise;
+
 
 import java.util.function.UnaryOperator;
 
 public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
 
     private MainWindowView mainView;
+    private VerticalTreeABExpExercise vtABExpExercise;
     private RichTextAreaSkin.KeyMapValue defaultKeyboard;
+    private RichTextAreaSkin.KeyMapValue defaultMapKeyboard;
     private String explainPrompt = "";
     private Label choiceLeadLabel = new Label();
     private CheckBox aCheckBox = new CheckBox();
@@ -82,9 +100,22 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
     private int pointsPossible;
     private TextField pointsEarnedTextField;
 
-    VerticalTreeABExpView(MainWindowView mainView) {
-        this.mainView = mainView;
+    private Node rightControlNode;
+    private Button checkButton;
+    private Button checkProgButton;
+    private Text bigCheck;
+    private String checkMessage;
+    private Text checkedElements;
+    private Label checkTriesLabel;
+    private Color checkColor;
+    private Color checkElementsColor;
+    private boolean checkShowing = false;
+    private Button staticHelpButton;
+    private Stage  staticHelpStage;;
 
+    VerticalTreeABExpView(MainWindowView mainView, VerticalTreeABExpExercise vtABExpExercise) {
+        this.mainView = mainView;
+        this.vtABExpExercise = vtABExpExercise;
         Font labelFont = new Font("Noto Serif Combo", 11);
         choiceLeadLabel.setFont(labelFont); aCheckBox.setFont(labelFont); bCheckBox.setFont(labelFont);
         choiceBox = new HBox(20, choiceLeadLabel, aCheckBox, bCheckBox);
@@ -106,7 +137,7 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
 
         controlBox.getChildren().addAll(undoButton, redoButton);
         controlBox.setAlignment(Pos.BASELINE_RIGHT);
-        controlBox.setPadding(new Insets(100,20,0,40));
+        controlBox.setPadding(new Insets(50,20,0,20));
         controlBox.setMinWidth(150); controlBox.setMaxWidth(150);
         exerciseControlNode = controlBox;
 
@@ -216,7 +247,7 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
         AnchorPane mainPane1 = rootLayout.getMain_pane();
         mainPane = rootLayout.getBase_pane();
         mainPane.setStyle("-fx-focus-color: gainsboro;");
-        mainPane1.setMinHeight(150.0);
+        mainPane1.setMinHeight(250.0);
         mainPane1.setMinWidth(mainView.getScalePageWidth());
 
         mainPaneHeightSpinner = new Spinner<>(5, 999.0, 0, 1.0);
@@ -265,6 +296,109 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
 
         setSizeSpinners();
     }
+
+    public void setRightControlBox() {
+        bigCheck = new Text("\ue89a");
+        bigCheck.setFont(Font.font("Noto Serif Combo", 72));
+
+        checkedElements = new Text(checkMessage);
+        checkedElements.setFont(Font.font("Noto Serif Combo", 11));
+        TextFlow checkedElementsFlow = new TextFlow(checkedElements);
+        checkedElementsFlow.setMaxWidth(150);
+
+        VBox bigCheckBox = new VBox(0, bigCheck, checkedElementsFlow);
+        bigCheckBox.setAlignment(Pos.CENTER);
+        checkedElementsFlow.setTextAlignment(TextAlignment.CENTER);
+
+        checkButton = new Button("Check Tree");
+        checkButton.setPrefWidth(105);
+        checkButton.setTooltip(new Tooltip("Check tree for correctness."));
+        checkTriesLabel = new Label();
+
+        //     checkProgButton = new Button("Check Progress");
+        //     checkProgButton.setPrefWidth(105);
+        //     checkProgButton.setTooltip(new Tooltip("Check tree progress so far."));
+        VBox checksBox = new VBox(10, checkButton, checkTriesLabel);
+        checksBox.setAlignment(Pos.CENTER);
+        checkTriesLabel.setAlignment(Pos.CENTER);
+//        checksBox.setMargin(checkProgButton, new Insets(0,0,10, 0));
+
+        staticHelpButton = new Button("Static Help");
+        staticHelpButton.setPrefWidth(105);
+        staticHelpButton.setTooltip(new Tooltip("Get static help text"));
+
+
+        VBox rightControlBox = new VBox(40, bigCheckBox, checksBox, staticHelpButton );
+        rightControlBox.setAlignment(Pos.TOP_CENTER);
+        rightControlBox.setPadding(new Insets(60,20,0,20));
+        rightControlNode = rightControlBox;
+
+        deactivateBigCheck();
+
+    }
+
+    public void activateBigCheck() {
+        bigCheck.setFill(checkColor);
+        checkedElements.setText(checkMessage);
+        checkedElements.setFill(checkElementsColor);
+
+        if (checkShowing) {
+            FadeTransition t1 = new FadeTransition(new Duration(250), checkedElements);
+            t1.setToValue(1.0);
+            t1.setInterpolator(Interpolator.DISCRETE);
+
+            FadeTransition t2 = new FadeTransition(new Duration(250), bigCheck);
+            t2.setToValue(1.0);
+            t2.setInterpolator(Interpolator.DISCRETE);
+
+            ParallelTransition pt = new ParallelTransition(t1, t2);
+            pt.play();
+        }
+        else {
+            bigCheck.setOpacity(1.0);
+            checkedElements.setOpacity(1.0);
+        }
+    }
+
+    //record status, and deactivate
+    public void deactivateBigCheck() {
+        if (bigCheck.getOpacity() > .5) checkShowing = true;
+        else checkShowing = false;
+        bigCheck.setOpacity(0.0);
+        checkedElements.setOpacity(0.0);
+    }
+
+    public void showStaticHelp(Document doc) {
+
+        if (staticHelpStage == null || !staticHelpStage.isShowing()) {
+            RichTextArea hrta = new RichTextArea(EditorMain.mainStage);
+            hrta.getActionFactory().open(doc).execute(new ActionEvent());
+            hrta.setPadding(new Insets(20, 0, 20, 20));
+            hrta.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
+            hrta.setPrefWidth(400);
+            hrta.setPrefHeight(300);
+            hrta.setEditable(false);
+
+
+            Scene scene = new Scene(hrta);
+            scene.getStylesheets().add(RichTextArea.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
+            hrta.applyCss();
+            staticHelpStage = new Stage();
+            staticHelpStage.setScene(scene);
+            staticHelpStage.setTitle("SLAPP Text Help");
+            staticHelpStage.initModality(Modality.NONE);
+            staticHelpStage.getIcons().addAll(EditorMain.icons);
+            staticHelpStage.initOwner(EditorMain.mainStage);
+            Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
+            staticHelpStage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 420));
+            staticHelpStage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 320));
+
+            staticHelpStage.show();
+        }
+    }
+
+    public Stage getStaticHelpStage() { return staticHelpStage; }
+
 
     private void setSizeSpinners() {
 
@@ -360,6 +494,14 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
 
     public void setDefaultKeyboard(RichTextAreaSkin.KeyMapValue defaultKeyboard) {    this.defaultKeyboard = defaultKeyboard;  }
 
+    public RichTextAreaSkin.KeyMapValue getDefaultMapKeyboard() {
+        return defaultMapKeyboard;
+    }
+
+    public void setDefaultMapKeyboard(RichTextAreaSkin.KeyMapValue defaultMapKeyboard) {
+        this.defaultMapKeyboard = defaultMapKeyboard;
+    }
+
     public double getCommentPrefHeight() { return exerciseComment.getEditor().getPrefHeight();   }
 
     public void setCommentPrefHeight(double commentPrefHeight) {   this.commentPrefHeight = commentPrefHeight;  }
@@ -376,6 +518,40 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
 
     public void setMainPanePrefWidth(double mainPanePrefWidth) {   this.mainPanePrefWidth = mainPanePrefWidth;  }
 
+    Spinner getMainPaneHeightSpinner() { return mainPaneHeightSpinner; }
+    Spinner getMainPaneWidthSpinner() { return mainPaneWidthSpinner; }
+
+    public Button getCheckButton() {
+        return checkButton;
+    }
+
+    public Button getCheckProgButton() {
+        return checkProgButton;
+    }
+
+    public Button getstaticHelpButton() {
+        return staticHelpButton;
+    }
+
+    public Label getCheckTriesLabel() {
+        return checkTriesLabel;
+    }
+
+    public void setCheckMessage(String checkMessage) {
+        this.checkMessage = checkMessage;
+    }
+
+    public void setCheckColor(Color checkColor) {
+        this.checkColor = checkColor;
+    }
+
+    public void setCheckElementsColor(Color checkElementsColor) {
+        this.checkElementsColor = checkElementsColor;
+    }
+
+    public String getCheckMessage() {
+        return checkMessage;
+    }
 
     @Override
     public DecoratedRTA getExerciseComment() {
@@ -411,7 +587,7 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
         return exerciseControlNode;
     }
     @Override
-    public Node getRightControl() { return null; }
+    public Node getRightControl() { return rightControlNode; }
 
     @Override
     public Node getPointsNode() {
@@ -433,4 +609,7 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
         return pointsEarnedTextField;
     }
 
+    public VerticalTreeABExpExercise getVtABExpExercise() {
+        return vtABExpExercise;
+    }
 }

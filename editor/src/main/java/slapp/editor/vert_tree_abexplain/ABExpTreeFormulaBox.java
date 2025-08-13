@@ -52,7 +52,7 @@ import java.util.ListIterator;
 import java.util.UUID;
 
 public class ABExpTreeFormulaBox extends AnchorPane {
-    private VerticalTreeABExpView verticalTreeView;
+    private VerticalTreeABExpView verticalTreeABExpView;
 
     private AnchorPane top_link_handle;
     private AnchorPane bottom_link_handle;
@@ -99,6 +99,8 @@ public class ABExpTreeFormulaBox extends AnchorPane {
     int circleStage = 0;
     Label[] circleMarkers;
     Double[] circleXAnchors = new Double[2];
+    private int[] circleIndexes = new int[2];
+
     double rtaBoundsHeight;
     double rtaBoundsMinY;
     boolean circled = false;
@@ -106,6 +108,9 @@ public class ABExpTreeFormulaBox extends AnchorPane {
     int ulineStage = 0;
     Label[] ulineMarkers;
     Double[] ulineXAnchors = new Double[2];
+    private List<Integer[]> ulineIndexes = new ArrayList<>();
+    private Integer[] ulineIndexTemp = new Integer[2];
+    private boolean ulineInclusion = true;
     double ulineSpace = 3.0;
     List<Integer> baseline = new ArrayList<>();
 
@@ -113,17 +118,11 @@ public class ABExpTreeFormulaBox extends AnchorPane {
 
 
 
-
-
-
-
-    public ABExpTreeFormulaBox(VerticalTreeABExpView verticalTreeView) {
-        this.verticalTreeView = verticalTreeView;
+    public ABExpTreeFormulaBox(VerticalTreeABExpView verticalTreeABExpView) {
+        this.verticalTreeABExpView = verticalTreeABExpView;
         self = this;
         circleMarkers = new Label[]{new Label("|"), new Label("|")};
         ulineMarkers = new Label[]{new Label("|"), new Label("|")};
-
-
 
         top_link_handle = new AnchorPane();
         top_link_handle.setPrefHeight(9);
@@ -250,6 +249,10 @@ public class ABExpTreeFormulaBox extends AnchorPane {
                 if (code == KeyCode.F10) {
                     if (circleStage < 2) {
                         if (!circled) {
+
+                            int xPos = (int) Math.round(rta.getCaretRowColumn().getX());
+                            circleIndexes[circleStage] = xPos;
+
                             Bounds caretBounds = ((RichTextAreaSkin) formulaBox.getRTA().getSkin()).getCaretPosition();
                             Bounds newCaretBounds = rta.sceneToLocal(caretBounds);
                             double xAnchor = newCaretBounds.getMaxX() + rtaBounds.getMinX() - 1.0;
@@ -276,6 +279,7 @@ public class ABExpTreeFormulaBox extends AnchorPane {
                         setCircle();
                         circleStage++;
                         circled = true;
+                        pushUndoRedo();
                     } else {
                         EditorAlerts.fleetingRedPopup("Text field has at most one circle annotation.");
                     }
@@ -293,6 +297,10 @@ public class ABExpTreeFormulaBox extends AnchorPane {
                 Bounds rtaBounds = self.sceneToLocal(rta.localToScene(rta.getBoundsInLocal()));
                 if (code == KeyCode.F10) {
                     if (ulineStage < 2) {
+
+                        int xPos = (int) Math.round(rta.getCaretRowColumn().getX());
+                        ulineIndexTemp[ulineStage] = xPos;
+
                         Bounds caretBounds = ((RichTextAreaSkin) formulaBox.getRTA().getSkin()).getCaretPosition();
                         Bounds newCaretBounds = rta.sceneToLocal(caretBounds);
                         double xAnchor = newCaretBounds.getMaxX() + rtaBounds.getMinX() - 2.0;
@@ -316,7 +324,9 @@ public class ABExpTreeFormulaBox extends AnchorPane {
                         double maxX = Math.max(ulineXAnchors[0], ulineXAnchors[1]);
                         self.getChildren().removeAll(ulineMarkers);
                         setLine(minX - rtaBounds.getMinX(), maxX - rtaBounds.getMinX());
+                        setLineIndexes();
                         ulineStage = 0;
+                        pushUndoRedo();
                     } else {
                         EditorAlerts.fleetingRedPopup("Underline requires two markers.");
                     }
@@ -324,8 +334,21 @@ public class ABExpTreeFormulaBox extends AnchorPane {
                 }
             }
         };
+    }
 
+    private void setLineIndexes() {
+        int minX = Math.min(ulineIndexTemp[0], ulineIndexTemp[1]);
+        int maxX = Math.max(ulineIndexTemp[0], ulineIndexTemp[1]);
 
+        if (minX != maxX) {
+            for (Integer[] index : ulineIndexes) {
+                if (index[0] > minX && index[0] < maxX) ulineInclusion = false;
+                if (index[1] > minX && index[1] < maxX) ulineInclusion = false;
+            }
+            if (ulineInclusion) {
+                ulineIndexes.add(new Integer[]{minX, maxX});
+            }
+        }
     }
 
     public void setCircle() {
@@ -336,6 +359,7 @@ public class ABExpTreeFormulaBox extends AnchorPane {
         circleStage = 0;
         self.getChildren().add(oval);
         oval.setWidth(maxX - minX);
+        oval.setMouseTransparent(true);
 
         oval.setHeight(rtaBoundsHeight - 6.0);
         oval.setStyle("-fx-fill: transparent; -fx-stroke: black; -fx-stroke-width: 1;");
@@ -343,8 +367,6 @@ public class ABExpTreeFormulaBox extends AnchorPane {
         oval.setArcWidth((maxX - minX));
         self.setLeftAnchor(oval, minX);
         self.setTopAnchor(oval, rtaBoundsMinY + 2.0);
-        verticalTreeView.setUndoRedoFlag(true);
-        verticalTreeView.setUndoRedoFlag(false);
     }
 
     private void setLine(double startX, double endX) {
@@ -371,8 +393,6 @@ public class ABExpTreeFormulaBox extends AnchorPane {
 
         //add line to linesPane
         addLineToPane(startX, endX - startX, yPos);
-        verticalTreeView.setUndoRedoFlag(true);
-        verticalTreeView.setUndoRedoFlag(false);
     }
 
     public void addLineToPane(double startX, double length, double yPos) {
@@ -420,8 +440,7 @@ public class ABExpTreeFormulaBox extends AnchorPane {
 
                 relocateToGridPoint2( new Point2D(event.getSceneX(), event.getSceneY())  );
                 self.setCursor(Cursor.DEFAULT);
-                verticalTreeView.setUndoRedoFlag(true);
-                verticalTreeView.setUndoRedoFlag(false);
+                pushUndoRedo();
             }
         };
 
@@ -459,9 +478,7 @@ public class ABExpTreeFormulaBox extends AnchorPane {
 
                     iterId.remove();
                 }
-                verticalTreeView.setUndoRedoFlag(true);
-                verticalTreeView.setUndoRedoFlag(false);
-
+                pushUndoRedo();
                 parent.requestFocus();
             }
         });
@@ -680,7 +697,7 @@ public class ABExpTreeFormulaBox extends AnchorPane {
     private BoxedDRTA newFormulaBoxedDRTA() {
         BoxedDRTA boxedDRTA = new BoxedDRTA();
         DecoratedRTA drta = boxedDRTA.getDRTA();
-        drta.getKeyboardSelector().valueProperty().setValue(verticalTreeView.getDefaultKeyboard());
+        drta.getKeyboardSelector().valueProperty().setValue(verticalTreeABExpView.getDefaultKeyboard());
         RichTextArea rta = boxedDRTA.getRTA();
         rta.setMaxHeight(24);
         rta.setMinHeight(24);
@@ -701,14 +718,7 @@ public class ABExpTreeFormulaBox extends AnchorPane {
  //       rta.getActionFactory().saveNow().execute(new ActionEvent());   ---------- this blanks text on open exercise.
         rta.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
-                verticalTreeView.getMainView().editorInFocus(drta, ControlType.FIELD);
-            } else {
-                if (rta.isModified()) {
-                    verticalTreeView.setUndoRedoFlag(true);
-                    verticalTreeView.setUndoRedoFlag(false);
-                    rta.getActionFactory().saveNow().execute(new ActionEvent());
-                }
-
+                verticalTreeABExpView.getMainView().editorInFocus(drta, ControlType.FIELD);
             }
         });
         return boxedDRTA;
@@ -728,14 +738,12 @@ public class ABExpTreeFormulaBox extends AnchorPane {
         annRTA.setPromptText("");
 
         annRTA.focusedProperty().addListener((ob, ov, nv) -> {
-            if (nv)  verticalTreeView.getMainView().editorInFocus(annBDRTA.getDRTA(), ControlType.FIELD);
+            if (nv)  verticalTreeABExpView.getMainView().editorInFocus(annBDRTA.getDRTA(), ControlType.FIELD);
             else {
                 if (annRTA.isModified()) {
-                    verticalTreeView.setUndoRedoFlag(true);
-                    verticalTreeView.setUndoRedoFlag(false);
+                    pushUndoRedo();
                     annRTA.getActionFactory().saveNow().execute(new ActionEvent());
                 }
-
             }
         });
         annBDRTA.getBoxedRTA().getTransforms().add(new Scale(.75,.75));
@@ -748,15 +756,13 @@ public class ABExpTreeFormulaBox extends AnchorPane {
             if (!boxed) {
                 middleBox.setStyle("-fx-border-color: black; -fx-border-width: 1 1 1 1");
                 boxed = true;
-                verticalTreeView.setUndoRedoFlag(true);
-                verticalTreeView.setUndoRedoFlag(false);
+                pushUndoRedo();
             }
         } else {
             if (boxed) {
                 middleBox.setStyle("-fx-border-width: 0 0 0 0");
                 boxed = false;
-                verticalTreeView.setUndoRedoFlag(true);
-                verticalTreeView.setUndoRedoFlag(false);
+                pushUndoRedo();
             }
         }
     }
@@ -771,16 +777,14 @@ public class ABExpTreeFormulaBox extends AnchorPane {
         if (add) {
             if (!starred) {
                 addStar();
-                verticalTreeView.setUndoRedoFlag(true);
-                verticalTreeView.setUndoRedoFlag(false);
+                pushUndoRedo();
             }
         } else {
             if (starred) {
                 mainBox.getChildren().clear();
                 mainBox.getChildren().addAll(labelPane, centerBox);
                 starred = false;
-                verticalTreeView.setUndoRedoFlag(true);
-                verticalTreeView.setUndoRedoFlag(false);
+                pushUndoRedo();
             }
         }
     }
@@ -798,8 +802,7 @@ public class ABExpTreeFormulaBox extends AnchorPane {
         if (add) {
             if (!annotation) {
                 addAnnotation();
-                verticalTreeView.setUndoRedoFlag(true);
-                verticalTreeView.setUndoRedoFlag(false);
+                pushUndoRedo();
             }
 
         } else {
@@ -807,8 +810,7 @@ public class ABExpTreeFormulaBox extends AnchorPane {
                 mainBox.getChildren().clear();
                 mainBox.getChildren().addAll(labelPane, centerBox);
                 annotation = false;
-                verticalTreeView.setUndoRedoFlag(true);
-                verticalTreeView.setUndoRedoFlag(false);
+                pushUndoRedo();
             }
         }
     }
@@ -850,8 +852,8 @@ public class ABExpTreeFormulaBox extends AnchorPane {
             undoCircleRequest();
             self.getChildren().remove(oval);
             circled = false;
-            verticalTreeView.setUndoRedoFlag(true);
-            verticalTreeView.setUndoRedoFlag(false);
+            circleIndexes = new int[2];
+            pushUndoRedo();
         }
     }
 
@@ -869,8 +871,9 @@ public class ABExpTreeFormulaBox extends AnchorPane {
             undoUnderlineRequest();
             linesPane.getChildren().clear();
             baseline.clear();
-            verticalTreeView.setUndoRedoFlag(true);
-            verticalTreeView.setUndoRedoFlag(false);
+            ulineIndexes = new ArrayList<>();
+            ulineInclusion = true;
+            pushUndoRedo();
         }
     }
 
@@ -937,6 +940,15 @@ public class ABExpTreeFormulaBox extends AnchorPane {
         this.circleXAnchors = circleXAnchors;
     }
 
+    public int[] getCircleIndexes() {
+        return circleIndexes;
+    }
+
+    public void setCircleIndexes(int[] circleIndexes) {
+        this.circleIndexes = circleIndexes;
+    }
+
+
     public double getRtaBoundsHeight() {
         return rtaBoundsHeight;
     }
@@ -970,5 +982,25 @@ public class ABExpTreeFormulaBox extends AnchorPane {
 
     public void setPrintWidth(double printWidth) {
         this.printWidth = printWidth;
+    }
+
+    public List<Integer[]> getUlineIndexes() {
+        return ulineIndexes;
+    }
+
+    public void setUlineIndexes(List<Integer[]> ulineIndexes) {
+        this.ulineIndexes = ulineIndexes;
+    }
+
+    public boolean isUlineInclusion() {
+        return ulineInclusion;
+    }
+
+    public void setUlineInclusion(boolean ulineInclusion) {
+        this.ulineInclusion = ulineInclusion;
+    }
+
+    private void pushUndoRedo() {
+        verticalTreeABExpView.getVtABExpExercise().pushUndoRedo();
     }
 }
