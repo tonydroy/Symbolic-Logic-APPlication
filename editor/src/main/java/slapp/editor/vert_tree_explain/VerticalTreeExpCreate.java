@@ -368,8 +368,8 @@ public class VerticalTreeExpCreate {
             boolean selected = (boolean) nv;
             if (selected) {
                 modified = true;
-                mapBoxBaseItalicCheck.setSelected(false);
                 mapBoxItalicSansCheck.setSelected(false);
+                mapBoxScriptItalicCheck.setSelected(false);
             }
         });
         mapBoxItalicSansCheck = new CheckBox("Italic/Sans");
@@ -423,10 +423,10 @@ public class VerticalTreeExpCreate {
 
 
         verticalBracketCheck = new CheckBox("Vertical Bracket");
-        verticalBracketCheck.setSelected(false);
+        verticalBracketCheck.setSelected(true);
         verticalBracketCheck.selectedProperty().addListener((ob, ov, nv) -> { modified = true; });
         dashedLineCheck = new CheckBox("Dashed Line");
-        dashedLineCheck.setSelected(false);
+        dashedLineCheck.setSelected(true);
         dashedLineCheck.selectedProperty().addListener((ob, ov, nv) -> { modified = true; });
 
         HBox bracketLineChecks = new HBox(20, verticalBracketCheck, dashedLineCheck);

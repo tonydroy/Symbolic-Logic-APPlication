@@ -394,10 +394,10 @@ public class VerticalTreeCreate {
         mapFormulaBox.setAlignment(Pos.BASELINE_LEFT);
 
         verticalBracketCheck = new CheckBox("Vertical Bracket");
-        verticalBracketCheck.setSelected(false);
+        verticalBracketCheck.setSelected(true);
         verticalBracketCheck.selectedProperty().addListener((ob, ov, nv) -> { modified = true; });
         dashedLineCheck = new CheckBox("Dashed Line");
-        dashedLineCheck.setSelected(false);
+        dashedLineCheck.setSelected(true);
         dashedLineCheck.selectedProperty().addListener((ob, ov, nv) -> { modified = true; });
 
         HBox bracketLineChecks = new HBox(20, verticalBracketCheck, dashedLineCheck);

@@ -552,6 +552,7 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
         HBox hbox = new HBox(exerciseName, spacer, printCheckNode());
         hbox.setHgrow(spacer, Priority.ALWAYS);
         hbox.setPadding(new Insets(0,0,10,0));
+        hbox.setMinWidth(nodeWidth);
 
         Group headerRoot = new Group();
         Scene headerScene = new Scene(headerRoot);

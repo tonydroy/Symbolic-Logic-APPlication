@@ -94,7 +94,7 @@ public class VTcheck implements VTAuxCheck {
         checkJustification = checkSetup.isCheckJustifications();
         checkMarkup = checkSetup.isCheckMarkup();
         checkType = checkSetup.getCheckType();
-        checkJustification = checkSetup.isCheckJustifications();
+
 
         checkBracket = vtModel.getDragIconList().contains(DragIconType.bracket);
         checkDashedLine = vtModel.getDragIconList().contains(DragIconType.dashed_line);
@@ -133,6 +133,8 @@ public class VTcheck implements VTAuxCheck {
 
 
     private void setRightControlBox() {
+
+        if (checkType == VTCheckType.NONE) vtView.getCheckButton().setDisable(true);
 
         vtView.getCheckButton().setOnAction(e -> {
             checkTree();

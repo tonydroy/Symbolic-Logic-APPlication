@@ -96,7 +96,6 @@ public class VTExpCheck implements VTAuxCheck {
         checkJustification = checkSetup.isCheckJustifications();
         checkMarkup = checkSetup.isCheckMarkup();
         checkType = checkSetup.getCheckType();
-        checkJustification = checkSetup.isCheckJustifications();
 
         checkBracket = vtExpModel.getDragIconList().contains(DragIconType.bracket);
         checkDashedLine = vtExpModel.getDragIconList().contains(DragIconType.dashed_line);
@@ -135,6 +134,8 @@ public class VTExpCheck implements VTAuxCheck {
 
 
     private void setRightControlBox() {
+
+        if (checkType == VTCheckType.NONE) vtExpView.getCheckButton().setDisable(true);
 
         vtExpView.getCheckButton().setOnAction(e -> {
             checkTree();
@@ -764,12 +765,12 @@ public class VTExpCheck implements VTAuxCheck {
             }
 
             if (hasFormulas) {
-                List<DashedLine> dashedLines = new ArrayList<>();
-                List<VerticalBracket> verticalBrackets = new ArrayList<>();
+                List<ExpDashedLine> dashedLines = new ArrayList<>();
+                List<ExpVerticalBracket> verticalBrackets = new ArrayList<>();
 
                 for (Node node : checkNodeList) {
-                    if (node instanceof DashedLine) dashedLines.add((DashedLine) node);
-                    if (node instanceof VerticalBracket) verticalBrackets.add((VerticalBracket) node);
+                    if (node instanceof ExpDashedLine) dashedLines.add((ExpDashedLine) node);
+                    if (node instanceof ExpVerticalBracket) verticalBrackets.add((ExpVerticalBracket) node);
                 }
 
 
@@ -796,7 +797,7 @@ public class VTExpCheck implements VTAuxCheck {
                             }
                             return false;
                         }
-                        DashedLine dashedLine = dashedLines.get(0);
+                        ExpDashedLine dashedLine = dashedLines.get(0);
                         if (dashedLine.getLayoutY() < maxTermY || dashedLine.getLayoutY() > minFormulaY) {
                             if (!silent) {
                                 EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Dashed line does not separate terms from formulas.")));
@@ -822,7 +823,7 @@ public class VTExpCheck implements VTAuxCheck {
                         }
                         return false;
                     }
-                    VerticalBracket bracket = verticalBrackets.get(0);
+                    ExpVerticalBracket bracket = verticalBrackets.get(0);
                     if (hasTerms && (bracket.getLayoutY() + 10) < maxTermY) {
                         if (!silent) {
                             EditorAlerts.showSimpleTxtListAlert("Tree Markup", Collections.singletonList(ParseUtilities.newRegularText("Vertical bracket includes more than just subformulas.")));
@@ -1245,8 +1246,8 @@ public class VTExpCheck implements VTAuxCheck {
                 String relativeID = "";
                 for (Node link : checkNodeList ) {
                     relativeID = "";
-                    if (link instanceof ClickableNodeLink) {
-                        ClickableNodeLink nodeLink = (ClickableNodeLink) link;
+                    if (link instanceof ExpClickableNodeLink) {
+                        ExpClickableNodeLink nodeLink = (ExpClickableNodeLink) link;
                         if (nodeLink.getSourceId().equals(formulaID)) {
                             relativeID = nodeLink.getTargetId();
                         }
