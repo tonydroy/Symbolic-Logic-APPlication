@@ -636,7 +636,7 @@ public class VerticalTreeExpCreate {
                 "For either sort of check, choose whether to check justification fields, and the object language.  If CheckMax is 0 checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.</li></p>" +
 
                 "<li><p>The static help check activates the Static Help button which pops up a message which you may state in the right hand text area below.</li></p>" +
-                "<li><p>Finally provide the exercise statement and, if desired the static help message..</p></li>" +
+                "<li><p>Finally provide the exercise statement and, if desired the static help message.</p></li>" +
                 "</ul>";
 
 

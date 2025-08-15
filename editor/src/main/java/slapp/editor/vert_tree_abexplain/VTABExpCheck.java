@@ -75,6 +75,15 @@ public class VTABExpCheck implements VTAuxCheck {
     private VTAuxCheck vtAuxCheckA;
     private Expression getTargetExpression;
 
+    boolean choiceSuccess;
+    boolean checkChoices;
+    boolean choiceASet;
+    boolean choiceBSet;
+    boolean choiceSet;
+    boolean choiceAMade;
+    boolean choiceBMade;
+    boolean choiceMade;
+
 
     VTABExpCheck(VerticalTreeABExpExercise vtABExpExercise) {
 
@@ -109,14 +118,20 @@ public class VTABExpCheck implements VTAuxCheck {
         checkBoxing = vtABExpModel.getObjectControlList().contains(ObjectControlType.FORMULA_BOX);
         checkUnderline = vtABExpModel.getObjectControlList().contains(ObjectControlType.UNDERLINE);
 
-
+        choiceSuccess = checkSetup.isChoiceSuccess();
+        checkChoices = checkSetup.isCheckChoices();
+        choiceASet = checkSetup.isChoiceA();
+        choiceBSet = checkSetup.isChoiceB();
+        choiceSet = choiceASet || choiceBSet;
 
         checkSuccess = checkSetup.isCheckSuccess();
         checkFinal = checkSetup.isCheckFinal();
         if (checkFinal) {
             vtABExpView.setCheckColor(Color.LAWNGREEN);
             vtABExpView.setCheckElementsColor(Color.GREEN);
-            vtABExpView.setCheckMessage("Full Tree");
+            String message = "Tree";
+            if (choiceSuccess) message = "Tree / Choice";
+            vtABExpView.setCheckMessage(message);
         }
         else {
             vtABExpView.setCheckColor(Color.ORCHID);
@@ -261,13 +276,59 @@ public class VTABExpCheck implements VTAuxCheck {
 
         if (!checkAbbContent()) return false;
 
-
+        choiceAMade = vtABExpExercise.getExerciseView().getaCheckBox().isSelected();
+        choiceBMade = vtABExpExercise.getExerciseView().getbCheckBox().isSelected();
+        choiceMade = choiceAMade || choiceBMade;
+        if (!checkChoice()) {
+            checkSuccess = false;
+            return false;
+        }
 
         checkSuccess = true;
         vtABExpView.activateBigCheck();
         return true;
 
     }
+
+    private boolean checkChoice() {
+        boolean success = true;
+
+        if (choiceSet && !choiceMade) {
+            vtABExpView.getaCheckBox().setStyle("-fx-background-color: mistyrose");
+            vtABExpView.getbCheckBox().setStyle("-fx-background-color: mistyrose");
+            EditorAlerts.showSimpleTxtListAlert("Choices", Collections.singletonList(ParseUtilities.newRegularText("No choice made.")));
+            vtABExpView.getaCheckBox().setStyle("-fx-background-color: white");
+            vtABExpView.getbCheckBox().setStyle("-fx-background-color: white");
+            success = false;
+        }
+
+        else if (choiceSet && (checkChoices || vtABExpExercise.getMainWindow().isInstructorFunctions())) {
+            if (choiceAMade && !choiceASet) {
+                vtABExpView.getaCheckBox().setStyle("-fx-background-color: mistyrose");
+                EditorAlerts.showSimpleTxtListAlert("Choices", Collections.singletonList(ParseUtilities.newRegularText("Mistaken choice.")));
+                vtABExpView.getaCheckBox().setStyle("-fx-background-color: white");
+                success = false;
+            }
+            if (choiceBMade && !choiceBSet) {
+                vtABExpView.getbCheckBox().setStyle("-fx-background-color: mistyrose");
+                EditorAlerts.showSimpleTxtListAlert("Choices", Collections.singletonList(ParseUtilities.newRegularText("Mistaken choice.")));
+                vtABExpView.getbCheckBox().setStyle("-fx-background-color: white");
+                success = false;
+            }
+            if (success) {
+                vtABExpView.setCheckMessage("Tree / Choice");
+                choiceSuccess = true;
+            }
+        }
+        else if (!choiceSet || !checkChoices || !vtABExpExercise.getMainWindow().isInstructorFunctions()) {
+            vtABExpView.setCheckMessage("Tree");
+            choiceSuccess = false;
+        }
+
+        return success;
+    }
+
+
 
     private boolean checkAbbContent() {
 
@@ -464,6 +525,14 @@ public class VTABExpCheck implements VTAuxCheck {
         if (!checkContents()) return false;
         if (checkMarkup && !checkMarkup()) return false;
 
+
+        choiceAMade = vtABExpExercise.getExerciseView().getaCheckBox().isSelected();
+        choiceBMade = vtABExpExercise.getExerciseView().getbCheckBox().isSelected();
+        choiceMade = choiceAMade || choiceBMade;
+        if (!checkChoice()) {
+            checkSuccess = false;
+            return false;
+        }
 
         checkSuccess = true;
         vtABExpView.activateBigCheck();
@@ -1479,7 +1548,7 @@ public class VTABExpCheck implements VTAuxCheck {
     private void updateCheckCounter() {
         if (checkMax != -1 && checkTries >= checkMax && !vtABExpExercise.getMainWindow().isInstructorFunctions()) {
             vtABExpView.getCheckButton().setDisable(true);
-            vtABExpView.getCheckProgButton().setDisable(true);
+         //   vtABExpView.getCheckProgButton().setDisable(true);
         }
         String checkString;
         if (checkMax == -1) checkString = "(unlimited)";
@@ -1525,5 +1594,9 @@ public class VTABExpCheck implements VTAuxCheck {
 
     public boolean isCheckFinal() {
         return checkFinal;
+    }
+
+    public boolean isChoiceSuccess() {
+        return choiceSuccess;
     }
 }

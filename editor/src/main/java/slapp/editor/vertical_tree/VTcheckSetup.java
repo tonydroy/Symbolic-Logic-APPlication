@@ -11,6 +11,7 @@ public class VTcheckSetup implements Serializable {
     String metLangName;
 
     boolean checkSuccess;
+    boolean choiceSuccess;
     boolean checkFinal;
     int checkMax;
     int checkTries;
@@ -24,12 +25,19 @@ public class VTcheckSetup implements Serializable {
     String auxExerName;
     VTCheckType checkType;
 
+    boolean checkChoices;
+    boolean choiceA;
+    boolean choiceB;
+    boolean choiceE;
+    boolean choiceF;
+
 
     public VTcheckSetup() {
 
         objLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (abv)
         metLangName = "LM Meta";
         checkSuccess = false;
+        choiceSuccess = false;
         checkFinal = true;
         checkMax = 0;              //0
         checkTries = 0;
@@ -40,6 +48,11 @@ public class VTcheckSetup implements Serializable {
         checkType = VTCheckType.NONE;
         checkMarkup = false;
         formulaTarget = new Document();
+        checkChoices = false;
+        choiceA = false;
+        choiceB = false;
+        choiceE = false;
+        choiceF = false;
 
     }
 
@@ -145,5 +158,51 @@ public class VTcheckSetup implements Serializable {
         this.checkMarkup = checkMarkup;
     }
 
+    public boolean isCheckChoices() {
+        return checkChoices;
+    }
 
+    public void setCheckChoices(boolean checkChoices) {
+        this.checkChoices = checkChoices;
+    }
+
+    public boolean isChoiceA() {
+        return choiceA;
+    }
+
+    public void setChoiceA(boolean choiceA) {
+        this.choiceA = choiceA;
+    }
+
+    public boolean isChoiceB() {
+        return choiceB;
+    }
+
+    public void setChoiceB(boolean choiceB) {
+        this.choiceB = choiceB;
+    }
+
+    public boolean isChoiceE() {
+        return choiceE;
+    }
+
+    public void setChoiceE(boolean choiceE) {
+        this.choiceE = choiceE;
+    }
+
+    public boolean isChoiceF() {
+        return choiceF;
+    }
+
+    public void setChoiceF(boolean choiceF) {
+        this.choiceF = choiceF;
+    }
+
+    public boolean isChoiceSuccess() {
+        return choiceSuccess;
+    }
+
+    public void setChoiceSuccess(boolean choiceSuccess) {
+        this.choiceSuccess = choiceSuccess;
+    }
 }

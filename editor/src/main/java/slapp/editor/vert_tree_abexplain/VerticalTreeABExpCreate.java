@@ -134,6 +134,10 @@ public class VerticalTreeABExpCreate {
     Spinner<Double> staticHelpHeightSpinner;
     private RichTextArea currentSpinnerNode;
 
+    CheckBox checkChoicesBox;
+    CheckBox choiceABox;
+    CheckBox choiceBBox;
+
 
     public VerticalTreeABExpCreate(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
@@ -188,6 +192,11 @@ public class VerticalTreeABExpCreate {
         targetBoxedDRTA.getRTA().getActionFactory().saveNow().execute(new ActionEvent());
         checkMaxSpinner.getValueFactory().setValue(checkSetup.getCheckMax());
         checkMarkup.setSelected(checkSetup.isCheckMarkup());
+
+        checkChoicesBox.setSelected(checkSetup.isCheckChoices());
+        choiceABox.setSelected(checkSetup.isChoiceA());
+        choiceBBox.setSelected(checkSetup.isChoiceB());
+
 
         for (String key : langMap.keySet()) {
             if (key.equals(checkSetup.getObjLangName())) {
@@ -672,7 +681,44 @@ public class VerticalTreeABExpCreate {
         HBox checkLine3 = new HBox(30, unabbCheckBox, auxNameBox);
         checkLine3.setAlignment(Pos.CENTER_LEFT);
 
-        VBox checksVBox = new VBox(10, checkLine2, checkLine3, checkLine1);
+        //check choices
+        Label checkChoicesLabel = new Label("Check Choices:");
+        checkChoicesBox = new CheckBox();
+        checkChoicesBox.setSelected(false);
+        checkChoicesBox.selectedProperty().addListener((ob, ov, nv) -> {
+            modified = true;
+        });
+        HBox checkChoicesHBox = new HBox(10, checkChoicesLabel, checkChoicesBox);
+
+        Label choiceALabel = new Label("Correct     \u21d2     A choice:");
+        choiceABox = new CheckBox();
+        choiceABox.setSelected(false);
+        choiceABox.selectedProperty().addListener((ob, ov, nv) -> {
+            modified = true;
+            boolean selected = (boolean) nv;
+            if (selected) {
+                choiceBBox.setSelected(false);
+            }
+        });
+        HBox choiceAHBox = new HBox(10, choiceALabel, choiceABox);
+
+        Label choiceBLabel = new Label("B choice:");
+        choiceBBox = new CheckBox();
+        choiceBBox.setSelected(false);
+        choiceBBox.selectedProperty().addListener((ob, ov, nv) -> {
+            modified = true;
+            boolean selected = (boolean) nv;
+            if (selected) {
+                choiceABox.setSelected(false);
+            }
+        });
+        HBox choiceBHBox = new HBox(10, choiceBLabel, choiceBBox);
+
+        HBox checkLine4 = new HBox(30, checkChoicesHBox, choiceAHBox, choiceBHBox);
+
+
+
+        VBox checksVBox = new VBox(10, checkLine2, checkLine3, checkLine1, checkLine4);
 
         HBox checksBox = new HBox(20, helpCheckLabel, checksVBox);
         checksBox.setAlignment(Pos.TOP_LEFT);
@@ -698,7 +744,8 @@ public class VerticalTreeABExpCreate {
                 "For either sort of check, choose whether to check justification fields, and the object language.  If CheckMax is 0 checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.</li></p>" +
 
                 "<li><p>The static help check activates the Static Help button which pops up a message which you may state in the right hand text area below.</li></p>" +
-                "<li><p>Finally provide the exercise statement and, if desired the static help message..</p></li>" +
+                "<li><p>Selecting an A/B choice by itself enables choice check for instructors.  For students choice check is enabled only if, in addition, Check Choices is selected (in which case the check essentially gives the answer).</li></p>" +
+                "<li><p>Finally provide the exercise statement and, if desired the static help message.</p></li>" +
                 "</ul>";
 
         WebView helpArea = new WebView();
@@ -1033,6 +1080,10 @@ public class VerticalTreeABExpCreate {
             EditorAlerts.showSimpleAlert("No language selected:", "Without a language selection, SLAPP will revert to the default, \u2112\ud835\udcc6 (w/abv).");
         }
 
+        checkSetup.setCheckChoices(checkChoicesBox.isSelected());
+        checkSetup.setChoiceA(choiceABox.isSelected());
+        checkSetup.setChoiceB(choiceBBox.isSelected());
+
         //consistency checks
         if (checkMax == 0 && checkType != VTCheckType.NONE) {
             formulaCheck.setSelected(false);
@@ -1041,13 +1092,13 @@ public class VerticalTreeABExpCreate {
             EditorAlerts.fleetingRedPopup("Check Max set to zero.  Checking deselected.");
         }
 
-        else if (checkType == VTCheckType.NONE  && checkMax != 0) {
+        if (checkType == VTCheckType.NONE  && checkMax != 0) {
             checkSetup.setCheckMax(0);
             checkMaxSpinner.getValueFactory().setValue(0);
             EditorAlerts.fleetingRedPopup("No checking selected.  Check max set to zero.");
         }
 
-        else if (checkType == VTCheckType.UNABB && auxNameField.getText().equals("")) {
+        if (checkType == VTCheckType.UNABB && auxNameField.getText().equals("")) {
             unabbreviationCheck.setSelected(false);
             checkMaxSpinner.getValueFactory().setValue(0);
             checkSetup.setCheckType(VTCheckType.NONE);
@@ -1055,7 +1106,7 @@ public class VerticalTreeABExpCreate {
             EditorAlerts.fleetingRedPopup("Unabbreviation check requires auxiliary exercise.  Check disabled.");
         }
 
-        else if (checkType == VTCheckType.FORMULA && !targetDocument.getText().equals("")) {
+        if (checkType == VTCheckType.FORMULA && !targetDocument.getText().equals("")) {
             boolean goodTarget = false;
             Expression targetExpression = null;
 
@@ -1071,8 +1122,15 @@ public class VerticalTreeABExpCreate {
                 checkSetup.setCheckMax(0);
                 EditorAlerts.fleetingRedPopup("Target is (not empty and) not a formula of the selected language.  Check disabled.");
             }
-
         }
+
+        if (checkChoicesBox.isSelected() && !(choiceABox.isSelected() || choiceBBox.isSelected()))  {
+            checkChoicesBox.setSelected(false);
+            checkSetup.setCheckChoices(false);
+            EditorAlerts.fleetingRedPopup("There is no choice to check.  Check Choices disabled.");
+        }
+
+
         return model;
     }
 
