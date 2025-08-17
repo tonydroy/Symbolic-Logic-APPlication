@@ -19,6 +19,7 @@ import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.model.Document;
 import slapp.editor.main_window.ExerciseModel;
 import slapp.editor.main_window.ExerciseType;
+import slapp.editor.vertical_tree.VTcheckSetup;
 import slapp.editor.vertical_tree.drag_drop.DragIconType;
 import slapp.editor.vertical_tree.object_models.*;
 
@@ -32,6 +33,7 @@ public class VerticalTreeABEFExpModel implements ExerciseModel<Document>, Serial
     private String explainPrompt ="";
     private ExerciseType exerciseType = ExerciseType.VERTICAL_TREE;
     private RichTextAreaSkin.KeyMapValue defaultKeyboardType;
+    private RichTextAreaSkin.KeyMapValue defaultMapKeyboardType;
     private ExerciseModel<Document> originalModel = null;
     private boolean started = false;
     private Document exerciseStatement = new Document();
@@ -45,8 +47,6 @@ public class VerticalTreeABEFExpModel implements ExerciseModel<Document>, Serial
     private double explainTextHeight = 0;
     private double mainPanePrefHeight = 150;  //250
     private double mainPanePrefWidth;
-
-
 
     private List<DragIconType> dragIconList = new ArrayList<>();
     private List<ObjectControlType> objectControlList = new ArrayList<>();
@@ -70,14 +70,24 @@ public class VerticalTreeABEFExpModel implements ExerciseModel<Document>, Serial
     private boolean fSelected = false;
     private int pointsPossible;
     private int pointsEarned;
+    private VTcheckSetup checkSetup;
 
 
 
     public VerticalTreeABEFExpModel(){
         pointsPossible = 0;
         pointsEarned = -1;
+        this.checkSetup = new VTcheckSetup();
+        this.defaultMapKeyboardType = RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS;
     }
 
+    public VTcheckSetup getCheckSetup() {
+        return checkSetup;
+    }
+
+    public void setCheckSetup(VTcheckSetup checkSetup) {
+        this.checkSetup = checkSetup;
+    }
 
     void setExerciseName(String exerciseName) { this.exerciseName = exerciseName;    }
 
@@ -164,6 +174,14 @@ public class VerticalTreeABEFExpModel implements ExerciseModel<Document>, Serial
     RichTextAreaSkin.KeyMapValue getDefaultKeyboardType() {     return defaultKeyboardType;  }
 
     void setDefaultKeyboardType(RichTextAreaSkin.KeyMapValue defaultKeyboardType) {     this.defaultKeyboardType = defaultKeyboardType;  }
+
+    public RichTextAreaSkin.KeyMapValue getDefaultMapKeyboardType() {
+        return defaultMapKeyboardType;
+    }
+
+    public void setDefaultMapKeyboardType(RichTextAreaSkin.KeyMapValue defaultMapKeyboardType) {
+        this.defaultMapKeyboardType = defaultMapKeyboardType;
+    }
 
     double getCommentPrefHeight() {     return commentPrefHeight;  }
 

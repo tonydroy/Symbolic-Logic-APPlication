@@ -21,10 +21,6 @@ import com.gluonhq.richtextarea.model.Document;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.animation.ParallelTransition;
-import com.gluonhq.richtextarea.model.Document;
-import javafx.animation.FadeTransition;
-import javafx.animation.Interpolator;
-import javafx.animation.ParallelTransition;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -32,7 +28,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.geometry.Rectangle2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -51,9 +46,6 @@ import slapp.editor.EditorMain;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.ExerciseView;
 import slapp.editor.main_window.MainWindowView;
-import slapp.editor.vert_tree_explain.VerticalTreeExpExercise;
-
-
 import java.util.function.UnaryOperator;
 
 public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
@@ -518,8 +510,7 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
 
     public void setMainPanePrefWidth(double mainPanePrefWidth) {   this.mainPanePrefWidth = mainPanePrefWidth;  }
 
-    Spinner getMainPaneHeightSpinner() { return mainPaneHeightSpinner; }
-    Spinner getMainPaneWidthSpinner() { return mainPaneWidthSpinner; }
+
 
     public Button getCheckButton() {
         return checkButton;

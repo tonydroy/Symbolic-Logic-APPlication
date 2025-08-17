@@ -327,7 +327,7 @@ public class VTcheck implements VTAuxCheck {
                                 if (!lineJustifications.get(j).get(i).equals("AB(i)")) {
                                     if (!silent) {
                                         treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
-                                        EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Unabbreviation of infix term has incorrect justification.")));
+                                        EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Unabbreviation of infix term has incorrect justification (use AB(i)).")));
                                         treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
                                     }
                                     return false;
@@ -367,7 +367,7 @@ public class VTcheck implements VTAuxCheck {
                             if (!lineJustifications.get(j).get(i).equals("AB(i)")) {
                                 if (!silent) {
                                     treeNode.getMainTreeBox().getFormulaBox().setVTtreeBoxHighlight();
-                                    EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Unabbreviation of infix atomic has incorrect justification..")));
+                                    EditorAlerts.showSimpleTxtListAlert("Tree Content", Collections.singletonList(ParseUtilities.newRegularText("Unabbreviation of infix atomic has incorrect justification (use AB(i)).")));
                                     treeNode.getMainTreeBox().getFormulaBox().resetVTtreeBoxHighlight();
                                 }
                                 return false;

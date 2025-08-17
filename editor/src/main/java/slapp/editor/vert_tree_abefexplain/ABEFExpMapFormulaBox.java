@@ -47,7 +47,7 @@ import java.util.ListIterator;
 import java.util.UUID;
 
 public class ABEFExpMapFormulaBox extends AnchorPane {
-    private VerticalTreeABEFExpView verticalTreeView;
+    private VerticalTreeABEFExpView verticalTreeABEFExpView;
 
     private Label leftDragLabel;
     private Label closeLabel;
@@ -82,8 +82,8 @@ public class ABEFExpMapFormulaBox extends AnchorPane {
     Double[] mapXAnchors = new Double[2];
     private double printWidth;
 
-    public ABEFExpMapFormulaBox(VerticalTreeABEFExpView verticalTreeView) {
-        this.verticalTreeView = verticalTreeView;
+    public ABEFExpMapFormulaBox(VerticalTreeABEFExpView verticalTreeABEFExpView) {
+        this.verticalTreeABEFExpView = verticalTreeABEFExpView;
         self = this;
         mapMarkers = new Label[]{new Label("|"), new Label("|")};
 
@@ -231,8 +231,7 @@ public class ABEFExpMapFormulaBox extends AnchorPane {
 
                 relocateToGridPoint2( new Point2D(event.getSceneX(), event.getSceneY()) );
                 self.setCursor(Cursor.DEFAULT);
-                verticalTreeView.setUndoRedoFlag(true);
-                verticalTreeView.setUndoRedoFlag(false);
+                pushUndoRedo();
             }
         };
 
@@ -269,8 +268,7 @@ public class ABEFExpMapFormulaBox extends AnchorPane {
                     }
                     iterId.remove();
                 }
-                verticalTreeView.setUndoRedoFlag(true);
-                verticalTreeView.setUndoRedoFlag(false);
+                pushUndoRedo();
 
                 parent.requestFocus();
             }
@@ -360,7 +358,7 @@ public class ABEFExpMapFormulaBox extends AnchorPane {
     private BoxedDRTA newFormulaBoxedDRTA() {
         BoxedDRTA boxedDRTA = new BoxedDRTA();
         DecoratedRTA drta = boxedDRTA.getDRTA();
-        drta.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS);
+        drta.getKeyboardSelector().valueProperty().setValue(verticalTreeABEFExpView.getDefaultMapKeyboard());
         RichTextArea rta = boxedDRTA.getRTA();
         rta.setMaxHeight(24);
         rta.setMinHeight(24);
@@ -383,22 +381,11 @@ public class ABEFExpMapFormulaBox extends AnchorPane {
  //       rta.getActionFactory().saveNow().execute(new ActionEvent());  messes up rta on reopen
         rta.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
-                verticalTreeView.getMainView().editorInFocus(drta, ControlType.FIELD);
-            } else {
-                if (rta.isModified()) {
-                    verticalTreeView.setUndoRedoFlag(true);
-                    verticalTreeView.setUndoRedoFlag(false);
-                    rta.getActionFactory().saveNow().execute(new ActionEvent());
-                }
+                verticalTreeABEFExpView.getMainView().editorInFocus(drta, ControlType.FIELD);
             }
         });
         return boxedDRTA;
     }
-
-
-
-
-
 
     public void processMappingRequest(boolean add) {
         if (add) {
@@ -464,5 +451,9 @@ public class ABEFExpMapFormulaBox extends AnchorPane {
 
     public void setPrintWidth(double printWidth) {
         this.printWidth = printWidth;
+    }
+
+    private void pushUndoRedo() {
+        verticalTreeABEFExpView.getVtABEFExpExercise().pushUndoRedo();
     }
 }

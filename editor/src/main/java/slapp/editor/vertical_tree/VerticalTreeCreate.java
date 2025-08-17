@@ -601,7 +601,7 @@ public class VerticalTreeCreate {
                 "<p>It is unlikely that any one exercise will include all the drag and control options (especially \"star\" and \"annotation\" cannot both apply to the same node) -- but the different options make it possible to accomodate a wide variety of exercises.</p></li>" +
                 "<li><p>Checking applies to formula and unabbreviation trees.  First select the check type." +
                 "<ul>" +
-                "<li><p>For formula checking, select whether to check markup (bracket, dashed line, and functions represented by controls down the left), and give the target (root) formula for the tree.</li></p>" +
+                "<li><p>For formula (or term) checking, select whether to check markup (bracket, dashed line, and functions represented by controls down the left), and give the target (root) formula for the tree.</li></p>" +
                 "<li><p>Unabbreviation check works only in the context of an assignment including a vertical tree exercise (of some sort) that constructs the formula to be unabbreviated.  So state the auxiliary exercise name.  In some cases you may wish to include a (viewable) auxiliary vertical tree exercise even without unabbreviation.</p></li>  " +
                 "</ul>" +
                 "For either sort of check, choose whether to check justification fields, and the object language.  If CheckMax is 0 checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.</li></p>" +
@@ -954,7 +954,7 @@ public class VerticalTreeCreate {
             List<Expression> targetParseList = ParseUtilities.parseDoc(targetDocument, langName);
             if (targetParseList.size() == 1) {
                 targetExpression = targetParseList.get(0);
-                if (targetExpression.getType() == ExpressionType.FORMULA) goodTarget = true;
+                if (targetExpression.getType() == ExpressionType.FORMULA || targetExpression.getType() == ExpressionType.TERM) goodTarget = true;
             }
 
             if (!goodTarget) {

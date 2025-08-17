@@ -628,16 +628,6 @@ public class ABEFExpRootLayout extends AnchorPane {
                     }
                 }
 
-                /*
-				//Move node drag operation
-				container =
-						(DragContainer) event.getDragboard().getContent(DragContainer.DragNode);
-
-				if (container != null) {
-					if (container.getValue("type") != null)
-						System.out.println ("Moved node " + container.getValue("type"));
-				}
-                 */
 
 
                 //AddLink drag operation
@@ -650,7 +640,7 @@ public class ABEFExpRootLayout extends AnchorPane {
                     String sourceId = container.getValue("source");
                     String targetId = container.getValue("target");
 
-                    if (sourceId != null && targetId != null) {
+                    if (sourceId != null && targetId != null && !sourceId.equals(targetId)) {
 
      //                   //	System.out.println(container.getData());
      //                  NodeLink link = new NodeLink();

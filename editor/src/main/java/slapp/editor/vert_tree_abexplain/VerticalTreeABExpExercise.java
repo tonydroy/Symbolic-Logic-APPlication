@@ -38,7 +38,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Line;
 import javafx.scene.text.Font;
-import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.scene.transform.Scale;
@@ -758,6 +757,7 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
         model.setDefaultMapKeyboardType(verticalTreeABExpModel.getDefaultMapKeyboardType());
         model.setExplainPrompt(verticalTreeABExpModel.getExplainPrompt());
         model.setOriginalModel(verticalTreeABExpModel.getOriginalModel());
+
         model.setChoiceLead(verticalTreeABExpModel.getChoiceLead());
         model.setaPrompt(verticalTreeABExpModel.getaPrompt());
         model.setaSelected(verticalTreeABExpView.getaCheckBox().isSelected());
