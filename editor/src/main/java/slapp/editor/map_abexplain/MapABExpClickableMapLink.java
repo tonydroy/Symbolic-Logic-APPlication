@@ -13,7 +13,7 @@ You should have received a copy of the GNU General Public License along with SLA
 <https://www.gnu.org/licenses/>.
  */
 
-package slapp.editor.vert_tree_abexplain;
+package slapp.editor.map_abexplain;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -23,9 +23,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
-import slapp.editor.map_abexplain.MapABExpMapFormulaBox;
 import slapp.editor.vert_tree_abexplain.ABExpMapFormulaBox;
-import slapp.editor.vert_tree_abexplain.VerticalTreeABExpView;
 
 import java.util.Arrays;
 import java.util.UUID;
@@ -33,9 +31,9 @@ import java.util.UUID;
 import static javafx.beans.binding.Bindings.add;
 import static javafx.beans.binding.Bindings.subtract;
 
-public class ABExpClickableMapLink extends Pane {
+public class MapABExpClickableMapLink extends Pane {
 
-    VerticalTreeABExpView verticalTreeView;
+    MapABExpView mapView;
     Line node_link;
     Line node_link1;
 
@@ -49,8 +47,8 @@ public class ABExpClickableMapLink extends Pane {
     Double[] targetXAnchors;
 
 
-    public ABExpClickableMapLink(VerticalTreeABExpView verticalTreeView) {
-        this.verticalTreeView = verticalTreeView;
+    public MapABExpClickableMapLink(MapABExpView mapView) {
+        this.mapView = mapView;
         this.getStylesheets().add("/drag_drop.css");
 
         this.setPickOnBounds(false);
@@ -73,8 +71,8 @@ public class ABExpClickableMapLink extends Pane {
             if (e.getButton() == MouseButton.SECONDARY) {
                 AnchorPane parent = (AnchorPane) this.getParent();
                 parent.getChildren().remove(this);
-                verticalTreeView.setUndoRedoFlag(true);
-                verticalTreeView.setUndoRedoFlag(false);
+                mapView.setUndoRedoFlag(true);
+                mapView.setUndoRedoFlag(false);
             }
         });
 
@@ -82,9 +80,9 @@ public class ABExpClickableMapLink extends Pane {
 
     }
 
-    public void bindEnds (ABExpMapFormulaBox box1, ABExpMapFormulaBox box2) {
-        ABExpMapFormulaBox source;
-        ABExpMapFormulaBox target;
+    public void bindEnds (MapABExpMapFormulaBox box1, MapABExpMapFormulaBox box2) {
+        MapABExpMapFormulaBox source;
+        MapABExpMapFormulaBox target;
 
 
         if (box1.getLayoutY() < box2.getLayoutY()) {

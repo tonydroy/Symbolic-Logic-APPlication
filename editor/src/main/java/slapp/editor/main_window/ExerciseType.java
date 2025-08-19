@@ -75,6 +75,8 @@ public enum ExerciseType {
      */
     TRUTH_TABLE_GENERATE("Truth table gen explain", "Exercise requires an interpretation, creation of truth table, with a binary choice and explanation."),
 
+    MAP_AB_EXPLAIN("Map AB Explain", "Exercise requires a form map, with a binary choice and explanation."),
+
     /**
      * Exercise requires a vertical tree (or map) of types as encountered in chapters 2, 4, and 5 of SL.
      */

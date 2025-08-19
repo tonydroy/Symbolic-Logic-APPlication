@@ -34,6 +34,9 @@ import slapp.editor.free_form.FreeFormModel;
 import slapp.editor.horizontal_tree.HorizontalTreeCreate;
 import slapp.editor.horizontal_tree.HorizontalTreeExercise;
 import slapp.editor.horizontal_tree.HorizontalTreeModel;
+import slapp.editor.map_abexplain.MapABExpCreate;
+import slapp.editor.map_abexplain.MapABExpExercise;
+import slapp.editor.map_abexplain.MapABExpModel;
 import slapp.editor.page_editor.PageEditCreate;
 import slapp.editor.page_editor.PageEditExercise;
 import slapp.editor.page_editor.PageEditModel;
@@ -131,6 +134,10 @@ public class TypeSelectorFactories {
             case "TruthTableGenModel": {
                 TruthTableGenModel truthTableGenModel = (TruthTableGenModel) objectModel;
                 return new TruthTableGenExercise(truthTableGenModel, mainWindow);
+            }
+            case "MapABExpModel": {
+                MapABExpModel mapABExpModel = (MapABExpModel) objectModel;
+                return new MapABExpExercise(mapABExpModel, mainWindow);
             }
             case "VerticalTreeModel": {
                 VerticalTreeModel verticalTreeModel = (VerticalTreeModel) objectModel;
@@ -263,6 +270,15 @@ public class TypeSelectorFactories {
                 TruthTableGenCreate truthTableGenCreate = new TruthTableGenCreate(mainWindow, truthTableGenModel);
                 break;
             }
+            case "MapABExpModel": {
+                MapABExpModel mapABExpModel = (MapABExpModel) objectModel;
+                if (mapABExpModel.isStarted()) {
+                    EditorAlerts.showSimpleAlert("Cannot Open", "This exercise appears to have the content area modified.  Cannot open in create window.");
+                    break;
+                }
+                MapABExpCreate mapABExpCreate = new MapABExpCreate(mainWindow, mapABExpModel);
+                break;
+            }
             case "VerticalTreeModel": {
                 VerticalTreeModel verticalTreeModel = (VerticalTreeModel) objectModel;
                 if (verticalTreeModel.isStarted()) {
@@ -376,6 +392,10 @@ public class TypeSelectorFactories {
             }
             case TRUTH_TABLE_GENERATE: {
                 TruthTableGenCreate truthTableGenCreate = new TruthTableGenCreate(mainWindow);
+                break;
+            }
+            case MAP_AB_EXPLAIN: {
+                MapABExpCreate mapABExpCreate = new MapABExpCreate(mainWindow);
                 break;
             }
             case VERTICAL_TREE: {
