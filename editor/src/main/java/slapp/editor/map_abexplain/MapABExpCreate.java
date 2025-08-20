@@ -824,7 +824,7 @@ public class MapABExpCreate {
         stage = new Stage();
         stage.initOwner(EditorMain.mainStage);
         stage.setScene(scene);
-        stage.setTitle("Create Vertical Tree AB Explain Exercise:");
+        stage.setTitle("Create Map AB Explain Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
 
         stage.setWidth(930);

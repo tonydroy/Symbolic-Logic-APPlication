@@ -23,7 +23,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
-import slapp.editor.vert_tree_abexplain.ABExpMapFormulaBox;
 
 import java.util.Arrays;
 import java.util.UUID;
@@ -80,9 +79,9 @@ public class MapABExpClickableMapLink extends Pane {
 
     }
 
-    public void bindEnds (MapABExpMapFormulaBox box1, MapABExpMapFormulaBox box2) {
-        MapABExpMapFormulaBox source;
-        MapABExpMapFormulaBox target;
+    public void bindEnds (MapABExpFormulaBox box1, MapABExpFormulaBox box2) {
+        MapABExpFormulaBox source;
+        MapABExpFormulaBox target;
 
 
         if (box1.getLayoutY() < box2.getLayoutY()) {

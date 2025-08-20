@@ -345,8 +345,8 @@ public class MapABExpRootLayout extends AnchorPane {
                 ObservableList<Node> nodesList = main_pane.getChildren();
                 for (Node node : nodesList) {
                     if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
-                        if (node instanceof slapp.editor.map_abexplain.MapABExpMapFormulaBox) {
-                            ((slapp.editor.map_abexplain.MapABExpMapFormulaBox) node).processMappingRequest(event.getButton() == MouseButton.PRIMARY);
+                        if (node instanceof MapABExpFormulaBox) {
+                            ((MapABExpFormulaBox) node).processMappingRequest(event.getButton() == MouseButton.PRIMARY);
                             break;
                         }
                     }
@@ -360,10 +360,10 @@ public class MapABExpRootLayout extends AnchorPane {
                 KeyCode code = e.getCode();
                 if (code == KeyCode.F11) {
                     ObservableList<Node> nodesList = main_pane.getChildren();
-                    List<slapp.editor.map_abexplain.MapABExpMapFormulaBox> formulaBoxes = new ArrayList<>();
+                    List<MapABExpFormulaBox> formulaBoxes = new ArrayList<>();
                     for (Node node : nodesList) {
-                        if (node instanceof slapp.editor.map_abexplain.MapABExpMapFormulaBox) {
-                            slapp.editor.map_abexplain.MapABExpMapFormulaBox mapFormulaBox = (slapp.editor.map_abexplain.MapABExpMapFormulaBox) node;
+                        if (node instanceof MapABExpFormulaBox) {
+                            MapABExpFormulaBox mapFormulaBox = (MapABExpFormulaBox) node;
                             if (mapFormulaBox.getMapStage() > 0) {
                                 formulaBoxes.add(mapFormulaBox);
                             }
@@ -385,11 +385,11 @@ public class MapABExpRootLayout extends AnchorPane {
                     ObservableList<Node> nodesList = main_pane.getChildren();
                     for (Node node : nodesList) {
                         if (inHierarchy(mapView.getMainView().getMainScene().focusOwnerProperty().get(), node)) {
-                            if (node instanceof slapp.editor.map_abexplain.MapABExpMapFormulaBox) {
-                                slapp.editor.map_abexplain.MapABExpMapFormulaBox mapFormulaBox = (slapp.editor.map_abexplain.MapABExpMapFormulaBox) node;
+                            if (node instanceof MapABExpFormulaBox) {
+                                MapABExpFormulaBox mapFormulaBox = (MapABExpFormulaBox) node;
                                 if (mapFormulaBox.getMapStage() > 0) {
 
-                                    slapp.editor.map_abexplain.MapABExpMapQuestionMarker mapQuestionMarker = new MapABExpMapQuestionMarker(mapView);
+                                    MapABExpQuestionMarker mapQuestionMarker = new MapABExpQuestionMarker(mapView);
                                     main_pane.getChildren().add(0, mapQuestionMarker);
                                     mapQuestionMarker.bindQuestionLabel(mapFormulaBox);
                                     mapView.setUndoRedoFlag(true);
@@ -418,8 +418,8 @@ public class MapABExpRootLayout extends AnchorPane {
                 main_pane.removeEventFilter(KeyEvent.KEY_PRESSED, mappingKeyFilter);
                 ObservableList<Node> nodesList = main_pane.getChildren();
                 for (Node node : nodesList) {
-                    if (node instanceof slapp.editor.map_abexplain.MapABExpMapFormulaBox) {
-                        ((slapp.editor.map_abexplain.MapABExpMapFormulaBox) node).undoMappingRequest();
+                    if (node instanceof MapABExpFormulaBox) {
+                        ((MapABExpFormulaBox) node).undoMappingRequest();
                     }
                 }
             }
@@ -601,7 +601,7 @@ public class MapABExpRootLayout extends AnchorPane {
                         }
 
                         else if (container.getValue("type").equals(DragIconType.map_field.toString())) {
-                            slapp.editor.map_abexplain.MapABExpMapFormulaBox mapFormulaBox = new MapABExpMapFormulaBox(mapView);
+                            MapABExpFormulaBox mapFormulaBox = new MapABExpFormulaBox(mapView);
                             main_pane.getChildren().add(mapFormulaBox);
                             Point2D cursorPoint = container.getValue("scene_coords");
                             mapFormulaBox.relocateToGridPoint(new Point2D(cursorPoint.getX(), cursorPoint.getY()));

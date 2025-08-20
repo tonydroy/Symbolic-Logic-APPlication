@@ -22,15 +22,13 @@ import javafx.scene.control.Label;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
-import slapp.editor.map_abexplain.MapABExpMapFormulaBox;
-import slapp.editor.map_abexplain.MapABExpView;
 
 import java.util.Arrays;
 import java.util.UUID;
 
 import static javafx.beans.binding.Bindings.add;
 
-public class MapABExpMapQuestionMarker extends Pane {
+public class MapABExpQuestionMarker extends Pane {
 
     MapABExpView verticalTreeView;
     Label questionLabel;
@@ -42,7 +40,7 @@ public class MapABExpMapQuestionMarker extends Pane {
 
 
 
-    public MapABExpMapQuestionMarker(MapABExpView verticalTreeView) {
+    public MapABExpQuestionMarker(MapABExpView verticalTreeView) {
         this.verticalTreeView = verticalTreeView;
         this.getStylesheets().add("/drag_drop.css");
         this.setPickOnBounds(false);
@@ -69,7 +67,7 @@ public class MapABExpMapQuestionMarker extends Pane {
         });
     }
 
-    public void bindQuestionLabel (MapABExpMapFormulaBox formulaBox) {
+    public void bindQuestionLabel (MapABExpFormulaBox formulaBox) {
         targetMapStage = formulaBox.getMapStage();
         targetXAnchors = Arrays.copyOf(formulaBox.getMapXAnchors(), 2);
         targetId = formulaBox.getIdString();

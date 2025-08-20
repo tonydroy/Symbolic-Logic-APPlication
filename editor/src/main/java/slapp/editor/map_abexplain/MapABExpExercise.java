@@ -57,7 +57,6 @@ import slapp.editor.vertical_tree.drag_drop.DragIconType;
 import slapp.editor.vertical_tree.drag_drop.MapFormulaBox;
 import slapp.editor.vertical_tree.drag_drop.TreeFormulaBox;
 import slapp.editor.vertical_tree.object_models.*;
-import slapp.editor.map_abexplain.MapABExpMapFormulaBox;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -225,7 +224,7 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
         }
 
         for (MapFormulaBoxMod mapBoxMod : mapModel.getMapFormulaBoxes()) {
-            MapABExpMapFormulaBox mapFormulaBox = new MapABExpMapFormulaBox(mapView);
+            MapABExpFormulaBox mapFormulaBox = new MapABExpFormulaBox(mapView);
             mainPane.getChildren().add(mapFormulaBox);
             mapFormulaBox.setLayoutX(mapBoxMod.getLayoutX());
             mapFormulaBox.setLayoutY(mapBoxMod.getLayoutY());
@@ -301,13 +300,13 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
         }
 
         for (MapQuestionMarkerMod mapQuestMod : mapModel.getMapQuestionMarkers()) {
-            MapABExpMapQuestionMarker mapQuestion = new MapABExpMapQuestionMarker(mapView);
+            MapABExpQuestionMarker mapQuestion = new MapABExpQuestionMarker(mapView);
             mainPane.getChildren().add(mapQuestion);
             mapQuestion.setId(mapQuestMod.getIdString());
 
             for (Node node : nodesList) {
-                if (node instanceof MapABExpMapFormulaBox) {
-                    MapABExpMapFormulaBox mapBox = (MapABExpMapFormulaBox) node;
+                if (node instanceof MapABExpFormulaBox) {
+                    MapABExpFormulaBox mapBox = (MapABExpFormulaBox) node;
                     if (mapBox.getIdString().equals(mapQuestMod.getTargetId())) {
                         mapBox.setMapStage(mapQuestMod.getTargetMapStage());
                         mapBox.setMapXAnchors(mapQuestMod.getTargetXAnchors());
@@ -324,11 +323,11 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
             mainPane.getChildren().add(0, mapLink);
             mapLink.setId(mapLinkMod.getIdString());
 
-            MapABExpMapFormulaBox source = null;
-            MapABExpMapFormulaBox target = null;
+            MapABExpFormulaBox source = null;
+            MapABExpFormulaBox target = null;
             for (Node node : nodesList) {
-                if (node instanceof MapABExpMapFormulaBox) {
-                    MapABExpMapFormulaBox mapFormulaBox = (MapABExpMapFormulaBox) node;
+                if (node instanceof MapABExpFormulaBox) {
+                    MapABExpFormulaBox mapFormulaBox = (MapABExpFormulaBox) node;
                     if (mapFormulaBox.getIdString().equals(mapLinkMod.getSourceId())) {
                         source = mapFormulaBox;
                         source.setMapStage(mapLinkMod.getSourceMapStage());
@@ -603,8 +602,8 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
                 treeBox.getFormulaBox().getRTA().setMinWidth(treeBox.getPrintWidth());
                 if (treeBox.getAnnotationField() != null) treeBox.getAnnotationField().getRTA().setStyle("-fx-border-color: transparent");
             }
-            if (node instanceof MapABExpMapFormulaBox) {
-                MapABExpMapFormulaBox mapBox = (MapABExpMapFormulaBox) node;
+            if (node instanceof MapABExpFormulaBox) {
+                MapABExpFormulaBox mapBox = (MapABExpFormulaBox) node;
                 mapBox.getFormulaBox().getRTA().setStyle("-fx-border-color: transparent");
                 mapBox.getFormulaBox().getRTA().setMinWidth(mapBox.getPrintWidth());
             }
@@ -729,8 +728,8 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
                 MapABExpTreeFormulaBox treeBox = (MapABExpTreeFormulaBox) node;
                 if (treeBox.getFormulaBox().getRTA().isModified()) exerciseModified = true;
             }
-            if (node instanceof MapABExpMapFormulaBox) {
-                MapABExpMapFormulaBox mapBox = (MapABExpMapFormulaBox) node;
+            if (node instanceof MapABExpFormulaBox) {
+                MapABExpFormulaBox mapBox = (MapABExpFormulaBox) node;
                 if (mapBox.getFormulaBox().getRTA().isModified()) exerciseModified = true;
             }
         }
@@ -844,8 +843,8 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
                 newTreeMod.setBaseline(originalTreeBox.getBaseline());
                 model.getTreeFormulaBoxes().add(newTreeMod);
 
-            } else if (node instanceof MapABExpMapFormulaBox) {
-                MapABExpMapFormulaBox originalMapBox = (MapABExpMapFormulaBox) node;
+            } else if (node instanceof MapABExpFormulaBox) {
+                MapABExpFormulaBox originalMapBox = (MapABExpFormulaBox) node;
                 MapFormulaBoxMod newMapMod = new MapFormulaBoxMod();
                 newMapMod.setIdString(originalMapBox.getIdString());
                 newMapMod.setLayoutX(originalMapBox.getLayoutX());
@@ -885,8 +884,8 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
                 mapLinkMod.setSourceXAnchors(mapLink.getSourceXAnchors()); mapLinkMod.setTargetXAnchors(mapLink.getTargetXAnchors());
                 model.getClickableMapLinks().add(mapLinkMod);
 
-            } else if (node instanceof MapABExpMapQuestionMarker) {
-                MapABExpMapQuestionMarker mapQuest = (MapABExpMapQuestionMarker) node;
+            } else if (node instanceof MapABExpQuestionMarker) {
+                MapABExpQuestionMarker mapQuest = (MapABExpQuestionMarker) node;
                 MapQuestionMarkerMod qMod = new MapQuestionMarkerMod(mapQuest.getIdString(), mapQuest.getTargetId(), mapQuest.getTargetMapStage(), mapQuest.getTargetXAnchors());
                 model.getMapQuestionMarkers().add(qMod);
             }  

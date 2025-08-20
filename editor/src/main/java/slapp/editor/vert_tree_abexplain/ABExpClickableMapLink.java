@@ -23,9 +23,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
-import slapp.editor.map_abexplain.MapABExpMapFormulaBox;
-import slapp.editor.vert_tree_abexplain.ABExpMapFormulaBox;
-import slapp.editor.vert_tree_abexplain.VerticalTreeABExpView;
 
 import java.util.Arrays;
 import java.util.UUID;

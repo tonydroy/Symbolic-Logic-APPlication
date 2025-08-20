@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.UUID;
 
-public class MapABExpMapFormulaBox extends AnchorPane {
+public class MapABExpFormulaBox extends AnchorPane {
     private MapABExpView mapView;
 
     private Label leftDragLabel;
@@ -60,7 +60,7 @@ public class MapABExpMapFormulaBox extends AnchorPane {
 
     private Point2D mDragOffset = new Point2D (0.0, 0.0);
 
-    private final MapABExpMapFormulaBox self;
+    private final MapABExpFormulaBox self;
 
     private BoxedDRTA formulaBox;
 
@@ -81,7 +81,7 @@ public class MapABExpMapFormulaBox extends AnchorPane {
     Double[] mapXAnchors = new Double[2];
     private double printWidth;
 
-    public MapABExpMapFormulaBox(MapABExpView mapView) {
+    public MapABExpFormulaBox(MapABExpView mapView) {
         this.mapView = mapView;
         self = this;
         mapMarkers = new Label[]{new Label("|"), new Label("|")};
