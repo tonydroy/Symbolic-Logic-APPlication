@@ -84,7 +84,7 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
         if (model.getOriginalModel() == null) {model.setOriginalModel(model); }
         this.mainView = mainWindow.getMainView();
         this.mapView = new MapABExpView(mainView, this);
-        setVerticalTreeView();
+        setMapView();
 
         mapCheck = new MapABExpCheck(this);
         undoRedoList = new UndoRedoList<>(50);
@@ -103,10 +103,10 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
 
     }
 
-    private void setVerticalTreeView() {
+    private void setMapView() {
         mapView.setExplainPrompt(mapModel.getExplainPrompt());
         mapView.setDefaultKeyboard(mapModel.getDefaultKeyboardType());
-        mapView.setDefaultMapKeyboard(mapModel.getDefaultMapKeyboardType());
+        mapView.setDefaultMapKeyboard(mapModel.getDefaultObjectKeyboardType());
         mapView.setStatementPrefHeight(mapModel.getStatementPrefHeight());
         mapView.setCommentPrefHeight(mapModel.getCommentPrefHeight());
         mapView.setExplainPrefHeight(mapModel.getExplainPrefHeight());
@@ -194,7 +194,7 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
         mapView.getUndoButton().setOnAction(e -> undoAction());
         mapView.getRedoButton().setOnAction(e -> redoAction());
 
-        populateControlBox();
+   //   populateControlBox();
         for (DragIconType type : mapModel.getDragIconList()) {
             mapView.getRootLayout().addDragIcon(type);
         }
@@ -237,7 +237,9 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
             RichTextArea mapBoxRTA = formulaBox.getRTA();
 //            mapBoxRTA.setPrefWidth(mapBoxMod.getWidth());
             mapBoxRTA.getActionFactory().open(mapBoxMod.getText()).execute(new ActionEvent());
+
             mapBoxRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
         }
 
         for (TreeFormulaBoxMod treeBoxMod : mapModel.getTreeFormulaBoxes()) {
@@ -518,7 +520,7 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
     }
 
     public void pushUndoRedo() {
-        MapABExpModel model = getVerticalTreeModelFromView();
+        MapABExpModel model = getMapModelFromView();
         MapABExpModel deepCopy = (MapABExpModel) SerializationUtils.clone(model);
         undoRedoList.push(deepCopy);
         updateUndoRedoButtons();
@@ -533,7 +535,7 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
 
     @Override
     public void saveExercise(boolean saveAs) {
-        boolean success = DiskUtilities.saveExercise(saveAs, getVerticalTreeModelFromView());
+        boolean success = DiskUtilities.saveExercise(saveAs, getMapModelFromView());
         if (success) exerciseModified = false;
     }
 
@@ -748,15 +750,15 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
     public Spinner getFFWidthSpinner() {return null;}
     @Override
     public ExerciseModel<MapABExpModel> getExerciseModelFromView() {
-        return (ExerciseModel) getVerticalTreeModelFromView();
+        return (ExerciseModel) getMapModelFromView();
     }
 
-    private MapABExpModel getVerticalTreeModelFromView() {
+    private MapABExpModel getMapModelFromView() {
         MapABExpModel model = new MapABExpModel();
 
         model.setExerciseName(mapModel.getExerciseName());
         model.setDefaultKeyboardType(mapModel.getDefaultKeyboardType());
-        model.setDefaultMapKeyboardType(mapModel.getDefaultMapKeyboardType());
+        model.setDefaultObjectKeyboardType(mapModel.getDefaultObjectKeyboardType());
         model.setExplainPrompt(mapModel.getExplainPrompt());
         model.setOriginalModel(mapModel.getOriginalModel());
 

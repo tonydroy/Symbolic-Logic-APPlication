@@ -4,6 +4,7 @@ import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -154,7 +155,9 @@ public class MapABExpCheck implements VTAuxCheck {
         if (checkType == VTCheckType.NONE) mapABExpView.getCheckButton().setDisable(true);
 
         mapABExpView.getCheckButton().setOnAction(e -> {
-            checkTree();
+  //          checkTree();
+
+            dumpFormulaBoxes();
         });
 
 //        vtView.getCheckProgButton().setOnAction(e -> {
@@ -168,6 +171,24 @@ public class MapABExpCheck implements VTAuxCheck {
             if (helpStage != null && helpStage.isShowing()) helpStage.close();
             else mapABExpView.showStaticHelp(mapABExpModel.getCheckSetup().getStaticHelpDoc());
         });
+    }
+
+    private void dumpFormulaBoxes() {
+        List<Node> nodes = mapABExpView.getRootLayout().getMain_pane().getChildren();
+        for (Node node : nodes) {
+            if (node instanceof MapABExpFormulaBox) {
+                MapABExpFormulaBox box = (MapABExpFormulaBox) node;
+                System.out.println("Box:");
+                System.out.println("id: " + box.getIdString());
+                System.out.println("text: " + box.getFormulaBox().getRTA().getDocument().getText());
+                System.out.println("Layout X: " + box.getLayoutX());
+                System.out.println("Layout Y: " + box.getLayoutY());
+                System.out.println("Width: " + box.getFormulaBox().getRTA().getPrefWidth());
+            }
+        }
+
+
+
     }
 
     private void setChecksCounter() {

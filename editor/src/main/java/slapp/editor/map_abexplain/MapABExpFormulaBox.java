@@ -54,7 +54,7 @@ public class MapABExpFormulaBox extends AnchorPane {
     private EventHandler <DragEvent> mContextDragDropped;
 
     private AnchorPane right_pane = null;
-    private List<String> mLinkIds = new ArrayList<>();
+    private List<String> mLinkIds;
 
     private DragIconType mType = DragIconType.map_field;
 
@@ -69,11 +69,6 @@ public class MapABExpFormulaBox extends AnchorPane {
     private VBox centerBox;
 
     private String idString = "";
-
-
-
-
-
     Rectangle oval = new Rectangle();
     EventHandler mappingKeyFilter;
     int mapStage = 0;
@@ -84,14 +79,33 @@ public class MapABExpFormulaBox extends AnchorPane {
     public MapABExpFormulaBox(MapABExpView mapView) {
         this.mapView = mapView;
         self = this;
+        mLinkIds = new ArrayList<>();
         mapMarkers = new Label[]{new Label("|"), new Label("|")};
 
         leftDragLabel = new Label("");
         leftDragLabel.setMaxWidth(10);
         leftDragLabel.setMinWidth(10);
+        leftDragLabel.setPrefWidth(10);
+        leftDragLabel.setMaxHeight(21);
+        leftDragLabel.setMinHeight(21);
+        leftDragLabel.setPadding(new Insets(0));
+
+        leftDragLabel.setOnMouseEntered(e -> {
+            leftDragLabel.setStyle("-fx-background-color: grey; -fx-background-radius: 5 0 0 5;");
+        });
+        leftDragLabel.setOnMouseExited(e -> {
+            leftDragLabel.setStyle("-fx-background-color: transparent");
+        });
+
+        /*
+        leftDragLabel = new Label("");
+        leftDragLabel.setMaxWidth(10);
+        leftDragLabel.setMinWidth(20);
         leftDragLabel.setMaxHeight(10);
         leftDragLabel.setPadding(new Insets(0));
         //       leftDragLabel.setStyle("-fx-background-color: red");
+
+         */
 
         closeLabel = new Label();
         closeLabel.setMaxHeight(10);
@@ -109,7 +123,7 @@ public class MapABExpFormulaBox extends AnchorPane {
         labelPane.getRowConstraints().addAll(closeRowConstraints, moveRowConstraints);
         labelPane.add(closeLabel, 0, 0); labelPane.add(leftDragLabel, 0, 1);
 
-
+/*
         leftDragLabel.setOnMouseEntered(e -> {
             leftDragLabel.setStyle("-fx-background-color: grey; -fx-background-radius: 0 0 0 5;");
             closeLabel.setStyle("-fx-background-color: black; -fx-background-radius: 5 0 0 0;");
@@ -120,6 +134,8 @@ public class MapABExpFormulaBox extends AnchorPane {
             closeLabel.setStyle("-fx-background-color:transparent");
             //           leftDragLabel.setCursor(Cursor.DEFAULT);
         });
+
+ */
 
         closeLabel.setOnMouseEntered(e -> {
             leftDragLabel.setStyle("-fx-background-color: grey; -fx-background-radius: 0 0 0 5");
@@ -140,7 +156,8 @@ public class MapABExpFormulaBox extends AnchorPane {
         centerBox = new VBox(formulaBox.getBoxedRTA());
         centerBox.setAlignment(Pos.CENTER);
 
-        mainBox = new HBox(labelPane, centerBox);
+     //   mainBox = new HBox(labelPane, centerBox);
+        mainBox = new HBox(leftDragLabel, centerBox);
         mainBox.setAlignment(Pos.TOP_CENTER);
         mainBox.setMargin(labelPane, new Insets(2, 0, 0, 0));
 

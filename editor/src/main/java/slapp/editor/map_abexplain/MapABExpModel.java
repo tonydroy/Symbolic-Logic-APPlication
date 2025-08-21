@@ -30,10 +30,9 @@ import java.util.List;
 public class MapABExpModel implements ExerciseModel<Document>, Serializable {
     private static final long serialVersionUID = 100L;
     private String exerciseName = new String("");
-    private ExerciseType exerciseType = ExerciseType.VERTICAL_TREE;
-    private RichTextAreaSkin.KeyMapValue defaultKeyboardType;
-    private RichTextAreaSkin.KeyMapValue defaultMapKeyboardType;
+    private ExerciseType exerciseType = ExerciseType.MAP_AB_EXPLAIN;
     private ExerciseModel<Document> originalModel = null;
+
     private boolean started = false;
     private Document exerciseStatement = new Document();
     private double statementPrefHeight = 80;
@@ -47,15 +46,10 @@ public class MapABExpModel implements ExerciseModel<Document>, Serializable {
     private double mainPanePrefHeight = 150;  //275
     private double mainPanePrefWidth;
 
-    private List<DragIconType> dragIconList = new ArrayList<>();
-    private List<ObjectControlType> objectControlList = new ArrayList<>();
-    private List<TreeFormulaBoxMod> treeFormulaBoxes = new ArrayList<>();
+    private RichTextAreaSkin.KeyMapValue defaultObjectKeyboardType;
+
     private List<MapFormulaBoxMod> mapFormulaBoxes = new ArrayList<>();
-    private List<VerticalBracketMod> verticalBrackets = new ArrayList<>();
-    private List<DashedLineMod> dashedLineMods = new ArrayList<>();
-    private List<ClickableNodeLinkMod> clickableNodeLinks = new ArrayList<>();
-    private List<ClickableMapLinkMod> clickableMapLinks = new ArrayList<>();
-    private List <MapQuestionMarkerMod> mapQuestionMarkers = new ArrayList<>();
+
     private String choiceLead = new String("");
     private String aPrompt = new String("");
     private boolean aSelected = false;
@@ -64,6 +58,19 @@ public class MapABExpModel implements ExerciseModel<Document>, Serializable {
     private String explainPrompt = "";
     private int pointsPossible;
     private int pointsEarned;
+
+    //-----------
+
+    private RichTextAreaSkin.KeyMapValue defaultKeyboardType;
+
+    private List<DragIconType> dragIconList = new ArrayList<>();
+    private List<ObjectControlType> objectControlList = new ArrayList<>();
+    private List<TreeFormulaBoxMod> treeFormulaBoxes = new ArrayList<>();
+    private List<VerticalBracketMod> verticalBrackets = new ArrayList<>();
+    private List<DashedLineMod> dashedLineMods = new ArrayList<>();
+    private List<ClickableNodeLinkMod> clickableNodeLinks = new ArrayList<>();
+    private List<ClickableMapLinkMod> clickableMapLinks = new ArrayList<>();
+    private List <MapQuestionMarkerMod> mapQuestionMarkers = new ArrayList<>();
     private VTcheckSetup checkSetup;
 
 
@@ -71,7 +78,7 @@ public class MapABExpModel implements ExerciseModel<Document>, Serializable {
         pointsPossible = 0;
         pointsEarned = -1;
         this.checkSetup = new VTcheckSetup();
-        this.defaultMapKeyboardType = RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS;
+        this.defaultObjectKeyboardType = RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS;
     }
 
     public VTcheckSetup getCheckSetup() {
@@ -146,12 +153,12 @@ public class MapABExpModel implements ExerciseModel<Document>, Serializable {
 
     void setDefaultKeyboardType(RichTextAreaSkin.KeyMapValue defaultKeyboardType) {     this.defaultKeyboardType = defaultKeyboardType;   }
 
-    public RichTextAreaSkin.KeyMapValue getDefaultMapKeyboardType() {
-        return defaultMapKeyboardType;
+    public RichTextAreaSkin.KeyMapValue getDefaultObjectKeyboardType() {
+        return defaultObjectKeyboardType;
     }
 
-    public void setDefaultMapKeyboardType(RichTextAreaSkin.KeyMapValue defaultMapKeyboardType) {
-        this.defaultMapKeyboardType = defaultMapKeyboardType;
+    public void setDefaultObjectKeyboardType(RichTextAreaSkin.KeyMapValue defaultObjectKeyboardType) {
+        this.defaultObjectKeyboardType = defaultObjectKeyboardType;
     }
 
     double getCommentPrefHeight() {     return commentPrefHeight;  }

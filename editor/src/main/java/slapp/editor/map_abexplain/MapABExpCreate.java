@@ -42,6 +42,7 @@ import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import slapp.editor.DiskUtilities;
 import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
 import slapp.editor.PrintUtilities;
@@ -52,17 +53,13 @@ import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
 import slapp.editor.parser.*;
-import slapp.editor.map_abexplain.MapABExpExercise;
-import slapp.editor.map_abexplain.MapABExpModel;
 import slapp.editor.vertical_tree.VTCheckType;
 import slapp.editor.vertical_tree.VTcheckSetup;
 import slapp.editor.vertical_tree.drag_drop.DragIconType;
+import slapp.editor.vertical_tree.object_models.MapFormulaBoxMod;
 import slapp.editor.vertical_tree.object_models.ObjectControlType;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.UnaryOperator;
 
 import static com.gluonhq.richtextarea.RichTextAreaSkin.KeyMapValue.*;
@@ -140,6 +137,9 @@ public class MapABExpCreate {
     CheckBox choiceABox;
     CheckBox choiceBBox;
 
+    BoxedDRTA metaFormulaBoxedDRTA;
+    BoxedDRTA objectFormulaBoxedDRTA;
+
 
     public MapABExpCreate(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
@@ -155,12 +155,18 @@ public class MapABExpCreate {
         statementTextHeight = originalModel.getStatementTextHeight();
         nameField.setText(originalModel.getExerciseName());
         treeBoxKeyboardSelector = originalModel.getDefaultKeyboardType();
-        mapBoxKeyboardSelector = originalModel.getDefaultMapKeyboardType();
+        mapBoxKeyboardSelector = originalModel.getDefaultObjectKeyboardType();
 
         choiceLeadField.setText(originalModel.getChoiceLead());
         aPromptField.setText(originalModel.getaPrompt());
         bPromptField.setText(originalModel.getbPrompt());
         explainPromptField.setText(originalModel.getExplainPrompt());
+
+        metaFormulaBoxedDRTA.getRTA().getActionFactory().open(originalModel.getMapFormulaBoxes().get(0).getText()).execute(new ActionEvent());
+        metaFormulaBoxedDRTA.getRTA().getActionFactory().saveNow().execute(new ActionEvent());
+        objectFormulaBoxedDRTA.getRTA().getActionFactory().open(originalModel.getMapFormulaBoxes().get(1).getText()).execute(new ActionEvent());
+        objectFormulaBoxedDRTA.getRTA().getActionFactory().saveNow().execute(new ActionEvent());
+
 
         List<DragIconType> dragIconList = originalModel.getDragIconList();
         treeBoxItalicSansCheck.setSelected(dragIconList.contains(tree_field) && treeBoxKeyboardSelector == ITALIC_AND_SANS);
@@ -322,6 +328,7 @@ public class MapABExpCreate {
         HBox nameBox = new HBox(nameLabel, nameField);
         nameBox.setAlignment(Pos.BASELINE_LEFT);
 
+        //points
         Label pointsPossibleLabel = new Label("Points Possible: ");
         pointsPossibleLabel.setPrefWidth(100);
         pointsPossibleTextField = new TextField();
@@ -342,6 +349,130 @@ public class MapABExpCreate {
         HBox pointsBox = new HBox(pointsPossibleLabel, pointsPossibleTextField);
         pointsBox.setAlignment(Pos.BASELINE_LEFT);
 
+        //explain prompt
+        Label promptLabel = new Label("Explain Prompt: ");
+        promptLabel.setPrefWidth(100);
+        explainPromptField = new TextField();
+        explainPromptField.setPromptText("(plain text)");
+        explainPromptListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                modified = true;
+            }
+        };
+        explainPromptField.textProperty().addListener(explainPromptListener);
+
+        explainPromptField.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) textFieldInFocus();
+        });
+
+        HBox promptBox = new HBox(promptLabel, explainPromptField);
+        promptBox.setAlignment(Pos.BASELINE_LEFT);
+
+        //choice fields
+        Label choiceLeadLabel = new Label("Checkbox lead: ");
+        choiceLeadLabel.setPrefWidth(90);
+        choiceLeadField  = new TextField();
+        choiceLeadField.setPromptText("(plain text)");
+        choiceLeadListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                modified = true;
+                choiceLeadField.textProperty().removeListener(choiceLeadListener);
+            }
+        };
+        choiceLeadField.textProperty().addListener(choiceLeadListener);
+
+        choiceLeadField.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) textFieldInFocus();
+        });
+
+        Label aPromptLabel = new Label("A prompt: ");
+        aPromptLabel.setPrefWidth(90);
+        aPromptLabel.setAlignment(Pos.CENTER_RIGHT);
+        aPromptField  = new TextField();
+        aPromptField.setPromptText("(plain text)");
+        aPromptListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                modified = true;
+                aPromptField.textProperty().removeListener(aPromptListener);
+            }
+        };
+        aPromptField.textProperty().addListener(aPromptListener);
+
+        aPromptField.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) textFieldInFocus();
+        });
+
+        Label bPromptLabel = new Label("B prompt: ");
+        bPromptField  = new TextField();
+        bPromptField.setPromptText("(plain text)");
+        bPromptListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                modified = true;
+                bPromptField.textProperty().removeListener(bPromptListener);
+            }
+        };
+        bPromptField.textProperty().addListener(bPromptListener);
+
+        bPromptField.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) textFieldInFocus();
+        });
+
+        HBox choicesBox = new HBox(10, choiceLeadLabel, choiceLeadField, aPromptLabel, aPromptField, bPromptLabel, bPromptField);
+        choicesBox.setAlignment(Pos.CENTER_LEFT);
+
+        //formula fields
+
+        metaFormulaBoxedDRTA = new BoxedDRTA();
+        metaFormulaBoxedDRTA.getDRTA().getKeyboardSelector().valueProperty().setValue(SCRIPT_AND_ITALIC);
+        RichTextArea metaFormulaRTA = metaFormulaBoxedDRTA.getRTA();
+
+        metaFormulaRTA.setMaxHeight(27);
+        metaFormulaRTA.setMinHeight(27);
+        metaFormulaRTA.setPrefWidth(400);
+        metaFormulaRTA.setContentAreaWidth(500);
+        metaFormulaRTA.getStylesheets().add("RichTextFieldWide.css");
+        metaFormulaRTA.setPromptText("Meta Expression");
+
+        metaFormulaRTA.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) {
+                editorInFocus(metaFormulaBoxedDRTA.getDRTA(), ControlType.FIELD);
+            }
+        });
+        Label metaFormulaLabel = new Label("Meta Exp:");
+        metaFormulaLabel.setPrefWidth(90);
+        HBox metaBox = new HBox(10, metaFormulaLabel, metaFormulaBoxedDRTA.getBoxedRTA());
+        metaBox.setAlignment(Pos.CENTER_LEFT);
+
+        objectFormulaBoxedDRTA = new BoxedDRTA();
+        objectFormulaBoxedDRTA.getDRTA().getKeyboardSelector().valueProperty().setValue(ITALIC_AND_SANS);
+        RichTextArea objectFormulaRTA = objectFormulaBoxedDRTA.getRTA();
+
+        objectFormulaRTA.setMaxHeight(27);
+        objectFormulaRTA.setMinHeight(27);
+        objectFormulaRTA.setPrefWidth(400);
+        objectFormulaRTA.setContentAreaWidth(500);
+        objectFormulaRTA.getStylesheets().add("RichTextFieldWide.css");
+        objectFormulaRTA.setPromptText("Object Expression");
+
+        objectFormulaRTA.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) {
+                editorInFocus(objectFormulaBoxedDRTA.getDRTA(), ControlType.FIELD);
+            }
+        });
+        Label objectFormulaLabel = new Label("Object Exp:");
+        objectFormulaLabel.setPrefWidth(90);
+        HBox objectBox = new HBox(10, objectFormulaLabel, objectFormulaBoxedDRTA.getBoxedRTA());
+        metaBox.setAlignment(Pos.CENTER_LEFT);
+
+        VBox topFieldsBox = new VBox(10, nameBox, pointsBox, promptBox, choicesBox, metaBox, objectBox);
+
+
+
+        //drag bar
         Label dragBarLabel = new Label("Drag Bar: ");
         dragBarLabel.setPrefWidth(80);
 
@@ -413,85 +544,6 @@ public class MapABExpCreate {
         HBox mapFormulaBox = new HBox(20, mapBoxLabel, mapBoxBaseItalicCheck, mapBoxItalicSansCheck, mapBoxScriptItalicCheck);
         mapFormulaBox.setAlignment(Pos.BASELINE_LEFT);
 
-        //prompt
-        Label promptLabel = new Label("Explain Prompt: ");
-        promptLabel.setPrefWidth(100);
-        explainPromptField = new TextField();
-        explainPromptField.setPromptText("(plain text)");
-        explainPromptListener = new ChangeListener() {
-            @Override
-            public void changed(ObservableValue ob, Object ov, Object nv) {
-                modified = true;
-            }
-        };
-        explainPromptField.textProperty().addListener(explainPromptListener);
-
-        explainPromptField.focusedProperty().addListener((ob, ov, nv) -> {
-            if (nv) textFieldInFocus();
-        });
-
-        HBox promptBox = new HBox(promptLabel, explainPromptField);
-        promptBox.setAlignment(Pos.BASELINE_LEFT);
-
-
-
-
-        //choice fields
-        Label choiceLeadLabel = new Label("Checkbox lead: ");
-        choiceLeadLabel.setPrefWidth(90);
-        choiceLeadField  = new TextField();
-        choiceLeadField.setPromptText("(plain text)");
-        choiceLeadListener = new ChangeListener() {
-            @Override
-            public void changed(ObservableValue ob, Object ov, Object nv) {
-                modified = true;
-                choiceLeadField.textProperty().removeListener(choiceLeadListener);
-            }
-        };
-        choiceLeadField.textProperty().addListener(choiceLeadListener);
-
-        choiceLeadField.focusedProperty().addListener((ob, ov, nv) -> {
-            if (nv) textFieldInFocus();
-        });
-
-        Label aPromptLabel = new Label("A prompt: ");
-        aPromptLabel.setPrefWidth(90);
-        aPromptLabel.setAlignment(Pos.CENTER_RIGHT);
-        aPromptField  = new TextField();
-        aPromptField.setPromptText("(plain text)");
-        aPromptListener = new ChangeListener() {
-            @Override
-            public void changed(ObservableValue ob, Object ov, Object nv) {
-                modified = true;
-                aPromptField.textProperty().removeListener(aPromptListener);
-            }
-        };
-        aPromptField.textProperty().addListener(aPromptListener);
-
-        aPromptField.focusedProperty().addListener((ob, ov, nv) -> {
-            if (nv) textFieldInFocus();
-        });
-
-        Label bPromptLabel = new Label("B prompt: ");
-        bPromptField  = new TextField();
-        bPromptField.setPromptText("(plain text)");
-        bPromptListener = new ChangeListener() {
-            @Override
-            public void changed(ObservableValue ob, Object ov, Object nv) {
-                modified = true;
-                bPromptField.textProperty().removeListener(bPromptListener);
-            }
-        };
-        bPromptField.textProperty().addListener(bPromptListener);
-
-        bPromptField.focusedProperty().addListener((ob, ov, nv) -> {
-            if (nv) textFieldInFocus();
-        });
-
-        HBox choicesBox = new HBox(10, choiceLeadLabel, choiceLeadField, aPromptLabel, aPromptField, bPromptLabel, bPromptField);
-        choicesBox.setAlignment(Pos.CENTER_LEFT);
-
-        VBox topFieldsBox = new VBox(10, nameBox, pointsBox, promptBox, choicesBox);
 
         //drag bar
 
@@ -970,12 +1022,14 @@ public class MapABExpCreate {
         bPromptField.textProperty().addListener(bPromptListener);
 
         MapABExpModel model = extractModelFromWindow();
-        MapABExpExercise exercise = new MapABExpExercise(model, mainWindow);
-        RichTextArea rta = exercise.getExerciseView().getExerciseStatement().getEditor();
-        rta.setEditable(false);
-        rta.prefHeightProperty().unbind();
-        exercise.getExerciseView().setStatementPrefHeight(Math.min(PrintUtilities.getPageHeight(), model.getStatementPrefHeight()));
-        exercise.saveExercise(saveAs);
+        DiskUtilities.saveExercise(saveAs, model);
+
+  //      MapABExpExercise exercise = new MapABExpExercise(model, mainWindow);
+   //     RichTextArea rta = exercise.getExerciseView().getExerciseStatement().getEditor();
+  //      rta.setEditable(false);
+ //       rta.prefHeightProperty().unbind();
+ //       exercise.getExerciseView().setStatementPrefHeight(Math.min(PrintUtilities.getPageHeight(), model.getStatementPrefHeight()));
+ //       exercise.saveExercise(saveAs);
         saveButton.setDisable(false);
         saveAsButton.setDisable(false);
         modified = false;
@@ -989,6 +1043,32 @@ public class MapABExpCreate {
         model.setaPrompt(aPromptField.getText());
         model.setbPrompt(bPromptField.getText());
         model.setExplainPrompt(explainPromptField.getText());
+
+        MapFormulaBoxMod metaBoxMod = new MapFormulaBoxMod();
+        metaBoxMod.setIdString("d2f211c8-4a16-4033-9512-06a25cc79df1");
+        metaBoxMod.setLayoutX(62.0);
+        metaBoxMod.setLayoutY(24.0);
+        metaBoxMod.setLinkIdStrings(new ArrayList<>());
+        RichTextArea metaRTA = metaFormulaBoxedDRTA.getRTA();
+        if (metaRTA.isModified()) modified = true;
+        metaRTA.getActionFactory().saveNow().execute(new ActionEvent());
+        metaBoxMod.setText(metaRTA.getDocument());
+
+        MapFormulaBoxMod objectBoxMod = new MapFormulaBoxMod();
+        objectBoxMod.setIdString("33f6eb99-8991-45aa-b9bc-2168975a79bb");
+        objectBoxMod.setLayoutX(62.0);
+        objectBoxMod.setLayoutY(96.0);
+        objectBoxMod.setLinkIdStrings(new ArrayList<>());
+        RichTextArea objectRTA = objectFormulaBoxedDRTA.getRTA();
+        if (objectRTA.isModified()) modified = true;
+        objectRTA.getActionFactory().saveNow().execute(new ActionEvent());
+        objectBoxMod.setText(objectRTA.getDocument());
+
+        model.getMapFormulaBoxes().add(metaBoxMod);
+        model.getMapFormulaBoxes().add(objectBoxMod);
+
+
+
 
         List<DragIconType> dragList = model.getDragIconList();
         if (treeBoxItalicSansCheck.isSelected()) {
@@ -1008,15 +1088,15 @@ public class MapABExpCreate {
         if (dashedLineCheck.isSelected()) dragList.add(dashed_line);
 
         if (mapBoxItalicSansCheck.isSelected()) {
-            model.setDefaultMapKeyboardType(ITALIC_AND_SANS);
+            model.setDefaultObjectKeyboardType(ITALIC_AND_SANS);
             dragList.add(map_field);
         }
         else if (mapBoxBaseItalicCheck.isSelected()) {
-            model.setDefaultMapKeyboardType(BASE);
+            model.setDefaultObjectKeyboardType(BASE);
             dragList.add(map_field);
         }
         else if (mapBoxScriptItalicCheck.isSelected()) {
-            model.setDefaultMapKeyboardType(SCRIPT_AND_ITALIC);
+            model.setDefaultObjectKeyboardType(SCRIPT_AND_ITALIC);
             dragList.add(map_field);
         }
 

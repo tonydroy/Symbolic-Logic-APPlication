@@ -242,8 +242,10 @@ public class MapABExpView implements ExerciseView<DecoratedRTA> {
         AnchorPane mainPane1 = rootLayout.getMain_pane();
         mainPane = rootLayout.getBase_pane();
         mainPane.setStyle("-fx-focus-color: gainsboro;");
+
         mainPane1.setMinHeight(250.0);
         mainPane1.setMinWidth(mainView.getScalePageWidth());
+
 
         mainPaneHeightSpinner = new Spinner<>(5, 999.0, 0, 1.0);
         mainPaneHeightSpinner.setPrefWidth(60);

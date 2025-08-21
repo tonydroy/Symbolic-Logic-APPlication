@@ -78,7 +78,8 @@ public class MapABExpRootLayout extends AnchorPane {
         top_pane = new HBox();
         main_pane = new AnchorPane();
         base_pane = new SplitPane();
-        base_pane.getItems().addAll(top_pane, main_pane);
+     //   base_pane.getItems().addAll(top_pane, main_pane);
+        base_pane.getItems().add(main_pane);
         base_pane.setOrientation(Orientation.VERTICAL);
 
         this.getChildren().add(base_pane);
@@ -424,6 +425,10 @@ public class MapABExpRootLayout extends AnchorPane {
                 }
             }
         });
+
+        main_pane.addEventFilter(MouseEvent.MOUSE_PRESSED, mappingClickFilter);
+        main_pane.addEventFilter(KeyEvent.KEY_PRESSED, mappingKeyFilter);
+
     }
 
     public void initialize() {
