@@ -111,7 +111,7 @@ public class VTcheck implements VTAuxCheck {
         if (checkFinal) {
             vtView.setCheckColor(Color.LAWNGREEN);
             vtView.setCheckElementsColor(Color.GREEN);
-            vtView.setCheckMessage("Full Tree");
+            vtView.setCheckMessage("Tree");
         }
         else {
             vtView.setCheckColor(Color.ORCHID);

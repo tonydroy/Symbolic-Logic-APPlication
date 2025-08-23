@@ -811,7 +811,8 @@ public class VerticalTreeABEFExpExercise implements Exercise<VerticalTreeABEFExp
         VTcheckSetup checkSetup = verticalTreeABEFExpModel.getCheckSetup();
         if (vtABEFExpCheck != null) checkSetup.setCheckTries(vtABEFExpCheck.getCheckTries());
         if (vtABEFExpCheck != null) checkSetup.setCheckSuccess(vtABEFExpCheck.isCheckSuccess());
-        if (vtABEFExpCheck != null) checkSetup.setChoiceSuccess(vtABEFExpCheck.isChoiceSuccess());
+   //     if (vtABEFExpCheck != null) checkSetup.setChoiceSuccess(vtABEFExpCheck.isChoiceSuccess());
+        if (vtABEFExpCheck != null) checkSetup.setCheckMessage(verticalTreeABEFExpView.getCheckMessage());
         model.setCheckSetup(checkSetup);
 
 

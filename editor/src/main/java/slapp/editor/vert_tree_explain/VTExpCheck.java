@@ -112,7 +112,7 @@ public class VTExpCheck implements VTAuxCheck {
         if (checkFinal) {
             vtExpView.setCheckColor(Color.LAWNGREEN);
             vtExpView.setCheckElementsColor(Color.GREEN);
-            vtExpView.setCheckMessage("Full Tree");
+            vtExpView.setCheckMessage("Tree");
         }
         else {
             vtExpView.setCheckColor(Color.ORCHID);

@@ -12,6 +12,7 @@ public class VTcheckSetup implements Serializable {
 
     boolean checkSuccess;
     boolean choiceSuccess;
+    String checkMessage;
     boolean checkFinal;
     int checkMax;
     int checkTries;
@@ -37,7 +38,8 @@ public class VTcheckSetup implements Serializable {
         objLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (abv)
         metLangName = "LM Meta";
         checkSuccess = false;
-        choiceSuccess = false;
+        checkMessage = "";
+        choiceSuccess = false;  //vestigial
         checkFinal = true;
         checkMax = 0;              //0
         checkTries = 0;
@@ -204,5 +206,13 @@ public class VTcheckSetup implements Serializable {
 
     public void setChoiceSuccess(boolean choiceSuccess) {
         this.choiceSuccess = choiceSuccess;
+    }
+
+    public String getCheckMessage() {
+        return checkMessage;
+    }
+
+    public void setCheckMessage(String checkMessage) {
+        this.checkMessage = checkMessage;
     }
 }

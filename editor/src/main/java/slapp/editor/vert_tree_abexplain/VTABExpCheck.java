@@ -75,7 +75,7 @@ public class VTABExpCheck implements VTAuxCheck {
     private VTAuxCheck vtAuxCheckA;
     private Expression getTargetExpression;
 
-    boolean choiceSuccess;
+ //   boolean choiceSuccess;
     boolean checkChoices;
     boolean choiceASet;
     boolean choiceBSet;
@@ -83,6 +83,7 @@ public class VTABExpCheck implements VTAuxCheck {
     boolean choiceAMade;
     boolean choiceBMade;
     boolean choiceMade;
+    String message;
 
 
     VTABExpCheck(VerticalTreeABExpExercise vtABExpExercise) {
@@ -118,7 +119,7 @@ public class VTABExpCheck implements VTAuxCheck {
         checkBoxing = vtABExpModel.getObjectControlList().contains(ObjectControlType.FORMULA_BOX);
         checkUnderline = vtABExpModel.getObjectControlList().contains(ObjectControlType.UNDERLINE);
 
-        choiceSuccess = checkSetup.isChoiceSuccess();
+    //    choiceSuccess = checkSetup.isChoiceSuccess();
         checkChoices = checkSetup.isCheckChoices();
         choiceASet = checkSetup.isChoiceA();
         choiceBSet = checkSetup.isChoiceB();
@@ -129,9 +130,7 @@ public class VTABExpCheck implements VTAuxCheck {
         if (checkFinal) {
             vtABExpView.setCheckColor(Color.LAWNGREEN);
             vtABExpView.setCheckElementsColor(Color.GREEN);
-            String message = "Tree";
-            if (choiceSuccess) message = "Tree / Choice";
-            vtABExpView.setCheckMessage(message);
+            vtABExpView.setCheckMessage(checkSetup.getCheckMessage());
         }
         else {
             vtABExpView.setCheckColor(Color.ORCHID);
@@ -210,6 +209,81 @@ public class VTABExpCheck implements VTAuxCheck {
         return false;
     }
 
+    private boolean checkFormulaTree(boolean checkMarkup) {
+
+        boolean goodTree = true;
+
+        vtABExpView.deactivateBigCheck();
+        if (!vtABExpExercise.getMainWindow().isInstructorFunctions()) {
+            checkTries++;
+            setChecksCounter();
+        }
+
+
+        formulaTree = new ArrayList<>();
+        lineJustifications = new ArrayList<>();
+        checkNodeList = vtABExpView.getRootLayout().getMain_pane().getChildren();
+
+        choiceAMade = vtABExpExercise.getExerciseView().getaCheckBox().isSelected();
+        choiceBMade = vtABExpExercise.getExerciseView().getbCheckBox().isSelected();
+        choiceMade = choiceAMade || choiceBMade;
+
+        if (checkNodeList.isEmpty()) {
+            if (!silent) {
+                EditorAlerts.showSimpleTxtListAlert("Tree Structure", Collections.singletonList(ParseUtilities.newRegularText("No tree to evaluate.")));
+            }
+            goodTree = false;
+        }
+        else {
+            List<Node> sortedFormulaBoxes = getSortedFormulaBoxes();
+
+            if (sortedFormulaBoxes.isEmpty()) {
+                if (!silent) {
+                    EditorAlerts.showSimpleTxtListAlert("Tree Structure", Collections.singletonList(ParseUtilities.newRegularText("No tree to evaluate.")));
+                }
+                goodTree = false;
+            }
+
+            else if (!populateTreeLists(sortedFormulaBoxes)) goodTree = false;
+            else if (!setParentsAndChildren()) goodTree = false;
+            else if (!checkTrueTree()) goodTree = false;
+            else if (!checkContents()) goodTree = false;
+            else if (checkMarkup && !checkMarkup()) goodTree = false;
+        }
+
+        checkSuccess = false;
+
+        if (goodTree) {
+            if (choiceSet && !checkChoiceMade()) {}
+            else if (choiceSet && (checkChoices || vtABExpExercise.getMainWindow().isInstructorFunctions())) {
+                if (checkChoice()) {
+                    checkSuccess = true;
+                    vtABExpView.setCheckMessage("Tree / Choice");
+                }
+            }
+            else {
+                checkSuccess = true;
+                vtABExpView.setCheckMessage("Tree");
+            }
+        }
+        else if  (targetExpression == null) {
+            if (choiceSet && !checkChoiceMade()) {}
+            else if (choiceSet && (checkChoices || vtABExpExercise.getMainWindow().isInstructorFunctions())) {
+                if (checkChoice()) {
+                    checkSuccess = true;
+                    vtABExpView.setCheckMessage("Choice");
+                }
+            }
+        }
+
+        if (checkSuccess) {
+            vtABExpView.activateBigCheck();
+            return true;
+        }
+        else return false;
+    }
+
+
     private boolean checkUnabbTree(boolean checkMarkup) {
 
         checkSuccess = false;
@@ -221,79 +295,95 @@ public class VTABExpCheck implements VTAuxCheck {
 
         formulaTree = new ArrayList<>();
         lineJustifications = new ArrayList<>();
-
         checkNodeList = vtABExpView.getRootLayout().getMain_pane().getChildren();
-        if (checkNodeList.isEmpty()) {
-            if (!silent) {
-                EditorAlerts.showSimpleTxtListAlert("Tree Structure", Collections.singletonList(ParseUtilities.newRegularText("Nothing to evaluate.")));
-            }
-            return false;
-        }
-
-        List<Node> sortedFormulaBoxes = getSortedFormulaBoxes();
-        if (sortedFormulaBoxes.isEmpty()) {
-            if (!silent) {
-                EditorAlerts.showSimpleTxtListAlert("Tree Structure", Collections.singletonList(ParseUtilities.newRegularText("No tree to evaluate.")));
-            }
-            return false;
-        }
-
-        auxExerA =  vtABExpExercise.getVTAuxExer();
-        if (auxExerA == null) {
-            if (!silent) {
-                EditorAlerts.showSimpleTxtListAlert("Auxiliary Tree", Collections.singletonList(ParseUtilities.newRegularText("Missing auxiliary tree.  Cannot check unabbreviation.")));
-            }
-            return false;
-        }
-
-        vtAuxCheckA = auxExerA.getVTAuxCheck();
-        vtAuxCheckA.setCheckType(VTCheckType.UNABB_AUX);
-        if (!vtAuxCheckA.checkTree()) {
-            if (!silent) {
-                EditorAlerts.showSimpleTxtListAlert("Auxiliary Tree", Collections.singletonList(ParseUtilities.newRegularText("Unabbreviation check requires (successfully) completed auxiliary tree.")));
-            }
-            return false;
-        }
-
-        if (!populateTreeLists(sortedFormulaBoxes)) return false;
-        if (!setParentsAndChildren()) return false;
-        if (!checkTrueTree()) return false;
-        if (!checkFormulaContents()) return false;
-        List<List<? extends VTAuxTreeNode>> auxFormulaTree = vtAuxCheckA.getAuxFormulaTree();
-
-        try {
-
-            checkParallelTrees(formulaTree.get(formulaTree.size() - 1).get(0), auxFormulaTree.get(auxFormulaTree.size() - 1).get(0) );
-        }
-        catch (TreeNodeException e) {
-            if (!silent) {
-                e.getAuxTreeNode().getMainFormulaBox().setVTtreeBoxHighlight();
-                EditorAlerts.showSimpleTxtListAlert("Trees Structure", e.getMessageList());
-                e.getAuxTreeNode().getMainFormulaBox().resetVTtreeBoxHighlight();
-            }
-            return false;
-        }
-
-        if (!checkAbbContent()) return false;
 
         choiceAMade = vtABExpExercise.getExerciseView().getaCheckBox().isSelected();
         choiceBMade = vtABExpExercise.getExerciseView().getbCheckBox().isSelected();
         choiceMade = choiceAMade || choiceBMade;
-        if (!checkChoice()) {
-            checkSuccess = false;
-            return false;
+
+        boolean goodTree = true;
+        if (checkNodeList.isEmpty()) {
+            if (!silent) {
+                EditorAlerts.showSimpleTxtListAlert("Tree Structure", Collections.singletonList(ParseUtilities.newRegularText("No tree to evaluate.")));
+            }
+            goodTree = false;
         }
 
-        checkSuccess = true;
-        vtABExpView.activateBigCheck();
-        return true;
+        else {
+            List<Node> sortedFormulaBoxes = getSortedFormulaBoxes();
+            if (sortedFormulaBoxes.isEmpty()) {
+                if (!silent) {
+                    EditorAlerts.showSimpleTxtListAlert("Tree Structure", Collections.singletonList(ParseUtilities.newRegularText("No tree to evaluate.")));
+                }
+                goodTree = false;
+            }
+            else {
+                auxExerA = vtABExpExercise.getVTAuxExer();
+                if (auxExerA == null) {
+                    if (!silent) {
+                        EditorAlerts.showSimpleTxtListAlert("Auxiliary Tree", Collections.singletonList(ParseUtilities.newRegularText("Missing auxiliary tree.  Cannot check unabbreviation.")));
+                    }
+                    goodTree = false;
+                }
+                else {
+                    vtAuxCheckA = auxExerA.getVTAuxCheck();
+                    vtAuxCheckA.setCheckType(VTCheckType.UNABB_AUX);
+                    if (!vtAuxCheckA.checkTree()) {
+                        if (!silent) {
+                            EditorAlerts.showSimpleTxtListAlert("Auxiliary Tree", Collections.singletonList(ParseUtilities.newRegularText("Unabbreviation check requires (successfully) completed auxiliary tree.")));
+                        }
+                        goodTree = false;
+                    }
 
+                    else if (!populateTreeLists(sortedFormulaBoxes)) goodTree = false;
+                    else if (!setParentsAndChildren()) goodTree = false;
+                    else if (!checkTrueTree()) goodTree = false;
+                    else if (!checkFormulaContents()) goodTree = false;
+                    else {
+                        List<List<? extends VTAuxTreeNode>> auxFormulaTree = vtAuxCheckA.getAuxFormulaTree();
+                        try {
+                            checkParallelTrees(formulaTree.get(formulaTree.size() - 1).get(0), auxFormulaTree.get(auxFormulaTree.size() - 1).get(0));
+                        } catch (TreeNodeException e) {
+                            if (!silent) {
+                                e.getAuxTreeNode().getMainFormulaBox().setVTtreeBoxHighlight();
+                                EditorAlerts.showSimpleTxtListAlert("Trees Structure", e.getMessageList());
+                                e.getAuxTreeNode().getMainFormulaBox().resetVTtreeBoxHighlight();
+                            }
+                            goodTree = false;
+                        }
+                    }
+                    if (goodTree) {
+                        if (!checkAbbContent())  goodTree = false;
+                    }
+                }
+            }
+        }
+
+        if (goodTree) {
+            if (choiceSet && !checkChoiceMade()) {}
+            else if (choiceSet && (checkChoices || vtABExpExercise.getMainWindow().isInstructorFunctions())) {
+                if (checkChoice()) {
+                    checkSuccess = true;
+                    vtABExpView.setCheckMessage("Tree / Choice");
+                }
+            }
+            else {
+                checkSuccess = true;
+                vtABExpView.setCheckMessage("Tree");
+            }
+        }
+
+        if (checkSuccess) {
+            vtABExpView.activateBigCheck();
+            return true;
+        }
+        else return false;
     }
 
-    private boolean checkChoice() {
+    private boolean checkChoiceMade() {
         boolean success = true;
 
-        if (choiceSet && !choiceMade) {
+        if (!choiceMade) {
             vtABExpView.getaCheckBox().setStyle("-fx-background-color: mistyrose");
             vtABExpView.getbCheckBox().setStyle("-fx-background-color: mistyrose");
             EditorAlerts.showSimpleTxtListAlert("Choices", Collections.singletonList(ParseUtilities.newRegularText("No choice made.")));
@@ -301,32 +391,27 @@ public class VTABExpCheck implements VTAuxCheck {
             vtABExpView.getbCheckBox().setStyle("-fx-background-color: white");
             success = false;
         }
-
-        else if (choiceSet && (checkChoices || vtABExpExercise.getMainWindow().isInstructorFunctions())) {
-            if (choiceAMade && !choiceASet) {
-                vtABExpView.getaCheckBox().setStyle("-fx-background-color: mistyrose");
-                EditorAlerts.showSimpleTxtListAlert("Choices", Collections.singletonList(ParseUtilities.newRegularText("Mistaken choice.")));
-                vtABExpView.getaCheckBox().setStyle("-fx-background-color: white");
-                success = false;
-            }
-            if (choiceBMade && !choiceBSet) {
-                vtABExpView.getbCheckBox().setStyle("-fx-background-color: mistyrose");
-                EditorAlerts.showSimpleTxtListAlert("Choices", Collections.singletonList(ParseUtilities.newRegularText("Mistaken choice.")));
-                vtABExpView.getbCheckBox().setStyle("-fx-background-color: white");
-                success = false;
-            }
-            if (success) {
-                vtABExpView.setCheckMessage("Tree / Choice");
-                choiceSuccess = true;
-            }
-        }
-        else if (!choiceSet || !checkChoices || !vtABExpExercise.getMainWindow().isInstructorFunctions()) {
-            vtABExpView.setCheckMessage("Tree");
-            choiceSuccess = false;
-        }
-
         return success;
     }
+
+    private boolean checkChoice() {
+        boolean success = true;
+
+        if (choiceAMade && !choiceASet) {
+            vtABExpView.getaCheckBox().setStyle("-fx-background-color: mistyrose");
+            EditorAlerts.showSimpleTxtListAlert("Choices", Collections.singletonList(ParseUtilities.newRegularText("Mistaken choice.")));
+            vtABExpView.getaCheckBox().setStyle("-fx-background-color: white");
+            success = false;
+        }
+        if (choiceBMade && !choiceBSet) {
+            vtABExpView.getbCheckBox().setStyle("-fx-background-color: mistyrose");
+            EditorAlerts.showSimpleTxtListAlert("Choices", Collections.singletonList(ParseUtilities.newRegularText("Mistaken choice.")));
+            vtABExpView.getbCheckBox().setStyle("-fx-background-color: white");
+            success = false;
+        }
+        return success;
+    }
+
 
 
 
@@ -491,54 +576,6 @@ public class VTABExpCheck implements VTAuxCheck {
         }
     }
 
-    private boolean checkFormulaTree(boolean checkMarkup) {
-        checkSuccess = false;
-        vtABExpView.deactivateBigCheck();
-        if (!vtABExpExercise.getMainWindow().isInstructorFunctions()) {
-            checkTries++;
-            setChecksCounter();
-        }
-
-
-        formulaTree = new ArrayList<>();
-        lineJustifications = new ArrayList<>();
-
-        checkNodeList = vtABExpView.getRootLayout().getMain_pane().getChildren();
-        if (checkNodeList.isEmpty()) {
-            if (!silent) {
-                EditorAlerts.showSimpleTxtListAlert("Tree Structure", Collections.singletonList(ParseUtilities.newRegularText("Nothing to evaluate.")));
-            }
-            return false;
-        }
-
-        List<Node> sortedFormulaBoxes = getSortedFormulaBoxes();
-        if (sortedFormulaBoxes.isEmpty()) {
-            if (!silent) {
-                EditorAlerts.showSimpleTxtListAlert("Tree Structure", Collections.singletonList(ParseUtilities.newRegularText("No tree to evaluate.")));
-            }
-            return false;
-        }
-
-        if (!populateTreeLists(sortedFormulaBoxes)) return false;
-        if (!setParentsAndChildren()) return false;
-        if (!checkTrueTree()) return false;
-        if (!checkContents()) return false;
-        if (checkMarkup && !checkMarkup()) return false;
-
-
-        choiceAMade = vtABExpExercise.getExerciseView().getaCheckBox().isSelected();
-        choiceBMade = vtABExpExercise.getExerciseView().getbCheckBox().isSelected();
-        choiceMade = choiceAMade || choiceBMade;
-        if (!checkChoice()) {
-            checkSuccess = false;
-            return false;
-        }
-
-        checkSuccess = true;
-        vtABExpView.activateBigCheck();
-
-        return true;
-    }
 
     private boolean checkFormulaContents() {
 
@@ -1596,7 +1633,7 @@ public class VTABExpCheck implements VTAuxCheck {
         return checkFinal;
     }
 
-    public boolean isChoiceSuccess() {
-        return choiceSuccess;
-    }
+ //   public boolean isChoiceSuccess() {
+ //       return choiceSuccess;
+ //   }
 }

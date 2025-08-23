@@ -770,7 +770,8 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
         VTcheckSetup checkSetup = verticalTreeABExpModel.getCheckSetup();
         if (vtABExpCheck != null) checkSetup.setCheckTries(vtABExpCheck.getCheckTries());
         if (vtABExpCheck != null) checkSetup.setCheckSuccess(vtABExpCheck.isCheckSuccess());
-        if (vtABExpCheck != null) checkSetup.setChoiceSuccess(vtABExpCheck.isChoiceSuccess());
+   //     if (vtABExpCheck != null) checkSetup.setChoiceSuccess(vtABExpCheck.isChoiceSuccess());
+        if (vtABExpCheck != null) checkSetup.setCheckMessage(verticalTreeABExpView.getCheckMessage());
         model.setCheckSetup(checkSetup);
 
         model.setStatementPrefHeight(verticalTreeABExpView.getExerciseStatement().getEditor().getPrefHeight());
