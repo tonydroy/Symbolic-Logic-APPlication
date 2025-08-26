@@ -230,8 +230,8 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
             mapFormulaBox.setLayoutY(mapBoxMod.getLayoutY());
             mapFormulaBox.setIdString(mapBoxMod.getIdString());
             mapFormulaBox.setmLinkIds(mapBoxMod.getLinkIdStrings());
-
             mapFormulaBox.setPrintWidth(mapBoxMod.getPrintWidth());
+            mapFormulaBox.setMapIndexItems(mapBoxMod.getMapIndexItems());
 
             BoxedDRTA formulaBox = mapFormulaBox.getFormulaBox();
             RichTextArea mapBoxRTA = formulaBox.getRTA();
@@ -852,6 +852,7 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
                 newMapMod.setLayoutX(originalMapBox.getLayoutX());
                 newMapMod.setLayoutY(originalMapBox.getLayoutY());
                 newMapMod.setLinkIdStrings(originalMapBox.getmLinkIds());
+                newMapMod.setMapIndexItems(originalMapBox.getMapIndexItems());
 
                 BoxedDRTA formulaBox = originalMapBox.getFormulaBox();
                 RichTextArea mapRTA = formulaBox.getRTA();

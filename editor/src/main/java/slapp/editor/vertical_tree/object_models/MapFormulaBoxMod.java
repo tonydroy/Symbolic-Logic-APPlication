@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License along with SLA
 package slapp.editor.vertical_tree.object_models;
 
 import com.gluonhq.richtextarea.model.Document;
+import slapp.editor.map_abexplain.MapIndexItem;
 
 import java.io.Serializable;
 import java.util.List;
@@ -31,6 +32,7 @@ public class MapFormulaBoxMod implements Serializable {
     private Document text;
     private List<String> linkIdStrings;
     double printWidth;
+    List<MapIndexItem> mapIndexItems;
 
     public MapFormulaBoxMod() {
         printWidth = 0;
@@ -102,5 +104,13 @@ public class MapFormulaBoxMod implements Serializable {
 
     public void setPrintWidth(double printWidth) {
         this.printWidth = printWidth;
+    }
+
+    public List<MapIndexItem> getMapIndexItems() {
+        return mapIndexItems;
+    }
+
+    public void setMapIndexItems(List<MapIndexItem> mapIndexItems) {
+        this.mapIndexItems = mapIndexItems;
     }
 }

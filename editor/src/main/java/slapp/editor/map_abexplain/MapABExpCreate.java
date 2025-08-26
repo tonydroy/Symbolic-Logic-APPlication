@@ -586,7 +586,8 @@ public class MapABExpCreate {
         HBox controlBox = new HBox(20,controlLabel, boxingFormulaCheck, circleCheck, starCheck, annotationCheck, underlineCheck, mappingCheck);
         controlBox.setAlignment(Pos.BASELINE_LEFT);
 
-        fieldsBox = new VBox(15, topFieldsBox, dragBox, controlBox);
+        fieldsBox = new VBox(15, topFieldsBox);
+  //      fieldsBox = new VBox(15, topFieldsBox, dragBox, controlBox);
         fieldsBox.setPadding(new Insets(20,0, 0, 20));
 
         //check items
@@ -627,7 +628,7 @@ public class MapABExpCreate {
         justificationCheckBox.setAlignment(Pos.CENTER_LEFT);
 
         //language list view
-        Label languageLabel = new Label("   Language:");
+        Label languageLabel = new Label("   Object Language:");
         langMap = new LinkedHashMap<>();
         for (int i = 0; i < Languages.getFixedLanguages().size() - 1; i++) {
             Language language = Languages.getFixedLanguages().get(i);
@@ -643,7 +644,8 @@ public class MapABExpCreate {
         Callback<String, ObservableValue<Boolean>> langToBoolean = (String item) -> langMap.get(item);
         languageListView.setCellFactory(CheckBoxListCell.forListView(langToBoolean));
 
-        HBox checkLine1 = new HBox(30, staticHelpBox, checkMaxBox, justificationCheckBox, languageLabel, languageListView);
+        HBox checkLine1 = new HBox(30, staticHelpBox, checkMaxBox, languageLabel, languageListView);
+  //      HBox checkLine1 = new HBox(30, staticHelpBox, checkMaxBox, justificationCheckBox, languageLabel, languageListView);
         checkLine1.setAlignment(Pos.CENTER_LEFT);
 
 
@@ -771,8 +773,8 @@ public class MapABExpCreate {
         HBox checkLine4 = new HBox(30, checkChoicesHBox, choiceAHBox, choiceBHBox);
 
 
-
-        VBox checksVBox = new VBox(10, checkLine2, checkLine3, checkLine1, checkLine4);
+        VBox checksVBox = new VBox(10, checkLine1, checkLine4);
+   //     VBox checksVBox = new VBox(10, checkLine2, checkLine3, checkLine1, checkLine4);
 
         HBox checksBox = new HBox(20, helpCheckLabel, checksVBox);
         checksBox.setAlignment(Pos.TOP_LEFT);
@@ -1169,44 +1171,8 @@ public class MapABExpCreate {
         checkSetup.setChoiceB(choiceBBox.isSelected());
 
         //consistency checks
-        if (checkMax == 0 && checkType != VTCheckType.NONE) {
-            formulaCheck.setSelected(false);
-            unabbreviationCheck.setSelected(false);
-            checkSetup.setCheckType(VTCheckType.NONE);
-            EditorAlerts.fleetingRedPopup("Check Max set to zero.  Checking deselected.");
-        }
 
-        if (checkType == VTCheckType.NONE  && checkMax != 0) {
-            checkSetup.setCheckMax(0);
-            checkMaxSpinner.getValueFactory().setValue(0);
-            EditorAlerts.fleetingRedPopup("No checking selected.  Check max set to zero.");
-        }
 
-        if (checkType == VTCheckType.UNABB && auxNameField.getText().equals("")) {
-            unabbreviationCheck.setSelected(false);
-            checkMaxSpinner.getValueFactory().setValue(0);
-            checkSetup.setCheckType(VTCheckType.NONE);
-            checkSetup.setCheckMax(0);
-            EditorAlerts.fleetingRedPopup("Unabbreviation check requires auxiliary exercise.  Check disabled.");
-        }
-
-        if (checkType == VTCheckType.FORMULA && !targetDocument.getText().equals("")) {
-            boolean goodTarget = false;
-            Expression targetExpression = null;
-
-            List<Expression> targetParseList = ParseUtilities.parseDoc(targetDocument, langName);
-            if (targetParseList.size() == 1) {
-                targetExpression = targetParseList.get(0);
-                if (targetExpression.getType() == ExpressionType.FORMULA || targetExpression.getType() == ExpressionType.TERM) goodTarget = true;
-            }
-            if (!goodTarget) {
-                formulaCheck.setSelected(false);
-                checkMaxSpinner.getValueFactory().setValue(0);
-                checkSetup.setCheckType(VTCheckType.NONE);
-                checkSetup.setCheckMax(0);
-                EditorAlerts.fleetingRedPopup("Target is (not empty and) not a formula of the selected language.  Check disabled.");
-            }
-        }
 
         if (checkChoicesBox.isSelected() && !(choiceABox.isSelected() || choiceBBox.isSelected()))  {
             checkChoicesBox.setSelected(false);

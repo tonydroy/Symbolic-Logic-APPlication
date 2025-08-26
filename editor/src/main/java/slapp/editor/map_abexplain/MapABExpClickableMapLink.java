@@ -18,6 +18,7 @@ package slapp.editor.map_abexplain;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
@@ -56,6 +57,7 @@ public class MapABExpClickableMapLink extends Pane {
         node_link = new Line();
         node_link1 = new Line();
 
+    //    node_link.setStroke(Color.RED);
 
         //provide a universally unique identifier for this object
         setId(UUID.randomUUID().toString());
@@ -63,13 +65,24 @@ public class MapABExpClickableMapLink extends Pane {
 
         node_link1.setStrokeWidth(7);
         node_link1.setStroke(Color.TRANSPARENT);
+
         node_link1.setOnMouseEntered(e -> setCursor(Cursor.HAND));
         node_link1.setOnMouseExited(e -> setCursor(Cursor.DEFAULT));
+
+
 
         node_link1.setOnMouseClicked(e -> {
             if (e.getButton() == MouseButton.SECONDARY) {
                 AnchorPane parent = (AnchorPane) this.getParent();
                 parent.getChildren().remove(this);
+                for (Node node : parent.getChildren()) {
+                    if (node instanceof MapABExpFormulaBox) {
+                        MapABExpFormulaBox box = (MapABExpFormulaBox) node;
+                        if (box.getIdString().equals(sourceId) || box.getIdString().equals(targetId)) {
+                            box.removeMapIndex(idString);
+                        }
+                    }
+                }
                 mapView.setUndoRedoFlag(true);
                 mapView.setUndoRedoFlag(false);
             }
@@ -78,6 +91,8 @@ public class MapABExpClickableMapLink extends Pane {
         this.getChildren().addAll(node_link, node_link1);
 
     }
+
+
 
     public void bindEnds (MapABExpFormulaBox box1, MapABExpFormulaBox box2) {
         MapABExpFormulaBox source;
@@ -121,10 +136,10 @@ public class MapABExpClickableMapLink extends Pane {
 
         } else {
             if (source.getMapXAnchors()[0] > source.getMapXAnchors()[1]) {
-            double temp = source.getMapXAnchors()[0];
-            source.getMapXAnchors()[0] = source.getMapXAnchors()[1];
-            source.getMapXAnchors()[1] = temp;
-        }
+                double temp = source.getMapXAnchors()[0];
+                source.getMapXAnchors()[0] = source.getMapXAnchors()[1];
+                source.getMapXAnchors()[1] = temp;
+            }
 
             double bracketWidth = source.getMapXAnchors()[1] - source.getMapXAnchors()[0];
             Pane brackPane = getUpBracket(bracketWidth);

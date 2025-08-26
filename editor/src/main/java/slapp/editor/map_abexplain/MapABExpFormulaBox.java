@@ -17,10 +17,12 @@ package slapp.editor.map_abexplain;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
+import com.gluonhq.richtextarea.model.Document;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
@@ -74,6 +76,10 @@ public class MapABExpFormulaBox extends AnchorPane {
     int mapStage = 0;
     Label[] mapMarkers;
     Double[] mapXAnchors = new Double[2];
+    Integer[] mapIndexes = new Integer[2];
+    List<MapIndexItem> mapIndexItems = new ArrayList<>();
+
+
     private double printWidth;
 
     public MapABExpFormulaBox(MapABExpView mapView) {
@@ -187,6 +193,10 @@ public class MapABExpFormulaBox extends AnchorPane {
                 Bounds rtaBounds = self.sceneToLocal(rta.localToScene(rta.getBoundsInLocal()));
                 if (code == KeyCode.F10) {
                     if (mapStage < 2) {
+
+                        int xPos = (int) Math.round(rta.getCaretRowColumn().getX());
+                        mapIndexes[mapStage] = xPos;
+
                         Bounds caretBounds = ((RichTextAreaSkin) formulaBox.getRTA().getSkin()).getCaretPosition();
                         Bounds newCaretBounds = rta.sceneToLocal(caretBounds);
                         double xAnchor = newCaretBounds.getMaxX() + rtaBounds.getMinX() - 1.0;
@@ -207,6 +217,45 @@ public class MapABExpFormulaBox extends AnchorPane {
             }
         };
 
+    }
+
+    public void setMapIndexes(String linkID) {
+
+        RichTextArea rta = formulaBox.getRTA();
+        rta.getActionFactory().saveNow().execute(new ActionEvent());
+        Document doc = rta.getDocument();
+        String text = doc.getText();
+
+        if (mapStage == 1) {
+            int index = mapIndexes[0];
+            if (0 < index && index + 1 < text.length() && text.codePointCount(index - 1, index + 1) == 1) index++;
+            MapIndexItem indexItem = new MapIndexItem(index, null, linkID);
+            mapIndexItems.add(indexItem);
+            System.out.println(text);
+            System.out.println(indexItem);
+            System.out.println();
+        }
+        else {
+            int minIndex = Math.min(mapIndexes[0], mapIndexes[1]);
+            int maxIndex = Math.max(mapIndexes[0], mapIndexes[1]);
+            if (0 < minIndex && minIndex + 1 < text.length() && text.codePointCount(minIndex - 1, minIndex + 1) == 1) minIndex++;
+            if (0 < maxIndex && maxIndex + 1 < text.length() && text.codePointCount(maxIndex - 1, maxIndex + 1) == 1) maxIndex++;
+            MapIndexItem indexItem = new MapIndexItem(minIndex, maxIndex, linkID);
+            mapIndexItems.add(indexItem);
+            System.out.println(text);
+            System.out.println(indexItem);
+            System.out.println();
+        }
+        mapIndexes = new Integer[2];
+    }
+
+    public void removeMapIndex(String idString) {
+        for (MapIndexItem mapIndexItem : mapIndexItems) {
+            if (mapIndexItem.getLinkID().equals(idString)) {
+                mapIndexItems.remove(mapIndexItem);
+                break;
+            }
+        }
     }
 
     public void registerLink(String linkId) {mLinkIds.add(linkId); }
@@ -415,6 +464,7 @@ public class MapABExpFormulaBox extends AnchorPane {
         self.removeEventFilter(KeyEvent.KEY_PRESSED, mappingKeyFilter);
         self.getChildren().removeAll(mapMarkers[0], mapMarkers[1]);
         mapStage = 0;
+        mapIndexes = new Integer[2];
     }
 
 
@@ -469,5 +519,13 @@ public class MapABExpFormulaBox extends AnchorPane {
 
     private void pushUndoRedo() {
         mapView.getMapABExpExercise().pushUndoRedo();
+    }
+
+    public List<MapIndexItem> getMapIndexItems() {
+        return mapIndexItems;
+    }
+
+    public void setMapIndexItems(List<MapIndexItem> mapIndexItems) {
+        this.mapIndexItems = mapIndexItems;
     }
 }

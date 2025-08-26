@@ -374,6 +374,9 @@ public class MapABExpRootLayout extends AnchorPane {
                         slapp.editor.map_abexplain.MapABExpClickableMapLink mapLink = new MapABExpClickableMapLink(mapView);
                         main_pane.getChildren().add(0, mapLink);
                         mapLink.bindEnds(formulaBoxes.get(0), formulaBoxes.get(1));
+                        formulaBoxes.get(0).setMapIndexes(mapLink.getIdString());
+                        formulaBoxes.get(1).setMapIndexes(mapLink.getIdString());
+
                         mapView.setUndoRedoFlag(true);
                         mapView.setUndoRedoFlag(false);
                         formulaBoxes.get(0).undoMappingRequest();
