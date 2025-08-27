@@ -232,6 +232,7 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
             mapFormulaBox.setmLinkIds(mapBoxMod.getLinkIdStrings());
             mapFormulaBox.setPrintWidth(mapBoxMod.getPrintWidth());
             mapFormulaBox.setMapIndexItems(mapBoxMod.getMapIndexItems());
+            mapFormulaBox.setMetaBox(mapBoxMod.isMetaBox());
 
             BoxedDRTA formulaBox = mapFormulaBox.getFormulaBox();
             RichTextArea mapBoxRTA = formulaBox.getRTA();
@@ -323,7 +324,7 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
         for (ClickableMapLinkMod mapLinkMod : mapModel.getClickableMapLinks()) {
             MapABExpClickableMapLink mapLink = new MapABExpClickableMapLink(mapView);
             mainPane.getChildren().add(0, mapLink);
-            mapLink.setId(mapLinkMod.getIdString());
+            mapLink.setIdString(mapLinkMod.getIdString());
 
             MapABExpFormulaBox source = null;
             MapABExpFormulaBox target = null;
@@ -705,11 +706,15 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
         MapABExpModel originalModel = (MapABExpModel) (mapModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
         originalModel.setPointsEarned(pointsEarned);
+        for (MapFormulaBoxMod formulaBoxMod : originalModel.getMapFormulaBoxes()) {
+            formulaBoxMod.setMapIndexItems(new ArrayList<>());
+        }
 
-        VTcheckSetup setup = originalModel.getCheckSetup();
+        MapCheckSetup setup = originalModel.getCheckSetup();
         setup.setCheckTries(mapCheck.getCheckTries());
         setup.setCheckSuccess(false);
         setup.setChoiceSuccess(false);
+
         originalModel.setCheckSetup(setup);
 
         MapABExpExercise clearExercise = new MapABExpExercise(originalModel, mainWindow);
@@ -771,7 +776,7 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
         model.setObjectControlList(mapModel.getObjectControlList());
         model.setStarted(mapModel.isStarted() || exerciseModified);
 
-        VTcheckSetup checkSetup = mapModel.getCheckSetup();
+        MapCheckSetup checkSetup = mapModel.getCheckSetup();
         if (mapCheck != null) checkSetup.setCheckTries(mapCheck.getCheckTries());
         if (mapCheck != null) checkSetup.setCheckSuccess(mapCheck.isCheckSuccess());
         if (mapCheck != null) checkSetup.setChoiceSuccess(mapCheck.isChoiceSuccess());
@@ -853,6 +858,7 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
                 newMapMod.setLayoutY(originalMapBox.getLayoutY());
                 newMapMod.setLinkIdStrings(originalMapBox.getmLinkIds());
                 newMapMod.setMapIndexItems(originalMapBox.getMapIndexItems());
+                newMapMod.setMetaBox(originalMapBox.isMetaBox());
 
                 BoxedDRTA formulaBox = originalMapBox.getFormulaBox();
                 RichTextArea mapRTA = formulaBox.getRTA();

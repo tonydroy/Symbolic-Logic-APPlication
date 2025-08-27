@@ -78,6 +78,7 @@ public class MapABExpFormulaBox extends AnchorPane {
     Double[] mapXAnchors = new Double[2];
     Integer[] mapIndexes = new Integer[2];
     List<MapIndexItem> mapIndexItems = new ArrayList<>();
+    boolean metaBox;
 
 
     private double printWidth;
@@ -221,6 +222,7 @@ public class MapABExpFormulaBox extends AnchorPane {
 
     public void setMapIndexes(String linkID) {
 
+
         RichTextArea rta = formulaBox.getRTA();
         rta.getActionFactory().saveNow().execute(new ActionEvent());
         Document doc = rta.getDocument();
@@ -231,9 +233,6 @@ public class MapABExpFormulaBox extends AnchorPane {
             if (0 < index && index + 1 < text.length() && text.codePointCount(index - 1, index + 1) == 1) index++;
             MapIndexItem indexItem = new MapIndexItem(index, null, linkID);
             mapIndexItems.add(indexItem);
-            System.out.println(text);
-            System.out.println(indexItem);
-            System.out.println();
         }
         else {
             int minIndex = Math.min(mapIndexes[0], mapIndexes[1]);
@@ -242,9 +241,6 @@ public class MapABExpFormulaBox extends AnchorPane {
             if (0 < maxIndex && maxIndex + 1 < text.length() && text.codePointCount(maxIndex - 1, maxIndex + 1) == 1) maxIndex++;
             MapIndexItem indexItem = new MapIndexItem(minIndex, maxIndex, linkID);
             mapIndexItems.add(indexItem);
-            System.out.println(text);
-            System.out.println(indexItem);
-            System.out.println();
         }
         mapIndexes = new Integer[2];
     }
@@ -527,5 +523,13 @@ public class MapABExpFormulaBox extends AnchorPane {
 
     public void setMapIndexItems(List<MapIndexItem> mapIndexItems) {
         this.mapIndexItems = mapIndexItems;
+    }
+
+    public boolean isMetaBox() {
+        return metaBox;
+    }
+
+    public void setMetaBox(boolean metaBox) {
+        this.metaBox = metaBox;
     }
 }

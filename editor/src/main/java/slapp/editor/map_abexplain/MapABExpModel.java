@@ -71,21 +71,21 @@ public class MapABExpModel implements ExerciseModel<Document>, Serializable {
     private List<ClickableNodeLinkMod> clickableNodeLinks = new ArrayList<>();
     private List<ClickableMapLinkMod> clickableMapLinks = new ArrayList<>();
     private List <MapQuestionMarkerMod> mapQuestionMarkers = new ArrayList<>();
-    private VTcheckSetup checkSetup;
+    private MapCheckSetup checkSetup;
 
 
     public MapABExpModel(){
         pointsPossible = 0;
         pointsEarned = -1;
-        this.checkSetup = new VTcheckSetup();
+        this.checkSetup = new MapCheckSetup();
         this.defaultObjectKeyboardType = RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS;
     }
 
-    public VTcheckSetup getCheckSetup() {
+    public MapCheckSetup getCheckSetup() {
         return checkSetup;
     }
 
-    public void setCheckSetup(VTcheckSetup checkSetup) {
+    public void setCheckSetup(MapCheckSetup checkSetup) {
         this.checkSetup = checkSetup;
     }
 

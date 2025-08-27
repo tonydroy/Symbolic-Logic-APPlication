@@ -19,6 +19,7 @@ import com.gluonhq.richtextarea.model.Document;
 import slapp.editor.map_abexplain.MapIndexItem;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,7 +33,8 @@ public class MapFormulaBoxMod implements Serializable {
     private Document text;
     private List<String> linkIdStrings;
     double printWidth;
-    List<MapIndexItem> mapIndexItems;
+    List<MapIndexItem> mapIndexItems = new ArrayList<MapIndexItem>();
+    boolean metaBox;
 
     public MapFormulaBoxMod() {
         printWidth = 0;
@@ -112,5 +114,13 @@ public class MapFormulaBoxMod implements Serializable {
 
     public void setMapIndexItems(List<MapIndexItem> mapIndexItems) {
         this.mapIndexItems = mapIndexItems;
+    }
+
+    public boolean isMetaBox() {
+        return metaBox;
+    }
+
+    public void setMetaBox(boolean metaBox) {
+        this.metaBox = metaBox;
     }
 }

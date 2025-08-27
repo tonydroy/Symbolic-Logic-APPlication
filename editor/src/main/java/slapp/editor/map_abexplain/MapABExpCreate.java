@@ -54,7 +54,6 @@ import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
 import slapp.editor.parser.*;
 import slapp.editor.vertical_tree.VTCheckType;
-import slapp.editor.vertical_tree.VTcheckSetup;
 import slapp.editor.vertical_tree.drag_drop.DragIconType;
 import slapp.editor.vertical_tree.object_models.MapFormulaBoxMod;
 import slapp.editor.vertical_tree.object_models.ObjectControlType;
@@ -124,7 +123,7 @@ public class MapABExpCreate {
     private Spinner checkMaxSpinner;
     private CheckBox justificationCheck;
     private Map<String, SimpleBooleanProperty> langMap;
-    private String defaultLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (w/abv)
+    private String defaultLangName = "\u2112\ud835\udcc6";  //Lq (w/abv)
     CheckBox formulaCheck;
     CheckBox unabbreviationCheck;
     CheckBox checkMarkup;
@@ -139,6 +138,7 @@ public class MapABExpCreate {
 
     BoxedDRTA metaFormulaBoxedDRTA;
     BoxedDRTA objectFormulaBoxedDRTA;
+
 
 
     public MapABExpCreate(MainWindow mainWindow) {
@@ -187,8 +187,8 @@ public class MapABExpCreate {
         underlineCheck.setSelected(objectControlList.contains(UNDERLINE));
         mappingCheck.setSelected(objectControlList.contains(MAPPING));
 
-        VTcheckSetup checkSetup = originalModel.getCheckSetup();
-        if (checkSetup == null) checkSetup = new VTcheckSetup();
+        MapCheckSetup checkSetup = originalModel.getCheckSetup();
+        if (checkSetup == null) checkSetup = new MapCheckSetup();
         formulaCheck.setSelected(checkSetup.getCheckType() == VTCheckType.FORMULA);
         unabbreviationCheck.setSelected(checkSetup.getCheckType() == VTCheckType.UNABB);
         auxNameField.setText(checkSetup.getAuxExerName());
@@ -1051,6 +1051,7 @@ public class MapABExpCreate {
         metaBoxMod.setLayoutX(62.0);
         metaBoxMod.setLayoutY(24.0);
         metaBoxMod.setLinkIdStrings(new ArrayList<>());
+        metaBoxMod.setMetaBox(true);
         RichTextArea metaRTA = metaFormulaBoxedDRTA.getRTA();
         if (metaRTA.isModified()) modified = true;
         metaRTA.getActionFactory().saveNow().execute(new ActionEvent());
@@ -1061,6 +1062,7 @@ public class MapABExpCreate {
         objectBoxMod.setLayoutX(62.0);
         objectBoxMod.setLayoutY(96.0);
         objectBoxMod.setLinkIdStrings(new ArrayList<>());
+        objectBoxMod.setMetaBox(false);
         RichTextArea objectRTA = objectFormulaBoxedDRTA.getRTA();
         if (objectRTA.isModified()) modified = true;
         objectRTA.getActionFactory().saveNow().execute(new ActionEvent());
@@ -1123,7 +1125,7 @@ public class MapABExpCreate {
             pointsPossibleTextField.setText("0");
         }
 
-        VTcheckSetup checkSetup = model.getCheckSetup();
+        MapCheckSetup checkSetup = model.getCheckSetup();
         if (staticHelpRTA.isModified()) modified = true;
         staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
         checkSetup.setStaticHelpDoc(staticHelpRTA.getDocument());

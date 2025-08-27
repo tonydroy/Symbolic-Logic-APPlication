@@ -93,6 +93,13 @@ public class MapABExpClickableMapLink extends Pane {
     }
 
 
+    public void setMapLinkHighlight() {
+        node_link.setStroke(Color.RED);
+    }
+
+    public void resetMapLinkHighlight() {
+        node_link.setStroke(Color.BLACK);
+    }
 
     public void bindEnds (MapABExpFormulaBox box1, MapABExpFormulaBox box2) {
         MapABExpFormulaBox source;
@@ -206,6 +213,10 @@ public class MapABExpClickableMapLink extends Pane {
 
     public String getIdString() {
         return idString;
+    }
+
+    public void setIdString(String idString) {
+        this.idString = idString;
     }
 
     public String getSourceId() {
