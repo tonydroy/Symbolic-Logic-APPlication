@@ -12,14 +12,16 @@ public class MapCheckLink {
     Integer metaStartIndex;
     Integer metaEndIndex;
     List<Expression> metaExpressions;
+    int metaExpSize;
 
     Integer objectStartIndex;
     Integer objectEndIndex;
     List<Expression> objectExpressions;
+    int objectExpSize;
 
     MapABExpClickableMapLink link;
 
-
+/*
     @Override
     public String toString() {
         StringBuilder msb = new StringBuilder();
@@ -53,6 +55,8 @@ public class MapCheckLink {
         return "meta -- size: " + metaSyms.size() + " element " + metaSyms.get(0) + " type " + metaSyms.get(0).getType() + "\n" + "obj -- size: " + objectSyms.size() + " element " + objectSyms.get(0) + " type " + objectSyms.get(0).getType() + "\n";
       //  return "obj -- size: " + objectSyms.size() + " element " + objectSyms.get(0) + " type " + objectSyms.get(0).getType() + "\n";
     }
+
+ */
 
     public boolean isMetaGroup() {
         return metaEndIndex != null;
@@ -119,5 +123,19 @@ public class MapCheckLink {
         this.metaExpressions = metaExpressions;
     }
 
+    public int getMetaExpSize() {
+        return metaExpSize;
+    }
 
+    public void setMetaExpSize(int metaExpSize) {
+        this.metaExpSize = metaExpSize;
+    }
+
+    public int getObjectExpSize() {
+        return objectExpSize;
+    }
+
+    public void setObjectExpSize(int objectExpSize) {
+        this.objectExpSize = objectExpSize;
+    }
 }

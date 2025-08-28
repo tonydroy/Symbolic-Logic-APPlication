@@ -44,7 +44,7 @@ public class MSentenceLetter extends SentenceLetter {
         if (matchLetter == null) { matchLetter = match; }
         else if (!matchLetter.equals(match)) {
             List<Text> messageTxts = new ArrayList<>();
-            messageTxts.add(new Text("Variable "));
+            messageTxts.add(new Text("Meta symbol "));
             messageTxts.addAll(this.toTextList());
             messageTxts.add(new Text(" cannot match to both "));
             messageTxts.addAll(matchLetter.toTextList());

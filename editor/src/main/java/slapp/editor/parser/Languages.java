@@ -21,7 +21,6 @@ public class Languages {
 
     private static void loadFixedLanguages(){
 
-
         fixedLanguages.add(Ls());
         fixedLanguages.add(Ls_abv());
         fixedLanguages.add(Lq());
@@ -35,6 +34,16 @@ public class Languages {
 
     public static List<Language> getFixedLanguages() {
         return fixedLanguages;
+    }
+
+    public static List<Language> getMappingLanguages() {
+        List<Language> mapLanguages = new ArrayList<>();
+        mapLanguages.add(Ls());
+        mapLanguages.add(Ls_abv());
+        mapLanguages.add(Lq());
+        mapLanguages.add(Lq_abv());
+
+        return mapLanguages;
     }
 
     /*

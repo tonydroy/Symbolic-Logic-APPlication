@@ -43,7 +43,7 @@ public class MConstant extends Constant {
         if (matchConstant == null) { matchConstant = match; }
         else if (!matchConstant.equals(match)) {
             List<Text> messageTxts = new ArrayList<>();
-            messageTxts.add(new Text("Variable "));
+            messageTxts.add(new Text("Meta constant symbol "));
             messageTxts.addAll(this.toTextList());
             messageTxts.add(new Text(" cannot match to both "));
             messageTxts.addAll(matchConstant.toTextList());

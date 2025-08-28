@@ -470,7 +470,7 @@ public class DerivationCheck implements DCheck {
                             if (!derivationExercise.getTheorems().isEmpty()) message = "I do not recognize this as an (available) ";
                             highlightJustification(i);
                             List<Text> texts = new ArrayList<>();
-                  //          texts.add(new Text("I do not recognize this as a(n) "));
+
                             texts.add(new Text(message));
                             texts.addAll(derivationRuleset.getTextName());
                             texts.add(new Text(" justification."));

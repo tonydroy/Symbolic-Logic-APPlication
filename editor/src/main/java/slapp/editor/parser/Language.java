@@ -518,6 +518,10 @@ public class Language implements Serializable {
         return newVars;
     }
 
+    public List<Text> getNameTextList() {
+        return nameTextList;
+    }
+
     public void setNoMatchVariables(List<String> noMatchVariables) {
         this.noMatchVariables = noMatchVariables;
     }

@@ -13,7 +13,7 @@ public class MAnyExpression extends AnyExpression {
 
 
     private static List<MAnyExpression> mAnyExpressions = new ArrayList<MAnyExpression>();
-    private AnyExpression matchAnyExp;
+    private List<Expression> matchAnyExp;
     private MAnyExpressionSym expressionSym;
 
     private MAnyExpression(MAnyExpressionSym sym) {
@@ -54,19 +54,23 @@ public class MAnyExpression extends AnyExpression {
         return sb.toString();
     }
 
-    @Override
-    public AnyExpression getMatch() { return matchAnyExp; }
+ //   @Override
+  //  public Expression getMatch() { return null; }
 
-    public void setMatch(AnyExpression match) throws TextMessageException {
+    public void setMatch(List<Expression> match) throws TextMessageException {
         if (matchAnyExp == null) { matchAnyExp = match; }
         else if (!matchAnyExp.equals(match)) {
             List<Text> messageTxts = new ArrayList<>();
             messageTxts.add(new Text("Variable "));
             messageTxts.addAll(getExpressionSym().toTextList());
             messageTxts.add(new Text(" cannot match to both "));
-            messageTxts.addAll(match.toTextList());
+            for (Expression e : matchAnyExp) {
+                messageTxts.addAll(e.toTextList());
+            }
             messageTxts.add(new Text(" and "));
-            messageTxts.addAll(matchAnyExp.toTextList());
+            for (Expression e : match) {
+                messageTxts.addAll(e.toTextList());
+            }
             messageTxts.add(new Text("."));
             throw new TextMessageException(messageTxts);
         }

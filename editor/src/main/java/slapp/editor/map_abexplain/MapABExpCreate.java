@@ -629,8 +629,11 @@ public class MapABExpCreate {
         //language list view
         Label languageLabel = new Label("   Object Language:");
         langMap = new LinkedHashMap<>();
-        for (int i = 0; i < Languages.getFixedLanguages().size() - 1; i++) {
-            Language language = Languages.getFixedLanguages().get(i);
+ //       for (int i = 0; i < Languages.getFixedLanguages().size() - 1; i++) {
+ //           Language language = Languages.getFixedLanguages().get(i);
+
+        for (int i = 0; i < Languages.getMappingLanguages().size(); i++) {
+            Language language = Languages.getMappingLanguages().get(i);
             SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
             if (language.getNameString().equals(defaultLangName)) booleanProperty.setValue(true); //default check
             setSingleSelection(booleanProperty, langMap);

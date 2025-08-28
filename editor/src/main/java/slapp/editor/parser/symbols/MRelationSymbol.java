@@ -39,7 +39,7 @@ public class MRelationSymbol extends RelationSymbol {
         if (matchRelSymbol == null) { matchRelSymbol = match; }
         else if (!matchRelSymbol.equals(match)) {
             List<Text> messageTxts = new ArrayList<>();
-            messageTxts.add(new Text("Variable "));
+            messageTxts.add(new Text("Meta variable "));
             messageTxts.addAll(this.toTextList());
             messageTxts.add(new Text(" cannot match to both "));
             messageTxts.addAll(matchRelSymbol.toTextList());

@@ -63,7 +63,7 @@ public class MFormula extends Formula{
             matchFormula = match;    }
         else if (!matchFormula.equals(match)) {
             List<Text> messageTxts = new ArrayList<>();
-            messageTxts.add(new Text("A formula"));
+            messageTxts.add(new Text("A formula symbol"));
       //      messageTxts.addAll(this.toTextList());
 
             messageTxts.add(new Text(" cannot match to both "));
