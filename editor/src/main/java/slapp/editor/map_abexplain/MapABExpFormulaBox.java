@@ -419,7 +419,7 @@ public class MapABExpFormulaBox extends AnchorPane {
     private BoxedDRTA newFormulaBoxedDRTA() {
         BoxedDRTA boxedDRTA = new BoxedDRTA();
         DecoratedRTA drta = boxedDRTA.getDRTA();
-        drta.getKeyboardSelector().valueProperty().setValue(mapView.getDefaultMapKeyboard());
+ //       drta.getKeyboardSelector().valueProperty().setValue(mapView.getDefaultMapKeyboard());
         RichTextArea rta = boxedDRTA.getRTA();
         rta.setMaxHeight(24);
         rta.setMinHeight(24);

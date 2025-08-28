@@ -1,6 +1,9 @@
 package slapp.editor.map_abexplain;
 
 import slapp.editor.parser.Expression;
+import slapp.editor.parser.Language;
+import slapp.editor.parser.Languages;
+import slapp.editor.parser.ParseUtilities;
 
 import java.util.List;
 
@@ -29,7 +32,26 @@ public class MapCheckLink {
             osb.append(e.toString());
             osb.append(" ");
         }
-        return ("mStart " + metaStartIndex + " mEnd " + metaEndIndex + " mexp " + msb.toString() + " oStart " + objectStartIndex + " oEnd " + objectEndIndex + " oexp " + osb.toString() );
+     //   return ("mStart " + metaStartIndex + " mEnd " + metaEndIndex + " mexp " + msb.toString() + " oStart " + objectStartIndex + " oEnd " + objectEndIndex + " oexp " + osb.toString() );
+
+
+
+        MapParser.setLanguage(Languages.getLanguage("LM Meta"));
+        ParseUtilities.setLanguage(Languages.getLanguage("LM Meta"));
+        List<Expression> metaSyms = MapParser.parseToSymbol(metaExpressions);
+
+
+        Language objLang = Languages.getLanguage("\u2112\ud835\udcc6 (w/abv)");
+        objLang.setXrelationSymbolsRequireSuper(true);
+        MapParser.setLanguage(objLang);
+        ParseUtilities.setLanguage(objLang);
+        List<Expression> objectSyms;
+        if (!isObjectGroup())  objectSyms = MapParser.parseToSymbol(objectExpressions);
+        else objectSyms = ParseUtilities.parseExpressions(objectExpressions);
+
+      //  return("test");
+        return "meta -- size: " + metaSyms.size() + " element " + metaSyms.get(0) + " type " + metaSyms.get(0).getType() + "\n" + "obj -- size: " + objectSyms.size() + " element " + objectSyms.get(0) + " type " + objectSyms.get(0).getType() + "\n";
+      //  return "obj -- size: " + objectSyms.size() + " element " + objectSyms.get(0) + " type " + objectSyms.get(0).getType() + "\n";
     }
 
     public boolean isMetaGroup() {

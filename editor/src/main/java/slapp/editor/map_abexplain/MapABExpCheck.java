@@ -6,6 +6,8 @@ import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
+import slapp.editor.parser.Expression;
+import slapp.editor.parser.OriginalElement;
 import slapp.editor.parser.ParseUtilities;
 
 import java.util.ArrayList;
@@ -31,6 +33,9 @@ public class MapABExpCheck {
         this.mapExercise = mapExercise;
         this.mapView = mapExercise.getExerciseView();
         this.mapModel = mapExercise.getExerciseModel();
+
+
+
 
         checkSetup = mapModel.getCheckSetup();
         if (checkSetup == null) {
@@ -176,8 +181,20 @@ public class MapABExpCheck {
             }
             else objectEndIndex = objectDocument.getText().length();
 
-            checkLink.setMetaExpressions(ParseUtilities.parseSubDoc(metaDocument, metaStartIndex, metaEndIndex, "LM Meta"));
-            checkLink.setObjectExpressions(ParseUtilities.parseSubDoc(objectDocument, objectStartIndex, objectEndIndex, objLangName));
+
+            List<OriginalElement> metaElements = ParseUtilities.getSubElements(metaDocument, metaStartIndex, metaEndIndex);
+            List<Expression> metaExpressions = new ArrayList<>();
+            for (OriginalElement metaElement : metaElements) {
+                metaExpressions.add(metaElement);
+            }
+            checkLink.setMetaExpressions(metaExpressions);
+
+            List<OriginalElement> objectElements = ParseUtilities.getSubElements(objectDocument, objectStartIndex, objectEndIndex);
+            List<Expression> objectExpressions = new ArrayList<>();
+            for (OriginalElement objectElement : objectElements) {
+                objectExpressions.add(objectElement);
+            }
+            checkLink.setObjectExpressions(objectExpressions);
 
             System.out.println(checkLink.toString());
 

@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License along with SLA
 package slapp.editor.map_abexplain;
 
 import com.gluonhq.richtextarea.RichTextArea;
+import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -106,7 +107,6 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
     private void setMapView() {
         mapView.setExplainPrompt(mapModel.getExplainPrompt());
         mapView.setDefaultKeyboard(mapModel.getDefaultKeyboardType());
-        mapView.setDefaultMapKeyboard(mapModel.getDefaultObjectKeyboardType());
         mapView.setStatementPrefHeight(mapModel.getStatementPrefHeight());
         mapView.setCommentPrefHeight(mapModel.getCommentPrefHeight());
         mapView.setExplainPrefHeight(mapModel.getExplainPrefHeight());
@@ -233,6 +233,12 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
             mapFormulaBox.setPrintWidth(mapBoxMod.getPrintWidth());
             mapFormulaBox.setMapIndexItems(mapBoxMod.getMapIndexItems());
             mapFormulaBox.setMetaBox(mapBoxMod.isMetaBox());
+            if (mapBoxMod.isMetaBox()) {
+                mapFormulaBox.getFormulaBox().getDRTA().getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.SCRIPT_AND_SANS);
+            }
+            else {
+                mapFormulaBox.getFormulaBox().getDRTA().getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS);
+            }
 
             BoxedDRTA formulaBox = mapFormulaBox.getFormulaBox();
             RichTextArea mapBoxRTA = formulaBox.getRTA();
@@ -763,7 +769,6 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
 
         model.setExerciseName(mapModel.getExerciseName());
         model.setDefaultKeyboardType(mapModel.getDefaultKeyboardType());
-        model.setDefaultObjectKeyboardType(mapModel.getDefaultObjectKeyboardType());
         model.setExplainPrompt(mapModel.getExplainPrompt());
         model.setOriginalModel(mapModel.getOriginalModel());
 

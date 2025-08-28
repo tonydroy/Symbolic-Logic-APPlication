@@ -123,7 +123,7 @@ public class MapABExpCreate {
     private Spinner checkMaxSpinner;
     private CheckBox justificationCheck;
     private Map<String, SimpleBooleanProperty> langMap;
-    private String defaultLangName = "\u2112\ud835\udcc6";  //Lq (w/abv)
+    private String defaultLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (w/abv)
     CheckBox formulaCheck;
     CheckBox unabbreviationCheck;
     CheckBox checkMarkup;
@@ -155,7 +155,6 @@ public class MapABExpCreate {
         statementTextHeight = originalModel.getStatementTextHeight();
         nameField.setText(originalModel.getExerciseName());
         treeBoxKeyboardSelector = originalModel.getDefaultKeyboardType();
-        mapBoxKeyboardSelector = originalModel.getDefaultObjectKeyboardType();
 
         choiceLeadField.setText(originalModel.getChoiceLead());
         aPromptField.setText(originalModel.getaPrompt());
@@ -1090,19 +1089,6 @@ public class MapABExpCreate {
 
         if (verticalBracketCheck.isSelected()) dragList.add(bracket);
         if (dashedLineCheck.isSelected()) dragList.add(dashed_line);
-
-        if (mapBoxItalicSansCheck.isSelected()) {
-            model.setDefaultObjectKeyboardType(ITALIC_AND_SANS);
-            dragList.add(map_field);
-        }
-        else if (mapBoxBaseItalicCheck.isSelected()) {
-            model.setDefaultObjectKeyboardType(BASE);
-            dragList.add(map_field);
-        }
-        else if (mapBoxScriptItalicCheck.isSelected()) {
-            model.setDefaultObjectKeyboardType(SCRIPT_AND_ITALIC);
-            dragList.add(map_field);
-        }
 
 
         List<ObjectControlType> controlList = model.getObjectControlList();

@@ -46,7 +46,6 @@ public class MapABExpModel implements ExerciseModel<Document>, Serializable {
     private double mainPanePrefHeight = 150;  //275
     private double mainPanePrefWidth;
 
-    private RichTextAreaSkin.KeyMapValue defaultObjectKeyboardType;
 
     private List<MapFormulaBoxMod> mapFormulaBoxes = new ArrayList<>();
 
@@ -78,7 +77,6 @@ public class MapABExpModel implements ExerciseModel<Document>, Serializable {
         pointsPossible = 0;
         pointsEarned = -1;
         this.checkSetup = new MapCheckSetup();
-        this.defaultObjectKeyboardType = RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS;
     }
 
     public MapCheckSetup getCheckSetup() {
@@ -153,13 +151,7 @@ public class MapABExpModel implements ExerciseModel<Document>, Serializable {
 
     void setDefaultKeyboardType(RichTextAreaSkin.KeyMapValue defaultKeyboardType) {     this.defaultKeyboardType = defaultKeyboardType;   }
 
-    public RichTextAreaSkin.KeyMapValue getDefaultObjectKeyboardType() {
-        return defaultObjectKeyboardType;
-    }
 
-    public void setDefaultObjectKeyboardType(RichTextAreaSkin.KeyMapValue defaultObjectKeyboardType) {
-        this.defaultObjectKeyboardType = defaultObjectKeyboardType;
-    }
 
     double getCommentPrefHeight() {     return commentPrefHeight;  }
 
