@@ -4,7 +4,9 @@ import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
 import javafx.util.Pair;
 import slapp.editor.EditorAlerts;
 import slapp.editor.parser.*;
@@ -31,14 +33,25 @@ public class MapABExpCheck {
     private List<MapCheckLink> checkLinks = new ArrayList<>();
     private List<Expression> objectSyms;
 
+    private int checkMax;
+    private int checkTries;
+    private boolean checkFinal;
+    private boolean checkSuccess;
+    private boolean choiceSuccess;
+    boolean checkChoices;
+    boolean choiceASet;
+    boolean choiceBSet;
+    boolean choiceSet;
+    boolean choiceAMade;
+    boolean choiceBMade;
+    boolean choiceMade;
+
+
 
     public MapABExpCheck(MapABExpExercise mapExercise) {
         this.mapExercise = mapExercise;
         this.mapView = mapExercise.getExerciseView();
         this.mapModel = mapExercise.getExerciseModel();
-
-
-
 
         checkSetup = mapModel.getCheckSetup();
         if (checkSetup == null) {
@@ -47,30 +60,233 @@ public class MapABExpCheck {
         }
         objLangName = checkSetup.getObjLangName();
 
+        checkChoices = checkSetup.isCheckChoices();
+        choiceASet = checkSetup.isChoiceA();
+        choiceBSet = checkSetup.isChoiceB();
+        choiceSet = choiceASet || choiceBSet;
+
+        checkSuccess = checkSetup.isCheckSuccess();
+        checkFinal = checkSetup.isCheckFinal();
+        if (checkFinal) {
+            mapView.setCheckColor(Color.LAWNGREEN);
+            mapView.setCheckElementsColor(Color.GREEN);
+            mapView.setCheckMessage(checkSetup.getCheckMessage());
+        }
+        else {
+            mapView.setCheckColor(Color.ORCHID);
+            mapView.setCheckElementsColor(Color.PURPLE);
+            mapView.setCheckMessage(checkSetup.getCheckMessage());
+        }
+        if (checkSuccess) mapView.activateBigCheck();
+        else mapView.deactivateBigCheck();
+
+        checkMax = checkSetup.getCheckMax();
+        checkTries = checkSetup.getCheckTries();
+        setChecksCounter();
 
         setRightControlBox();
     }
 
     private void setRightControlBox() {
         mapView.getCheckButton().setOnAction(e -> {
-            checkMap();
+            checkFinal = true;
+            mapView.setCheckColor(Color.LAWNGREEN);
+            mapView.setCheckMessage("Map");
+            mapView.setCheckElementsColor(Color.GREEN);
+            checkMap(true);
+        });
+
+        mapView.getCheckProgButton().setOnAction(e -> {
+            checkFinal = false;
+            mapView.setCheckColor(Color.ORCHID);
+            mapView.setCheckMessage("Checked Links");
+            mapView.setCheckElementsColor(Color.PURPLE);
+            checkMap(false);
+        });
+
+        mapView.getstaticHelpButton().setDisable(!checkSetup.isStaticHelp());
+
+        mapView.getstaticHelpButton().setOnAction(e -> {
+            Stage helpStage = mapView.getStaticHelpStage();
+            if (helpStage != null && helpStage.isShowing()) helpStage.close();
+            else mapView.showStaticHelp(mapModel.getCheckSetup().getStaticHelpDoc());
         });
     }
 
-    public boolean checkMap() {
+    private void setChecksCounter() {
+        if (checkMax != -1 && checkTries >= checkMax && !mapExercise.getMainWindow().isInstructorFunctions()) {
+            mapView.getCheckButton().setDisable(true);
+            mapView.getCheckProgButton().setDisable(true);
+        }
+        String checkString;
+        if (checkMax == -1) checkString = "(unlimited)";
+        else if (checkMax == 0) checkString = "(none)";
+        else checkString = "(" + String.valueOf(checkTries) + "/" + String.valueOf(checkMax) + ")";
+
+        mapView.getCheckTriesLabel().setText(checkString);
+    }
+
+
+
+    public boolean checkMap(Boolean checkComplete) {
+
+        checkSuccess = false;
+        mapView.deactivateBigCheck();
+        if (!mapExercise.getMainWindow().isInstructorFunctions()) {
+            checkTries++;
+            setChecksCounter();
+        }
+
+        choiceAMade = mapExercise.getExerciseView().getaCheckBox().isSelected();
+        choiceBMade = mapExercise.getExerciseView().getbCheckBox().isSelected();
+        choiceMade = choiceAMade || choiceBMade;
+
+
+
 
         setMetaAndObjBoxes();
         populateCheckLinks();
 
         boolean checkOK = true;
 
-        if (metaLinkToBracket()) checkOK = false;
+        if (noLinks()) checkOK = false;
+        else if (metaLinkToBracket()) checkOK = false;
         else if (crossedLinks()) checkOK = false;
         else if (emptyLink()) checkOK = false;
         else if (!checkMatching()) checkOK = false;
+        else if (badGroup()) checkOK = false;
 
-        System.out.println("checkOK: " + checkOK);
-        return checkOK;
+        else if (checkComplete && !checkCompleteMatch()) checkOK = false;
+
+        if (checkOK) {
+            if (choiceSet && !checkChoiceMade()) {}
+            else if (choiceSet && (checkChoices || mapExercise.getMainWindow().isInstructorFunctions())) {
+                if (checkChoice()) {
+                    checkSuccess = true;
+                    if (checkComplete) mapView.setCheckMessage("Map / Choice");
+                    else mapView.setCheckMessage("Checked Links / Choice");
+                }
+            }
+            else {
+                checkSuccess = true;
+                if (checkComplete) mapView.setCheckMessage("Map");
+                else mapView.setCheckMessage("Checked Links");
+            }
+        }
+
+
+        if (checkSuccess) {
+            mapView.activateBigCheck();
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean checkChoiceMade() {
+        boolean success = true;
+
+        if (!choiceMade) {
+            mapView.getaCheckBox().setStyle("-fx-background-color: mistyrose");
+            mapView.getbCheckBox().setStyle("-fx-background-color: mistyrose");
+            EditorAlerts.showSimpleTxtListAlert("Choices", Collections.singletonList(ParseUtilities.newRegularText("No choice made.")));
+            mapView.getaCheckBox().setStyle("-fx-background-color: white");
+            mapView.getbCheckBox().setStyle("-fx-background-color: white");
+            success = false;
+        }
+        return success;
+    }
+
+    private boolean checkChoice() {
+        boolean success = true;
+
+        if (choiceAMade && !choiceASet) {
+            mapView.getaCheckBox().setStyle("-fx-background-color: mistyrose");
+            EditorAlerts.showSimpleTxtListAlert("Choices", Collections.singletonList(ParseUtilities.newRegularText("Mistaken choice.")));
+            mapView.getaCheckBox().setStyle("-fx-background-color: white");
+            success = false;
+        }
+        if (choiceBMade && !choiceBSet) {
+            mapView.getbCheckBox().setStyle("-fx-background-color: mistyrose");
+            EditorAlerts.showSimpleTxtListAlert("Choices", Collections.singletonList(ParseUtilities.newRegularText("Mistaken choice.")));
+            mapView.getbCheckBox().setStyle("-fx-background-color: white");
+            success = false;
+        }
+        return success;
+    }
+
+    private boolean noLinks() {
+        boolean noLinks = false;
+        if (checkLinks.isEmpty()) {
+            EditorAlerts.fleetingRedPopup("No map to check.");
+            noLinks = true;
+        }
+        return noLinks;
+    }
+
+    private boolean checkCompleteMatch() {
+        boolean good;
+        boolean metaBoxGood = true;
+        boolean objectBoxGood = true;
+
+        //check unparsed
+        for (MapCheckLink checkLink : checkLinks) {
+
+            if (checkLink.getMetaExpSize() > 1) metaBoxGood = false;
+            if (checkLink.getObjectExpSize() > 1 && !checkLink.isObjectGroup()) objectBoxGood = false;
+        }
+
+        //before first link
+        if (!checkLinks.isEmpty() && checkLinks.get(0).getMetaStartIndex() > 0) {
+            List<OriginalElement> metaElements = ParseUtilities.getSubElements(metaDocument, 0, checkLinks.get(0).getMetaStartIndex());
+            if (metaElements.size() > 0) metaBoxGood = false;
+        }
+        if (!checkLinks.isEmpty() && checkLinks.get(0).getObjectStartIndex() > 0) {
+            List<OriginalElement> objectElements = ParseUtilities.getSubElements(objectDocument, 0, checkLinks.get(0).getObjectStartIndex());
+            if (objectElements.size() > 0) objectBoxGood = false;
+        }
+
+        //after group
+        for (int i = 0; i < checkLinks.size(); i++) {
+            MapCheckLink checkLink = checkLinks.get(i);
+            if (checkLink.isObjectGroup()) {
+                Integer endGroup = checkLink.getObjectEndIndex();
+                Integer nextStart;
+                if (i + 1 < checkLinks.size()) {
+                    nextStart = checkLinks.get(i + 1).getObjectStartIndex();
+                }
+                else {
+                    nextStart = objectDocument.getText().length();
+                }
+                if (nextStart - endGroup > 0) {
+                    List<OriginalElement> objectElements = ParseUtilities.getSubElements(objectDocument, endGroup, nextStart);
+                    if (objectElements.size() > 0) objectBoxGood = false;
+                }
+            }
+        }
+
+        good = metaBoxGood && objectBoxGood;
+        if (!good) {
+            if (!metaBoxGood) metaBox.getFormulaBox().setVTtreeBoxHighlight();
+            if (!objectBoxGood) objectBox.getFormulaBox().setVTtreeBoxHighlight();
+            EditorAlerts.showSimpleTxtListAlert("Map Problem", Collections.singletonList(ParseUtilities.newRegularText("Box not completely mapped.")));
+            metaBox.getFormulaBox().resetVTtreeBoxHighlight();
+            objectBox.getFormulaBox().resetVTtreeBoxHighlight();
+        }
+        return good;
+    }
+
+    private boolean badGroup() {
+
+        for (MapCheckLink checkLink : checkLinks) {
+            if (checkLink.isObjectGroup() && checkLink.getObjectExpSize() > 1) {
+                checkLink.getLink().setMapLinkHighlight();
+                EditorAlerts.showSimpleTxtListAlert("Match Issue", Collections.singletonList(ParseUtilities.newRegularText("Bad link (check extraneous content).")));
+                checkLink.getLink().resetMapLinkHighlight();
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean checkMatching() {
@@ -125,7 +341,7 @@ public class MapABExpCheck {
                 objectExp = objectSyms.get(0);
             }
 
-            System.out.println("meta: " + metaExp +" " + metaExp.getType() + " object " + objectExp + " " + objectExp.getType());
+           // System.out.println("meta: " + metaExp +" " + metaExp.getType() + " object " + objectExp + " " + objectExp.getType());
 
             if (!checkExpressionMatch(metaExp, objectExp, checkLink)) return false;
         }
@@ -367,7 +583,6 @@ public class MapABExpCheck {
 
         else if (metaExp instanceof MAnyExpression) {
 
-
             boolean isExpression = true;
             for (Expression objExp : objectSyms) {
                 if (objExp.getType() == ExpressionType.ORIGINAL_ELEMENT) {
@@ -401,6 +616,7 @@ public class MapABExpCheck {
                 else {
                     try {
                         ((MAnyExpression) metaExp).setMatch(objectSyms);
+                        checkLink.setObjectExpSize(1);
                     }
                     catch (TextMessageException e) {
                         checkLink.getLink().setMapLinkHighlight();
@@ -417,7 +633,7 @@ public class MapABExpCheck {
             result = false;
         }
 
-        System.out.println(result);
+       // System.out.println(result);
         return result;
     }
 
@@ -454,7 +670,7 @@ public class MapABExpCheck {
         List<Pair<Integer, MapABExpClickableMapLink>> objectIndexes = new ArrayList<>();
         for (MapCheckLink link : checkLinks) {
             objectIndexes.add(new Pair(link.getObjectStartIndex(), link.getLink()));
-            if (link.getObjectEndIndex() != null) objectIndexes.add(new Pair(link.getObjectEndIndex(), link.getLink()));
+            if (link.getObjectEndIndex() != null) objectIndexes.add(new Pair(link.getObjectEndIndex() - 1, link.getLink()));
         }
 
         for (int i = 0; i < objectIndexes.size(); i++) {
@@ -548,7 +764,7 @@ public class MapABExpCheck {
             }
             checkLink.setObjectExpressions(objectExpressions);
 
-        //    System.out.println(checkLink.toString());
+        //    System.out.println("checklink: " + checkLink.toString());
 
         }
 
@@ -595,19 +811,19 @@ public class MapABExpCheck {
 
 
     public boolean isCheckSuccess() {
-        return false;
+        return checkSuccess;
     }
 
     public boolean isChoiceSuccess() {
-        return false;
+        return choiceSuccess;
     }
 
     public boolean isCheckFinal() {
-        return false;
+        return checkFinal;
     }
 
     public int getCheckTries() {
-        return 0;
+        return checkTries;
     }
 
 }

@@ -53,6 +53,7 @@ public class TextHelpPopup {
     private static String keyboardShortcuts;
     private static String commonElements;
     private static String simpleEdit;
+    private static String formMaps;
     private static String verticalTrees;
     private static String horizontalTrees;
     private static String truthTables;
@@ -137,30 +138,54 @@ static {
             "<ul><li>Because of its 'one page per window' setup and relatively limited editing capacities (compared to, say, Word), SLAPP is less than ideal for multiple-page essays.  All the same, you <em>can</em> produce multiple page documents in SLAPP.  Then you retain editing features unique to SLAPP -- special characters and the like.  And with the second form of the edit exercise, it is easy to include into your documents graphical elements including trees, tables and derivations. </li></ul>"
     ;
 
+    formMaps = "<body style=\"margin-left:10; margin-right: 20\">" +
+            "<p><h3>Form Maps</h3></p>" +
+            "<p>Form mapping exercises appear in chapter 2 of <i>Symbolic Logic</i> -- in a SLAPP environment overlapping that for \"vertical trees\" (also encountered in chapter 2). Controls are straightforward:</p>" +
+            "<ol><li>"+
+            "<p>A map exercise starts with \"upper\" and \"lower\" expression boxes.  The aim is to \"map\" elements from the upper box to the lower.  Each box has a gray popup button on its left that can be used to drag the box around in the work area. </p>" +
+            "<ul>"+
+            "<li><p>To start, click into one of the boxes.  Then F10 adds a marker at the current cursor position.  Move the cursor, and F10 again adds a second marker.  Pressing F10 a third time removes markers, and the cycle begins again. And similarly for the other box.  Right click on a box removes any markers. </li>" +
+            "<li><p>With at least one marker in each box, F11 connects them by a line.  If a field has two markers, the line reaches to a bracket whose leftmost end is at the left marker, and rightmost point at the right marker.  If there is a single marker, the line reaches to the marked character.  It is possible to 'grab' the center of a line with the mouse; then right-click deletes it.</p></li>" +
+            "<li><p>With at least one marker in a selected formula field, F12 adds '?' above.  If there are two markers, the question mark attaches to a bracket whose leftmost end is at the left marker, and rightmost point at the right marker.  If there is a single marker, the question mark attaches to the marked character.  It is possible to grab the question mark with the mouse; then right-click deletes it.</p></li>" +
+            "<li><p>There should be no need to alter expressions in the boxes.  However it is worth noting that, although map elements are first set relative to formula characters, they are linked to positions on the box.  A result is that changes to the formula may leave links incorrectly positioned.  So if an expression changes, it is likely that mapping will need to be redone.</p></li>" +
+            "</ul></li>" +
+            "<li><p>The check function evaluates whether you have produced a good map.  'Check Progress' evaluates existing links for correctness.  'Check Map' adds the requirement that expressions are <i>completely</i> mapped.</p>"+
+            "<p>Observe that Check Map must fail in case the correct response is that there is no map -- and so that the expression is not of the given form.  It remains that any links you make will be evaluated by Check Progress -- where these may help focus an explanation of why there is no complete map.</p></li>" +
+            "</li>"+
+            "</ol>"
+            ;
+
     verticalTrees = "<body style=\"margin-left:10; margin-right: 20\">" +
             "<p><h3>VerticalTrees</h3></p>" +
-            "<p>Vertical trees appear in a variety of contexts and in a variety of forms, as sprinkled through chapters 2, 4, and 5 of <i>Symbolic Logic</i>.  Such exercises have a variety of controls, where different exercises may include different combinations of them.  Also, though they are not strictly vertical trees, there is a sort of 'mapping' exercise (as encountered in chapter 2 of <i>Symbolic Logic</i>) that works within the same overall framework.</p>" +
+            "<p>Vertical trees appear in a variety of contexts and in a variety of forms, as sprinkled through chapters 2, 4, and 5 of <i>Symbolic Logic</i>.  Such exercises have a variety of controls, where different exercises may include different combinations of them.</p>" +
 
-            "<ol><li>A vertical tree exercise always  has a bar over the main work area containing items that may be dragged into the work area.  Among the possibilities are a blue formula field, a green formula field, a grey vertical bracket, and/or a grey dotted horizontal line.    Once placed in the work area, the formula fields grow as you type in them; bracket and line may be sized from the far end (the right or bottom) by the mouse.  Each of the items has small popup buttons at the start (the left or top) -- grey to drag the object around in the work area, black to delete.   <br><br> A formula field is always associated with a default keyboard selection.  If you require a keyboard other than the default, it is often helpful to select the keyboard when the field is first dragged to the work area.  Each box 'remembers' its selected keyboard.<br><br></li>" +
+            "<ol>" +
+            "<li><p>A vertical tree exercise always  has a bar over the main work area containing items that may be dragged into the work area.  Among the possibilities are a blue formula field, a green formula field, a gray vertical bracket, and/or a gray dotted horizontal line.</p>" +
+            "<ul>" +
+            "<li><p>Use the blue box for \"nodes\" of your tree.  Use the green box for justification fields (usually appearing down the right).</p></li>" +
+            "<li><p>Once placed in the work area, the formula fields grow as you type in them; bracket and line may be sized from the far end (the right or bottom) by the mouse.  Each of the items has small popup buttons at the start (the left or top) -- gray to drag the object around in the work area, black to delete.</p></li>" +
+            "<li><p>The initial size of the work area is on the small side.  However the space adjusts its size to accommodate its contents.  </p>" +
+            "<p>This works well so long as the work space fits within the main SLAPP window.  To obtain a larger space you can increase the size of the SLAPP window, or alternatively \"push\" a content beyond the window bounds -- then the work area will expand (and scroll) to match.  (The vertical bracket and horizontal line work well for this, as they can be extended to push the area over their entire length.)   </p></li>" +
+            "</li></ul>" +
 
-            "<li>The initial size of the work area is on the small side.  However the space adjusts its size to accommodate its contents.<br><br></li>" +
-
-            "<li>Blue formula field: In addition to its move and delete buttons, a blue formula field has popup grey buttons above and below the center of the field.  Grabbing a lower (upper) button of one field and dragging to an upper (lower) button of another results in  a line between the two. This line is linked to the formula fields and moves with them as the fields move or grow. It is possible to 'grab' the center of a line with the mouse; then right-click deletes it.  Removing a box removes any lines to which it is connected. In addition, the blue formula field may have any of the following controls: <br><br></li>" +
+            "<li>In addition to its move and delete buttons, a blue formula field has popup grey buttons above and below the center of the field.  Grabbing a lower (upper) button of one field and dragging to an upper (lower) button of another results in  a line between the two. This line is linked to the formula fields and moves with them as the fields move or grow. It is possible to 'grab' the center of a line with the mouse; then right-click deletes it.  Removing a box removes any lines to which it is connected. In addition, the blue formula field may have any of the following controls on the left: <br><br></li>" +
 
             "<ul><li>With 'box' selected, left-click adds a solid outline around the formula space.  Right-click removes the outline.<br><br></li>" +
             "<li>With 'star' selected, left-click adds a solid star at the upper right-hand corner of the formula space.  Right-click removes the star.<br><br></li>" +
             "<li>With 'annotation' (the stacked boxes) selected, left-click adds a small annotation field at the upper right-hand corner of the formula space.  Right-click removes the field.  The small '+' button adds annotation fields to each formula space, and '-' removes them all.  Star and annotation options exclude one another. <br><br></li>" +
             "<li> With 'circle' selected, F10 adds a marker at the current cursor position.  Move the cursor, and F10 again adds a second marker.  Pressing F10 a third time removes markers, and the cycle begins again.  With two markers, F11 adds a circle whose leftmost point is at the left marker and rightmost point is at the right marker.  Right-click removes a circle and any markers.  In order for the circle not to 'walk' on characters in the formula space, you can insert a space on either side of the circled item(s), and the markers just before the spaces.<br><br></li>" +
-            "<li> Underlines work very much like circle.  With 'underlines' (horizontal bars) selected, F10 adds a marker at the current cursor position.  Move the cursor, and F10 again adds a second marker.  Pressing F10 a third time removes markers and the cycle begins again.  With two markers, F11 adds an underline whose leftmost point is at the left marker, and rightmost point at the right marker.  Right-click removes all underlines and any markers on the field.  A new underline always rests just above any underlines beneath it -- if necessary, 'pushing' existing lines down.  This will be what you want so long as you begin with longer lines (for main operators) first, and come with shorter ones 'contained' within them after.<br><br></li></ul>" +
+            "<li> Underlines work very much like circle.  With 'underlines' (horizontal bars) selected, F10 adds a marker at the current cursor position.  Move the cursor, and F10 again adds a second marker.  Pressing F10 a third time removes markers and the cycle begins again.  With two markers, F11 adds an underline whose leftmost point is at the left marker, and rightmost point at the right marker.  Right-click removes all underlines and any markers on the field.  A new underline always rests just above any underlines beneath it -- if necessary, 'pushing' existing lines down.  This will be what you want so long as you begin with longer lines (for main operators) first, and come with shorter ones 'contained' within them after.<br><br></li>" +
+            "</ul>" +
+            "<p>These elements attach to the <i>formula box</i>.  This is just what you want for the box, star, and annotation options.  However, although circle and underline are first set relative to formula characters, they too are linked to the boxes.  A result is that changes to the formula may leave these incorrectly positioned.  So it is best to add circle and underline only after the formula is finalized. </p>" +
 
-            "<li>Green formula box: A 'mapping' function applies to green formula boxes.  This function is related to circle and underline.  It applies just to the green formula fields.  With 'mapping' (down arrow) selected, F10 adds a marker at the current cursor position.  Move the cursor, and F10 again adds a second marker.  Pressing F10 a third time removes markers, and the cycle begins again. And similarly in a second formula field.  With mapping selected, right click on a formula box removes any markers.<br><br></li>" +
-
-            "<ul><li>With at least one marker in separate formula fields, F11 connects them by a line.  If a field has two markers, the line reaches to a bracket whose leftmost end is at the left marker, and rightmost point at the right marker.  If there is a single marker, the line reaches to the marked character.  It is possible to 'grab' the center of a line with the mouse; then right-click deletes it.   <br><br></li>" +
-            "<li>With at least one marker in a selected formula field, F12 adds '?' above.  If there are two markers, the question mark attaches to a bracket whose leftmost end is at the left marker, and rightmost point at the right marker.  If there is a single marker, the question mark attaches to the marked character.  It is possible to grab the question mark with the mouse; then right-click deletes it.<br><br></li></ol>" +
-
-            "<ul><li>Elements from categories (3) and (4) attach to the <i>formula box</i>.  This is just what you want for the box, star, and annotation options.  However, although circle, underline, and map are first set relative to formula characters, they too are linked to the boxes.  A result is that changes to the formula may leave these incorrectly positioned.  So it is best to add circle, underline, and map only after the formula is finalized. <br><br></li>" +
-
-            "<li>It is likely that some vertical trees will overrun the margins of a standard page (especially ones in chapter 5 of <em>Symbolic Logic</em>).  In this case, it will often make sense to modify page and/or scale settings from the 'print' dropdown.</li></ul>"
+            "<li><p>The check function checks your tree for correctness.  Depending on how an exercise is set up it may check the tree, justifications, and/or markup.</p></li>" +
+            "<ul>" +
+            "<li><p>For a given row use a single justification field.  This one field may include justifications for multiple nodes of the tree -- just list them in order from left to right.  (SLAPP looks just for the rule that justifies the node, as 'FR(\u2192)' or the like, other content is ignored.)  </p></li>" +
+            "<li><p>Checking for some tree exercises depends upon a previously completed tree.  In this case there is a thumbnail on the left which you can click to pop up your previous tree.  This checking works only in the context of an assignment including the previous tree. </p></li>" +
+            "</ul>" +
+            "</li>" +
+            "<li>It is likely that some vertical trees will overrun the margins of a standard printed page (especially ones in chapter 5 of <em>Symbolic Logic</em>).  In this case, it will often make sense to modify page and/or scale settings from the 'print' dropdown.</li>" +
+            "</ul>"
             ;
 
     horizontalTrees = "<body style=\"margin-left:10; margin-right: 20\">"+
@@ -326,6 +351,11 @@ static {
             case TRUTH_TABLE_GENERATE: {}
             case TRUTH_TABLE: {
                 showHelp(truthTables);
+                break;
+            }
+
+            case MAP_AB_EXPLAIN: {
+                showHelp(formMaps);
                 break;
             }
 

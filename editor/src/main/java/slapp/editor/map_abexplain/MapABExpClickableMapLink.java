@@ -45,6 +45,9 @@ public class MapABExpClickableMapLink extends Pane {
     int targetMapStage;
     Double[] sourceXAnchors;
     Double[] targetXAnchors;
+    Pane brackPaneUp;
+    Pane brackPaneDn;
+
 
 
     public MapABExpClickableMapLink(MapABExpView mapView) {
@@ -95,10 +98,14 @@ public class MapABExpClickableMapLink extends Pane {
 
     public void setMapLinkHighlight() {
         node_link.setStroke(Color.RED);
+        if (brackPaneUp != null) {brackPaneUp.setStyle("-fx-border-width: 0 1 1 1; -fx-border-color: red; -fx-border-radius: 0 0 3 3");}
+        if (brackPaneDn != null) {brackPaneDn.setStyle("-fx-border-width: 1 1 0 1; -fx-border-color: red; -fx-border-radius: 3 3 0 0");}
     }
 
     public void resetMapLinkHighlight() {
         node_link.setStroke(Color.BLACK);
+        if (brackPaneUp != null) {brackPaneUp.setStyle("-fx-border-width: 0 1 1 1; -fx-border-color: black; -fx-border-radius: 0 0 3 3");}
+        if (brackPaneDn != null) {brackPaneDn.setStyle("-fx-border-width: 1 1 0 1; -fx-border-color: black; -fx-border-radius: 3 3 0 0");}
     }
 
     public void bindEnds (MapABExpFormulaBox box1, MapABExpFormulaBox box2) {
@@ -196,19 +203,19 @@ public class MapABExpClickableMapLink extends Pane {
     }
 
     private Pane getUpBracket(double width) {
-        Pane brackPane = new Pane();
-        brackPane.setMinHeight(4.0); brackPane.setMaxHeight(4.0);
-        brackPane.setMinWidth(width); brackPane.setMaxWidth(width);
-        brackPane.setStyle("-fx-border-width: 0 1 1 1; -fx-border-color: black; -fx-border-radius: 0 0 3 3");
-        return brackPane;
+        brackPaneUp = new Pane();
+        brackPaneUp.setMinHeight(4.0); brackPaneUp.setMaxHeight(4.0);
+        brackPaneUp.setMinWidth(width); brackPaneUp.setMaxWidth(width);
+        brackPaneUp.setStyle("-fx-border-width: 0 1 1 1; -fx-border-color: black; -fx-border-radius: 0 0 3 3");
+        return brackPaneUp;
     }
 
     private Pane getDownBracket(double width) {
-        Pane brackPane = new Pane();
-        brackPane.setMinHeight(4.0); brackPane.setMaxHeight(4.0);
-        brackPane.setMinWidth(width); brackPane.setMaxWidth(width);
-        brackPane.setStyle("-fx-border-width: 1 1 0 1; -fx-border-color: black; -fx-border-radius: 3 3 0 0");
-        return brackPane;
+        brackPaneDn = new Pane();
+        brackPaneDn.setMinHeight(4.0); brackPaneDn.setMaxHeight(4.0);
+        brackPaneDn.setMinWidth(width); brackPaneDn.setMaxWidth(width);
+        brackPaneDn.setStyle("-fx-border-width: 1 1 0 1; -fx-border-color: black; -fx-border-radius: 3 3 0 0");
+        return brackPaneDn;
     }
 
     public String getIdString() {

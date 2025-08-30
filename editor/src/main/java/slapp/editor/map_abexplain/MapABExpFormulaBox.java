@@ -220,7 +220,7 @@ public class MapABExpFormulaBox extends AnchorPane {
 
     }
 
-    public void setMapIndexes(String linkID) {
+    public boolean setMapIndexes(String linkID) {
 
 
         RichTextArea rta = formulaBox.getRTA();
@@ -239,10 +239,12 @@ public class MapABExpFormulaBox extends AnchorPane {
             int maxIndex = Math.max(mapIndexes[0], mapIndexes[1]);
             if (0 < minIndex && minIndex + 1 < text.length() && text.codePointCount(minIndex - 1, minIndex + 1) == 1) minIndex++;
             if (0 < maxIndex && maxIndex + 1 < text.length() && text.codePointCount(maxIndex - 1, maxIndex + 1) == 1) maxIndex++;
+            if (minIndex == maxIndex) return false;
             MapIndexItem indexItem = new MapIndexItem(minIndex, maxIndex, linkID);
             mapIndexItems.add(indexItem);
         }
         mapIndexes = new Integer[2];
+        return true;
     }
 
     public void removeMapIndex(String idString) {

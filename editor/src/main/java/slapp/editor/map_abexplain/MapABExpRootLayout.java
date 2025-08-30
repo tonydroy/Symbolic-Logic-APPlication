@@ -372,15 +372,23 @@ public class MapABExpRootLayout extends AnchorPane {
                     }
                     if (formulaBoxes.size() == 2) {
                         slapp.editor.map_abexplain.MapABExpClickableMapLink mapLink = new MapABExpClickableMapLink(mapView);
-                        main_pane.getChildren().add(0, mapLink);
-                        mapLink.bindEnds(formulaBoxes.get(0), formulaBoxes.get(1));
-                        formulaBoxes.get(0).setMapIndexes(mapLink.getIdString());
-                        formulaBoxes.get(1).setMapIndexes(mapLink.getIdString());
+                        boolean box0 = formulaBoxes.get(0).setMapIndexes(mapLink.getIdString());
+                        boolean box1 = formulaBoxes.get(1).setMapIndexes(mapLink.getIdString());
 
-                        mapView.setUndoRedoFlag(true);
-                        mapView.setUndoRedoFlag(false);
-                        formulaBoxes.get(0).undoMappingRequest();
-                        formulaBoxes.get(1).undoMappingRequest();
+                        if (box0 && box1) {
+                            main_pane.getChildren().add(0, mapLink);
+                            mapLink.bindEnds(formulaBoxes.get(0), formulaBoxes.get(1));
+
+                            mapView.setUndoRedoFlag(true);
+                            mapView.setUndoRedoFlag(false);
+                            formulaBoxes.get(0).undoMappingRequest();
+                            formulaBoxes.get(1).undoMappingRequest();
+                        }
+                        else {
+                            EditorAlerts.fleetingRedPopup("Bracket link cannot have zero size.");
+                            formulaBoxes.get(0).undoMappingRequest();
+                            formulaBoxes.get(1).undoMappingRequest();
+                        }
                     } else {
                         EditorAlerts.fleetingRedPopup("Map requires two marked nodes.");
                     }

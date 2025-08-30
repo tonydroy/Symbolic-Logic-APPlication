@@ -21,7 +21,7 @@ public class MapCheckLink {
 
     MapABExpClickableMapLink link;
 
-/*
+
     @Override
     public String toString() {
         StringBuilder msb = new StringBuilder();
@@ -34,9 +34,10 @@ public class MapCheckLink {
             osb.append(e.toString());
             osb.append(" ");
         }
-     //   return ("mStart " + metaStartIndex + " mEnd " + metaEndIndex + " mexp " + msb.toString() + " oStart " + objectStartIndex + " oEnd " + objectEndIndex + " oexp " + osb.toString() );
+        return ("mStart " + metaStartIndex + " mEnd " + metaEndIndex + " mexp " + msb.toString() + " oStart " + objectStartIndex + " oEnd " + objectEndIndex + " oexp " + osb.toString());
+    }
 
-
+/*
 
         MapParser.setLanguage(Languages.getLanguage("LM Meta"));
         ParseUtilities.setLanguage(Languages.getLanguage("LM Meta"));

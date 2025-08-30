@@ -782,9 +782,13 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
         model.setStarted(mapModel.isStarted() || exerciseModified);
 
         MapCheckSetup checkSetup = mapModel.getCheckSetup();
-        if (mapCheck != null) checkSetup.setCheckTries(mapCheck.getCheckTries());
-        if (mapCheck != null) checkSetup.setCheckSuccess(mapCheck.isCheckSuccess());
-        if (mapCheck != null) checkSetup.setChoiceSuccess(mapCheck.isChoiceSuccess());
+        if (mapCheck != null) {
+            checkSetup.setCheckTries(mapCheck.getCheckTries());
+            checkSetup.setCheckSuccess(mapCheck.isCheckSuccess());
+            checkSetup.setChoiceSuccess(mapCheck.isChoiceSuccess());
+            checkSetup.setCheckFinal(mapCheck.isCheckFinal());
+            checkSetup.setCheckMessage(mapView.getCheckMessage());
+        }
         model.setCheckSetup(checkSetup);
 
         model.setStatementPrefHeight(mapView.getExerciseStatement().getEditor().getPrefHeight());
@@ -917,18 +921,16 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
 
     @Override
     public String getAuxExerName() {
-        return getExerciseModel().getCheckSetup().getAuxExerName();
+        return "";
     }
 
     @Override
-    public void setAuxExerA(Exercise exer) {
-        auxExerciseA = exer;
-    }
+    public void setAuxExerA(Exercise exer) {}
+
 
     @Override
-    public void setAuxExerB(Exercise exer) {
-        auxExerciseB = exer;
-    }
+    public void setAuxExerB(Exercise exer) {}
+
 
     @Override
     public void clearStandingPopups() {

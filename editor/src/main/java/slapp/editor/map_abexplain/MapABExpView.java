@@ -307,18 +307,18 @@ public class MapABExpView implements ExerciseView<DecoratedRTA> {
         bigCheckBox.setAlignment(Pos.CENTER);
         checkedElementsFlow.setTextAlignment(TextAlignment.CENTER);
 
-        checkButton = new Button("Check Tree");
+        checkButton = new Button("Check Map");
         checkButton.setPrefWidth(105);
-        checkButton.setTooltip(new Tooltip("Check tree for correctness."));
+        checkButton.setTooltip(new Tooltip("Check map for correctness."));
         checkTriesLabel = new Label();
 
-        //     checkProgButton = new Button("Check Progress");
-        //     checkProgButton.setPrefWidth(105);
-        //     checkProgButton.setTooltip(new Tooltip("Check tree progress so far."));
-        VBox checksBox = new VBox(10, checkButton, checkTriesLabel);
+        checkProgButton = new Button("Check Progress");
+        checkProgButton.setPrefWidth(105);
+        checkProgButton.setTooltip(new Tooltip("Check map progress so far."));
+        VBox checksBox = new VBox(10, checkProgButton, checkButton, checkTriesLabel);
         checksBox.setAlignment(Pos.CENTER);
         checkTriesLabel.setAlignment(Pos.CENTER);
-//        checksBox.setMargin(checkProgButton, new Insets(0,0,10, 0));
+        checksBox.setMargin(checkProgButton, new Insets(0,0,10, 0));
 
         staticHelpButton = new Button("Static Help");
         staticHelpButton.setPrefWidth(105);
@@ -608,4 +608,8 @@ public class MapABExpView implements ExerciseView<DecoratedRTA> {
     public MapABExpExercise getMapABExpExercise() {
         return mapABExpExercise;
     }
+
+
+
+
 }

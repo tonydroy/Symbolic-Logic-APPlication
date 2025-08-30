@@ -188,17 +188,10 @@ public class MapABExpCreate {
 
         MapCheckSetup checkSetup = originalModel.getCheckSetup();
         if (checkSetup == null) checkSetup = new MapCheckSetup();
-        formulaCheck.setSelected(checkSetup.getCheckType() == VTCheckType.FORMULA);
-        unabbreviationCheck.setSelected(checkSetup.getCheckType() == VTCheckType.UNABB);
-        auxNameField.setText(checkSetup.getAuxExerName());
         staticHelpCheck.setSelected(checkSetup.isStaticHelp());
         staticHelpRTA.getActionFactory().open(checkSetup.getStaticHelpDoc()).execute(new ActionEvent());
         staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
-        justificationCheck.setSelected(checkSetup.isCheckJustifications());
-        targetBoxedDRTA.getRTA().getActionFactory().open(checkSetup.getFormulaTarget()).execute(new ActionEvent());
-        targetBoxedDRTA.getRTA().getActionFactory().saveNow().execute(new ActionEvent());
         checkMaxSpinner.getValueFactory().setValue(checkSetup.getCheckMax());
-        checkMarkup.setSelected(checkSetup.isCheckMarkup());
 
         checkChoicesBox.setSelected(checkSetup.isCheckChoices());
         choiceABox.setSelected(checkSetup.isChoiceA());
@@ -1119,28 +1112,12 @@ public class MapABExpCreate {
         staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
         checkSetup.setStaticHelpDoc(staticHelpRTA.getDocument());
 
-        if (targetBoxedDRTA.getRTA().isModified()) modified = true;
-        targetBoxedDRTA.getRTA().getActionFactory().saveNow().execute(new ActionEvent());
-        Document targetDocument = targetBoxedDRTA.getRTA().getDocument();
-        checkSetup.setFormulaTarget(targetDocument);
-
-        checkSetup.setAuxExerName(auxNameField.getText());
-
-        VTCheckType checkType = VTCheckType.NONE;
-        if (formulaCheck.isSelected()) {
-            checkType = VTCheckType.FORMULA;
-        }
-        else if (unabbreviationCheck.isSelected()) {
-            checkType = VTCheckType.UNABB;
-        }
-        checkSetup.setCheckType(checkType);
 
 
-        checkSetup.setCheckMarkup(checkMarkup.isSelected());
         checkSetup.setStaticHelp(staticHelpCheck.isSelected());
         int checkMax = (Integer) checkMaxSpinner.getValue();
         checkSetup.setCheckMax(checkMax);
-        checkSetup.setCheckJustifications(justificationCheck.isSelected());
+
 
         String langName = null;
         for (String key : langMap.keySet()) {
