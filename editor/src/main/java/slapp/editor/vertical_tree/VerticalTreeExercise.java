@@ -332,7 +332,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
                 case ANNOTATION: {
                     controlBox.getChildren().add(layout.getAnnotationBox());
                     layout.getAnnotationToggle().setToggleGroup(buttonGroup);
-                    controlBox.setMargin(layout.getAnnotationBox(), new Insets(20, 0, -15, 0));  //don't understand weird spacing this "papers over"
+          //          controlBox.setMargin(layout.getAnnotationBox(), new Insets(20, 0, -15, 0));  //don't understand weird spacing this "papers over"
                     break;
                 }
                 case UNDERLINE: {

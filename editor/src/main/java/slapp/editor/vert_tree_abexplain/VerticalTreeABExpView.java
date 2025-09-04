@@ -307,6 +307,8 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
         checkButton.setTooltip(new Tooltip("Check tree for correctness."));
         checkTriesLabel = new Label();
 
+        checkProgButton = new Button();
+
         //     checkProgButton = new Button("Check Progress");
         //     checkProgButton.setPrefWidth(105);
         //     checkProgButton.setTooltip(new Tooltip("Check tree progress so far."));

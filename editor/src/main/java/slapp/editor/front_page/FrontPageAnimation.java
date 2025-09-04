@@ -114,7 +114,7 @@ public class FrontPageAnimation {
         Text title1 = new Text("Symbolic Logic APPlication");
         title1.setFont(Font.font("Noto Serif Combo", FontWeight.BOLD, 36));
 
-        Text title2 = new Text("Version 3.0");
+        Text title2 = new Text("Version 3.1");
         title2.setFont(Font.font("Noto Serif Combo",20));
 
 

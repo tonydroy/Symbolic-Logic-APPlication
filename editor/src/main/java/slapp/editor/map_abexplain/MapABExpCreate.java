@@ -778,34 +778,23 @@ public class MapABExpCreate {
 
 
         //center
-        String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
-                "<p>The Vertical Tree Explain Exercise is like Vertical Tree Explain Exercise except that it requires a binary choice.  It is appropriate for any exercise that builds tree diagrams and requires a choice together with an explanation of some sort.  It includes checking for diagrams of the sort encountered in chapter 2 of <em>Symbolic Logic</em> and possible check of the choice.</p>" +
-                "<ul>" +
-                "<li><p>Start with the exercise name, point possible, and explain prompt fields.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
-                "<li><p>The checkbox lead appears before the choice boxes, the A prompt with the first box, and the B prompt with the second.</p></li>" +
-                "<li><p>Use checkboxes to select items that may be dragged into the work area (to appear across the top), including the default keyboard for Tree and Map boxes.  For nodes of the tree use TreeBox, and for justification fields use MapBox (so a typical configuration has Italic/Sans Tree box and Base/Italic Map Box).</p>" +
-                "<p>I always include both the vertical bracket and dashed line - as they can be used to \"push\" the work area beyond the bounds of the SLAPP window.</p></li>" +
-                "<li><p>Then select select controls for functions applied to the tree boxes (to appear down the left).</p>" +
-                "<p>It is unlikely that any one exercise will include all the drag and control options (especially \"star\" and \"annotation\" cannot both apply to the same node) -- but the different options make it possible to accomodate a wide variety of exercises.</p></li>" +
-                "<li><p>Checking applies to formula and unabbreviation trees.  First select the check type." +
-                "<ul>" +
-                "<li><p>For formula (or term) checking, select whether to check markup (bracket, dashed line, and functions represented by controls down the left), and give the target (root) formula for the tree.</li></p>" +
-                "<li><p>Unabbreviation check works only in the context of an assignment including a vertical tree exercise (of some sort) that constructs the formula to be unabbreviated.  So state the auxiliary exercise name.  In some cases you may wish to include a (viewable) auxiliary vertical tree exercise even without unabbreviation.</p></li>  " +
-                "</ul>" +
-                "For either sort of check, choose whether to check justification fields, and the object language.  If CheckMax is 0 checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.</li></p>" +
+        /*
+        This is a kludge.  The help areas are usually HTML documents displayed in WebView.  But the JavaFX WebView
+        doesn't display Unicode supplemental characters properly.  So we use an RTA document.  To edit this document
+        see Derivation Exercise.
+         */
 
-                "<li><p>The static help check activates the Static Help button which pops up a message which you may state in the right hand text area below.</li></p>" +
-                "<li><p>Selecting an A/B choice by itself enables choice check for instructors.  For students choice check is enabled only if, in addition, Check Choices is selected (in which case the check essentially gives the answer).</li></p>" +
-                "<li><p>Finally provide the exercise statement and, if desired the static help message.</p></li>" +
-                "</ul>";
 
-        WebView helpArea = new WebView();
-        WebEngine webEngine = helpArea.getEngine();
-        webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
-        webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(230);
+        RichTextArea helpRTA = new RichTextArea(EditorMain.mainStage);
+        Document helpDoc = mainWindow.getSlappProgData().getMapCreateHelp();
+        helpRTA.getActionFactory().open(helpDoc).execute(new ActionEvent());
+        helpRTA.setEditable(false);
+        helpRTA.getStylesheets().add("slappTextArea.css");
 
-        centerBox = new VBox(10, fieldsBox, checksBox, textBoxes, helpArea);
+
+        helpRTA.setPrefHeight(300);
+
+        centerBox = new VBox(10, fieldsBox, checksBox, textBoxes, helpRTA);
         centerBox.setPadding(new Insets(10,0,10,20));
 
         spacerPane = new Pane();

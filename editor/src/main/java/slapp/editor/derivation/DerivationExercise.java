@@ -243,6 +243,8 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         To edit this document, uncomment the second group of lines below and open metalanguageHelp.sle.  The help Document opens
         into the comment field.  After edit there, press the metalanguage help button so that the Document is sent to
         SLAPPdata.  Close the program, re-comment the lines, and the revised file should open with the help button.
+
+        There is a similar issue for help in Mapping Create.  For this use the third comment.
          */
         derivationView.getShowMetaLangButton().setOnAction(e -> {
             //   TextHelpPopup.helpMetalanguage();
@@ -251,16 +253,20 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
             derivationView.getExerciseComment().getEditor().getActionFactory().saveNow().execute(new ActionEvent());
             Document doc = derivationView.getExerciseComment().getEditor().getDocument();
             mainWindow.getSlappProgData().setMetalanguageHelp(doc);
+ */
+
+/*
+            derivationView.getExerciseComment().getEditor().getActionFactory().saveNow().execute(new ActionEvent());
+            Document doc = derivationView.getExerciseComment().getEditor().getDocument();
+            mainWindow.getSlappProgData().setMapCreateHelp(doc);
 
  */
+
 
 
             Stage metaHelpStage = derivationView.getMetaLangStage();
             if (metaHelpStage != null && metaHelpStage.isShowing()) metaHelpStage.close();
             else derivationView.showMetalanguageHelp(mainWindow.getSlappProgData().getMetalanguageHelp());
-
-
-
         });
 
 

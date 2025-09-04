@@ -389,6 +389,30 @@ public class MapABExpCheck {
                 result = false;
             }
         }
+        else if (metaExp instanceof UniversalQuantifierSym) {
+            if (!((UniversalQuantifierSym) metaExp).equals(objectExp)) {
+                checkLink.getLink().setMapLinkHighlight();
+                List<Text> texts = new ArrayList<>();
+                texts.add(new Text("The '"));
+                texts.addAll(metaExp.toTextList());
+                texts.add(new Text("' symbol maps only to itself."));
+                EditorAlerts.showSimpleTxtListAlert("Match Issue:", texts);
+                checkLink.getLink().resetMapLinkHighlight();
+                result = false;
+            }
+        }
+        else if (metaExp instanceof ExistentialQuantifierSym) {
+            if (!((ExistentialQuantifierSym) metaExp).equals(objectExp)) {
+                checkLink.getLink().setMapLinkHighlight();
+                List<Text> texts = new ArrayList<>();
+                texts.add(new Text("The '"));
+                texts.addAll(metaExp.toTextList());
+                texts.add(new Text("' symbol maps only to itself."));
+                EditorAlerts.showSimpleTxtListAlert("Match Issue:", texts);
+                checkLink.getLink().resetMapLinkHighlight();
+                result = false;
+            }
+        }
         else if (metaExp instanceof ContradictionSimple) {
             if (!((ContradictionSimple) metaExp).equals(objectExp)) {
                 checkLink.getLink().setMapLinkHighlight();

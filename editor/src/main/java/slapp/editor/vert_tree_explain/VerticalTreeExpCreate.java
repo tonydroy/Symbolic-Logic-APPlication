@@ -626,8 +626,11 @@ public class VerticalTreeExpCreate {
                 "<li><p>Start with the exercise name, explain prompt, and points fields.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
                 "<li><p>Use checkboxes to select items that may be dragged into the work area (to appear across the top), including the default keyboard for Tree and Map boxes.  For nodes of the tree use TreeBox, and for justification fields use MapBox (so a typical configuration has Italic/Sans Tree box and Base/Italic Map Box).</p>" +
                 "<p>I always include both the vertical bracket and dashed line - as they can be used to \"push\" the work area beyond the bounds of the SLAPP window.</p></li>" +
-                "<li><p>Then select select controls for functions applied to the tree boxes (to appear down the left).</p>" +
-                "<p>It is unlikely that any one exercise will include all the drag and control options (especially \"star\" and \"annotation\" cannot both apply to the same node) -- but the different options make it possible to accomodate a wide variety of exercises.</p></li>" +
+                "<li><p>Then select select controls for functions applied to the tree boxes (to appear down the left).</p></li>" +
+                "<ul>" +
+                "<li><p>It is unlikely that any one exercise will include all the drag and control options (especially \"star\" and \"annotation\" cannot both apply to the same node) -- but the different options make it possible to accomodate a wide variety of exercises.</p></li>" +
+                "<li><p>In combination with the Mapping Button, map boxes retain the capacity for links from one box to another.  In the usual case, this functionality isn't useful except for the explicit Map exercise type. </p></li>" +
+                "</ul>" +
                 "<li><p>Checking applies to formula and unabbreviation trees.  First select the check type." +
                 "<ul>" +
                 "<li><p>For formula (or term) checking, select whether to check markup (bracket, dashed line, and functions represented by controls down the left), and give the target (root) formula for the tree.</li></p>" +

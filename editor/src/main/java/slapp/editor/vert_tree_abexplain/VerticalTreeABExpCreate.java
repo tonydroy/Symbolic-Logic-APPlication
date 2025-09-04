@@ -734,11 +734,18 @@ public class VerticalTreeABExpCreate {
                 "<li><p>The checkbox lead appears before the choice boxes, the A prompt with the first box, and the B prompt with the second.</p></li>" +
                 "<li><p>Use checkboxes to select items that may be dragged into the work area (to appear across the top), including the default keyboard for Tree and Map boxes.  For nodes of the tree use TreeBox, and for justification fields use MapBox (so a typical configuration has Italic/Sans Tree box and Base/Italic Map Box).</p>" +
                 "<p>I always include both the vertical bracket and dashed line - as they can be used to \"push\" the work area beyond the bounds of the SLAPP window.</p></li>" +
-                "<li><p>Then select select controls for functions applied to the tree boxes (to appear down the left).</p>" +
-                "<p>It is unlikely that any one exercise will include all the drag and control options (especially \"star\" and \"annotation\" cannot both apply to the same node) -- but the different options make it possible to accomodate a wide variety of exercises.</p></li>" +
+                "<li><p>Then select select controls for functions applied to the tree boxes (to appear down the left).</p></li>" +
+                "<ul>" +
+                "<li><p>It is unlikely that any one exercise will include all the drag and control options (especially \"star\" and \"annotation\" cannot both apply to the same node) -- but the different options make it possible to accomodate a wide variety of exercises.</p></li>" +
+                "<li><p>In combination with the Mapping Button, map boxes retain the capacity for links from one box to another.  In the usual case, this functionality isn't useful except for the explicit Map exercise type. </p></li>" +
+                "</ul>" +
                 "<li><p>Checking applies to formula and unabbreviation trees.  First select the check type." +
                 "<ul>" +
-                "<li><p>For formula (or term) checking, select whether to check markup (bracket, dashed line, and functions represented by controls down the left), and give the target (root) formula for the tree.</li></p>" +
+
+                "<li><p>For formula (or term) checking, select whether to check markup (bracket, dashed line, and functions represented by controls down the left), and give the target (root) formula for the tree.  A good tree is expected to result in the target formula.</li></p>" +
+                "<li><p>In case Formula Check is selected without a target formula, checking will identify broken rules in a tree but then go on to evaluate the choice (in case Check Choices or Instructor Functions are active).  So it may be useful in case a partial tree is used to illustrate failure.</p></li>" +
+
+
                 "<li><p>Unabbreviation check works only in the context of an assignment including a vertical tree exercise (of some sort) that constructs the formula to be unabbreviated.  So state the auxiliary exercise name.  In some cases you may wish to include a (viewable) auxiliary vertical tree exercise even without unabbreviation.</p></li>  " +
                 "</ul>" +
                 "For either sort of check, choose whether to check justification fields, and the object language.  If CheckMax is 0 checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.</li></p>" +
