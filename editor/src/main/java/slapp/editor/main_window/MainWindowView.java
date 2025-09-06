@@ -156,6 +156,7 @@ public class MainWindowView {
     private MenuItem quickStartItem;
     private MenuItem slappEditorItem;
     private MenuItem verticalTreeItem;
+    private MenuItem formMapItem;
     private MenuItem horizontalTreeItem;
     private MenuItem truthTableItem;
     private MenuItem derivationItem;
@@ -213,6 +214,10 @@ public class MainWindowView {
         Text filmItemGraphic1 = new Text("\uf008");
         filmItemGraphic1.setStyle("-fx-font-family: la-solid-900");
         slappEditorItem = new MenuItem("SLAPP editor", filmItemGraphic1);
+        Text filmItemGraphic6 = new Text("\uf008");
+        filmItemGraphic6.setStyle("-fx-font-family: la-solid-900");
+        formMapItem = new MenuItem("Form Maps", filmItemGraphic6);
+
         Text filmItemGraphic2 = new Text("\uf008");
         filmItemGraphic2.setStyle("-fx-font-family: la-solid-900");
         verticalTreeItem = new MenuItem("Vertical Trees", filmItemGraphic2);
@@ -263,7 +268,7 @@ public class MainWindowView {
         exerciseMenu.getItems().addAll(openExerciseItem, recentExerciseMenu, saveExerciseItem, saveAsExerciseItem, clearExerciseItem, closeExerciseItem, printExerciseItem, exportToPDFExerciseItem, createRevisedExerciseItem, createNewExerciseItem);
         assignmentMenu.getItems().addAll(openAssignmentItem, recentAssignmentMenu, saveAssignmentItem, saveAsAssignmentItem, closeAssignmentItem, printAssignmentItem, exportAssignmentToPDFItem, createRevisedAssignmentItem, createNewAssignmentItem);
         printMenu.getItems().addAll(printExerciseItemPM, exportExerciseToPDFItemPM, printAssignmentItemPM, exportAssignmentToPDFItemPM, exportSetupItem, pageSetupItem, scaleSetupItem);
-        helpMenu.getItems().addAll(quickStartItem, slappEditorItem, verticalTreeItem, truthTableItem, horizontalTreeItem, derivationItem,  commonElementsTextItem, contextualTextItem, new SeparatorMenuItem(), keyboardShortcutsItem, instructorInfoItem, aboutItem, updateItem, reportItem);
+        helpMenu.getItems().addAll(quickStartItem, slappEditorItem, formMapItem, verticalTreeItem, truthTableItem, horizontalTreeItem, derivationItem,  commonElementsTextItem, contextualTextItem, new SeparatorMenuItem(), keyboardShortcutsItem, instructorInfoItem, aboutItem, updateItem, reportItem);
 
         createNewExerciseItem.setDisable(true);
         createRevisedExerciseItem.setDisable(true);
@@ -1207,6 +1212,10 @@ public class MainWindowView {
      */
     MenuItem getSlappEditorItem() {
         return slappEditorItem;
+    }
+
+    public MenuItem getFormMapItem() {
+        return formMapItem;
     }
 
     /**

@@ -140,7 +140,7 @@ static {
 
     formMaps = "<body style=\"margin-left:10; margin-right: 20\">" +
             "<p><h3>Form Maps</h3></p>" +
-            "<p>Form mapping exercises appear in chapter 2 of <i>Symbolic Logic</i> -- in a SLAPP environment overlapping that for \"vertical trees\" (also encountered in chapter 2). Controls are straightforward:</p>" +
+            "<p>Form map exercises appear in chapter 2 of <i>Symbolic Logic</i>.  Controls are straightforward (and anticipate ones for \"vertical trees\", also encountered in chapter 2).</p>" +
             "<ol><li>"+
             "<p>A map exercise starts with \"upper\" and \"lower\" expression boxes.  The aim is to \"map\" elements from the upper box to the lower.  Each box has a gray popup button on its left that can be used to drag the box around in the work area. </p>" +
             "<ul>"+

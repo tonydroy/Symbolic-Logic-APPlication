@@ -269,7 +269,7 @@ public class MapABExpCheck {
         if (!good) {
             if (!metaBoxGood) metaBox.getFormulaBox().setVTtreeBoxHighlight();
             if (!objectBoxGood) objectBox.getFormulaBox().setVTtreeBoxHighlight();
-            EditorAlerts.showSimpleTxtListAlert("Map Problem", Collections.singletonList(ParseUtilities.newRegularText("Box not completely mapped.")));
+            EditorAlerts.showSimpleTxtListAlert("Map Problem", Collections.singletonList(ParseUtilities.newRegularText("Box(es) not completely mapped.")));
             metaBox.getFormulaBox().resetVTtreeBoxHighlight();
             objectBox.getFormulaBox().resetVTtreeBoxHighlight();
         }
