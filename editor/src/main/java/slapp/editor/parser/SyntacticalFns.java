@@ -295,6 +295,19 @@ public class SyntacticalFns {
         return free;
     }
 
+    public static boolean sentence(Expression formulaExp, String langName ) {
+        List<Expression> variableList = variablesList(formulaExp);
+
+        boolean sentence = true;
+        for (Expression variable : variableList) {
+            if (expTermFreeInFormula(formulaExp, variable, langName)) {
+                sentence = false;
+                break;
+            }
+        }
+        return sentence;
+    }
+
     //formula P with term t replaced by term s (P either term or formula)
     public static Expression substituteDocTerms(Document formulaDoc, Document term1Doc, Document term2Doc, String langName) {
 
@@ -881,6 +894,23 @@ public class SyntacticalFns {
         }
         return subs;
     }
+
+    public static List<Expression> variablesList(Expression expression) {
+        nodeList = new ArrayList<Expression>();
+        listNodes(expression);
+        Collections.sort(nodeList, new SortByLevel());
+        List<Expression> vars = new ArrayList<>();
+        for (int i = 0; i < nodeList.size(); i++) {
+            if (nodeList.get(i).getType() == ExpressionType.TERM) {
+                Term t = (Term) nodeList.get(i);
+                if (t.getTermType() == TermType.VARIABLE) {
+                    vars.add(nodeList.get(i));
+                }
+            }
+        }
+        return vars;
+    }
+
 
     public static List<Expression> allElementsDoc(Document doc, String langName) {
         lang = Languages.getLanguage(langName);

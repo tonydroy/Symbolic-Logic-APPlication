@@ -54,12 +54,22 @@ public class TruthTableModel implements ExerciseModel<Document>, Serializable {
     private int pointsPossible;
     private int pointsEarned;
 
+    private TTcheckSetup checkSetup;
+
     /**
      * Construct truth table model
      */
     public TruthTableModel(){
         pointsPossible = 0;
         pointsEarned = -1;
+    }
+
+    public TTcheckSetup getCheckSetup() {
+        return checkSetup;
+    }
+
+    public void setCheckSetup(TTcheckSetup checkSetup) {
+        this.checkSetup = checkSetup;
     }
 
     /**

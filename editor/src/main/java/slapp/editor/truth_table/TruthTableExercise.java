@@ -29,10 +29,9 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import slapp.editor.DiskUtilities;
@@ -40,6 +39,8 @@ import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.*;
+import slapp.editor.vertical_tree.VTcheck;
+import slapp.editor.vertical_tree.VTcheckSetup;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +52,7 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
     private MainWindow mainWindow;
     private TruthTableModel truthTableModel;
     private TruthTableView truthTableView;
+    private TTcheck ttCheck;
     private MainWindowView mainView;
     private boolean exerciseModified = false;
     private ParseDocForTTable docParser;
@@ -72,6 +74,8 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
         docParser = new ParseDocForTTable(truthTableModel.getUnaryOperators(), truthTableModel.getBinaryOperators());
         tableRows = truthTableModel.getTableRows();
         setTruthTableView();
+
+        ttCheck = new TTcheck(this);
     }
 
     /**
@@ -185,6 +189,7 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
         truthTableView.updateTableGridFromTableItems();
 
         truthTableView.initializeViewDetails();
+        truthTableView.setRightControlBox();
     }
 
     /*
@@ -326,8 +331,12 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
         //header node
         Label exerciseName = new Label(printModel.getExerciseName());
         exerciseName.setStyle("-fx-font-weight: bold;");
-        HBox hbox = new HBox(exerciseName);
+        Region spacer = new Region();
+
+        HBox hbox = new HBox(exerciseName, spacer, printCheckNode());
+        hbox.setHgrow(spacer, Priority.ALWAYS);
         hbox.setPadding(new Insets(0,0,10,0));
+        hbox.setMinWidth(nodeWidth);
 
         Group headerRoot = new Group();
         Scene headerScene = new Scene(headerRoot);
@@ -419,6 +428,30 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
         return nodeList;
     }
 
+
+    TextFlow printCheckNode() {
+        TextFlow flow = new TextFlow();
+        flow.setMaxWidth(200);
+        if (ttCheck.isCheckSuccess()) {
+            Text bigCheck = new Text("\ue89a");
+            bigCheck.setFont(Font.font("Noto Serif Combo", 14));
+            Text message = new Text("  " + truthTableView.getCheckMessage());
+            message.setFont(Font.font("Noto Serif Combo", 11));
+
+            if (ttCheck.isCheckFinal()) {
+                bigCheck.setFill(Color.LAWNGREEN);
+                message.setFill(Color.GREEN);
+            }
+            else {
+                bigCheck.setFill(Color.ORCHID);
+                message.setFill(Color.PURPLE);
+            }
+            flow.getChildren().addAll(bigCheck, message);
+        }
+        return flow;
+    }
+
+
     /**
      * Return to the initial (unworked) version of the exercise, retaining the comment only.
      * @return the initial exercise
@@ -433,6 +466,11 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
         TruthTableModel originalModel = (TruthTableModel) (truthTableModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
         originalModel.setPointsEarned(pointsEarned);
+        TTcheckSetup setup = originalModel.getCheckSetup();
+        setup.setCheckTries(ttCheck.getCheckTries());
+        setup.setCheckSuccess(false);
+        originalModel.setCheckSetup(setup);
+
         TruthTableExercise clearExercise = new TruthTableExercise(originalModel, mainWindow, true);
         return clearExercise;
     }
@@ -497,6 +535,13 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
         model.setExerciseName(truthTableModel.getExerciseName());
         model.setOriginalModel(truthTableModel.getOriginalModel());
         model.setStarted(truthTableModel.isStarted() || exerciseModified);
+
+        TTcheckSetup checkSetup = truthTableModel.getCheckSetup();
+        if (ttCheck != null) checkSetup.setCheckTries(ttCheck.getCheckTries());
+        if (ttCheck != null) checkSetup.setCheckSuccess(ttCheck.isCheckSuccess());
+        model.setCheckSetup(checkSetup);
+
+
 
         model.setStatementPrefHeight(truthTableView.getExerciseStatement().getEditor().getPrefHeight());
         model.setCommentPrefHeight(truthTableView.getCommentPrefHeight());
