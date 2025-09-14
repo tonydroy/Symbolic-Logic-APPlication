@@ -224,9 +224,9 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
                 }
                 tableGrid.add(highlightButtons[i], i, tableRows + 3);
                 if (highlightButtons[i].isSelected()) {
-                    highlightButtons[i].setStyle("-fx-border-radius: 10; -fx-border-color: tomato; -fx-background-color: lavenderblush;");
+                    highlightButtons[i].setStyle("-fx-border-radius: 10; -fx-border-color: dodgerblue; -fx-background-color: lightblue; -fx-background-radius: 10");
                     for (int j = 0; j < tableRows; j++) {
-                        tableFields[i][j].setStyle("-fx-background-radius: 2; -fx-background-color: pink");
+                        tableFields[i][j].setStyle("-fx-background-radius: 2; -fx-background-color: lightblue");
                     }
                 }
 
@@ -407,9 +407,10 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
 
         button.setOnAction(e -> {
             if (button.isSelected()) {
-                button.setStyle("-fx-border-radius: 10; -fx-border-color: tomato; -fx-background-color: lavenderblush;");
+                button.setStyle("-fx-border-radius: 10; -fx-border-color: dodgerblue; -fx-background-color: lightblue; -fx-background-radius: 10;");
+          //      button.setStyle("-fx-border-radius: 10; -fx-border-color: tomato; -fx-background-color: lavenderblush;");
                 for (int j = 0; j < tableRows; j++) {
-                    tableFields[index][j].setStyle("-fx-background-radius: 2; -fx-background-color: pink");
+                    tableFields[index][j].setStyle("-fx-background-radius: 2; -fx-background-color: lightblue");  //pink
                 }
 
             } else {

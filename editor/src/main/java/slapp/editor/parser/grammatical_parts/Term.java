@@ -23,6 +23,7 @@ public class Term implements Expression {
     private CloseBracket closeBracket = new CloseBracket("");
     private SubstitutionTransform subTransform = null;
     private Term matchTerm = null;
+    private String semanticValue;
 
 
     @Override
@@ -93,6 +94,14 @@ public class Term implements Expression {
 
     public void setMatchTerm(Term matchTerm) {
         this.matchTerm = matchTerm;
+    }
+
+    public String getSemanticValue() {
+        return semanticValue;
+    }
+
+    public void setSemanticValue(String semanticValue) {
+        this.semanticValue = semanticValue;
     }
 
     @Override

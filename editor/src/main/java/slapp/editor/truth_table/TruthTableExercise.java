@@ -58,6 +58,9 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
     private ParseDocForTTable docParser;
     private int tableColumns = 0;
     private int tableRows = 0;
+    private List<Integer> basicFormulaCols = new ArrayList<>();
+    private List<Integer> mainFormulaCols = new ArrayList<>();
+
 
 
     /**
@@ -94,6 +97,7 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
         tableRows = truthTableModel.getTableRows();
         generateEmptyTableModel();                                 //** the difference
         setTruthTableView();
+        ttCheck = new TTcheck(this);
     }
 
     /**
@@ -244,11 +248,14 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
     private void setupHeadItemsFromModel() {
 
         List<TableHeadItem> headList = new ArrayList<>();
+        basicFormulaCols = new ArrayList<>();
+        mainFormulaCols = new ArrayList<>();
 
         //basic formulas head items
         List<Document> basicFormulas = truthTableModel.getBasicFormulas();
         for (int i = 0; i < basicFormulas.size(); i++) {
             List<TableHeadItem> basicHeadItems = docParser.generateHeadItems(basicFormulas.get(i));
+            basicFormulaCols.add(headList.size());
             headList.addAll(basicHeadItems);
             TableHeadItem spaceColHead = new TableHeadItem(new TextFlow(new Text("")), new ColumnConstraints(10));
             spaceColHead.setBlankColumn(true);
@@ -267,6 +274,7 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
         //main formula head items
         List<Document> mainFormulas = truthTableModel.getMainFormulas();
         for (int i = 0; i < mainFormulas.size() - 1; i++) {
+            mainFormulaCols.add(headList.size());
             List<TableHeadItem> mainHeadItems = docParser.generateHeadItems(mainFormulas.get(i));
             headList.addAll(mainHeadItems);
             TableHeadItem spaceColHead = new TableHeadItem(new TextFlow(new Text("")), new ColumnConstraints(10));
@@ -282,6 +290,7 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
         }
         if (mainFormulas.size() > 0) {
             List<TableHeadItem> finalHeadItems = docParser.generateHeadItems(mainFormulas.get(mainFormulas.size() - 1));
+            mainFormulaCols.add(headList.size());
             headList.addAll(finalHeadItems);
         }
         TableHeadItem spaceColHead = new TableHeadItem(new TextFlow(new Text("")), new ColumnConstraints(10));
@@ -290,6 +299,22 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
 
         truthTableView.setTableHeadItemsList(headList);
         tableColumns = headList.size();
+
+        /*
+        //print head items
+        for (int i = 0; i < tableColumns; i++) {
+            TextFlow flow = headList.get(i).getExpression();
+            StringBuilder builder = new StringBuilder();
+            for (Node node : flow.getChildren()) {
+                if (node instanceof Text) {
+                    builder.append(((Text) node).getText());
+                }
+            }
+            System.out.print(i + ": " + builder.toString() + ", ");
+        }
+        System.out.println();
+         */
+
     }
 
     /**
@@ -467,6 +492,7 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
         originalModel.setExerciseComment(commentDocument);
         originalModel.setPointsEarned(pointsEarned);
         TTcheckSetup setup = originalModel.getCheckSetup();
+        if (setup == null) setup = new TTcheckSetup();
         setup.setCheckTries(ttCheck.getCheckTries());
         setup.setCheckSuccess(false);
         originalModel.setCheckSetup(setup);
@@ -619,4 +645,27 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
         return model;
     }
 
+    public List<Integer> getBasicFormulaCols() {
+        return basicFormulaCols;
+    }
+
+    public void setBasicFormulaCols(List<Integer> basicFormulaCols) {
+        this.basicFormulaCols = basicFormulaCols;
+    }
+
+    public List<Integer> getMainFormulaCols() {
+        return mainFormulaCols;
+    }
+
+    public void setMainFormulaCols(List<Integer> mainFormulaCols) {
+        this.mainFormulaCols = mainFormulaCols;
+    }
+
+    public int getTableColumns() {
+        return tableColumns;
+    }
+
+    public int getTableRows() {
+        return tableRows;
+    }
 }

@@ -1196,7 +1196,7 @@ public class SyntacticalFns {
         return dummyVar;
     }
 
-    static class SortByLevel implements Comparator<Expression> {
+    public static class SortByLevel implements Comparator<Expression> {
         @Override
         public int compare(Expression o1, Expression o2) {
             return Integer.compare(o1.getLevel(), o2.getLevel());

@@ -24,6 +24,8 @@ public class Formula implements Expression {
     CloseBracket closeBracket = new CloseBracket("");
     private SubstitutionTransform subTransform = null;
     private Formula matchFormula = null;
+    private String semanticValue;
+    private int ttColumn;
 
     public RelationSymbol getMainRelation() { return null; }
 
@@ -231,8 +233,19 @@ public class Formula implements Expression {
         this.mainOperator = mainOperator;
     }
 
+    public String getSemanticValue() {
+        return semanticValue;
+    }
 
+    public void setSemanticValue(String semanticValue) {
+        this.semanticValue = semanticValue;
+    }
 
+    public int getTtColumn() {
+        return ttColumn;
+    }
 
-
+    public void setTTColumn(int ttColumn) {
+        this.ttColumn = ttColumn;
+    }
 }

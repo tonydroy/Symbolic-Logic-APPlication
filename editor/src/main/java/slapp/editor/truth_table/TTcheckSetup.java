@@ -3,14 +3,22 @@ package slapp.editor.truth_table;
 import java.io.Serializable;
 
 public class TTcheckSetup implements Serializable {
+    private static final long serialVersionUID = 100L;
 
-    String objLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (abv)
-    boolean checkSuccess;
-    boolean choiceSuccess;
-    String checkMessage;
-    boolean checkFinal;
-    int checkMax;
-    int checkTries;
+    private String objLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (abv)
+    private boolean checkSuccess;
+    private boolean choiceSuccess;
+    private String checkMessage;
+    private boolean checkFinal;
+    private int checkMax;
+    private int checkTries;
+
+    private boolean skipAtomicsOK;
+
+
+    public TTcheckSetup() {
+        skipAtomicsOK = false;
+    }
 
 
     public boolean isCheckSuccess() {
@@ -67,5 +75,13 @@ public class TTcheckSetup implements Serializable {
 
     public void setObjLangName(String objLangName) {
         this.objLangName = objLangName;
+    }
+
+    public boolean isSkipAtomicsOK() {
+        return skipAtomicsOK;
+    }
+
+    public void setSkipAtomicsOK(boolean skipAtomicsOK) {
+        this.skipAtomicsOK = skipAtomicsOK;
     }
 }
