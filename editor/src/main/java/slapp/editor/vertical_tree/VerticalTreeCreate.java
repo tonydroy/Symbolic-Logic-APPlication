@@ -116,7 +116,7 @@ public class VerticalTreeCreate {
     private Spinner checkMaxSpinner;
     private CheckBox justificationCheck;
     private Map<String, SimpleBooleanProperty> langMap;
-    private String defaultLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (w/abv)
+    private String defaultLangName = "\u2112\ud835\udcc8 (w/abv)";  //Lq (w/abv)
     CheckBox formulaCheck;
     CheckBox unabbreviationCheck;
     CheckBox checkMarkup;
@@ -163,7 +163,6 @@ public class VerticalTreeCreate {
         mappingCheck.setSelected(objectControlList.contains(MAPPING));
 
         VTcheckSetup checkSetup = originalModel.getCheckSetup();
-        if (checkSetup == null) checkSetup = new VTcheckSetup();
         formulaCheck.setSelected(checkSetup.getCheckType() == VTCheckType.FORMULA);
         unabbreviationCheck.setSelected(checkSetup.getCheckType() == VTCheckType.UNABB);
         auxNameField.setText(checkSetup.getAuxExerName());
@@ -886,6 +885,7 @@ public class VerticalTreeCreate {
         }
 
         VTcheckSetup checkSetup = model.getCheckSetup();
+        if (checkSetup == null) checkSetup = new VTcheckSetup();
         if (staticHelpRTA.isModified()) modified = true;
         staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
         checkSetup.setStaticHelpDoc(staticHelpRTA.getDocument());

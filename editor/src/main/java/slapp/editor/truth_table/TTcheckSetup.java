@@ -1,23 +1,44 @@
 package slapp.editor.truth_table;
 
+import com.gluonhq.richtextarea.model.Document;
+
 import java.io.Serializable;
 
 public class TTcheckSetup implements Serializable {
     private static final long serialVersionUID = 100L;
 
-    private String objLangName = "\u2112\ud835\udcc6 (w/abv)";  //Lq (abv)
+    private String objLangName;
     private boolean checkSuccess;
     private boolean choiceSuccess;
     private String checkMessage;
     private boolean checkFinal;
     private int checkMax;
     private int checkTries;
+    private boolean staticHelp;
+    private Document staticHelpDoc;
 
-    private boolean skipAtomicsOK;
+    boolean checkChoices;
+    boolean choiceA;
+    boolean choiceB;
+
+    private boolean skipBasicsOK;
 
 
     public TTcheckSetup() {
-        skipAtomicsOK = false;
+        objLangName = "\u2112\ud835\udcc8 (w/abv)";
+        checkSuccess = false;
+        choiceSuccess = false;
+        checkMessage = "";
+        checkFinal = true;
+        checkMax = 0;  // 0
+        checkTries = 0;
+        staticHelp = false;
+        staticHelpDoc = new Document();
+        checkChoices = false;
+        choiceA = false;
+        choiceB = false;
+
+        skipBasicsOK = true;
     }
 
 
@@ -77,11 +98,51 @@ public class TTcheckSetup implements Serializable {
         this.objLangName = objLangName;
     }
 
-    public boolean isSkipAtomicsOK() {
-        return skipAtomicsOK;
+    public boolean isSkipBasicsOK() {
+        return skipBasicsOK;
     }
 
-    public void setSkipAtomicsOK(boolean skipAtomicsOK) {
-        this.skipAtomicsOK = skipAtomicsOK;
+    public void setSkipBasicsOK(boolean skipBasicsOK) {
+        this.skipBasicsOK = skipBasicsOK;
+    }
+
+    public boolean isStaticHelp() {
+        return staticHelp;
+    }
+
+    public void setStaticHelp(boolean staticHelp) {
+        this.staticHelp = staticHelp;
+    }
+
+    public Document getStaticHelpDoc() {
+        return staticHelpDoc;
+    }
+
+    public void setStaticHelpDoc(Document staticHelpDoc) {
+        this.staticHelpDoc = staticHelpDoc;
+    }
+
+    public boolean isCheckChoices() {
+        return checkChoices;
+    }
+
+    public void setCheckChoices(boolean checkChoices) {
+        this.checkChoices = checkChoices;
+    }
+
+    public boolean isChoiceA() {
+        return choiceA;
+    }
+
+    public void setChoiceA(boolean choiceA) {
+        this.choiceA = choiceA;
+    }
+
+    public boolean isChoiceB() {
+        return choiceB;
+    }
+
+    public void setChoiceB(boolean choiceB) {
+        this.choiceB = choiceB;
     }
 }

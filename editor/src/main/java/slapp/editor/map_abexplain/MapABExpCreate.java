@@ -1097,6 +1097,7 @@ public class MapABExpCreate {
         }
 
         MapCheckSetup checkSetup = model.getCheckSetup();
+        if (checkSetup == null) checkSetup = new MapCheckSetup();
         if (staticHelpRTA.isModified()) modified = true;
         staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
         checkSetup.setStaticHelpDoc(staticHelpRTA.getDocument());

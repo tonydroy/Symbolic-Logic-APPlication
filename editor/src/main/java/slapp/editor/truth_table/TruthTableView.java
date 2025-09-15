@@ -156,6 +156,7 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
         addBasicFormulaButton.setOnAction(e -> {
             basicFormulasBoxedDRTAList.add(newFormulaDRTAField());
             updateBasicFormulasPaneFromList();
+     //       basicFormulasBoxedDRTAList.get(0).getBoxedRTA().requestFocus();  //doesn't work  same for RTA
         });
         removeBasicFormulaButton.setOnAction(e -> {
            int index = basicFormulasBoxedDRTAList.size();
@@ -612,9 +613,9 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
         bigCheckBox.setAlignment(Pos.CENTER);
         checkedElementsFlow.setTextAlignment(TextAlignment.CENTER);
 
-        checkButton = new Button("Check Tree");
+        checkButton = new Button("Check Table");
         checkButton.setPrefWidth(105);
-        checkButton.setTooltip(new Tooltip("Check tree for correctness."));
+        checkButton.setTooltip(new Tooltip("Check table for correctness."));
         checkTriesLabel = new Label();
 
         checkProgButton = new Button();
@@ -750,7 +751,29 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
         return false;
     }
 
+    public Button getCheckProgButton() {
+        return checkProgButton;
+    }
 
+    public Label getCheckTriesLabel() {
+        return checkTriesLabel;
+    }
+
+    public void setCheckColor(Color checkColor) {
+        this.checkColor = checkColor;
+    }
+
+    public void setCheckElementsColor(Color checkElementsColor) {
+        this.checkElementsColor = checkElementsColor;
+    }
+
+    public void setCheckMessage(String checkMessage) {
+        this.checkMessage = checkMessage;
+    }
+
+    public Button getStaticHelpButton() {
+        return staticHelpButton;
+    }
 
     /**
      * The table grid pane

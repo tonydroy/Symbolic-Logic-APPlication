@@ -39,8 +39,7 @@ import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.*;
-import slapp.editor.vertical_tree.VTcheck;
-import slapp.editor.vertical_tree.VTcheckSetup;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -491,6 +490,7 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
         TruthTableModel originalModel = (TruthTableModel) (truthTableModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
         originalModel.setPointsEarned(pointsEarned);
+
         TTcheckSetup setup = originalModel.getCheckSetup();
         if (setup == null) setup = new TTcheckSetup();
         setup.setCheckTries(ttCheck.getCheckTries());
@@ -667,5 +667,9 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
 
     public int getTableRows() {
         return tableRows;
+    }
+
+    public MainWindow getMainWindow() {
+        return mainWindow;
     }
 }

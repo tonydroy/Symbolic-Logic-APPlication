@@ -3,12 +3,14 @@ package slapp.editor.truth_table;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.geometry.Insets;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
 import javafx.util.Pair;
 import slapp.editor.AlphanumStringComparator;
 import slapp.editor.EditorAlerts;
@@ -37,6 +39,7 @@ public class TTcheck {
     private List<Document> basicDocs;
     private List<Pair<Formula, String>[]> interpretations;
     private Formula[] basicFormulas;
+    private List<Formula> mainFormulas;
     private int tableColumns;
     private int tableRows;
     private String[][] tableKey;
@@ -50,18 +53,31 @@ public class TTcheck {
         this.ttView = ttExercise.getExerciseView();
         this.ttModel = ttExercise.getExerciseModel();
 
-
         checkSetup = ttModel.getCheckSetup();
         if (checkSetup == null) {
             checkSetup = new TTcheckSetup();
             ttModel.setCheckSetup(checkSetup);
         }
-
-
-
-
-
         objLangName = checkSetup.getObjLangName();
+
+        checkSuccess = checkSetup.isCheckSuccess();
+        checkFinal = checkSetup.isCheckFinal();
+        if (checkFinal) {
+            ttView.setCheckColor(Color.LAWNGREEN);
+            ttView.setCheckElementsColor(Color.GREEN);
+            ttView.setCheckMessage("Table");
+        }
+        else {
+            ttView.setCheckColor(Color.ORCHID);
+            ttView.setCheckElementsColor(Color.PURPLE);
+            ttView.setCheckMessage("Nodes: Good");
+        }
+        if (checkSuccess) ttView.activateBigCheck();
+        else ttView.deactivateBigCheck();
+
+        checkMax = checkSetup.getCheckMax();
+        checkTries = checkSetup.getCheckTries();
+        updateCheckCounter();
 
 
         setRightControlBox();
@@ -71,12 +87,26 @@ public class TTcheck {
         ttView.getCheckButton().setOnAction(e -> {
             checkTable();
         });
+
+        ttView.getStaticHelpButton().setDisable(!checkSetup.isStaticHelp());
+
+        ttView.getStaticHelpButton().setOnAction(e -> {
+            Stage helpStage = ttView.getStaticHelpStage();
+            if (helpStage != null && helpStage.isShowing()) helpStage.close();
+            else ttView.showStaticHelp(ttModel.getCheckSetup().getStaticHelpDoc());
+        });
     }
 
     public boolean checkTable() {
         basicDocs = ttModel.getBasicFormulas();
         tableColumns = ttExercise.getTableColumns();
         tableRows = (int) Math.pow(2, basicDocs.size());
+        checkSuccess = false;
+        ttView.deactivateBigCheck();
+        if (!ttExercise.getMainWindow().isInstructorFunctions()) {
+            checkTries++;
+            setChecksCounter();
+        }
 
         boolean checkGood = true;
 
@@ -89,10 +119,96 @@ public class TTcheck {
         populateInterpretations();  //initializes tableKey
         if (!populateTableKey()) checkGood = false;
 
-        if (!checkTableValues()) checkGood = false;
+        else if (!checkRows()) checkGood = false;     //won't apply to short tables
+        else if (!checkTableValues()) checkGood = false;
+        else if (!checkHighlights()) checkGood = false;
 
-        System.out.println("check good: " + checkGood);
+        if (checkGood) {
+       //     System.out.println("check good: " + checkGood);
+            checkSuccess = true;
+            ttView.activateBigCheck();
+        }
         return checkGood;
+    }
+
+    private void setChecksCounter() {
+        if (checkMax != -1 && checkTries >= checkMax && !ttExercise.getMainWindow().isInstructorFunctions()) {
+            ttView.getCheckButton().setDisable(true);
+        }
+        String checkString;
+        if (checkMax == -1) checkString = "(unlimited)";
+        else if (checkMax == 0) checkString = "(none)";
+        else checkString = "(" + String.valueOf(checkTries) + "/" + String.valueOf(checkMax) + ")";
+
+        ttView.getCheckTriesLabel().setText(checkString);
+
+    }
+
+    private boolean checkHighlights() {
+        ToggleButton[] highlightButtons = ttView.getHighlightButtons();
+        boolean[] highlightValues = new boolean[tableColumns];
+        for (int i = 0; i < tableColumns; i++) {
+            if (highlightButtons[i] != null) {
+                highlightValues[i] = highlightButtons[i].isSelected();
+            }
+        }
+        TextField[][] tableFields = ttView.getTableFields();
+
+        List<Integer> baseFormulaCols = ttExercise.getBasicFormulaCols();
+        for (int i = 0; i < baseFormulaCols.size(); i++) {
+            int baseCol = baseFormulaCols.get(i);
+
+            if (highlightValues[baseFormulaCols.get(i)]) {
+                if (highlightValues[baseCol]) {
+                    for (int k = 0; k < ttExercise.getTableRows(); k++) {
+                        tableFields[baseCol][k].setStyle("-fx-background-radius: 2; -fx-background-color: mistyrose; ");  //mistyrose
+                    }
+                    EditorAlerts.showSimpleTxtListAlert("Highlight:", Collections.singletonList(ParseUtilities.newRegularText("In completed table, highlight only columns in main table.")));
+                    for (int k = 0; k < ttExercise.getTableRows(); k++) {
+                        tableFields[baseCol][k].setStyle("-fx-background-radius: 2; -fx-background-color: lightblue");
+                    }
+                    return false;
+                }
+            }
+        }
+
+        for (int i = 0; i < mainFormulaSubLists.size(); i++) {
+
+            List<Expression> sublist = mainFormulaSubLists.get(i);
+            for (int j = 0; j < sublist.size(); j++) {
+                Formula sub = (Formula) sublist.get(j);
+                if (highlightValues[sub.getTtColumn()] == true && !isMainFormula(sub)) {
+                    for (int k = 0; k < ttExercise.getTableRows(); k++) {
+                        tableFields[sub.getTtColumn()][k].setStyle("-fx-background-radius: 2; -fx-background-color: mistyrose; ");  //mistyrose
+                    }
+                    EditorAlerts.showSimpleTxtListAlert("Highlight:", Collections.singletonList(ParseUtilities.newRegularText("In completed table, highlight only column for value of the whole formula.")));
+                    for (int k = 0; k < ttExercise.getTableRows(); k++) {
+                        tableFields[sub.getTtColumn()][k].setStyle("-fx-background-radius: 2; -fx-background-color: lightblue");
+                    }
+                    return false;
+                }
+            }
+        }
+
+        for (int i = 0; i < mainFormulaSubLists.size(); i++) {
+            List<Expression> sublist = mainFormulaSubLists.get(i);
+            for (int j = 0; j < sublist.size(); j++) {
+                Formula sub = (Formula) sublist.get(j);
+
+                if (isMainFormula(sub) && highlightValues[sub.getTtColumn()] != true) {
+                    for (int k = 0; k < ttExercise.getTableRows(); k++) {
+                        tableFields[sub.getTtColumn()][k].setStyle("-fx-background-radius: 2; -fx-background-color: mistyrose; ");  //mistyrose
+                    }
+                    EditorAlerts.showSimpleTxtListAlert("Highlight:", Collections.singletonList(ParseUtilities.newRegularText("In completed table, highlight column for value of the whole formula.")));
+                    for (int k = 0; k < ttExercise.getTableRows(); k++) {
+                        tableFields[sub.getTtColumn()][k].setStyle("-fx-background-radius: 2; -fx-Bbackground-color: white");
+                    }
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     private boolean checkTableValues() {
@@ -122,15 +238,79 @@ public class TTcheck {
         }
 
         //check main formulas
-
-
-
+        for (int i = 0; i < mainFormulaSubLists.size(); i++) {       //formula lists
+            List<Expression> subList = mainFormulaSubLists.get(i);
+            for (int j = 0; j < subList.size(); j++) {                // list for formula
+                Formula sub = (Formula) subList.get(j);
+                boolean goodColumn = true;
+                for (int k = 0 ; k < interpretations.size(); k++) {   //row
+                    if (checkSetup.isSkipBasicsOK() && isBasic(sub) && !isMainFormula(sub) && tableFields[sub.getTtColumn()][k].getText().equals("") ) {
+                        continue;
+                    }
+                    else {
+                        if (!tableKey[sub.getTtColumn()][k].equalsIgnoreCase(tableFields[sub.getTtColumn()][k].getText())) {
+                            tableFields[sub.getTtColumn()][k].setStyle("-fx-background-radius: 2; -fx-background-color: mistyrose; ");
+                            goodColumn = false;
+                        }
+                    }
+                }
+                if (!goodColumn) {
+                    String message = "Problem(s) in column.";
+                    if (!isMainFormula(sub)) message = "Problems(s) in column -- where values in this column may matter for ones that depend upon it.";
+                    EditorAlerts.showSimpleTxtListAlert("Table Values:", Collections.singletonList(ParseUtilities.newRegularText(message)));
+                    for (int m = 0 ; m < interpretations.size(); m++) {
+                        if (ttView.getHighlightButtons()[sub.getTtColumn()].isSelected()) {
+                            tableFields[sub.getTtColumn()][m].setStyle("-fx-background-radius: 2; -fx-background-color: lightblue");
+                        }
+                        else
+                            tableFields[sub.getTtColumn()][m].setStyle("-fx-background-radius: 2; -fxBbackground-color: white; ");
+                    }
+                    return false;
+                }
+            }
+        }
         return true;
     }
 
-    private boolean isMainFormula() {
+    private boolean isMainFormula(Formula formula) {
+        boolean isMain = false;
+        for (Formula mf : mainFormulas) {
+            if (formula == mf) {
+                isMain = true;
+                break;
+            }
+        }
+        return isMain;
+    }
 
-        return true;
+    private boolean equalsBasicFormula(Formula formula) {
+        boolean equalsBasic = false;
+        for (Formula bf : basicFormulas) {
+            if (bf.equals(formula)) {
+                equalsBasic = true;
+                break;
+            }
+        }
+        return equalsBasic;
+    }
+
+    private boolean checkRows() {
+        boolean good = true;
+        if (tableRows != ttExercise.getTableRows()) {
+            Background spinnerBackground = ttView.getRowsSpinner().getEditor().getBackground();
+            ttView.getRowsSpinner().getEditor().setBackground(new Background(new BackgroundFill(Color.MISTYROSE, new CornerRadii(0), new Insets(0))));
+            Background buttonBackground = ttView.getSetupTableButton().getBackground();
+            ttView.getSetupTableButton().setBackground(new Background(new BackgroundFill(Color.MISTYROSE, new CornerRadii(3.0), new Insets(0))));
+            List<Text> textList = new ArrayList<>();
+            textList.add(ParseUtilities.newRegularText("Table with \ud835\udc5b basic sentences should have 2"));
+            textList.add(ParseUtilities.newSuperscriptText("\ud835\udc5b"));
+            textList.add(ParseUtilities.newRegularText(" rows."));
+            EditorAlerts.showSimpleTxtListAlert("Table Setup: ", textList);
+            ttView.getRowsSpinner().getEditor().setBackground(spinnerBackground);
+            ttView.getSetupTableButton().setBackground(buttonBackground);
+            good = false;
+        }
+        return good;
     }
 
     private boolean populateTableKey() {
@@ -145,11 +325,13 @@ public class TTcheck {
 
         //populate main formula sub lists
         mainFormulaSubLists = new ArrayList<>();
+        mainFormulas = new ArrayList<>();
         for (int i = 0; i < ttModel.getMainFormulas().size(); i++) {
             subformulaColCounter = ttExercise.getMainFormulaCols().get(i);
             mainFormulaSubLists.add(new ArrayList<>());
             Document doc = ttModel.getMainFormulas().get(i);
             Formula formula = (Formula) ParseUtilities.parseDoc(doc, objLangName).get(0);
+            mainFormulas.add(formula);
             populateFormulaSubList(formula, i);
             Collections.sort(mainFormulaSubLists.get(i), new SyntacticalFns.SortByLevel());
         }
@@ -233,7 +415,7 @@ public class TTcheck {
             System.out.println();
         }
  */
-
+/*
         //print table
         for (int i = 0; i < tableRows; i++) {
             for (int j = 0; j < tableColumns; j++) {
@@ -241,6 +423,7 @@ public class TTcheck {
             }
             System.out.println();
         }
+ */
 
         return true;
     }
@@ -439,6 +622,19 @@ public class TTcheck {
             ttView.getSetupTableButton().setBackground(buttonBackground);
         }
         return good;
+    }
+
+    private void updateCheckCounter() {
+        if (checkMax != -1 && checkTries >= checkMax && !ttExercise.getMainWindow().isInstructorFunctions()) {
+            ttView.getCheckButton().setDisable(true);
+            ttView.getCheckProgButton().setDisable(true);
+        }
+        String checkString;
+        if (checkMax == -1) checkString = "(unlimited)";
+        else if (checkMax == 0) checkString = "(none)";
+        else checkString = "(" + String.valueOf(checkTries) + "/" + String.valueOf(checkMax) + ")";
+
+        ttView.getCheckTriesLabel().setText(checkString);
     }
 
 
