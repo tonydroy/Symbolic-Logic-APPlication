@@ -18,6 +18,7 @@ package slapp.editor.truth_table_explain;
 import com.gluonhq.richtextarea.model.Document;
 import slapp.editor.main_window.ExerciseModel;
 import slapp.editor.main_window.ExerciseType;
+import slapp.editor.truth_table.TTcheckSetup;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -61,6 +62,8 @@ public class TruthTableExpModel implements ExerciseModel<Document>, Serializable
     private int pointsPossible;
     private int pointsEarned;
 
+    private TTExpCheckSetup checkSetup;
+
 
     /**
      * Construct truth table explain model
@@ -68,7 +71,17 @@ public class TruthTableExpModel implements ExerciseModel<Document>, Serializable
     public TruthTableExpModel(){
         pointsPossible = 0;
         pointsEarned = -1;
+        checkSetup = new TTExpCheckSetup();
     }
+
+    public TTExpCheckSetup getCheckSetup() {
+        return checkSetup;
+    }
+
+    public void setCheckSetup(TTExpCheckSetup checkSetup) {
+        this.checkSetup = checkSetup;
+    }
+
 
     /**
      * Fill in empty values for table contents

@@ -492,7 +492,7 @@ public class TruthTableCreate {
                 "<li><p>Then supply formulas to appear across the top of the truth table (not including the base column), again using the plus and minus buttons to add and remove fields.  The \"conclusion divider\" merely inserts an extra space and slash ('/') prior to the last formula.</p></li>" +
 
                 "<li><p>The static help check activates the Static Help button which pops up a message which you may state in the right hand text area below.</p></li>" +
-                "<li><p>For checking: If Check Max is 0, checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.  The Basic Sentences box says whether check requires that basic sentence values be repeated in the main part of the table.  And you may need to select the object language.  </li></li>" +
+                "<li><p>For checking: If Check Max is 0, checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.  The Basic Sentences box says whether check requires that \"non-main\" basic sentence values be repeated in the main part of the table.  And you may need to select the object language.  </li></li>" +
 
                 "<li><p>Finally supply the exercise statement, and if desired the static help message.</p></li>" +
                 "</ul>";

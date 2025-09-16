@@ -17,23 +17,36 @@ package slapp.editor.truth_table_explain;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
+import com.gluonhq.richtextarea.model.Document;
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.ParallelTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.util.Duration;
 import slapp.editor.EditorAlerts;
+import slapp.editor.EditorMain;
 import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
@@ -91,6 +104,20 @@ public class TruthTableExpView implements ExerciseView<DecoratedRTA> {
     BoxedDRTA focusedBoxedDRTA;
     private int pointsPossible;
     private TextField pointsEarnedTextField;
+
+    //--------------------
+    private Node rightControlNode;
+    private Button checkButton;
+    private Button checkProgButton;
+    private Text bigCheck;
+    private String checkMessage;
+    private Text checkedElements;
+    private Label checkTriesLabel;
+    private Color checkColor;
+    private Color checkElementsColor;
+    private boolean checkShowing = false;
+    private Button staticHelpButton;
+    private Stage  staticHelpStage;;
 
     /**
      * Construct the truth table explain view
@@ -223,9 +250,9 @@ public class TruthTableExpView implements ExerciseView<DecoratedRTA> {
                 }
                 tableGrid.add(highlightButtons[i], i, tableRows + 3);
                 if (highlightButtons[i].isSelected()) {
-                    highlightButtons[i].setStyle("-fx-border-radius: 10; -fx-border-color: tomato; -fx-background-color: lavenderblush;");
+                    highlightButtons[i].setStyle("-fx-border-radius: 10; -fx-border-color: dodgerblue; -fx-background-color: lightblue; -fx-background-radius: 10");
                     for (int j = 0; j < tableRows; j++) {
-                        tableFields[i][j].setStyle("-fx-background-radius: 2; -fx-background-color: pink");
+                        tableFields[i][j].setStyle("-fx-background-radius: 2; -fx-background-color: lightblue");
                     }
                 }
 
@@ -406,9 +433,9 @@ public class TruthTableExpView implements ExerciseView<DecoratedRTA> {
 
         button.setOnAction(e -> {
             if (button.isSelected()) {
-                button.setStyle("-fx-border-radius: 10; -fx-border-color: tomato; -fx-background-color: lavenderblush;");
+                button.setStyle("-fx-border-radius: 10; -fx-border-color: dodgerblue; -fx-background-color: lightblue; -fx-background-radius: 10;");
                 for (int j = 0; j < tableRows; j++) {
-                    tableFields[index][j].setStyle("-fx-background-radius: 2; -fx-background-color: pink");
+                    tableFields[index][j].setStyle("-fx-background-radius: 2; -fx-background-color: lightblue");
                 }
             } else {
                 button.setStyle("-fx-border-radius: 10; -fx-border-color: lightblue; -fx-background-color: ghostwhite;");
@@ -618,6 +645,112 @@ public class TruthTableExpView implements ExerciseView<DecoratedRTA> {
         setSizeSpinners();
     }
 
+    public void setRightControlBox() {
+        bigCheck = new Text("\ue89a");
+        bigCheck.setFont(Font.font("Noto Serif Combo", 72));
+
+        checkedElements = new Text(checkMessage);
+        checkedElements.setFont(Font.font("Noto Serif Combo", 11));
+        TextFlow checkedElementsFlow = new TextFlow(checkedElements);
+        checkedElementsFlow.setMaxWidth(150);
+
+        VBox bigCheckBox = new VBox(0, bigCheck, checkedElementsFlow);
+        bigCheckBox.setAlignment(Pos.CENTER);
+        checkedElementsFlow.setTextAlignment(TextAlignment.CENTER);
+
+        checkButton = new Button("Check Table");
+        checkButton.setPrefWidth(105);
+        checkButton.setTooltip(new Tooltip("Check table for correctness."));
+        checkTriesLabel = new Label();
+
+        checkProgButton = new Button();
+
+        //     checkProgButton = new Button("Check Progress");
+        //     checkProgButton.setPrefWidth(105);
+        //     checkProgButton.setTooltip(new Tooltip("Check tree progress so far."));
+        VBox checksBox = new VBox(10, checkButton, checkTriesLabel);
+        checksBox.setAlignment(Pos.CENTER);
+        checkTriesLabel.setAlignment(Pos.CENTER);
+//        checksBox.setMargin(checkProgButton, new Insets(0,0,10, 0));
+
+        staticHelpButton = new Button("Static Help");
+        staticHelpButton.setPrefWidth(105);
+        staticHelpButton.setTooltip(new Tooltip("Get static help text"));
+
+
+        VBox rightControlBox = new VBox(40, bigCheckBox, checksBox, staticHelpButton );
+        rightControlBox.setAlignment(Pos.TOP_CENTER);
+        rightControlBox.setPadding(new Insets(60,20,0,20));
+        rightControlNode = rightControlBox;
+
+        deactivateBigCheck();
+
+    }
+
+    public void activateBigCheck() {
+        bigCheck.setFill(checkColor);
+        checkedElements.setText(checkMessage);
+        checkedElements.setFill(checkElementsColor);
+
+        if (checkShowing) {
+            FadeTransition t1 = new FadeTransition(new Duration(250), checkedElements);
+            t1.setToValue(1.0);
+            t1.setInterpolator(Interpolator.DISCRETE);
+
+            FadeTransition t2 = new FadeTransition(new Duration(250), bigCheck);
+            t2.setToValue(1.0);
+            t2.setInterpolator(Interpolator.DISCRETE);
+
+            ParallelTransition pt = new ParallelTransition(t1, t2);
+            pt.play();
+        }
+        else {
+            bigCheck.setOpacity(1.0);
+            checkedElements.setOpacity(1.0);
+        }
+    }
+
+    //record status, and deactivate
+    public void deactivateBigCheck() {
+        if (bigCheck.getOpacity() > .5) checkShowing = true;
+        else checkShowing = false;
+        bigCheck.setOpacity(0.0);
+        checkedElements.setOpacity(0.0);
+    }
+
+    public void showStaticHelp(Document doc) {
+
+        if (staticHelpStage == null || !staticHelpStage.isShowing()) {
+            RichTextArea hrta = new RichTextArea(EditorMain.mainStage);
+            hrta.getActionFactory().open(doc).execute(new ActionEvent());
+            hrta.setPadding(new Insets(20, 0, 20, 20));
+            hrta.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
+            hrta.setPrefWidth(400);
+            hrta.setPrefHeight(300);
+            hrta.setEditable(false);
+
+
+            Scene scene = new Scene(hrta);
+            scene.getStylesheets().add(RichTextArea.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
+            hrta.applyCss();
+            staticHelpStage = new Stage();
+            staticHelpStage.setScene(scene);
+            staticHelpStage.setTitle("SLAPP Text Help");
+            staticHelpStage.initModality(Modality.NONE);
+            staticHelpStage.getIcons().addAll(EditorMain.icons);
+            staticHelpStage.initOwner(EditorMain.mainStage);
+            Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
+            staticHelpStage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 420));
+            staticHelpStage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 320));
+
+            staticHelpStage.show();
+        }
+    }
+
+    public Stage getStaticHelpStage() { return staticHelpStage; }
+
+
+
     private void setSizeSpinners() {
 
         tableGrid.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
@@ -677,6 +810,30 @@ public class TruthTableExpView implements ExerciseView<DecoratedRTA> {
             node = node.getParent();
         }
         return false;
+    }
+
+    public Button getCheckProgButton() {
+        return checkProgButton;
+    }
+
+    public Label getCheckTriesLabel() {
+        return checkTriesLabel;
+    }
+
+    public void setCheckColor(Color checkColor) {
+        this.checkColor = checkColor;
+    }
+
+    public void setCheckElementsColor(Color checkElementsColor) {
+        this.checkElementsColor = checkElementsColor;
+    }
+
+    public void setCheckMessage(String checkMessage) {
+        this.checkMessage = checkMessage;
+    }
+
+    public Button getStaticHelpButton() {
+        return staticHelpButton;
     }
 
     /**
@@ -875,7 +1032,7 @@ public class TruthTableExpView implements ExerciseView<DecoratedRTA> {
      * @return the control node
      */
     @Override
-    public Node getRightControl() { return null; }
+    public Node getRightControl() { return rightControlNode; }
 
     @Override
     public Node getPointsNode() {
@@ -895,6 +1052,14 @@ public class TruthTableExpView implements ExerciseView<DecoratedRTA> {
 
     public TextField getPointsEarnedTextField() {
         return pointsEarnedTextField;
+    }
+
+    public String getCheckMessage() {
+        return checkMessage;
+    }
+
+    public Button getCheckButton() {
+        return checkButton;
     }
 
 }

@@ -16,9 +16,7 @@ You should have received a copy of the GNU General Public License along with SLA
 package slapp.editor.truth_table_explain;
 
 import com.gluonhq.richtextarea.RichTextArea;
-import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.model.Document;
-import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -32,10 +30,8 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -45,9 +41,9 @@ import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.*;
 import slapp.editor.truth_table.ParseDocForTTable;
+import slapp.editor.truth_table.TTcheck;
+import slapp.editor.truth_table.TTcheckSetup;
 import slapp.editor.truth_table.TableHeadItem;
-import slapp.editor.truth_table.TruthTableExercise;
-import slapp.editor.truth_table.TruthTableModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,12 +55,14 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
     private MainWindow mainWindow;
     private TruthTableExpModel truthTableExpModel;
     private TruthTableExpView truthTableExpView;
+    private TTExpCheck ttCheck;
     private MainWindowView mainView;
     private boolean exerciseModified = false;
     private ParseDocForTTable docParser;
     private int tableColumns = 0;
     private int tableRows = 0;
-    private ColumnConstraints spacerConstraint;
+    private List<Integer> basicFormulaCols = new ArrayList<>();
+    private List<Integer> mainFormulaCols = new ArrayList<>();
 
 
 
@@ -82,6 +80,8 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         docParser = new ParseDocForTTable(truthTableExpModel.getUnaryOperators(), truthTableExpModel.getBinaryOperators());
         tableRows = truthTableExpModel.getTableRows();
         setTruthTableView();
+
+        ttCheck = new TTExpCheck(this);
     }
 
     /**
@@ -114,7 +114,6 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
      * Setup truth table explain view from model
      */
     private void setTruthTableView() {
-        spacerConstraint = new ColumnConstraints(10);
 
         truthTableExpView.setExplainPrompt(truthTableExpModel.getExplainPrompt());
         truthTableExpView.setStatementPrefHeight(truthTableExpModel.getStatementPrefHeight());
@@ -239,6 +238,7 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         truthTableExpView.updateTableGridFromTableItems();
 
         truthTableExpView.initializeViewDetails();
+        truthTableExpView.setRightControlBox();
     }
 
     /*
@@ -292,22 +292,25 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
     private void setupHeadItemsFromModel() {
 
         List<TableHeadItem> headList = new ArrayList<>();
+        basicFormulaCols = new ArrayList<>();
+        mainFormulaCols = new ArrayList<>();
 
         //basic formulas head items
         List<Document> basicFormulas = truthTableExpModel.getBasicFormulas();
         for (int i = 0; i < basicFormulas.size(); i++) {
             List<TableHeadItem> basicHeadItems = docParser.generateHeadItems(basicFormulas.get(i));
+            basicFormulaCols.add(headList.size());
             headList.addAll(basicHeadItems);
-            TableHeadItem spaceColHead = new TableHeadItem(new TextFlow(new Text("")), spacerConstraint);
+            TableHeadItem spaceColHead = new TableHeadItem(new TextFlow(new Text("")), new ColumnConstraints(10));
             spaceColHead.setBlankColumn(true);
             headList.add(spaceColHead);
         }
         if (basicFormulas.size() == 0) {
-            TableHeadItem stubHead = new TableHeadItem(new TextFlow(new Text("  ")), spacerConstraint);
+            TableHeadItem stubHead = new TableHeadItem(new TextFlow(new Text("  ")), new ColumnConstraints(10));
             stubHead.setBlankColumn(true);
             headList.add(stubHead);
         }
-        TableHeadItem dividerHead = new TableHeadItem(new TextFlow(new Text("")), spacerConstraint);
+        TableHeadItem dividerHead = new TableHeadItem(new TextFlow(new Text("")), new ColumnConstraints(10));
         dividerHead.setDividerColumn(true); dividerHead.setBlankColumn(true);
         headList.add(dividerHead);
 
@@ -315,9 +318,10 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         //main formula head items
         List<Document> mainFormulas = truthTableExpModel.getMainFormulas();
         for (int i = 0; i < mainFormulas.size() - 1; i++) {
+            mainFormulaCols.add(headList.size());
             List<TableHeadItem> mainHeadItems = docParser.generateHeadItems(mainFormulas.get(i));
             headList.addAll(mainHeadItems);
-            TableHeadItem spaceColHead = new TableHeadItem(new TextFlow(new Text("")), spacerConstraint);
+            TableHeadItem spaceColHead = new TableHeadItem(new TextFlow(new Text("")), new ColumnConstraints(10));
             spaceColHead.setBlankColumn(true);
             headList.add(spaceColHead);
         }
@@ -330,9 +334,10 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         }
         if (mainFormulas.size() > 0) {
             List<TableHeadItem> finalHeadItems = docParser.generateHeadItems(mainFormulas.get(mainFormulas.size() - 1));
+            mainFormulaCols.add(headList.size());
             headList.addAll(finalHeadItems);
         }
-        TableHeadItem spaceColHead = new TableHeadItem(new TextFlow(new Text("")), spacerConstraint);
+        TableHeadItem spaceColHead = new TableHeadItem(new TextFlow(new Text("")), new ColumnConstraints(10));
         spaceColHead.setBlankColumn(true);
         headList.add(spaceColHead);
 
@@ -379,8 +384,12 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         //header node
         Label exerciseName = new Label(printModel.getExerciseName());
         exerciseName.setStyle("-fx-font-weight: bold;");
-        HBox hbox = new HBox(exerciseName);
+        Region spacer = new Region();
+
+        HBox hbox = new HBox(exerciseName, spacer, printCheckNode());
+        hbox.setHgrow(spacer, Priority.ALWAYS);
         hbox.setPadding(new Insets(0,0,10,0));
+        hbox.setMinWidth(nodeWidth);
 
         Group headerRoot = new Group();
         Scene headerScene = new Scene(headerRoot);
@@ -490,6 +499,28 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         return nodeList;
     }
 
+    TextFlow printCheckNode() {
+        TextFlow flow = new TextFlow();
+        flow.setMaxWidth(200);
+        if (ttCheck.isCheckSuccess()) {
+            Text bigCheck = new Text("\ue89a");
+            bigCheck.setFont(Font.font("Noto Serif Combo", 14));
+            Text message = new Text("  " + truthTableExpView.getCheckMessage());
+            message.setFont(Font.font("Noto Serif Combo", 11));
+
+            if (ttCheck.isCheckFinal()) {
+                bigCheck.setFill(Color.LAWNGREEN);
+                message.setFill(Color.GREEN);
+            }
+            else {
+                bigCheck.setFill(Color.ORCHID);
+                message.setFill(Color.PURPLE);
+            }
+            flow.getChildren().addAll(bigCheck, message);
+        }
+        return flow;
+    }
+
     /**
      * Return to the initial (unworked) version of the exercise, retaining the comment only.
      * @return the initial exercise
@@ -504,6 +535,13 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         TruthTableExpModel originalModel = (TruthTableExpModel) (truthTableExpModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
         originalModel.setPointsEarned(pointsEarned);
+
+        TTExpCheckSetup setup = originalModel.getCheckSetup();
+        if (setup == null) setup = new TTExpCheckSetup();
+        setup.setCheckTries(ttCheck.getCheckTries());
+        setup.setCheckSuccess(false);
+        originalModel.setCheckSetup(setup);
+
         TruthTableExpExercise clearExercise = new TruthTableExpExercise(originalModel, mainWindow, true);
         return clearExercise;
     }
@@ -591,6 +629,11 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         explainRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExplainDocument(explainRTA.getDocument());
 
+        TTExpCheckSetup checkSetup = truthTableExpModel.getCheckSetup();
+        if (ttCheck != null) checkSetup.setCheckTries(ttCheck.getCheckTries());
+        if (ttCheck != null) checkSetup.setCheckSuccess(ttCheck.isCheckSuccess());
+        model.setCheckSetup(checkSetup);
+
         model.setUnaryOperators(truthTableExpModel.getUnaryOperators());
         model.setBinaryOperators(truthTableExpModel.getBinaryOperators());
         model.setMainFormulas(truthTableExpModel.getMainFormulas());
@@ -656,6 +699,26 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         else model.setPointsEarned(-1);
 
         return model;
+    }
+
+    public List<Integer> getBasicFormulaCols() {
+        return basicFormulaCols;
+    }
+
+    public List<Integer> getMainFormulaCols() {
+        return mainFormulaCols;
+    }
+
+    public int getTableColumns() {
+        return tableColumns;
+    }
+
+    public int getTableRows() {
+        return tableRows;
+    }
+
+    public MainWindow getMainWindow() {
+        return mainWindow;
     }
 
 }

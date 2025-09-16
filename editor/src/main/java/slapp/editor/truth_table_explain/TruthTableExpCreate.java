@@ -21,6 +21,7 @@ import com.gluonhq.richtextarea.model.Document;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -32,6 +33,7 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
@@ -44,6 +46,7 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
 import slapp.editor.PrintUtilities;
@@ -53,11 +56,11 @@ import slapp.editor.decorated_rta.KeyboardDiagram;
 import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
+import slapp.editor.parser.*;
+import slapp.editor.parser.grammatical_parts.Formula;
+import slapp.editor.truth_table.TTcheckSetup;
 
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.UnaryOperator;
 
 import static javafx.scene.control.ButtonType.OK;
@@ -110,6 +113,16 @@ public class TruthTableExpCreate {
     private Spinner<Double> statementHeightSpinner;
     private TextField pointsPossibleTextField;
 
+    private CheckBox staticHelpCheck;
+    private RichTextArea staticHelpRTA;
+    private DecoratedRTA staticHelpDRTA;
+    private Spinner checkMaxSpinner;
+    private CheckBox skipBasicSentences;
+    private Map<String, SimpleBooleanProperty> langMap;
+    private String defaultLangName = "\u2112\ud835\udcc8 (w/abv)";  //Ls (w/abv)
+    Spinner<Double> staticHelpHeightSpinner;
+    private RichTextArea currentSpinnerNode;
+
     /**
      * Create new truth table explain exercise
      * @param mainWindow the main window
@@ -142,6 +155,21 @@ public class TruthTableExpCreate {
         updateBinaryOperatorGridFromFields();
         updateMainFormulaFieldsFromModel(originalModel);
         updateMainFormulaGridFromFields();
+
+        TTExpCheckSetup checkSetup = originalModel.getCheckSetup();
+        if (checkSetup == null) checkSetup = new TTExpCheckSetup();
+        staticHelpCheck.setSelected(checkSetup.isStaticHelp());
+        staticHelpRTA.getActionFactory().open(checkSetup.getStaticHelpDoc()).execute(new ActionEvent());
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+        skipBasicSentences.setSelected(checkSetup.isSkipBasicsOK());
+        checkMaxSpinner.getValueFactory().setValue(checkSetup.getCheckMax());
+
+        for (String key : langMap.keySet()) {
+            if (key.equals(checkSetup.getObjLangName())) {
+                langMap.get(key).setValue(true);
+            }
+            else langMap.get(key).setValue(false);
+        }
 
         fieldModified = false;
     }
@@ -197,6 +225,51 @@ public class TruthTableExpCreate {
                 editorInFocus(statementDRTA, ControlType.AREA);
             }
         });
+
+        //static help editor
+        staticHelpDRTA = new DecoratedRTA();
+        staticHelpDRTA.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.BASE_AND_SANS);
+        staticHelpRTA = staticHelpDRTA.getEditor();
+        staticHelpRTA.setPromptText("Static Help (complete if static help selected)");
+        staticHelpRTA.getStylesheets().add("slappTextArea.css");
+        staticHelpRTA.setPrefWidth(350);
+        staticHelpRTA.setMinWidth(350);
+        staticHelpRTA.setMaxWidth(350);
+        staticHelpRTA.setMinHeight(100);
+
+        double staticHelpInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
+
+
+        staticHelpHeightSpinner = new Spinner<>(0.0, 999.0, staticHelpInitialHeight, 1.0);
+        staticHelpHeightSpinner.setPrefWidth(60);
+        staticHelpHeightSpinner.setDisable(false);
+        staticHelpHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
+        staticHelpRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        staticHelpHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            Node increment = staticHelpHeightSpinner.lookup(".increment-arrow-button");
+            if (increment != null) increment.getOnMouseReleased().handle(null);
+            Node decrement = staticHelpHeightSpinner.lookup(".decrement-arrow-button");
+            if (decrement != null) decrement.getOnMouseReleased().handle(null);
+        });
+
+        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+            staticHelpRTA.prefHeightProperty().unbind();
+            staticHelpHeightSpinner.getValueFactory().setValue((double) Math.round(staticHelpHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
+            staticHelpRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+
+        });
+
+        staticHelpRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
+            fieldModified = true;
+        });
+        staticHelpRTA.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) {
+                editorInFocus(staticHelpDRTA, ControlType.AREA);
+            }
+        });
+
+        HBox textBoxes = new HBox(10, statementRTA, staticHelpRTA);
+
 
         //name field
         Label nameLabel = new Label("Exercise Name: ");
@@ -261,7 +334,7 @@ public class TruthTableExpCreate {
         Label choiceLeadLabel = new Label("Checkbox lead: ");
         choiceLeadLabel.setPrefWidth(95);
         choiceLeadField  = new TextField();
-        choiceLeadField.setPromptText("(plain text)");
+        choiceLeadField.setText("This argument is");
         choiceLeadListener = new ChangeListener() {
             @Override
             public void changed(ObservableValue ob, Object ov, Object nv) {
@@ -279,7 +352,7 @@ public class TruthTableExpCreate {
         aPromptLabel.setPrefWidth(95);
         aPromptLabel.setAlignment(Pos.CENTER_RIGHT);
         aPromptField  = new TextField();
-        aPromptField.setPromptText("(plain text)");
+        aPromptField.setText("valid");
         aPromptListener = new ChangeListener() {
             @Override
             public void changed(ObservableValue ob, Object ov, Object nv) {
@@ -295,7 +368,7 @@ public class TruthTableExpCreate {
 
         Label bPromptLabel = new Label("B prompt: ");
         bPromptField  = new TextField();
-        bPromptField.setPromptText("(plain text)");
+        bPromptField.setText("invalid");
         bPromptListener = new ChangeListener() {
             @Override
             public void changed(ObservableValue ob, Object ov, Object nv) {
@@ -497,23 +570,83 @@ public class TruthTableExpCreate {
         upperFieldsBox.setPadding(new Insets(20, 0, 20, 0));
 
         //center area
-        String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
-                "<p>The Truth Table AB Explain Exercise is like Truth Table Exercise except that it requests a choice between some mutually exclusive options (as valid/invalid) along with a short explanation.</p>" +
+        String helpText =  "<body style=\"margin-left:10; margin-right: 20\">" +
+                "<p>The Truth Table AB Explain Exercise like Truth Table Exercise except that it requests a choice between some mutually exclusive options (as valid/invalid) along with a short explanation.</p>" +
                 "<ul>" +
-                "<li><p>Begin with the exercise name, prompt, and points fields.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
-                "<li><p>The checkbox lead appears prior to the check boxes, the A prompt with the first box, and the B prompt with the second.</p></li>" +
-                "<li><p>The preset operator buttons set operators according to the official and abbreviating sentential languages from <em>Symbolic Logic</em>; alternatively, you may edit sentential operator symbols individually using the plus and minus buttons to add and remove fields.</p></li> " +
-                "<li><p>Then supply formulas to appear across the top of the truth table (not including the base column), using the plus and minus buttons to add and remove fields.  The \"conclusion divider\" merely inserts an extra space and slash ('/') prior to the last formula." +
-                "<li><p>Finally provide the exercise statement.</p></li>" +
+                "<li><p>Start with the the exercise name, prompt, and point fields.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
+                "<li><p>The checkbox lead appears prior to the check boxes, the A prompt with the first box, the B prompt with the second.  </p></li>" +
+                "<li><p>The preset operator buttons set operators according to the official and abbreviating sentential languages from <em>Symbolic Logic</em>; alternatively, you may edit sentential operator symbols individually, using the plus and minus buttons to add and remove fields.</p></li> " +
+                "<li><p>Then supply formulas to appear across the top of the truth table (not including the base column), again using the plus and minus buttons to add and remove fields.  The \"conclusion divider\" merely inserts an extra space and slash ('/') prior to the last formula.</p></li>" +
+
+                "<li><p>The static help check activates the Static Help button which pops up a message which you may state in the right hand text area below.</p></li>" +
+                "<li><p>For checking: If Check Max is 0, checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.  The Basic Sentences box says whether check requires that \"non-main\" basic sentence values be repeated in the main part of the table.  And you may need to select the object language.  </li></li>" +
+
+                "<li><p>Finally supply the exercise statement, and if desired the static help message.</p></li>" +
                 "</ul>";
         WebView helpArea = new WebView();
         WebEngine webEngine = helpArea.getEngine();
         webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
         webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(230);
+        helpArea.setPrefHeight(270);
+
+        //check items
+        Label helpCheckLabel = new Label("Help/Check: ");
+        helpCheckLabel.setPrefWidth(80);
+
+        staticHelpCheck = new CheckBox();
+        staticHelpCheck.setSelected(false);
+        ChangeListener staticHelpCheckListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                fieldModified = true;
+            }
+        };
+        staticHelpCheck.selectedProperty().addListener(staticHelpCheckListener);
+        Label staticHelpCheckLabel = new Label("Static Help:");
+        HBox staticHelpBox = new HBox(10, staticHelpCheckLabel, staticHelpCheck);
+        staticHelpBox.setAlignment(Pos.CENTER_LEFT);
+
+        checkMaxSpinner = new Spinner<>(-1, 99, 0);
+        checkMaxSpinner.setPrefWidth(60);
+        Label checkMaxLabel = new Label("Check Max:");
+        HBox checkMaxBox = new HBox(10, checkMaxLabel, checkMaxSpinner);
+        checkMaxBox.setAlignment(Pos.CENTER_LEFT);
+
+        skipBasicSentences = new CheckBox();
+        skipBasicSentences.setSelected(false);
+        ChangeListener justificationCheckListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                fieldModified = true;
+            }
+        };
+        skipBasicSentences.selectedProperty().addListener(justificationCheckListener);
+        Label justificationCheckLabel = new Label("Skip Basic Sentences OK:");
+        HBox justificationCheckBox = new HBox(10, justificationCheckLabel, skipBasicSentences);
+        justificationCheckBox.setAlignment(Pos.CENTER_LEFT);
+
+        //language list view
+        Label languageLabel = new Label("   Object Language:");
+        langMap = new LinkedHashMap<>();
+        for (int i = 0; i < Languages.getMappingLanguages().size(); i++) {
+            Language language = Languages.getMappingLanguages().get(i);
+            SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
+            if (language.getNameString().equals(defaultLangName)) booleanProperty.setValue(true); //default check
+            setSingleSelection(booleanProperty, langMap);
+            langMap.put(language.getNameString(), booleanProperty);
+        }
+        ListView<String> languageListView = new ListView<>();
+        languageListView.setPrefSize(120, 95);
+
+        languageListView.getItems().addAll(langMap.keySet());
+        Callback<String, ObservableValue<Boolean>> langToBoolean = (String item) -> langMap.get(item);
+        languageListView.setCellFactory(CheckBoxListCell.forListView(langToBoolean));
+
+        HBox checkLine1 = new HBox(30, staticHelpBox, checkMaxBox, justificationCheckBox, languageLabel, languageListView);
+        checkLine1.setAlignment(Pos.CENTER_LEFT);
 
 
-        centerBox = new VBox(10, upperFieldsBox, statementRTA, helpArea);
+        centerBox = new VBox(10, upperFieldsBox, checkLine1, textBoxes, helpArea);
         centerBox.setPadding(new Insets(10,0,10,20));
 
         spacerPane = new Pane();
@@ -581,13 +714,13 @@ public class TruthTableExpCreate {
 
         stage.setTitle("Create Truth Table AB Explain Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
-        stage.setWidth(890);
-        stage.setMinWidth(860);
-        stage.setHeight(940);
+        stage.setWidth(930);
+        stage.setMinWidth(930);
+        stage.setHeight(1000);
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 890));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 940));
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 930));
+        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 1000));
 
         stage.initModality(Modality.WINDOW_MODAL);
         stage.setOnCloseRequest(e-> {
@@ -836,6 +969,54 @@ public class TruthTableExpCreate {
         return okcontinue;
     }
 
+    //force single selection on list views
+    private void setSingleSelection(SimpleBooleanProperty booleanProperty, Map<String, SimpleBooleanProperty> map) {
+        booleanProperty.addListener((ob, ov, nv) -> {
+            if (nv.booleanValue() != ov.booleanValue()) fieldModified = true;
+            if (nv) {
+                for (SimpleBooleanProperty prop : map.values()) {
+                    if (prop != booleanProperty) {
+                        prop.set(false);
+                    }
+                }
+            }
+
+        });
+    }
+
+    private void setSizeSpinners() {
+
+        scene.focusOwnerProperty().addListener((ob, ov, nv) -> {
+
+            if (inHierarchy(nv, statementRTA) && currentSpinnerNode != statementRTA) {
+                currentSpinnerNode = statementRTA;
+                sizeToolBar.getItems().remove(3);
+                sizeToolBar.getItems().add(3, statementHeightSpinner);
+                return;
+            }
+            if (inHierarchy(nv, staticHelpRTA) && currentSpinnerNode != staticHelpRTA) {
+                currentSpinnerNode = staticHelpRTA;
+                sizeToolBar.getItems().remove(3);
+                sizeToolBar.getItems().add(3, staticHelpHeightSpinner);
+                return;
+            }
+        });
+    }
+
+    private static boolean inHierarchy(Node node, Node potentialHierarchyElement) {
+        if (potentialHierarchyElement == null) {
+            return true;
+        }
+        while (node != null) {
+            if (node == potentialHierarchyElement) {
+                return true;
+            }
+            node = node.getParent();
+        }
+        return false;
+    }
+
+
     /*
      * Update zoom setting
      */
@@ -891,12 +1072,41 @@ public class TruthTableExpCreate {
         }
         model.setBinaryOperators(binaryOperatorStrings);
 
+        TTExpCheckSetup checkSetup = model.getCheckSetup();
+        String langName = null;
+        for (String key : langMap.keySet()) {
+            ObservableValue<Boolean> value = langMap.get(key);
+            if (value.getValue()) {
+                langName = key;
+                break;
+            }
+        }
+        if (langName != null) {
+            checkSetup.setObjLangName(langName);
+        }
+        else {
+            EditorAlerts.showSimpleAlert("No language selected:", "Without a language selection, SLAPP will revert to the default, \u2112\ud835\udcc8 (w/abv).");
+        }
+
         List<Document> mainFormulaDocs = new ArrayList<>();
         for (BoxedDRTA bdrta : mainFormulaList) {
             RichTextArea rta = bdrta.getRTA();
             if (rta.isModified()) fieldModified = true;
             rta.getActionFactory().saveNow().execute(new ActionEvent());
             Document doc = rta.getDocument();
+
+            List<Expression> expressions = ParseUtilities.parseDoc(doc, langName);
+            if (expressions.size() != 1 || !(expressions.get(0) instanceof Formula) || !SyntacticalFns.sentence(expressions.get(0), langName)) {
+                bdrta.setVTtreeBoxHighlight();
+                List<Text> texts = new ArrayList<>();
+                texts.add(ParseUtilities.newRegularText("Expression is not a sentence of "));
+                texts.addAll(Languages.getLanguage(langName).getNameTextList());
+                texts.add(ParseUtilities.newRegularText("."));
+                EditorAlerts.showSimpleTxtListAlert("Not A Sentence:", texts);
+                rta.getActionFactory().open(new Document()).execute(new ActionEvent());
+                fieldModified = true;
+                bdrta.resetVTtreeBoxHighlight();
+            }
             mainFormulaDocs.add(doc);
         }
         model.setMainFormulas(mainFormulaDocs);
@@ -911,6 +1121,14 @@ public class TruthTableExpCreate {
             model.setPointsPossible(0);
             pointsPossibleTextField.setText("0");
         }
+
+        if (staticHelpRTA.isModified()) fieldModified = true;
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+        checkSetup.setStaticHelpDoc(staticHelpRTA.getDocument());
+        checkSetup.setStaticHelp(staticHelpCheck.isSelected());
+        int checkMax = (Integer) checkMaxSpinner.getValue();
+        checkSetup.setCheckMax(checkMax);
+        checkSetup.setSkipBasicsOK(skipBasicSentences.isSelected());
 
         return model;
     }

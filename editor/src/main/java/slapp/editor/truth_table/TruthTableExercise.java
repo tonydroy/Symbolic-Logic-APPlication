@@ -40,7 +40,6 @@ import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.*;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -649,17 +648,12 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
         return basicFormulaCols;
     }
 
-    public void setBasicFormulaCols(List<Integer> basicFormulaCols) {
-        this.basicFormulaCols = basicFormulaCols;
-    }
 
     public List<Integer> getMainFormulaCols() {
         return mainFormulaCols;
     }
 
-    public void setMainFormulaCols(List<Integer> mainFormulaCols) {
-        this.mainFormulaCols = mainFormulaCols;
-    }
+
 
     public int getTableColumns() {
         return tableColumns;
