@@ -143,6 +143,7 @@ public class VerticalTreeABExpCreate {
         this.mainWindow = mainWindow;
         setupWindow();
         modified = false;
+
     }
 
     public VerticalTreeABExpCreate(MainWindow mainWindow, VerticalTreeABExpModel originalModel) {

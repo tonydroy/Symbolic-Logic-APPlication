@@ -123,6 +123,12 @@ public class TruthTableExpCreate {
     Spinner<Double> staticHelpHeightSpinner;
     private RichTextArea currentSpinnerNode;
 
+    CheckBox checkChoicesBox;
+    CheckBox choiceABox;
+    CheckBox choiceBBox;
+    CheckBox autoCheckBox;
+    CheckBox permitShortTableBox;
+
     /**
      * Create new truth table explain exercise
      * @param mainWindow the main window
@@ -163,6 +169,12 @@ public class TruthTableExpCreate {
         staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
         skipBasicSentences.setSelected(checkSetup.isSkipBasicsOK());
         checkMaxSpinner.getValueFactory().setValue(checkSetup.getCheckMax());
+
+        checkChoicesBox.setSelected(checkSetup.isCheckChoices());
+        choiceABox.setSelected(checkSetup.isChoiceA());
+        choiceBBox.setSelected(checkSetup.isChoiceB());
+        autoCheckBox.setSelected(checkSetup.isAutoCheckValidity());
+        permitShortTableBox.setSelected(checkSetup.isPermitShortTable());
 
         for (String key : langMap.keySet()) {
             if (key.equals(checkSetup.getObjLangName())) {
@@ -579,8 +591,15 @@ public class TruthTableExpCreate {
                 "<li><p>Then supply formulas to appear across the top of the truth table (not including the base column), again using the plus and minus buttons to add and remove fields.  The \"conclusion divider\" merely inserts an extra space and slash ('/') prior to the last formula.</p></li>" +
 
                 "<li><p>The static help check activates the Static Help button which pops up a message which you may state in the right hand text area below.</p></li>" +
-                "<li><p>For checking: If Check Max is 0, checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.  The Basic Sentences box says whether check requires that \"non-main\" basic sentence values be repeated in the main part of the table.  And you may need to select the object language.  </li></li>" +
+                "<li><p>For checking: </p></li>" +
+                "<ul>" +
+                "<li><p>If Check Max is 0, checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.</p></li>" +
+                "<li><p>The Basic Sentences box says whether check requires that \"non-main\" basic sentence values be repeated in the main part of the table.    </p></li>" +
+                "<li><p>The default object language is usually fine, though you can change it.   </p></li>" +
+                "<li><p>The short table check permits a student to try a short table (as from 4.1.3 of <i>Symbolic Logic</i>), and have just the short table checked.</p></li>" +
+                "<li><p>If auto check validity is selected, check asks whether the table has a marked row with the first sentences true and the last false.  You can change the choice prompts but checking applies just to validity (A choice) and invalidity (B choice).  Manual checking checks the choice based just on your selection.   </p></li>" +
 
+                "</ul>"  +
                 "<li><p>Finally supply the exercise statement, and if desired the static help message.</p></li>" +
                 "</ul>";
         WebView helpArea = new WebView();
@@ -645,8 +664,65 @@ public class TruthTableExpCreate {
         HBox checkLine1 = new HBox(30, staticHelpBox, checkMaxBox, justificationCheckBox, languageLabel, languageListView);
         checkLine1.setAlignment(Pos.CENTER_LEFT);
 
+        //check choices
+        Label permitShortTableLabel = new Label("Permit short table:");
+        permitShortTableBox = new CheckBox();
+        permitShortTableBox.setSelected(true);
+        permitShortTableBox.selectedProperty().addListener((ob, ov, nv) -> {
+            fieldModified = true;
+        });
+        HBox permitShortTableHBox = new HBox(10, permitShortTableLabel, permitShortTableBox);
 
-        centerBox = new VBox(10, upperFieldsBox, checkLine1, textBoxes, helpArea);
+
+        Label autoCheckLabel = new Label("Auto check validity:");
+        autoCheckBox = new CheckBox();
+        autoCheckBox.setSelected(true);
+        autoCheckBox.selectedProperty().addListener((ob, ov, nv) -> {
+            fieldModified = true;
+            if (nv) checkChoicesBox.setSelected(false);
+        });
+        HBox autoCheckHBox = new HBox(10, autoCheckLabel, autoCheckBox);
+
+
+        Label checkChoicesLabel = new Label("Manual Check Choices:");
+        checkChoicesBox = new CheckBox();
+        checkChoicesBox.setSelected(false);
+        checkChoicesBox.selectedProperty().addListener((ob, ov, nv) -> {
+            fieldModified = true;
+            if (nv) autoCheckBox.setSelected(false);
+        });
+        HBox checkChoicesHBox = new HBox(10, checkChoicesLabel, checkChoicesBox);
+
+        Label choiceALabel = new Label("Correct     \u21d2     A choice:");
+        choiceABox = new CheckBox();
+        choiceABox.setSelected(false);
+        choiceABox.selectedProperty().addListener((ob, ov, nv) -> {
+            fieldModified = true;
+            boolean selected = (boolean) nv;
+            if (selected) {
+                choiceBBox.setSelected(false);
+            }
+        });
+        HBox choiceAHBox = new HBox(10, choiceALabel, choiceABox);
+
+        Label choiceBLabel = new Label("B choice:");
+        choiceBBox = new CheckBox();
+        choiceBBox.setSelected(false);
+        choiceBBox.selectedProperty().addListener((ob, ov, nv) -> {
+            fieldModified = true;
+            boolean selected = (boolean) nv;
+            if (selected) {
+                choiceABox.setSelected(false);
+            }
+        });
+        HBox choiceBHBox = new HBox(10, choiceBLabel, choiceBBox);
+
+        HBox checkLine4 = new HBox(30, permitShortTableHBox, autoCheckHBox, checkChoicesHBox, choiceAHBox, choiceBHBox);
+
+
+
+
+        centerBox = new VBox(10, upperFieldsBox, checkLine1, checkLine4, textBoxes, helpArea);
         centerBox.setPadding(new Insets(10,0,10,20));
 
         spacerPane = new Pane();
@@ -1129,6 +1205,13 @@ public class TruthTableExpCreate {
         int checkMax = (Integer) checkMaxSpinner.getValue();
         checkSetup.setCheckMax(checkMax);
         checkSetup.setSkipBasicsOK(skipBasicSentences.isSelected());
+
+        checkSetup.setPermitShortTable(permitShortTableBox.isSelected());
+        checkSetup.setAutoCheckValidity(autoCheckBox.isSelected());
+        checkSetup.setCheckChoices(checkChoicesBox.isSelected());
+        checkSetup.setChoiceA(choiceABox.isSelected());
+        checkSetup.setChoiceB(choiceBBox.isSelected());
+
 
         return model;
     }

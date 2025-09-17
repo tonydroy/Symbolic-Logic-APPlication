@@ -80,7 +80,7 @@ public class ParseDocForTTable {
                 TextFlow flow = ExtractSubText.getTextFromDoc(start, span, doc);
                 TableHeadItem headItem = new TableHeadItem(flow, constraints);
                 headItems.add(headItem);
-                EditorAlerts.fleetingRedPopup("Unexpected close bracket.");
+                EditorAlerts.fleetingRedPopup("Unexpected close bracket.  (Ungrammatical, or operator not selected.)");
                 return headItems;
             }
         }

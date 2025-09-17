@@ -17,11 +17,16 @@ public class TTExpCheckSetup implements Serializable {
     private boolean staticHelp;
     private Document staticHelpDoc;
 
-    boolean checkChoices;
-    boolean choiceA;
-    boolean choiceB;
+    private boolean autoCheckValidity;
+    private boolean checkChoices;
+    private boolean choiceA;
+    private boolean choiceB;
 
     private boolean skipBasicsOK;
+    private boolean permitShortTable;
+    private boolean shortTable;
+
+
 
 
     public TTExpCheckSetup() {
@@ -37,6 +42,12 @@ public class TTExpCheckSetup implements Serializable {
         checkChoices = false;
         choiceA = false;
         choiceB = false;
+        skipBasicsOK = false;
+        permitShortTable = true;
+        shortTable = false;
+
+        autoCheckValidity = true;
+
 
         skipBasicsOK = true;
     }
@@ -144,5 +155,29 @@ public class TTExpCheckSetup implements Serializable {
 
     public void setChoiceB(boolean choiceB) {
         this.choiceB = choiceB;
+    }
+
+    public boolean isAutoCheckValidity() {
+        return autoCheckValidity;
+    }
+
+    public void setAutoCheckValidity(boolean autoCheckValidity) {
+        this.autoCheckValidity = autoCheckValidity;
+    }
+
+    public boolean isPermitShortTable() {
+        return permitShortTable;
+    }
+
+    public void setPermitShortTable(boolean permitShortTable) {
+        this.permitShortTable = permitShortTable;
+    }
+
+    public boolean isShortTable() {
+        return shortTable;
+    }
+
+    public void setShortTable(boolean shortTable) {
+        this.shortTable = shortTable;
     }
 }

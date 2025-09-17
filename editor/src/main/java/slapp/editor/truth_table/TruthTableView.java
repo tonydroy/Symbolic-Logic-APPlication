@@ -309,7 +309,12 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
      * @return the text field
      */
     TextField newSingleCharTextField(int column, int row) {
-        TextField singleCharField = new TextField();
+        TextField singleCharField = new TextField() {
+            @Override
+            public void replaceText(int start, int end, String text) {
+                super.replaceText(start, end, text.toUpperCase());
+            }
+        };
 
         singleCharField.setPadding(new Insets(0));
         singleCharField.setMaxWidth(18);

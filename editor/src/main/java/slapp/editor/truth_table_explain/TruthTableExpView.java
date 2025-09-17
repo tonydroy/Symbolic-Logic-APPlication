@@ -118,6 +118,7 @@ public class TruthTableExpView implements ExerciseView<DecoratedRTA> {
     private boolean checkShowing = false;
     private Button staticHelpButton;
     private Stage  staticHelpStage;;
+    private CheckBox shortTableCheck;
 
     /**
      * Construct the truth table explain view
@@ -336,7 +337,12 @@ public class TruthTableExpView implements ExerciseView<DecoratedRTA> {
      * @return the text field
      */
     TextField newSingleCharTextField(int column, int row) {
-        TextField singleCharField = new TextField();
+        TextField singleCharField = new TextField() {
+            @Override
+            public void replaceText(int start, int end, String text) {
+                super.replaceText(start, end, text.toUpperCase());
+            }
+        };
 
         singleCharField.setPadding(new Insets(0));
         singleCharField.setMaxWidth(18);
@@ -356,6 +362,8 @@ public class TruthTableExpView implements ExerciseView<DecoratedRTA> {
         };
         TextFormatter<String> formatter = new TextFormatter<>(textFilter);
         singleCharField.setTextFormatter(formatter);
+
+
 
         singleCharField.addEventFilter(KeyEvent.KEY_TYPED, e -> {
            if (row < tableRows - 1) {
@@ -677,8 +685,10 @@ public class TruthTableExpView implements ExerciseView<DecoratedRTA> {
         staticHelpButton.setPrefWidth(105);
         staticHelpButton.setTooltip(new Tooltip("Get static help text"));
 
+        shortTableCheck = new CheckBox("Short Table");
 
-        VBox rightControlBox = new VBox(40, bigCheckBox, checksBox, staticHelpButton );
+
+        VBox rightControlBox = new VBox(40, bigCheckBox, checksBox, staticHelpButton, shortTableCheck );
         rightControlBox.setAlignment(Pos.TOP_CENTER);
         rightControlBox.setPadding(new Insets(60,20,0,20));
         rightControlNode = rightControlBox;
@@ -1062,4 +1072,7 @@ public class TruthTableExpView implements ExerciseView<DecoratedRTA> {
         return checkButton;
     }
 
+    public CheckBox getShortTableCheck() {
+        return shortTableCheck;
+    }
 }
