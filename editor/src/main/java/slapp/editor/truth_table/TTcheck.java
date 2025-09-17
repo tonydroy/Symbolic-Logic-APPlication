@@ -65,13 +65,12 @@ public class TTcheck {
         if (checkFinal) {
             ttView.setCheckColor(Color.LAWNGREEN);
             ttView.setCheckElementsColor(Color.GREEN);
-            ttView.setCheckMessage("Table");
         }
         else {
             ttView.setCheckColor(Color.ORCHID);
             ttView.setCheckElementsColor(Color.PURPLE);
-            ttView.setCheckMessage("Nodes: Good");
         }
+        ttView.setCheckMessage("Table");
         if (checkSuccess) ttView.activateBigCheck();
         else ttView.deactivateBigCheck();
 

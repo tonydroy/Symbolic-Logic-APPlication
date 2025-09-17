@@ -630,9 +630,12 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         model.setExplainDocument(explainRTA.getDocument());
 
         TTExpCheckSetup checkSetup = truthTableExpModel.getCheckSetup();
-        if (ttCheck != null) checkSetup.setCheckTries(ttCheck.getCheckTries());
-        if (ttCheck != null) checkSetup.setCheckSuccess(ttCheck.isCheckSuccess());
-        if (ttCheck != null) checkSetup.setShortTable(truthTableExpView.getShortTableCheck().isSelected());
+        if (ttCheck != null) {
+            checkSetup.setCheckTries(ttCheck.getCheckTries());
+            checkSetup.setCheckSuccess(ttCheck.isCheckSuccess());
+            checkSetup.setShortTable(truthTableExpView.getShortTableCheck().isSelected());
+            checkSetup.setCheckMessage(truthTableExpView.getCheckMessage());
+        }
         model.setCheckSetup(checkSetup);
 
         model.setUnaryOperators(truthTableExpModel.getUnaryOperators());

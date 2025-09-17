@@ -346,7 +346,7 @@ public class TruthTableExpCreate {
         Label choiceLeadLabel = new Label("Checkbox lead: ");
         choiceLeadLabel.setPrefWidth(95);
         choiceLeadField  = new TextField();
-        choiceLeadField.setText("This argument is");
+        choiceLeadField.setText("This entailment claim");
         choiceLeadListener = new ChangeListener() {
             @Override
             public void changed(ObservableValue ob, Object ov, Object nv) {
@@ -364,7 +364,7 @@ public class TruthTableExpCreate {
         aPromptLabel.setPrefWidth(95);
         aPromptLabel.setAlignment(Pos.CENTER_RIGHT);
         aPromptField  = new TextField();
-        aPromptField.setText("valid");
+        aPromptField.setText("holds");
         aPromptListener = new ChangeListener() {
             @Override
             public void changed(ObservableValue ob, Object ov, Object nv) {
@@ -380,7 +380,7 @@ public class TruthTableExpCreate {
 
         Label bPromptLabel = new Label("B prompt: ");
         bPromptField  = new TextField();
-        bPromptField.setText("invalid");
+        bPromptField.setText("does not hold");
         bPromptListener = new ChangeListener() {
             @Override
             public void changed(ObservableValue ob, Object ov, Object nv) {

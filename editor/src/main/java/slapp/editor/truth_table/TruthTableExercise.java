@@ -562,8 +562,11 @@ public class TruthTableExercise implements Exercise<TruthTableModel, TruthTableV
         model.setStarted(truthTableModel.isStarted() || exerciseModified);
 
         TTcheckSetup checkSetup = truthTableModel.getCheckSetup();
-        if (ttCheck != null) checkSetup.setCheckTries(ttCheck.getCheckTries());
-        if (ttCheck != null) checkSetup.setCheckSuccess(ttCheck.isCheckSuccess());
+        if (ttCheck != null) {
+            checkSetup.setCheckTries(ttCheck.getCheckTries());
+            checkSetup.setCheckSuccess(ttCheck.isCheckSuccess());
+            checkSetup.setCheckMessage(truthTableView.getCheckMessage());
+        }
         model.setCheckSetup(checkSetup);
 
 
