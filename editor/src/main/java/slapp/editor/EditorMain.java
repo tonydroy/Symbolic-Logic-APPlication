@@ -130,7 +130,7 @@ public class EditorMain extends Application {
            mainWindow = new MainWindow(fileToOpen);
 
 
-       //    new ParserMain(mainStage);
+      //     new ParserMain(mainStage);
        //    new RegexTest(mainStage);
       //    new SimpleEditor(mainStage);
 
