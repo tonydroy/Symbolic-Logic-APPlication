@@ -206,14 +206,25 @@ static {
 
     truthTables = "<body style=\"margin-left:10; margin-right: 20\">" +
             "<p><h3>Truth Table Exercises</h3></p>" +
-            "<p>There are two basic contexts for constructing truth tables.  Each is straightforward:</p>" +
-            "<ol><li> In the first and most basic case, you begin with some controls on the left, and table formulas over a line at the top of the work area.<br><br>" +
-            "<ul><li>To start, enter the setup information on the left:  '+' and '-' add and remove fields for basic sentences.  Enter the basic sentences, and then the number of table rows.  Press 'setup'.  This creates the table.<br><br></li>" +
-            "<li>Then it is a straightforward matter to enter table values. A given cell holds a single character (usually 'T' or 'F').  Automatic cursor movement is down.<br><br></li>" +
-            "<li>Each row includes a short comment field at the right.  In most cases the comment will either be blank or a simple marker on the row. <br><br></li>" +
-            "<li>Pressing a circular button highlights its column.  Highlighting may be helpful to 'direct the eye' as you work the table and, in the end, to mark main columns.<br><br></li> </ul>" +
-            "<li> The second context is like the first, except that there is a work space for you to supply an interpretation function and/or translation, and then fields on the left to enter the table formulas.  After that, table construction is just as in the simple case.<br><br></li></ol>" +
-            "<ul><li>Though there is no problem in most cases, some truth table exercises overrun a standard page size.  The problem is usually solved by modifying print settings.<br><br></li></ul>"
+            "<p>There are two basic contexts for constructing truth tables.   </p>" +
+            "<ol>" +
+            "<li><p>In the first and most basic case, you begin with some controls on the left, and table formulas over a line at the top of the work area.</p></li>" +
+            "<ul>" +
+            "<li><p>To start, enter the setup information on the left:  '+' and '-' add and remove fields for basic sentences.  Enter the basic sentences, and then the number of table rows.  Press 'setup'.  This creates the table.</p></li>" +
+            "<li><p>Then it is a straightforward matter to enter table values. A given cell holds a single uppercase character (usually 'T' or 'F').  Automatic cursor movement is down.</p></li>" +
+            "<li><p>Each row includes a short comment field at the right.  In most cases the comment will either be blank or a simple marker on the row. </p></li>" +
+            "<li><p>Pressing a circular button highlights its column.  Highlighting may be helpful to 'direct the eye' as you work the table and, in the end, to mark main columns.</p></li>" +
+            "</ul>" +
+            "<li><p>The second context is like the first, except that there is a work space for you to supply an interpretation function and/or translation, and then fields on the left to enter the table formulas.  After that, table construction is just as in the simple case.</p></li>" +
+            "<li><p>Either context may include choice boxes at the bottom, along with a field to explain your choice.</p>" +
+            "<p>And either context may include check and help functions on the right:</p></li>" +
+            "<ul>" +
+            "<li><p>If enabled, Static Help pops up a fixed message associated with that particular exercise.</p></li>" +
+            "<li><p>Check Table checks table values and, if the exercise includes a choice option, usually checks the choice.</p></li>" +
+            "<li><p>In some cases it is possible to \"shortcut\" a full table without doing all the rows.  If Short Table is selected check applies to the short table.  In this case, feedback is somewhat different, applying row-by-row to rows with (some) completed cells, rather than to the whole table and to cells individually. </p></li>" +
+            "</ul>" +
+            "</ol>" +
+            "<ul><li>Though there is no problem in most cases, some truth table exercises overrun a standard page size.  The problem is usually solved by modifying print or scale settings.</li></ul>"
             ;
 
     derivations = "<body style=\"margin-left:10; margin-right: 20\">" +

@@ -259,7 +259,7 @@ public class MainWindow {
         mainView.getFormMapItem().setOnAction(e -> videoHelp("https://www.slappservices.net/form_maps/form_maps_player.html",700, 603));
         mainView.getVerticalTreeItem().setOnAction(e -> videoHelp("https://www.slappservices.net/vertical_trees/vertical_trees_player.html",700, 673));
         mainView.getHorizontalTreeItem().setOnAction(e -> videoHelp("https://www.slappservices.net/horizontal_trees/horizontal_trees_player.html", 600, 835));
-        mainView.getTruthTableItem().setOnAction(e -> videoHelp("https://www.slappservices.net/truth_tables/truth_tables_player.html", 600, 746));
+        mainView.getTruthTableItem().setOnAction(e -> videoHelp("https://www.slappservices.net/truth_tables/truth_tables_player.html", 700, 597));
         mainView.getDerivationItem().setOnAction(e -> videoHelp("https://www.slappservices.net/derivations/derivations_player.html", 700, 587));
         mainView.getInstructorInfoItem().setOnAction(e -> mainView.showInstructorInfo());
      //   mainView.getInstructorInfoItem().setOnAction(e -> videoHelp("https://www.slappservices.net/instructor/instructor_player.html", 900, 537));
