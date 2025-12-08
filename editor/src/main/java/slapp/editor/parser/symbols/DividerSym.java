@@ -1,0 +1,58 @@
+package slapp.editor.parser.symbols;
+
+import javafx.scene.text.Text;
+import slapp.editor.parser.Expression;
+import slapp.editor.parser.ExpressionType;
+import slapp.editor.parser.ParseUtilities;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static slapp.editor.parser.ExpressionType.COLON_DIVIDER_SYM;
+
+
+public class DividerSym implements Expression {
+
+    private ExpressionType type = COLON_DIVIDER_SYM;
+    private String textString;
+
+    public DividerSym(String textString) {
+        this.textString = textString;
+    }
+
+    @Override
+    public ExpressionType getType() {return type;}
+
+    @Override
+    public DividerSym getMatch() {return this;}
+
+    @Override
+    public List<Text> toTextList() {
+        List<Text> textList = new ArrayList<Text>();
+        if (!textString.isEmpty()) textList.add(ParseUtilities.newRegularText(textString));
+        return textList;
+    }
+
+    @Override
+    public String toString() {
+        return textString;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o instanceof DividerSym) {
+            DividerSym other = (DividerSym) o;
+            return textString.equals(other.textString);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return textString.hashCode();
+    }
+
+
+
+}

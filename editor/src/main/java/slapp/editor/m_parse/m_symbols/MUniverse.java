@@ -1,0 +1,89 @@
+package slapp.editor.m_parse.m_symbols;
+
+import javafx.scene.text.Text;
+import slapp.editor.parser.Expression;
+import slapp.editor.parser.ExpressionType;
+import slapp.editor.parser.symbols.CommaDivider;
+
+import java.util.*;
+
+public class MUniverse implements Expression {
+
+    private ExpressionType type = ExpressionType.M_UNIVERSE;
+    private Set<MBasicObjTerm> universe = new LinkedHashSet<>();
+    private MOpenBrace openBrace;
+    private MCloseBrace closeBrace;
+    private CommaDivider commaDivider;
+
+
+    public MUniverse(Set<MBasicObjTerm> universe, MOpenBrace openBrace, MCloseBrace closeBrace, CommaDivider divider) {
+        this.universe = universe;
+        this.openBrace = openBrace;
+        this.closeBrace = closeBrace;
+        this.commaDivider = divider;
+    }
+
+    @Override
+    public ExpressionType getType() {return type;}
+
+    @Override
+    public List<Text> toTextList() {
+        List<Text> textList = new ArrayList<>();
+        textList.addAll(openBrace.toTextList());
+        Iterator<MBasicObjTerm> iterator = universe.iterator();
+        if (iterator.hasNext())  textList.addAll(iterator.next().toTextList());
+        while (iterator.hasNext()) {
+            textList.addAll(commaDivider.toTextList());
+            textList.add(new Text(" "));
+            textList.addAll(iterator.next().toTextList());
+        }
+        textList.addAll(closeBrace.toTextList());
+        return textList;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(openBrace.toString());
+        Iterator<MBasicObjTerm> iterator = universe.iterator();
+        if (iterator.hasNext())  sb.append(iterator.next().toString());
+        while (iterator.hasNext()) {
+            sb.append(commaDivider.toString());
+            sb.append(" ");
+            sb.append(iterator.next().toString());
+        }
+        sb.append(closeBrace.toString());
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o instanceof MUniverse) {
+            MUniverse other = (MUniverse) o;
+            if (universe.size() != other.getUniverse().size()) return false;
+            boolean ok = true;
+            for (MBasicObjTerm term : universe) {
+                if (!other.getUniverse().contains(term)) ok = false;
+            }
+            return ok;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int code = 0;
+        for (MBasicObjTerm term : universe) {
+            code += term.hashCode();
+        }
+        return code;
+    }
+
+
+    public Set<MBasicObjTerm> getUniverse() {
+        return universe;
+    }
+
+
+}

@@ -1,0 +1,29 @@
+package slapp.editor;
+
+import com.gluonhq.richtextarea.model.Document;
+
+import java.io.Serializable;
+
+public class SlappProgData implements Serializable {
+    private static final long serialVersionUID = 100L;
+
+    private Document metalanguageHelp = new Document("meta language help doc");
+    private Document mapCreateHelp = new Document("mapping create help doc");
+
+
+    public Document getMetalanguageHelp() {
+        return metalanguageHelp;
+    }
+
+    public void setMetalanguageHelp(Document metalanguageHelp) {
+        this.metalanguageHelp = metalanguageHelp;
+    }
+
+    public Document getMapCreateHelp() {
+        return mapCreateHelp;
+    }
+
+    public void setMapCreateHelp(Document mapCreateHelp) {
+        this.mapCreateHelp = mapCreateHelp;
+    }
+}
