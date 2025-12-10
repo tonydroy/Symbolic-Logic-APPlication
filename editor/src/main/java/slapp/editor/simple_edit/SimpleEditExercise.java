@@ -94,6 +94,7 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
         statementEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(statementDRTA, ControlType.STATEMENT);
+                mainView.getRTATextHeight(statementEditor);
             }
         });
 
@@ -117,6 +118,7 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
         commentEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(commentDRTA, ControlType.AREA);
+                editModel.setCommentTextHeight(mainView.getRTATextHeight(commentEditor));
             }
         });
         editView.setExerciseComment(commentDRTA);
@@ -128,7 +130,7 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
 
         responseEditor.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
             exerciseModified = true;
-           double responseTextHeight = mainView.getRTATextHeight(responseEditor);
+            double responseTextHeight = mainView.getRTATextHeight(responseEditor);
             editModel.setResponseTextHeight(responseTextHeight);
             //System.out.println("FH: " + responseTextHeight + "cursor: " + ((RichTextAreaSkin) responseEditor.getSkin()).getCaretPosition().getMaxY());
         });
@@ -140,7 +142,8 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
         responseEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(responseDRTA, ControlType.AREA);
-                mainView.getRTATextHeight(responseEditor);
+                editModel.setResponseTextHeight(mainView.getRTATextHeight(responseEditor));
+
             }
         });
         editView.setExerciseResponse(responseDRTA);
@@ -188,8 +191,6 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
         SimpleEditExercise printExercise = this;
         double nodeWidth = PrintUtilities.getPageWidth() / mainWindow.getBaseScale();
 
-        System.out.println("node width: " + nodeWidth  + " page width: " + PrintUtilities.getPageWidth() + " base scale: " + mainWindow.getBaseScale());
-
         //header node
         Label exerciseName = new Label(printModel.getExerciseName());
         exerciseName.setStyle("-fx-font-weight: bold;");
@@ -213,9 +214,9 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
         statementRTA.prefHeightProperty().unbind();
         statementRTA.minWidthProperty().unbind();
         double statementHeight = printModel.getStatementTextHeight();
-        statementRTA.setPrefHeight(statementHeight + 5);  //+ 35
-        statementRTA.setContentAreaWidth(nodeWidth);
-        statementRTA.setMinWidth(nodeWidth);
+        statementRTA.setPrefHeight(statementHeight + 15);  //+ 35
+  //      statementRTA.setContentAreaWidth(nodeWidth);
+        statementRTA.setMaxWidth(nodeWidth);
         statementRTA.getStylesheets().clear(); statementRTA.getStylesheets().add("richTextAreaPrinter.css");
         nodeList.add(statementRTA);
 
@@ -230,11 +231,17 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
         RichTextArea responseRTA = printExercise.getExerciseView().getExerciseResponse().getEditor();
         responseRTA.prefHeightProperty().unbind();
         responseRTA.minWidthProperty().unbind();
-        responseRTA.setPrefHeight(printModel.getResponseTextHeight() + 35.0);
-        responseRTA.setContentAreaWidth(nodeWidth);
-        responseRTA.setMinWidth(nodeWidth);
+        responseRTA.maxHeightProperty().unbind();   // added to match change in view binding
+     //   responseRTA.setContentAreaWidth(nodeWidth);
+        responseRTA.setMaxWidth(nodeWidth);
         responseRTA.getStylesheets().clear(); responseRTA.getStylesheets().add("richTextAreaPrinter.css");
+    //    responseRTA.setPrefHeight(printModel.getResponsePrefHeight() + 15.0);
+        responseRTA.setMinHeight(printModel.getResponseTextHeight() + 35);
+        responseRTA.setMaxHeight(printModel.getResponseTextHeight() + 35);
         nodeList.add(responseRTA);
+
+        double pageHeight = printModel.getResponseTextHeight() / PrintUtilities.getPageHeight();
+        System.out.println("response th: " + printModel.getResponseTextHeight() + " in page: " + pageHeight );
 
         Separator responseSeparator = new Separator(Orientation.HORIZONTAL);
         responseSeparator.setPrefWidth(100);
@@ -247,9 +254,9 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
         RichTextArea commentRTA = printExercise.getExerciseView().getExerciseComment().getEditor();
         commentRTA.prefHeightProperty().unbind();
         commentRTA.minWidthProperty().unbind();
-        commentRTA.setPrefHeight(printModel.getCommentTextHeight() + 35.0);
-        commentRTA.setContentAreaWidth(nodeWidth);
-        commentRTA.setMinWidth(nodeWidth);
+        commentRTA.setPrefHeight(Math.max(30, printModel.getCommentTextHeight() + 15.0));
+    //    commentRTA.setContentAreaWidth(nodeWidth);
+        commentRTA.setMaxWidth(nodeWidth);
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
 
         Node commentNode;
@@ -335,9 +342,9 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
         RichTextArea responseRTA = printExercise.getExerciseView().getExerciseResponse().getEditor();
         responseRTA.prefHeightProperty().unbind();
         responseRTA.minWidthProperty().unbind();
-        responseRTA.setPrefHeight(printModel.getResponseTextHeight() + 35);
-        responseRTA.setContentAreaWidth(nodeWidth);
-        responseRTA.setMinWidth(nodeWidth);
+        responseRTA.setPrefHeight(printModel.getResponseTextHeight() + 15);
+   //     responseRTA.setContentAreaWidth(nodeWidth);
+        responseRTA.setMaxWidth(nodeWidth);
         responseRTA.getStylesheets().clear(); responseRTA.getStylesheets().add("richTextAreaPrinter.css");
         return responseRTA;
     }

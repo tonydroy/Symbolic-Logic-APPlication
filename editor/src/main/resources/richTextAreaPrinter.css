@@ -1,40 +1,26 @@
 
-.rich-text-area:focused .paragraph-tile {
-    -fx-background-color: aliceblue;
+.rich-text-area {
+    -fx-border-color: transparent;
+    -fx-background-color: transparent;
+    -fx-border-width: 0 0 0 0;
+    -fx-padding: 5 0 5 0;
 }
-
-
 
 .rich-text-area .paragraph-tile {
-    -fx-background-color: white;
-    -fx-padding: 10 0 0 2;
-}
-
-
-
-.rich-text-area {
-    -fx-border-color: aliceblue aliceblue aliceblue black;
-    -fx-border-width: 0 0 0 0;
+    -fx-background-color: transparent;
     -fx-padding: 0 0 0 0;
 }
 
 
-.rich-text-area:focused {
-    -fx-border-width: 0;
-    -fx-border-color: aliceblue;
-}
-
-
-
-.text-flow:focused {
-    -fx-border-color: blue;
-    -fx-border-width: 0 0 0 0;
+.rich-text-area > .paragraph-list-view {
+    -fx-padding: 5 0 5 0;
+    -fx-background-color: transparent;
 }
 
 
 
 #text-flow {
-    -fx-border-color: red;
+    -fx-border-color: transparent;
     -fx-border-width: 0 0 0 0;
 }
 

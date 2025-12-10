@@ -1393,11 +1393,14 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
                 })
                 .sum();
 
-        //added by me to compensate for line feed weirdness
+        //added by me to compensate for line feed weirdness  not right esp with many paragraphs
+
         int n = 0;
         if (paragraphListView.getItems().size() > 1) n = paragraphListView.getItems().size()- 1;
         fullHeight = fullHeight - n * 7.0;
         //
+
+
 
 
         fullHeightProperty.set(fullHeight);

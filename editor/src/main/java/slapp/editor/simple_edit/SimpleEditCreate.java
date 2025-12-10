@@ -129,9 +129,14 @@ public class SimpleEditCreate {
         statementRTA = statementDRTA.getEditor();
         statementRTA.setPromptText("Exercise Statement:");
         statementRTA.getStylesheets().add("slappTextArea.css");
-        statementRTA.setPrefWidth(PrintUtilities.getPageWidth() );
-        statementRTA.setMinWidth(PrintUtilities.getPageWidth());
-        statementRTA.setMaxWidth(PrintUtilities.getPageWidth());
+        statementRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), 25.0));
+        statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), 25.0));
+        statementRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
+
+
+        //     statementRTA.setPrefWidth(PrintUtilities.getPageWidth() );
+   //     statementRTA.setMinWidth(PrintUtilities.getPageWidth());
+   //     statementRTA.setMaxWidth(PrintUtilities.getPageWidth());
 
         statementRTA.setMinHeight(100);
 

@@ -165,7 +165,9 @@ public class FreeFormView implements ExerciseView<DecoratedRTA> {
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
 
-        statementRTA.maxWidthProperty().bind(mainView.scalePageWidthProperty());
+        statementRTA.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), 25));
+        statementRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
+
         statementWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         statementWidthSpinner.setPrefWidth(60);
         statementWidthSpinner.setDisable(true);

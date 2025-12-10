@@ -110,7 +110,9 @@ public class SimpleEditView implements ExerciseView<DecoratedRTA> {
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
 
-        statementRTA.prefWidthProperty().bind(mainView.scalePageWidthProperty());
+        statementRTA.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), 25));
+        statementRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
+
         statementWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         statementWidthSpinner.setPrefWidth(60);
         statementWidthSpinner.setDisable(true);
@@ -134,7 +136,8 @@ public class SimpleEditView implements ExerciseView<DecoratedRTA> {
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
 
-        commentRTA.prefWidthProperty().bind(mainView.scalePageWidthProperty());
+        commentRTA.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), 25));
+        commentRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
         commentWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         commentWidthSpinner.setPrefWidth(60);
         commentWidthSpinner.setDisable(true);
@@ -152,7 +155,11 @@ public class SimpleEditView implements ExerciseView<DecoratedRTA> {
         responseHeightSpinner.setPrefWidth(60);
         responseHeightSpinner.setDisable(false);
         responseHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        responseRTA.prefHeightProperty().bind(Bindings.max(15.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(responseHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+ //       responseRTA.prefHeightProperty().bind(Bindings.max(15.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(responseHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        responseRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(15.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(responseHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), 20));
+        responseRTA.maxHeightProperty().bind(responseRTA.prefHeightProperty());
+
+
         responseHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = responseHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
@@ -160,7 +167,8 @@ public class SimpleEditView implements ExerciseView<DecoratedRTA> {
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
 
-        responseRTA.prefWidthProperty().bind(mainView.scalePageWidthProperty());
+        responseRTA.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), 25));
+        responseRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
         responseWidthSpinner = new Spinner<>(0.0, 999.0, 100, 5.0);
         responseWidthSpinner.setPrefWidth(60);
         responseWidthSpinner.setDisable(true);

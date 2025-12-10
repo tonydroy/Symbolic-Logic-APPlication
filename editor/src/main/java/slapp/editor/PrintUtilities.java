@@ -15,15 +15,10 @@ You should have received a copy of the GNU General Public License along with SLA
 
 package slapp.editor;
 
-import com.gluonhq.richtextarea.RichTextArea;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableSet;
 import javafx.geometry.Bounds;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.print.*;
 import javafx.scene.Group;
@@ -33,9 +28,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Scale;
-import javafx.stage.Stage;
-import javafx.util.Duration;
-import javafx.util.Pair;
+import javafx.scene.transform.Translate;
 
 
 import java.util.ArrayList;
@@ -67,8 +60,8 @@ public class PrintUtilities {
     private static double baseScale = 1.0;
     private static List<PrintBufferItem> printBuffer = new ArrayList<>();
     private static VBox topBox;
-
-
+    private static double minHorizOffset;
+    private static double minVertOffset;
 
 
     /**
@@ -85,22 +78,39 @@ public class PrintUtilities {
             double bottomMargin = Math.max(baseLayout.getBottomMargin(), 48);
             pageLayout = printer.createPageLayout(baseLayout.getPaper(), baseLayout.getPageOrientation(), baseLayout.getLeftMargin(), baseLayout.getRightMargin(), baseLayout.getTopMargin(), bottomMargin );
 
+            PageLayout minLayout = printer.createPageLayout(baseLayout.getPaper(), pageLayout.getPageOrientation(), Printer.MarginType.HARDWARE_MINIMUM);
+            minHorizOffset = minLayout.getLeftMargin();
+            minVertOffset = minLayout.getTopMargin();
+
             //Landscape margins do not work as expected and seem different on Win and Mac.  This kludge seems ok?
+
+            //Also Windows seems to set margins at Margin + printer minimum instead of Math.max(Margin, printerMinimum)
+            //and to truncate what is outside the margin.  I reduce left and top margins by the printer minimum
+            // (so that the sum is the requested margin) and then translate the node forward (at printNodes)
+            // by the printer minimum (so that the content appears at the "dummy" margin).
+
+
             double top = pageLayout.getTopMargin();
             double bottom = 18.0;
             double left = pageLayout.getLeftMargin();
             double right = pageLayout.getRightMargin();
+            double macOffset = 18.0;
+            double leftMargin = (left > minHorizOffset) ? left - minHorizOffset : minHorizOffset;
+            double topMargin = (top > minVertOffset) ? top - minVertOffset : minVertOffset;
 
             if (pageLayout.getPageOrientation() == PageOrientation.LANDSCAPE) {
                 if (os.startsWith("Win")) {
-                    internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left, right, bottom, top);
+                    internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, right, bottom, topMargin);
                 }
                 else if (os.startsWith("Mac")) {
-                    double offset = 18.0;
-                    internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left + offset, right - offset, top - offset, bottom + offset);
+                    internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, right, topMargin, bottom);
+              //   internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left + macOffset, right - macOffset, top - macOffset, bottom + macOffset);
+              //      internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left, right, top, bottom);
+               //     internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left - 40, right, top + 40, bottom);
+               //     internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left, right + macOffset, top, bottom);
                 }
             } else {
-                internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left, right, top, bottom);
+                internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, right, topMargin, bottom);
             }
         }
         else {
@@ -120,12 +130,6 @@ public class PrintUtilities {
                 initializePrintSetup(job);
             }
         }
-        //--
-        PageLayout pl = job.getJobSettings().getPageLayout();
-    //    PageLayout printPl = job.getPrinter().getDefaultPageLayout();
-        System.out.println("job left: " + pl.getLeftMargin() + " job top: " + pl.getTopMargin() + " job printable width: " + pl.getPrintableWidth());
-    //    System.out.println("at printer: " + pageLayout.getPaper());
-       //--
         return job;
     }
 
@@ -137,22 +141,33 @@ public class PrintUtilities {
         double bottomMargin = Math.max(baseLayout.getBottomMargin(), 48);
         pageLayout = printer.createPageLayout(baseLayout.getPaper(), baseLayout.getPageOrientation(), baseLayout.getLeftMargin(), baseLayout.getRightMargin(), baseLayout.getTopMargin(), bottomMargin );
 
+        PageLayout minLayout = printer.createPageLayout(baseLayout.getPaper(), pageLayout.getPageOrientation(), Printer.MarginType.HARDWARE_MINIMUM);
+        minHorizOffset = minLayout.getLeftMargin();
+        minVertOffset = minLayout.getTopMargin();
+
         //Landscape margins do not work as expected and seem different on Win and Mac.  This kludge seems ok?
         double top = pageLayout.getTopMargin();
         double bottom = 18.0;
         double left = pageLayout.getLeftMargin();
         double right = pageLayout.getRightMargin();
+        double leftMargin = (left > minHorizOffset) ? left - minHorizOffset : minHorizOffset;
+        double topMargin = (top > minVertOffset) ? top - minVertOffset : minVertOffset;
 
         if (pageLayout.getPageOrientation() == PageOrientation.LANDSCAPE) {
             if (os.startsWith("Win")) {
-                internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left, right, bottom, top);
+                internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, right, bottom,topMargin);
             }
             else if (os.startsWith("Mac")) {
-                double offset = 18.0;
-                internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left + offset, right - offset, top - offset, bottom + offset);
+                double macOffset = 18.0;
+                internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, right, topMargin, bottom);
+            //    internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left + offset, right - offset, top - offset, bottom + offset);
+            //    internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left, right, top, bottom);
+             //   internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left - 40, right, top + 40, bottom);
+             //   internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left, right + macOffset, top, bottom);
+
             }
         } else {
-            internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left, right, top, bottom);
+            internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, right, topMargin, bottom);
         }
     }
 
@@ -164,35 +179,51 @@ public class PrintUtilities {
         if (job != null) {
             job.getJobSettings().setPageLayout(pageLayout);
 
-
            // boolean proceed = job.showPageSetupDialog(null);
             boolean proceed = job.showPageSetupDialog(EditorMain.mainStage);
             if (proceed) {
                 PageLayout baseLayout = job.getJobSettings().getPageLayout();
-                Printer printer = job.getPrinter();
+            //    Printer printer = job.getPrinter();
                 double bottomMargin = Math.max(baseLayout.getBottomMargin(), 48);
                 pageLayout = printer.createPageLayout(baseLayout.getPaper(), baseLayout.getPageOrientation(), baseLayout.getLeftMargin(), baseLayout.getRightMargin(), baseLayout.getTopMargin(), bottomMargin );
                 pageHeight.set(pageLayout.getPrintableHeight());
                 pageWidth.set(pageLayout.getPrintableWidth());
+
+                PageLayout minLayout = printer.createPageLayout(baseLayout.getPaper(), pageLayout.getPageOrientation(), Printer.MarginType.HARDWARE_MINIMUM);
+                minHorizOffset = minLayout.getLeftMargin();
+                minVertOffset = minLayout.getTopMargin();
+
+
+
+
+
+
+
 
                 //see comment above
                 double top = pageLayout.getTopMargin();
                 double bottom = 18.0;
                 double left = pageLayout.getLeftMargin();
                 double right = pageLayout.getRightMargin();
+                double leftMargin = (left > minHorizOffset) ? left - minHorizOffset : minHorizOffset;
+                double topMargin = (top > minVertOffset) ? top - minVertOffset : minVertOffset;
 
                 if (pageLayout.getPageOrientation() == PageOrientation.LANDSCAPE) {
                     if (os.startsWith("Win")) {
-                        internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left, right, bottom, top);
+                        internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, right, bottom, topMargin);
                     }
                     else if (os.startsWith("Mac")) {
-                        double offset = 18.0;
-                        internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left + offset, right - offset, top - offset, bottom + offset);
+                        double macOffset = 18.0;
+                        internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, right, topMargin, bottom);
+                   //     internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left + macOffset, right - macOffset, top - macOffset, bottom + macOffset);
+                   //     internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left, right, top, bottom);
+                    //    internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left - 40, right, top + 40, bottom);
+                    //    internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left, right + macOffset, top, bottom);
+
                     }
                 } else {
-                    internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), left, right, top, bottom);
+                    internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, right, topMargin, bottom);
                 }
-                //               internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), pageLayout.getLeftMargin(), pageLayout.getRightMargin(), top, bottom);
             }
             job.endJob();
         }
@@ -310,9 +341,11 @@ public class PrintUtilities {
                 //if all the nodes have been added print page
                 if (i == printBuffer.size()) {
 
-
                     spacer.setPrefHeight(internalPageLayout.getPrintableHeight() - (netHeight + 16.0)) ;  //24  temp fix to stop cutoff footer for vtree
                     pageBox.getChildren().addAll(spacer, getFooterBox(++pageNum, footerInfo));
+
+
+                    pageBox.getTransforms().add(new Translate(minHorizOffset, minVertOffset));
                     success = (job.printPage(internalPageLayout, pageBox) && success);
                 }
                 //if the node does not fit on this page, print page and start new
@@ -321,6 +354,8 @@ public class PrintUtilities {
 
                 spacer.setPrefHeight(internalPageLayout.getPrintableHeight() - (netHeight + 16.0));  //16
                 pageBox.getChildren().addAll(spacer, getFooterBox(++pageNum, footerInfo));
+
+                pageBox.getTransforms().add(new Translate(minHorizOffset, minVertOffset));
                 success = (job.printPage(internalPageLayout, pageBox) && success);
 
 
@@ -338,6 +373,8 @@ public class PrintUtilities {
                 pane.setAlignment(footerBox, Pos.TOP_LEFT);
                 footerBox.setTranslateY(internalPageLayout.getPrintableHeight() - 16.0);  //16
                 footerBox.setTranslateX(0.0);
+
+                pane.getTransforms().add(new Translate(minHorizOffset, minVertOffset));
                 success = (job.printPage(internalPageLayout, pane) && success);
                 i++;
             }
@@ -376,20 +413,33 @@ public class PrintUtilities {
      */
     public static void sendBufferToPrint(String footerInfo) {
 
-
         PrinterJob job = getPrinterJob();
-
 
         if (job != null) {
             //        boolean proceed = job.showPrintDialog(null);
             boolean proceed = job.showPrintDialog(EditorMain.mainStage);
 
             if (proceed) {
-                PageLayout pl = job.getJobSettings().getPageLayout();
-                System.out.println("to printer left: " + pl.getLeftMargin() + " top: " + pl.getTopMargin() + " printable width: " + pl.getPrintableWidth());
+                PageLayout minLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), Printer.MarginType.HARDWARE_MINIMUM);
+                minHorizOffset = minLayout.getLeftMargin();
+                minVertOffset = minLayout.getTopMargin();
 
+                //Landscape margins do not work as expected and seem different on Win and Mac.  This kludge seems ok?
+                double top = pageLayout.getTopMargin();
+                double bottom = 18.0;
+                double left = pageLayout.getLeftMargin();
+                double right = pageLayout.getRightMargin();
+                double leftMargin = (left > minHorizOffset) ? left - minHorizOffset : minHorizOffset;
+                double topMargin = (top > minVertOffset) ? top - minVertOffset : minVertOffset;
+
+                if (pageLayout.getPageOrientation() == PageOrientation.LANDSCAPE) {
+                    internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, right, bottom,topMargin);
+                } else {
+                    internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, right, topMargin, bottom);
+                }
 
                 printNodes(footerInfo, job);
+
             } else MainWindowView.deactivateProgressIndicator();
             job.endJob();
 
@@ -412,8 +462,23 @@ public class PrintUtilities {
 
             if (job != null) {
 
-                PageLayout pl = job.getJobSettings().getPageLayout();
-                System.out.println("to pdf left: " + pl.getLeftMargin() + " top: " + pl.getTopMargin() + " printable width: " + pl.getPrintableWidth());
+                PageLayout minLayout = pdfPrinter.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), Printer.MarginType.HARDWARE_MINIMUM);
+                minHorizOffset = minLayout.getLeftMargin();
+                minVertOffset = minLayout.getTopMargin();
+
+                //Landscape margins do not work as expected and seem different on Win and Mac.  This kludge seems ok?
+                double top = pageLayout.getTopMargin();
+                double bottom = 18.0;
+                double left = pageLayout.getLeftMargin();
+                double right = pageLayout.getRightMargin();
+                double leftMargin = (left > minHorizOffset) ? left - minHorizOffset : minHorizOffset;
+                double topMargin = (top > minVertOffset) ? top - minVertOffset : minVertOffset;
+
+                if (pageLayout.getPageOrientation() == PageOrientation.LANDSCAPE) {
+                    internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, right, bottom,topMargin);
+                } else {
+                    internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, right, topMargin, bottom);
+                }
 
                 printNodes(footerInfo, job);
                 success = true;
