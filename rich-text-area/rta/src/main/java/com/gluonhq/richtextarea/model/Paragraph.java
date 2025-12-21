@@ -45,7 +45,7 @@ public class Paragraph {
     private ParagraphDecoration decoration;
 
     //added by me, set from ParagraphTile
-    private double paraHeight;
+//    private double paraHeight;
 
 
     public Paragraph(int start, int end, ParagraphDecoration decoration) {
@@ -98,7 +98,7 @@ public class Paragraph {
         return "Paragraph{[" + start + ", " + end + ") " + decoration + "}";
     }
 
-    public double getParaHeight() {  return paraHeight;  }
+ //   public double getParaHeight() {  return paraHeight;  }
 
-    public void setParaHeight(double paraHeight) {   this.paraHeight = paraHeight;  }
+//    public void setParaHeight(double paraHeight) {   this.paraHeight = paraHeight;  }
 }

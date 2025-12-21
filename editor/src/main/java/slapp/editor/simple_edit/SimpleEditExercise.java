@@ -43,6 +43,8 @@ import slapp.editor.page_editor.PageEditView;
 import java.util.ArrayList;
 import java.util.List;
 
+import static slapp.editor.EditorMain.RTA_PRINT_BMP;
+
 /**
  * The controller for the simple edit exercise
  */
@@ -215,7 +217,8 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
         RichTextArea statementRTA = printExercise.getExerciseView().getExerciseStatement().getEditor();
         statementRTA.prefHeightProperty().unbind();
         statementRTA.minWidthProperty().unbind();
-        statementRTA.setPrefHeight(printModel.getStatementPrefHeight() + 15);
+     //   statementRTA.setPrefHeight(printModel.getStatementPrefHeight() + 15);
+        statementRTA.setPrefHeight(printModel.getStatementTextHeight() + RTA_PRINT_BMP);
         statementRTA.setMaxWidth(nodeWidth);
         statementRTA.getStylesheets().clear(); statementRTA.getStylesheets().add("richTextAreaPrinter.css");
         nodeList.add(statementRTA);
@@ -234,7 +237,7 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
         responseRTA.maxHeightProperty().unbind();   // added to match change in view binding
         responseRTA.setMaxWidth(nodeWidth);
         responseRTA.getStylesheets().clear(); responseRTA.getStylesheets().add("richTextAreaPrinter.css");
-        double responseHeight = Math.max(40, printModel.getResponseTextHeight() + 15);
+        double responseHeight = Math.max(40, printModel.getResponseTextHeight() + RTA_PRINT_BMP);
         responseRTA.setMinHeight(responseHeight);
         responseRTA.setMaxHeight(responseHeight);
         nodeList.add(responseRTA);
@@ -250,7 +253,7 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
         RichTextArea commentRTA = printExercise.getExerciseView().getExerciseComment().getEditor();
         commentRTA.prefHeightProperty().unbind();
         commentRTA.minWidthProperty().unbind();
-        commentRTA.setPrefHeight(Math.max(40, printModel.getCommentTextHeight() + 15.0));
+        commentRTA.setPrefHeight(Math.max(40, printModel.getCommentTextHeight() + RTA_PRINT_BMP));
         commentRTA.setMaxWidth(nodeWidth);
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
 
@@ -337,7 +340,7 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
         RichTextArea responseRTA = printExercise.getExerciseView().getExerciseResponse().getEditor();
         responseRTA.prefHeightProperty().unbind();
         responseRTA.minWidthProperty().unbind();
-        responseRTA.setPrefHeight(printModel.getResponseTextHeight() + 15);
+        responseRTA.setPrefHeight(printModel.getResponseTextHeight() + RTA_PRINT_BMP);
    //     responseRTA.setContentAreaWidth(nodeWidth);
         responseRTA.setMaxWidth(nodeWidth);
         responseRTA.getStylesheets().clear(); responseRTA.getStylesheets().add("richTextAreaPrinter.css");

@@ -39,6 +39,9 @@ public class EditorMain extends Application {
     /** Stage for the main window   */
     public static Stage mainStage;
 
+    public static double RTA_SCREEN_BMP = 23;
+    public static double RTA_PRINT_BMP = 15;
+
     /** Window icons     */
     public static ObservableList<Image> icons;
 

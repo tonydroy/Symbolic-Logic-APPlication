@@ -153,7 +153,7 @@ class ParagraphTile extends HBox {
             contentPane.layout();
         }
         //*** added by TR
-        paragraph.setParaHeight(contentPane.prefHeight(control.getPrefWidth()));
+   //     paragraph.setParaHeight(contentPane.prefHeight(control.getPrefWidth()));
 
     }
 

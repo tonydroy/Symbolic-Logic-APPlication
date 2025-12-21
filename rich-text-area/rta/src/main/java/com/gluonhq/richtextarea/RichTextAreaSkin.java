@@ -837,7 +837,7 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
                 viewModel.getParagraphWithCaret().ifPresent(this::scrollTo);
             });
         }
-
+/*
         private double computeTotalHeight() {
             double totalHeight = 0.0;
 
@@ -848,6 +848,7 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
                 }
             return totalHeight;
         }
+ */
     }
 
 
@@ -2549,9 +2550,9 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
     }
 
 
-    public double getComputedHeight() {
-        return paragraphListView.computeTotalHeight();
-    }
+ //   public double getComputedHeight() {
+ //       return paragraphListView.computeTotalHeight();
+ //   }
 
 
     private Bounds bounds;

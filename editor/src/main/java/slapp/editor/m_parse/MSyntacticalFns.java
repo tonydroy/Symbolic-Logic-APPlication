@@ -583,9 +583,9 @@ public class MSyntacticalFns {
                             if (formula.isAtomic() && SyntacticalFns.sentence(formula, objlangName)) {
                                 textList.add(ParseUtilities.newRegularText("The interpretation of atomic sentence, "));
                                 textList.addAll(interpFormula.toTextList());
-                                textList.add(ParseUtilities.newRegularText(" is a truth value.\n\nCannot parse \""));
+                                textList.add(ParseUtilities.newRegularText(" is a truth value.\n\nFor \""));
                                 textList.addAll(right.toTextList());
-                                textList.add(ParseUtilities.newRegularText(" . . . \" into truth value (\ud835\uddb3/\ud835\udda5)."));
+                                textList.add(ParseUtilities.newRegularText(" . . . \" expect truth value (\ud835\uddb3/\ud835\udda5)."));
                                 EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
                                 return false;
                             } else {
@@ -600,13 +600,13 @@ public class MSyntacticalFns {
                             textList.add(ParseUtilities.newRegularText("Truth value "));
                             textList.addAll(truthValue.toTextList());
                             textList.add(ParseUtilities.newRegularText(" is the interpretation of an atomic sentence.\n\n"));
-                            textList.add(ParseUtilities.newRegularText("Cannot parse \" . . . "));
+                            textList.add(ParseUtilities.newRegularText("For \" . . . "));
                             textList.addAll(right.toTextList());
-                            textList.add(ParseUtilities.newRegularText(" \" into expression of the sort, \ud835\udda8[\ud835\udc9c] for interpretaton \ud835\udda8 and atomic sentence \ud835\udc9c of " + objlangName + ".\n"));
+                            textList.add(ParseUtilities.newRegularText(" \" expect expression of the sort, \ud835\udda8[\ud835\udc9c] for interpretaton \ud835\udda8 and atomic sentence \ud835\udc9c of " + objlangName + ".\n"));
                             EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
                             return false;
                         } else {
-                            textList.add(ParseUtilities.newRegularText("Cannot parse \" . . . "));
+                            textList.add(ParseUtilities.newRegularText("I cannot parse \" . . . "));
                             textList.addAll(left.toTextList());
                             textList.add(new Text(" "));
                             textList.addAll(mEquals.toTextList());
@@ -626,17 +626,17 @@ public class MSyntacticalFns {
                             MInterpUniv interpUniv = (MInterpUniv) left;
                             textList.add(ParseUtilities.newRegularText("The universe for interpretation "));
                             textList.addAll(interpUniv.getInterpVar().toTextList());
-                            textList.add(ParseUtilities.newRegularText((" is a nonempty set of objects.\n\nCannot parse \"")));
+                            textList.add(ParseUtilities.newRegularText((" is a nonempty set of objects.\n\nFor \"")));
                             textList.addAll(right.toTextList());
-                            textList.add(ParseUtilities.newRegularText(" . . . \" into universe (set of basic objects)."));
+                            textList.add(ParseUtilities.newRegularText(" . . . \" expace a universe (set of basic objects)."));
                             EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
                             return false;
                         } else if (right.getType() == ExpressionType.M_UNIVERSE) {
                             MUniverse universe = (MUniverse) right;
                             textList.addAll(universe.toTextList());
-                            textList.add(ParseUtilities.newRegularText(" is a universe for some interpretation (or the interpretation of a 1-place relation symbol).\n\n Cannot parse \" . . . "));
+                            textList.add(ParseUtilities.newRegularText(" is a universe for some interpretation (or the interpretation of a 1-place relation symbol).\n\n For \" . . . "));
                             textList.addAll(left.toTextList());
-                            textList.add(ParseUtilities.newRegularText("\" into expression of the sort \ud835\uddb4\ud835\udda8 or \ud835\udda8[\u211b"));
+                            textList.add(ParseUtilities.newRegularText("\" expect expression of the sort \ud835\uddb4\ud835\udda8 or \ud835\udda8[\u211b"));
                             textList.add(ParseUtilities.newSuperscriptText("1"));
                             textList.add(ParseUtilities.newRegularText("] for some interpretation \ud835\udda8 or relation symbol of " + objlangName + "."));
                             EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
@@ -650,9 +650,9 @@ public class MSyntacticalFns {
                             if (formula.isAtomic() && SyntacticalFns.sentence(formula, objlangName)) {
                                 textList.add(ParseUtilities.newRegularText("The interpretation of atomic sentence, "));
                                 textList.addAll(interpFormula.toTextList());
-                                textList.add(ParseUtilities.newRegularText(" is a truth value.\n\nCannot parse \""));
+                                textList.add(ParseUtilities.newRegularText(" is a truth value.\n\nFor \""));
                                 textList.addAll(right.toTextList());
-                                textList.add(ParseUtilities.newRegularText(" . . . \" into truth value (\ud835\uddb3/\ud835\udda5)."));
+                                textList.add(ParseUtilities.newRegularText(" . . . \" expect truth value (\ud835\uddb3/\ud835\udda5)."));
                                 EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
                                 return false;
                             } else {
@@ -667,9 +667,9 @@ public class MSyntacticalFns {
                             textList.add(ParseUtilities.newRegularText("Truth value "));
                             textList.addAll(truthValue.toTextList());
                             textList.add(ParseUtilities.newRegularText(" is the interpretation of an atomic sentence.\n\n"));
-                            textList.add(ParseUtilities.newRegularText("Cannot parse \" . . . "));
+                            textList.add(ParseUtilities.newRegularText("For \" . . . "));
                             textList.addAll(left.toTextList());
-                            textList.add(ParseUtilities.newRegularText("\" into expression of the sort, \ud835\udda8[\ud835\udc9c] (for interpretaton \ud835\udda8 and atomic sentence \ud835\udc9c of " + objlangName + ")."));
+                            textList.add(ParseUtilities.newRegularText("\" expect expression of the sort, \ud835\udda8[\ud835\udc9c] (for interpretaton \ud835\udda8 and atomic sentence \ud835\udc9c of " + objlangName + ")."));
                             EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
                             return false;
                         }
@@ -680,9 +680,9 @@ public class MSyntacticalFns {
                             MInterpConstant interpConstant = (MInterpConstant) left;
                             textList.add(ParseUtilities.newRegularText("The interpretation of a constant, "));
                             textList.addAll(interpConstant.toTextList());
-                            textList.add(ParseUtilities.newRegularText(" is a basic object.\n\nCannot parse \""));
+                            textList.add(ParseUtilities.newRegularText(" is a basic object.\n\nFor \""));
                             textList.addAll(right.toTextList());
-                            textList.add(ParseUtilities.newRegularText(" . . . \" into a basic object (as \ud835\udfe3 or \ud835\udda1\ud835\uddc8\ud835\uddbb)."));
+                            textList.add(ParseUtilities.newRegularText(" . . . \" expect a basic object (as \ud835\udfe3 or \ud835\udda1\ud835\uddc8\ud835\uddbb)."));
                             EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
                             return false;
                         } else if (left.getType() == ExpressionType.M_ASSIGN_VARIABLE) {
@@ -690,9 +690,9 @@ public class MSyntacticalFns {
                             if (assignVariable.getVariableAssignment().getAssignmentMods().size() == 0) {
                                 textList.add(ParseUtilities.newRegularText("The assignment to a variable, "));
                                 textList.addAll(assignVariable.toTextList());
-                                textList.add(ParseUtilities.newRegularText(" is a basic object.\n\nCannot parse \""));
+                                textList.add(ParseUtilities.newRegularText(" is a basic object.\n\nFor \""));
                                 textList.addAll(right.toTextList());
-                                textList.add(ParseUtilities.newRegularText(" . . . \" into basic object (as \ud835\udfe3 or \ud835\udda1\ud835\uddc8\ud835\uddbb)."));
+                                textList.add(ParseUtilities.newRegularText(" . . . \" expect basic object (as \ud835\udfe3 or \ud835\udda1\ud835\uddc8\ud835\uddbb)."));
                                 EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
                                 return false;
                             } else {
@@ -708,9 +708,9 @@ public class MSyntacticalFns {
                             textList.addAll(basicObjTerm.toTextList());
                             textList.add(ParseUtilities.newRegularText(" is the interpretation of a constant, or the assignment to a variable.\n\n"));
 
-                            textList.add(ParseUtilities.newRegularText("Cannot parse \" . . . "));
+                            textList.add(ParseUtilities.newRegularText("For \" . . . "));
                             textList.addAll(left.toTextList());
-                            textList.add(ParseUtilities.newRegularText("\" into expression of the sort, \ud835\udda8[\ud835\udcb8] or \ud835\uddbd[\ud835\udccb] for interpretaton \ud835\udda8 or variable assignment \ud835\uddbd and language " + objlangName + "."));
+                            textList.add(ParseUtilities.newRegularText("\" expect expression of the sort, \ud835\udda8[\ud835\udcb8] or \ud835\uddbd[\ud835\udccb] for interpretaton \ud835\udda8 or variable assignment \ud835\uddbd and language " + objlangName + "."));
                             EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
                             return false;
                         }
@@ -721,9 +721,9 @@ public class MSyntacticalFns {
                             int places = interpRelation.getRelationSymbol().getPlaces();
                             textList.add(ParseUtilities.newRegularText("The interpretation of a relation symbol, "));
                             textList.addAll(interpRelation.toTextList());
-                            textList.add(ParseUtilities.newRegularText(" is a " + places + "-place relation.\n\nCannot parse \""));
+                            textList.add(ParseUtilities.newRegularText(" is a " + places + "-place relation.\n\nFor \""));
                             textList.addAll(right.toTextList());
-                            textList.add(ParseUtilities.newRegularText(" . . . \" into a " + places + "-place relation (a set of " + places + "-tuples.)"));
+                            textList.add(ParseUtilities.newRegularText(" . . . \" expect a " + places + "-place relation (a set of " + places + "-tuples.)"));
                             EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
                             return false;
                         } else if (right.getType() == ExpressionType.M_RELATION) {
@@ -732,9 +732,9 @@ public class MSyntacticalFns {
                             textList.addAll(relation.toTextList());
                             if (places == 2) {
                                 textList.add(ParseUtilities.newRegularText(" is the interpretation of a " + places + "-place relation symbol (or a 1-place function symbol).\n\n"));
-                                textList.add(ParseUtilities.newRegularText("Cannot parse \" . . . "));
+                                textList.add(ParseUtilities.newRegularText("For \" . . . "));
                                 textList.addAll(left.toTextList());
-                                textList.add(ParseUtilities.newRegularText("\" into expression of the sort \ud835\udda8[\u211b"));
+                                textList.add(ParseUtilities.newRegularText("\" expect an expression of the sort \ud835\udda8[\u211b"));
                                 textList.add(ParseUtilities.newSuperscriptText("2"));
                                 textList.add(ParseUtilities.newRegularText("] or \ud835\udda8[\ud835\udcbb"));
                                 textList.add(ParseUtilities.newSuperscriptText("1"));
@@ -743,9 +743,9 @@ public class MSyntacticalFns {
                                 return false;
                             } else {
                                 textList.add(ParseUtilities.newRegularText(" is the interpretation of a " + places + "-place relation symbol.\n\n"));
-                                textList.add(ParseUtilities.newRegularText("Cannot parse \" . . . "));
+                                textList.add(ParseUtilities.newRegularText("For \" . . . "));
                                 textList.addAll(left.toTextList());
-                                textList.add(ParseUtilities.newRegularText("\" into expression of the sort \ud835\udda8[\u211b"));
+                                textList.add(ParseUtilities.newRegularText("\" expect expression of the sort \ud835\udda8[\u211b"));
                                 textList.add(ParseUtilities.newSuperscriptText(Integer.toString(places)));
                                 textList.add(ParseUtilities.newRegularText("] for a relation symbol of language " + objlangName + " and some interpretation \ud835\udda8."));
                                 EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
@@ -756,9 +756,9 @@ public class MSyntacticalFns {
                             MEmptySet emptySet = (MEmptySet) right;
                             textList.addAll(emptySet.toTextList());
                             textList.add(ParseUtilities.newRegularText(" is the interpretation of relation symbol.\n\n"));
-                            textList.add(ParseUtilities.newRegularText("Cannot parse \" . . . "));
+                            textList.add(ParseUtilities.newRegularText("For \" . . . "));
                             textList.addAll(left.toTextList());
-                            textList.add(ParseUtilities.newRegularText("\" into expression of the sort \ud835\udda8[\u211b] for some interpretation \ud835\udda8 and \ud835\udc5b-place relation symbol of language " + objlangName + "."));
+                            textList.add(ParseUtilities.newRegularText("\" expect expression of the sort \ud835\udda8[\u211b] for some interpretation \ud835\udda8 and \ud835\udc5b-place relation symbol of language " + objlangName + "."));
                             EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
                             return false;
                         }
@@ -775,9 +775,9 @@ public class MSyntacticalFns {
                             } else {
                                 textList.addAll(function.toTextList());
                                 textList.add(ParseUtilities.newRegularText("is the interpretation of a " + places + "-place function symbol.\n\n"));
-                                textList.add(ParseUtilities.newRegularText("Cannot parse \" . . . "));
+                                textList.add(ParseUtilities.newRegularText("For \" . . . "));
                                 textList.addAll(left.toTextList());
-                                textList.add(ParseUtilities.newRegularText("\" into expression of the sort \ud835\udda8[\ud835\udcbb"));
+                                textList.add(ParseUtilities.newRegularText("\" expect expression of the sort \ud835\udda8[\ud835\udcbb"));
                                 textList.add(ParseUtilities.newSuperscriptText(Integer.toString(places)));
                                 textList.add(ParseUtilities.newRegularText("] for some function symbol of language " + objlangName + " and interpretation \ud835\udda8."));
                                 EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
@@ -788,9 +788,9 @@ public class MSyntacticalFns {
                             int places = interpFunction.getFunctionSymbol().getPlaces();
                             textList.add(ParseUtilities.newRegularText("The interpretation of a function symbol, "));
                             textList.addAll(interpFunction.toTextList());
-                            textList.add(ParseUtilities.newRegularText(" is a " + places + "-place function.\n\nCannot parse \""));
+                            textList.add(ParseUtilities.newRegularText(" is a " + places + "-place function.\n\nFor \""));
                             textList.addAll(right.toTextList());
-                            textList.add(ParseUtilities.newRegularText(" . . . \" into function (a set of pairs whose first member is a " + places + "-tuple."));
+                            textList.add(ParseUtilities.newRegularText(" . . . \" expect a function (a set of pairs whose first member is a " + places + "-tuple."));
                             EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
                             return false;
                         } else {
