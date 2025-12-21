@@ -40,7 +40,7 @@ public class PageEditModel implements ExerciseModel<Document>, Serializable {
     private double commentPrefHeight = 60;
     private double commentTextHeight = 0;
     private List<PageContent> pageContents = new ArrayList<>();
-    private double paginationPrefHeight = 450.0;
+    private double paginationPrefHeight = 350.0;  //450
     private String contentPrompt = "";
     private int pointsPossible;
     private int pointsEarned;

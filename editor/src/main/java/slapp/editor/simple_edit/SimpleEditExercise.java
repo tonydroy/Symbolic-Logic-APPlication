@@ -14,11 +14,8 @@ You should have received a copy of the GNU General Public License along with SLA
  */
 
 package slapp.editor.simple_edit;
-
 import com.gluonhq.richtextarea.RichTextArea;
-import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.model.Document;
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -44,6 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static slapp.editor.EditorMain.RTA_PRINT_BMP;
+import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
 
 /**
  * The controller for the simple edit exercise
@@ -100,10 +98,9 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
             }
         });
 
-
         editView.setExerciseStatement(statementDRTA);
 
-        statementEditor.setPrefHeight(statementEditor.getFullHeight() + 20);
+        statementEditor.setPrefHeight(statementEditor.getFullHeight() + RTA_SCREEN_BMP);
 
         //comment
         DecoratedRTA commentDRTA = new DecoratedRTA();
