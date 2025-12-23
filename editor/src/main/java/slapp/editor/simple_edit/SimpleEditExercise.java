@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License along with SLA
 package slapp.editor.simple_edit;
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.DoubleProperty;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -33,9 +35,6 @@ import slapp.editor.DiskUtilities;
 import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.*;
-import slapp.editor.page_editor.PageEditExercise;
-import slapp.editor.page_editor.PageEditModel;
-import slapp.editor.page_editor.PageEditView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -99,7 +98,6 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
         });
 
         editView.setExerciseStatement(statementDRTA);
-
         statementEditor.setPrefHeight(statementEditor.getFullHeight() + RTA_SCREEN_BMP);
 
         //comment
@@ -214,7 +212,6 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
         RichTextArea statementRTA = printExercise.getExerciseView().getExerciseStatement().getEditor();
         statementRTA.prefHeightProperty().unbind();
         statementRTA.minWidthProperty().unbind();
-     //   statementRTA.setPrefHeight(printModel.getStatementPrefHeight() + 15);
         statementRTA.setPrefHeight(printModel.getStatementTextHeight() + RTA_PRINT_BMP);
         statementRTA.setMaxWidth(nodeWidth);
         statementRTA.getStylesheets().clear(); statementRTA.getStylesheets().add("richTextAreaPrinter.css");

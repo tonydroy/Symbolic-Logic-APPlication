@@ -98,8 +98,6 @@ public class SimpleEditView implements ExerciseView<DecoratedRTA> {
         statementRTA.getStylesheets().add("slappTextArea.css");
         statementRTA.setEditable(false);
 
-
-
         double statementInitialHeight = Math.round((statementPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100.0);
         statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
         statementHeightSpinner.setPrefWidth(60);
@@ -158,10 +156,7 @@ public class SimpleEditView implements ExerciseView<DecoratedRTA> {
         responseHeightSpinner.setPrefWidth(60);
         responseHeightSpinner.setDisable(false);
         responseHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
- //old       responseRTA.prefHeightProperty().bind(Bindings.max(15.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(responseHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
         responseRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(15.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(responseHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
-  //      responseRTA.prefHeightProperty().bind(Bindings.max(60, Bindings.add(responseRTA.fullHeightProperty(), RTA_SCREEN_BMP )));  //test
-
         responseRTA.maxHeightProperty().bind(responseRTA.prefHeightProperty());
 
 
@@ -193,7 +188,7 @@ public class SimpleEditView implements ExerciseView<DecoratedRTA> {
             responseRTA.prefHeightProperty().unbind();
             responseHeightSpinner.getValueFactory().setValue((double) Math.round(responseHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue() / 5.0) * 5.0);
             responseRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(15.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(responseHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
-      //      responseRTA.prefHeightProperty().bind(Bindings.max(60, Bindings.add(responseRTA.fullHeightProperty(), RTA_SCREEN_BMP )));  //test
+
         });
 
         setSizeSpinners();

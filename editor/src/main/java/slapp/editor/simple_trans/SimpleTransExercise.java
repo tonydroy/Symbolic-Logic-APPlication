@@ -17,6 +17,8 @@ package slapp.editor.simple_trans;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.DoubleProperty;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -39,6 +41,9 @@ import slapp.editor.simple_trans.SimpleTransView;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static slapp.editor.EditorMain.RTA_PRINT_BMP;
+import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
 
 /**
  * Simple Translate exercise has separate text-entry areas for interpretation and translation.
@@ -91,9 +96,11 @@ public class SimpleTransExercise implements Exercise<SimpleTransModel, SimpleTra
         statementEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(statementDRTA, ControlType.STATEMENT);
+                mainView.getRTATextHeight(statementEditor);
             }
         });
         transView.setExerciseStatement(statementDRTA);
+        statementEditor.setPrefHeight(statementEditor.getFullHeight() + RTA_SCREEN_BMP);
 
         //comment
         DecoratedRTA commentDRTA = new DecoratedRTA();
@@ -110,6 +117,7 @@ public class SimpleTransExercise implements Exercise<SimpleTransModel, SimpleTra
         commentEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(commentDRTA, ControlType.AREA);
+                transModel.setCommentTextHeight(mainView.getRTATextHeight(commentEditor));
             }
         });
         transView.setExerciseComment(commentDRTA);
@@ -132,6 +140,7 @@ public class SimpleTransExercise implements Exercise<SimpleTransModel, SimpleTra
         interpretationEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(interpretationDRTA, ControlType.AREA);
+                transModel.setInterpretationTextHeight(mainView.getRTATextHeight(interpretationEditor));
             }
         });
         transView.setExerciseInterpretation(interpretationDRTA);
@@ -151,6 +160,7 @@ public class SimpleTransExercise implements Exercise<SimpleTransModel, SimpleTra
         responseEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(responseDRTA, ControlType.AREA);
+                transModel.setResponseTextHeight(mainView.getRTATextHeight(responseEditor));
             }
         });
         transView.setExerciseResponse(responseDRTA);
@@ -216,10 +226,9 @@ public class SimpleTransExercise implements Exercise<SimpleTransModel, SimpleTra
         RichTextArea statementRTA = printExercise.getExerciseView().getExerciseStatement().getEditor();
         statementRTA.prefHeightProperty().unbind();
         statementRTA.minWidthProperty().unbind();
-        double statementHeight = printModel.getStatementTextHeight();
-        statementRTA.setPrefHeight(statementHeight + 35.0);
-        statementRTA.setContentAreaWidth(nodeWidth);
-        statementRTA.setMinWidth(nodeWidth);
+        statementRTA.setPrefHeight(printModel.getStatementTextHeight() + RTA_PRINT_BMP);
+        statementRTA.setMaxWidth(nodeWidth);
+
         statementRTA.getStylesheets().clear(); statementRTA.getStylesheets().add("richTextAreaPrinter.css");
         nodeList.add(statementRTA);
 
@@ -234,9 +243,8 @@ public class SimpleTransExercise implements Exercise<SimpleTransModel, SimpleTra
         RichTextArea interpretationRTA = printExercise.getExerciseView().getExerciseInterpretation().getEditor();
         interpretationRTA.prefHeightProperty().unbind();
         interpretationRTA.minWidthProperty().unbind();
-        interpretationRTA.setPrefHeight(printModel.getInterpretationTextHeight() + 35.0);
-        interpretationRTA.setContentAreaWidth(nodeWidth);
-        interpretationRTA.setMinWidth(nodeWidth);
+        interpretationRTA.setPrefHeight(printModel.getInterpretationTextHeight() + RTA_PRINT_BMP);
+        interpretationRTA.setMaxWidth(nodeWidth);
         interpretationRTA.getStylesheets().clear(); interpretationRTA.getStylesheets().add("richTextAreaPrinter.css");
         nodeList.add(interpretationRTA);
 
@@ -251,10 +259,13 @@ public class SimpleTransExercise implements Exercise<SimpleTransModel, SimpleTra
         RichTextArea responseRTA = printExercise.getExerciseView().getExerciseResponse().getEditor();
         responseRTA.prefHeightProperty().unbind();
         responseRTA.minWidthProperty().unbind();
-        responseRTA.setPrefHeight(printModel.getResponseTextHeight() + 35.0);
-        responseRTA.setContentAreaWidth(nodeWidth);
-        responseRTA.setMinWidth(nodeWidth);
+        responseRTA.maxHeightProperty().unbind();
+        responseRTA.setMaxWidth(nodeWidth);
+
         responseRTA.getStylesheets().clear(); responseRTA.getStylesheets().add("richTextAreaPrinter.css");
+        double responseHeight = Math.max(40, printModel.getResponseTextHeight() + RTA_PRINT_BMP);
+        responseRTA.setMinHeight(responseHeight);
+        responseRTA.setMaxHeight(responseHeight);
         nodeList.add(responseRTA);
 
         Separator responseSeparator = new Separator(Orientation.HORIZONTAL);
@@ -268,9 +279,8 @@ public class SimpleTransExercise implements Exercise<SimpleTransModel, SimpleTra
         RichTextArea commentRTA = printExercise.getExerciseView().getExerciseComment().getEditor();
         commentRTA.prefHeightProperty().unbind();
         commentRTA.minWidthProperty().unbind();
-        commentRTA.setPrefHeight(printModel.getCommentTextHeight() + 35.0);
-        commentRTA.setContentAreaWidth(nodeWidth);
-        commentRTA.setMinWidth(nodeWidth);
+        commentRTA.setPrefHeight(Math.max(40, printModel.getCommentTextHeight() + RTA_PRINT_BMP));
+        commentRTA.setMaxWidth(nodeWidth);
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
 
         Node commentNode;
@@ -281,7 +291,7 @@ public class SimpleTransExercise implements Exercise<SimpleTransModel, SimpleTra
             anchorPane.setLeftAnchor(commentRTA, 0.0);
             anchorPane.setBottomAnchor(pointsLabel, 3.0);
             anchorPane.setRightAnchor(pointsLabel, 3.0);
-            anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
+  //          anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
             commentNode = anchorPane;
         }
         else commentNode = commentRTA;
