@@ -567,9 +567,12 @@ public class MainWindowView {
 
         if (currentExerciseView.getPointsNode() != null) {
 
+
             HBox pointBox = new HBox(currentExerciseView.getPointsNode(), new Label(" / " + currentExerciseView.getPointsPossible()));
+            pointBox.setMinHeight(15);
             pointBox.setAlignment(Pos.CENTER);
             AnchorPane anchorPane = new AnchorPane(commentDecoratedRTA.getEditor(), pointBox);
+
             anchorPane.setTopAnchor(commentDecoratedRTA.getEditor(), 0.0);
             anchorPane.setLeftAnchor(commentDecoratedRTA.getEditor(), 0.0);
             anchorPane.setBottomAnchor(pointBox, 3.0);
@@ -577,6 +580,7 @@ public class MainWindowView {
             anchorPane.maxWidthProperty().bind(scalePageWidthProperty());
             anchorPane.minWidthProperty().bind(scalePageWidthProperty());
             commentNode = anchorPane;
+
         }
         else commentNode = commentDecoratedRTA.getEditor();
 

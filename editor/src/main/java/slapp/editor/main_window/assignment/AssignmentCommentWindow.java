@@ -37,6 +37,8 @@ import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.MainWindowView;
 
+import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
+
 /**
  * Window to update of comment in assignment header
  */
@@ -93,7 +95,7 @@ public class AssignmentCommentWindow {
         commentRTA.getActionFactory().open(header.getComment()).execute(new ActionEvent());
         commentRTA.setPromptText("Assignment Comment:");
         commentRTA.getStylesheets().add("slappTextArea.css");
-        commentRTA.setPrefWidth(PrintUtilities.getPageWidth() + 20);
+        commentRTA.setPrefWidth(PrintUtilities.getPageWidth() + RTA_WIDTH_BMP);
         commentRTA.setContentAreaWidth(PrintUtilities.getPageWidth());
         commentRTA.setPrefHeight(200);
         commentRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {

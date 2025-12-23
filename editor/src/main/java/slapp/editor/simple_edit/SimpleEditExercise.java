@@ -262,7 +262,7 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
             anchorPane.setLeftAnchor(commentRTA, 0.0);
             anchorPane.setBottomAnchor(pointsLabel, 3.0);
             anchorPane.setRightAnchor(pointsLabel, 3.0);
-            anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 15);
+      //      anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 15);
             commentNode = anchorPane;
         }
         else commentNode = commentRTA;

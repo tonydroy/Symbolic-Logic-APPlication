@@ -370,7 +370,7 @@ public class ABexercise implements Exercise<ABmodel, ABview> {
             anchorPane.setLeftAnchor(commentRTA, 0.0);
             anchorPane.setBottomAnchor(pointsLabel, 3.0);
             anchorPane.setRightAnchor(pointsLabel, 3.0);
-            anchorPane.setPrefHeight(printModel.getCommentTextHeight());
+   //         anchorPane.setPrefHeight(printModel.getCommentTextHeight());
             commentNode = anchorPane;
         }
         else commentNode = commentRTA;

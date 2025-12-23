@@ -332,7 +332,7 @@ public class PageEditExercise implements Exercise<PageEditModel, PageEditView> {
             anchorPane.setLeftAnchor(commentRTA, 0.0);
             anchorPane.setBottomAnchor(pointsLabel, 3.0);
             anchorPane.setRightAnchor(pointsLabel, 3.0);
-            anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
+     //       anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 15);
             commentNode = anchorPane;
         }
         else commentNode = commentRTA;

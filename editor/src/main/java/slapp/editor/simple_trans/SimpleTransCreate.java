@@ -272,8 +272,8 @@ public class SimpleTransCreate {
                 "<ul>" +
                 "<li><p>Provide the exercise name.</p></li>" +
                 "<li><p>If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
-                "<li><p>Provide the exercise statement.</p></li>" +
                 "<li><p>If desired, you may include an interpretation function to appear along with the exercise.  If this field is left blank, an empty field for an interpretation function that is to be filled in by the student appears along with the exercise.</p></li>" +
+                "<li><p>And finally, provide the exercise statement.</p></li>" +
                 "</ul>";
         WebView helpArea = new WebView();
         WebEngine webEngine = helpArea.getEngine();
@@ -281,7 +281,7 @@ public class SimpleTransCreate {
         webEngine.loadContent(helpText);
         helpArea.setPrefHeight(250);
 
-        centerBox = new VBox(10, nameAndPointsBox, statementRTA, interpretationRTA, helpArea);
+        centerBox = new VBox(10, nameAndPointsBox, interpretationRTA, statementRTA, helpArea);
         centerBox.setPadding(new Insets(10,0,10,20));
 
         spacerPane = new Pane();
