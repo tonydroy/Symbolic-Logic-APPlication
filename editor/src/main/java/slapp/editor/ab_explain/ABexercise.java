@@ -18,6 +18,7 @@ package slapp.editor.ab_explain;
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -42,6 +43,8 @@ import slapp.editor.DiskUtilities;
 import slapp.editor.page_editor.PageContent;
 
 import static javafx.scene.control.ButtonType.OK;
+import static slapp.editor.EditorMain.RTA_PRINT_BMP;
+import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
 
 /**
  * AB exercise has binary choice and explain field
@@ -121,10 +124,11 @@ public class ABexercise implements Exercise<ABmodel, ABview> {
         statementEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(statementDRTA, ControlType.STATEMENT);
-                abModel.setStatementTextHeight(mainWindow.getMainView().getRTATextHeight(statementEditor));
+                mainView.getRTATextHeight(statementEditor);
             }
         });
         abView.setExerciseStatement(statementDRTA);
+        statementEditor.setPrefHeight(statementEditor.getFullHeight() + RTA_SCREEN_BMP);
 
         //comment
         DecoratedRTA commentDRTA = new DecoratedRTA();
@@ -155,15 +159,13 @@ public class ABexercise implements Exercise<ABmodel, ABview> {
             DecoratedRTA drta = new DecoratedRTA();
             RichTextArea pageEditor = drta.getEditor();
 
-
-
             pageEditor.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
                 exerciseModified = true;
                 double pageTextHeight = mainView.getRTATextHeight(pageEditor);
                 pageContent.setTextHeight(pageTextHeight);
 
-                double paginationHt = abView.getPaginationPrefHeight() - 91.6;
-                System.out.println("text height: " +  mainView.getRTATextHeight(pageEditor) + " rtaHeight: " + pageEditor.getHeight() + " pagination pref Height: " + paginationHt);
+    //            double paginationHt = abView.getPaginationPrefHeight() - 91.6;
+    //            System.out.println("text height: " +  mainView.getRTATextHeight(pageEditor) + " rtaHeight: " + pageEditor.getHeight() + " pagination pref Height: " + paginationHt);
             });
 
             pageEditor.getActionFactory().open(doc).execute(new ActionEvent());
@@ -172,7 +174,7 @@ public class ABexercise implements Exercise<ABmodel, ABview> {
             pageEditor.focusedProperty().addListener((o, ov, nv) -> {
                 if (nv) {
                     mainView.editorInFocus(drta, ControlType.AREA);
-                    pageContent.setTextHeight(mainView.getRTATextHeight(pageEditor));
+                    mainView.getRTATextHeight(pageEditor);
                 }
             });
             contentList.add(drta);
@@ -298,11 +300,8 @@ public class ABexercise implements Exercise<ABmodel, ABview> {
         RichTextArea statementRTA = printExercise.getExerciseView().getExerciseStatement().getEditor();
         statementRTA.prefHeightProperty().unbind();
         statementRTA.minWidthProperty().unbind();
-        double statementHeight = printModel.getStatementTextHeight();
-
-        statementRTA.setPrefHeight(statementHeight);
-        statementRTA.setContentAreaWidth(nodeWidth);
-        statementRTA.setMinWidth(nodeWidth);
+        statementRTA.setPrefHeight(printModel.getStatementTextHeight() + RTA_PRINT_BMP);
+        statementRTA.setMaxWidth(nodeWidth);
         statementRTA.getStylesheets().clear(); statementRTA.getStylesheets().add("richTextAreaPrinter.css");
         nodeList.add(statementRTA);
 
@@ -333,11 +332,15 @@ public class ABexercise implements Exercise<ABmodel, ABview> {
         for (int i = 0; i < pageList.size(); i++) {
             DecoratedRTA drta = pageList.get(i);
             RichTextArea pageRTA = drta.getEditor();
-            pageRTA.prefHeightProperty().unbind();
 
-            pageRTA.setPrefHeight(pageContents.get(i).getTextHeight());
-            pageRTA.setContentAreaWidth(nodeWidth);
-            pageRTA.setPrefWidth(nodeWidth);
+            pageRTA.prefWidthProperty().bind(mainView.scalePageWidthProperty());
+            pageRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
+
+            pageRTA.getStylesheets().clear(); pageRTA.getStylesheets().add("richTextAreaPrinter.css");
+            double responseHeight = Math.max(40, pageContents.get(i).getTextHeight() + RTA_PRINT_BMP);
+            pageRTA.setMinHeight(responseHeight);
+            pageRTA.setMaxHeight(responseHeight);
+
             nodeList.add(pageRTA);
         }
 
@@ -354,9 +357,8 @@ public class ABexercise implements Exercise<ABmodel, ABview> {
         RichTextArea commentRTA = printExercise.getExerciseView().getExerciseComment().getEditor();
         commentRTA.prefHeightProperty().unbind();
         commentRTA.minWidthProperty().unbind();
-        commentRTA.setPrefHeight(printModel.getCommentTextHeight());
-        commentRTA.setContentAreaWidth(nodeWidth);
-        commentRTA.setMinWidth(nodeWidth);
+        commentRTA.setPrefHeight(Math.max(40, printModel.getCommentTextHeight() + RTA_PRINT_BMP));
+        commentRTA.setMaxWidth(nodeWidth);
         commentRTA.getStylesheets().clear();
         commentRTA.getStylesheets().add("richTextAreaPrinter.css");
 

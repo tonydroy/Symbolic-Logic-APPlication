@@ -53,6 +53,7 @@ import java.util.function.UnaryOperator;
 
 import static javafx.scene.control.ButtonType.OK;
 import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
+import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
 
 /**
  * Create window for page edit exercise
@@ -130,8 +131,8 @@ public class PageEditCreate {
         statementRTA = statementDRTA.getEditor();
         statementRTA.setPromptText("Exercise Statement:");
         statementRTA.getStylesheets().add("slappTextArea.css");
-        statementRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), 25.0));
-        statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), 25.0));
+        statementRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
+        statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
         statementRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
 
         statementRTA.setMinHeight(100);

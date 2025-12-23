@@ -33,6 +33,7 @@ import slapp.editor.main_window.MainWindowView;
 import java.util.function.UnaryOperator;
 
 import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
+import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
 
 /**
  * View for the simple edit exercise
@@ -112,7 +113,7 @@ public class SimpleEditView implements ExerciseView<DecoratedRTA> {
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
 
-        statementRTA.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), 25));
+        statementRTA.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
         statementRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
 
         statementWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
@@ -138,7 +139,7 @@ public class SimpleEditView implements ExerciseView<DecoratedRTA> {
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
 
-        commentRTA.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), 25));
+        commentRTA.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
         commentRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
         commentWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         commentWidthSpinner.setPrefWidth(60);
@@ -171,7 +172,7 @@ public class SimpleEditView implements ExerciseView<DecoratedRTA> {
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
 
-        responseRTA.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), 25));
+        responseRTA.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
         responseRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
         responseWidthSpinner = new Spinner<>(0.0, 999.0, 100, 5.0);
         responseWidthSpinner.setPrefWidth(60);

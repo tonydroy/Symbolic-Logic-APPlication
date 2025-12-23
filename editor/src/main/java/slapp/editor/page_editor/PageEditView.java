@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.function.UnaryOperator;
 
 import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
+import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
 
 /**
  * View for the page edit exercise.
@@ -131,7 +132,7 @@ public class PageEditView implements ExerciseView<DecoratedRTA> {
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
 
-        statementRTA.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), 25));
+        statementRTA.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
         statementRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
 
         statementWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
@@ -158,7 +159,7 @@ public class PageEditView implements ExerciseView<DecoratedRTA> {
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
 
-        commentRTA.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), 25));
+        commentRTA.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
         commentRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
 
         commentWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
@@ -181,7 +182,7 @@ public class PageEditView implements ExerciseView<DecoratedRTA> {
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
 
-        pagination.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), 25));
+        pagination.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
         paginationWidthSpinner = new Spinner<>(0.0, 999.0, 100, 5.0);
         paginationWidthSpinner.setPrefWidth(60);
         paginationWidthSpinner.setDisable(true);

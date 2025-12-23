@@ -18,6 +18,7 @@ package slapp.editor.page_editor;
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -170,7 +171,6 @@ public class PageEditExercise implements Exercise<PageEditModel, PageEditView> {
         RichTextArea editor = drta.getEditor();
         editor.getActionFactory().saveNow().execute(new ActionEvent());
 
-
         editor.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
             exerciseModified = true;
             double textHeight = mainView.getRTATextHeight(editor);
@@ -296,8 +296,9 @@ public class PageEditExercise implements Exercise<PageEditModel, PageEditView> {
             DecoratedRTA drta = pageList.get(i);
             RichTextArea pageRTA = drta.getEditor();
 
+            pageRTA.prefWidthProperty().bind(mainView.scalePageWidthProperty());
+            pageRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
 
-            pageRTA.setMaxWidth(nodeWidth);
             pageRTA.getStylesheets().clear(); pageRTA.getStylesheets().add("richTextAreaPrinter.css");
             double responseHeight = Math.max(40, pageContents.get(i).getTextHeight() + RTA_PRINT_BMP);
             pageRTA.setMinHeight(responseHeight);

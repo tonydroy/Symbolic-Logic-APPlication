@@ -43,7 +43,7 @@ public class ABmodel implements ExerciseModel<Document>, Serializable {
     private double commentPrefHeight = 60;
     private double commentTextHeight = 0;
     private List<PageContent> pageContents = new ArrayList<>();
-    private double paginationPrefHeight = 251;
+    private double paginationPrefHeight = 400;
     private int pointsPossible;
     private int pointsEarned;
 
