@@ -291,6 +291,10 @@ public class PrintUtilities {
 
         MainWindowView.activateProgressIndicator("printing");
 
+        if (printer = null) {
+            System.out.println("null printer");    //?? problem here
+        }
+
         boolean success = true;
         int pageNum = 0;
         VBox pageBox = new VBox();
