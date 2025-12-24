@@ -291,7 +291,7 @@ public class PrintUtilities {
 
         MainWindowView.activateProgressIndicator("printing");
 
-        if (printer = null) {
+        if (printer == null) {
             System.out.println("null printer");    //?? problem here
         }
 

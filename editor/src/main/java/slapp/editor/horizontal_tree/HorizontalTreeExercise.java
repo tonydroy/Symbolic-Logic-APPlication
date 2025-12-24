@@ -27,7 +27,6 @@ import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
@@ -35,20 +34,18 @@ import javafx.scene.control.Spinner;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import org.apache.commons.lang3.SerializationUtils;
 import slapp.editor.DiskUtilities;
 import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.*;
-import slapp.editor.truth_table.TTcheckSetup;
-import slapp.editor.vertical_tree.VerticalTreeExercise;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static slapp.editor.EditorMain.RTA_PRINT_BMP;
+import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
 
 /**
  * Controller for the horizontal tree exercise
@@ -114,6 +111,8 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
         interpretationEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(interpretationDRTA, ControlType.AREA);
+                double interpretationTextHeight = mainView.getRTATextHeight(interpretationEditor);
+                htCheck.getCheckSetup().setInterpretationTextHeight(interpretationTextHeight);
             }
         });
 
