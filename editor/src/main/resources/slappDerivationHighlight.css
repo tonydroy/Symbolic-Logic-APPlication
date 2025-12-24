@@ -8,7 +8,7 @@
 
 .rich-text-area .paragraph-tile {
     -fx-background-color: mistyrose;
-    -fx-padding: 0 0 0 2;
+    -fx-padding: 0 0 0 0;
 }
 
 
@@ -16,7 +16,7 @@
 .rich-text-area {
     -fx-border-color: aliceblue aliceblue aliceblue black;
     -fx-border-width: 0 0 0 0;
-    -fx-padding: 0 0 0 3;
+    -fx-padding: 0 0 0 0;
 }
 
 

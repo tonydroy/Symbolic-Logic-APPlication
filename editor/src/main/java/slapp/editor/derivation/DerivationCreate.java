@@ -79,7 +79,8 @@ import java.util.regex.Pattern;
 
 import static com.gluonhq.richtextarea.RichTextAreaSkin.KeyMapValue.*;
 import static javafx.scene.control.ButtonType.OK;
-
+import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
+import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
 
 /**
  * Create window for derivation exercise.
@@ -268,9 +269,10 @@ public class DerivationCreate {
         statementRTA = statementDRTA.getEditor();
         statementRTA.setPromptText("Exercise Statement:");
         statementRTA.getStylesheets().add("slappTextArea.css");
-        statementRTA.setPrefWidth(PrintUtilities.getPageWidth());
-        statementRTA.setMinWidth(PrintUtilities.getPageWidth());
-        statementRTA.setMaxWidth(PrintUtilities.getPageWidth());
+        statementRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
+        statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
+        statementRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
+
         statementRTA.setMinHeight(100);
 
         double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
@@ -278,7 +280,7 @@ public class DerivationCreate {
         statementHeightSpinner.setPrefWidth(60);
         statementHeightSpinner.setDisable(false);
         statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
         statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
@@ -289,7 +291,7 @@ public class DerivationCreate {
         mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
             statementRTA.prefHeightProperty().unbind();
             statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+            statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
@@ -302,6 +304,7 @@ public class DerivationCreate {
         statementRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(statementDRTA, ControlType.AREA);
+                statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
             }
         });
 
@@ -312,9 +315,10 @@ public class DerivationCreate {
         staticHelpRTA = staticHelpDRTA.getEditor();
         staticHelpRTA.setPromptText("Static Help (complete if static help selected)");
         staticHelpRTA.getStylesheets().add("slappTextArea.css");
-        staticHelpRTA.setPrefWidth(400);
-        staticHelpRTA.setMinWidth(400);
-        staticHelpRTA.setMaxWidth(400);
+
+        staticHelpRTA.setMinWidth(400 + RTA_WIDTH_BMP);
+        staticHelpRTA.setMaxWidth(400 + RTA_WIDTH_BMP);
+        staticHelpRTA.setContentAreaWidth(400);
         staticHelpRTA.setMinHeight(100);
 
         double staticHelpInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
@@ -324,7 +328,7 @@ public class DerivationCreate {
         staticHelpHeightSpinner.setPrefWidth(60);
         staticHelpHeightSpinner.setDisable(false);
         staticHelpHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        staticHelpRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
         staticHelpHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = staticHelpHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
@@ -335,7 +339,7 @@ public class DerivationCreate {
         mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
             staticHelpRTA.prefHeightProperty().unbind();
             staticHelpHeightSpinner.getValueFactory().setValue((double) Math.round(staticHelpHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            staticHelpRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+            staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
@@ -346,6 +350,7 @@ public class DerivationCreate {
         staticHelpRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(staticHelpDRTA, ControlType.AREA);
+                staticHelpTextHeight = mainWindow.getMainView().getRTATextHeight(staticHelpRTA);
             }
         });
         staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
@@ -747,7 +752,7 @@ public class DerivationCreate {
                 "<p>Derivation Exercise is appropriate for any exercise that calls for a derivation as response.<p>" +
                 "<ul>" +
 
-                "<li><p>Supply the exercise name.  The name for a theorem exercise should end with underscore and then the name (as '_T3.14') as the check feature uses the name to identify 'prior' theorems available in a derivation.  Then select the default keyboard for derivation content lines, and select whether there is to be a leftmost scope line, and/or a \"shelf\" beneath the top line of an automatically generated subderivation. " +
+                "<li><p>Supply the exercise name.  The name for a theorem exercise should be of the sort, exercise name / underscore / theorem name (as 'E3.3_T3.14') -- as the check feature sorts on theorem names to identify 'prior' theorems available in a derivation.  Then select the default keyboard for derivation content lines, and select whether there is to be a leftmost scope line, and/or a \"shelf\" beneath the top line of an automatically generated subderivation. " +
                 "The width is the (default) percentage of the window's width allocated to this derivation.  " +
                 "If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
                 "<li><p>For the check and help functions: A 'max value' of -1 corresponds to 'unlimited', 0 to 'none', and otherwise to the maximum number of check or help tries allotted for the exercise.  " +
@@ -761,7 +766,7 @@ public class DerivationCreate {
                 "</li>" +
                 "<li><p>After that, insert setup derivation lines as appropriate.  In the ordinary case, setup lines will include some premise lines with justification 'P' (the last sitting on a shelf), a blank line, and a conclusion line (without justification), all at scope depth 1. " +
                 "A line identified as a premise cannot have either its formula or justification modified; one identified as a conclusion cannot have its formula modified.  Different arrangements (as, e.g. \"fill in the justification\" exercises) are possible.</p></li>" +
-                "<li><p>Finally, fill in the exercise statement.</p></li>" +
+                "<li><p>Finally, fill in the exercise statement and, if desired, static help.</p></li>" +
                 "</ul>";
 
         WebView helpArea = new WebView();
@@ -771,7 +776,7 @@ public class DerivationCreate {
         helpArea.setPrefHeight(230);
 
 
-        HBox textEntryRow = new HBox(20, statementRTA, staticHelpRTA);
+        HBox textEntryRow = new HBox(10, statementRTA, staticHelpRTA);
 
 
         centerBox = new VBox(10, upperFieldsBox, textEntryRow, helpArea);
@@ -853,11 +858,11 @@ public class DerivationCreate {
 
         stage.setTitle("Create Derivation Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
-        stage.setWidth(1035);
+        stage.setWidth(1040);
         stage.setHeight(950);
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1035));
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1040));
         stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 900));
 
         stage.initModality(Modality.NONE);
@@ -1129,13 +1134,15 @@ public class DerivationCreate {
         if (statementRTA.isModified()) fieldModified = true;
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document statementDocument = statementRTA.getDocument();
-        double statementPrefHeight = statementTextHeight + 29;
+
+        double statementPrefHeight = Math.max(40, statementTextHeight + RTA_SCREEN_BMP);
+
         Document commentDocument = new Document();
 
         if (staticHelpRTA.isModified()) fieldModified = true;
         staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document staticHelpDocument = staticHelpRTA.getDocument();
-        double staticHelpPrefHeight = staticHelpTextHeight + 25;
+
 
 
         List<ModelLine> modelLines = new ArrayList<>();
