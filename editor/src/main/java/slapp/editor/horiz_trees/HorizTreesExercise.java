@@ -49,6 +49,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static slapp.editor.derivation.DerivationExercise.inHierarchy;
+import static slapp.editor.EditorMain.RTA_PRINT_BMP;
+import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
 
 /**
  * Controller for the free form exercise
@@ -139,7 +141,8 @@ public class HorizTreesExercise implements Exercise<HorizTreesModel, HorizTreesV
         interpretationEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(interpretationDRTA, ControlType.AREA);
-                mainView.getRTATextHeight(interpretationEditor);
+                double interpretationTextHeight = mainView.getRTATextHeight(interpretationEditor);
+                htCheck.getCheckSetup().setInterpretationTextHeight(interpretationTextHeight);
             }
         });
 
@@ -175,6 +178,7 @@ public class HorizTreesExercise implements Exercise<HorizTreesModel, HorizTreesV
             }
         });
         horizTreesView.setExerciseStatement(statementDRTA);
+        statementEditor.setPrefHeight(statementEditor.getFullHeight() + RTA_SCREEN_BMP);
 
         //comment
         DecoratedRTA commentDRTA = new DecoratedRTA();
@@ -190,7 +194,8 @@ public class HorizTreesExercise implements Exercise<HorizTreesModel, HorizTreesV
         commentEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(commentDRTA, ControlType.AREA);
-                mainView.getRTATextHeight(commentEditor);
+                double commentTextHeight = mainView.getRTATextHeight(commentEditor);
+                horizTreesModel.setCommentTextHeight(commentTextHeight);
             }
         });
         horizTreesView.setExerciseComment(commentDRTA);
@@ -212,7 +217,8 @@ public class HorizTreesExercise implements Exercise<HorizTreesModel, HorizTreesV
         explainEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(explainDRTA, ControlType.AREA);
-                mainView.getRTATextHeight(explainEditor);
+                double explanationTextHeight = mainView.getRTATextHeight(explainEditor);
+                horizTreesModel.setExplainTextHeight(explanationTextHeight);
             }
         });
 
@@ -495,10 +501,11 @@ public class HorizTreesExercise implements Exercise<HorizTreesModel, HorizTreesV
         RichTextArea statementRTA = printExercise.getExerciseView().getExerciseStatement().getEditor();
         statementRTA.prefHeightProperty().unbind();
         statementRTA.minWidthProperty().unbind();
-        double statementHeight = printModel.getStatementTextHeight();
-        statementRTA.setPrefHeight(statementHeight + 15);  //35
-        statementRTA.setContentAreaWidth(nodeWidth);
+        statementRTA.maxWidthProperty().unbind();
+        statementRTA.setPrefHeight(printModel.getStatementTextHeight() + RTA_PRINT_BMP);
+        statementRTA.setMaxWidth(nodeWidth);
         statementRTA.setMinWidth(nodeWidth);
+
         statementRTA.getStylesheets().clear(); statementRTA.getStylesheets().add("richTextAreaPrinter.css");
         nodeList.add(statementRTA);
 
@@ -513,10 +520,10 @@ public class HorizTreesExercise implements Exercise<HorizTreesModel, HorizTreesV
         RichTextArea interpretationRTA = printExercise.getExerciseView().getInterpretationDRTA().getEditor();
         interpretationRTA.prefHeightProperty().unbind();
         interpretationRTA.minWidthProperty().unbind();
-        double interpretationHeight = printModel.getCheckSetup().getInterpretationTextHeight();
-        interpretationRTA.setPrefHeight(interpretationHeight );  //35
-
-        interpretationRTA.setContentAreaWidth(nodeWidth);
+        interpretationRTA.maxWidthProperty().unbind();
+        double interpTextHeight = htCheck.getCheckSetup().getInterpretationTextHeight();
+        interpretationRTA.setPrefHeight(Math.max(40, interpTextHeight + RTA_PRINT_BMP));
+        interpretationRTA.setMaxWidth(nodeWidth);
         interpretationRTA.setMinWidth(nodeWidth);
 
         interpretationRTA.getStylesheets().clear(); interpretationRTA.getStylesheets().add("richTextAreaPrinter.css");
@@ -529,6 +536,8 @@ public class HorizTreesExercise implements Exercise<HorizTreesModel, HorizTreesV
             ModelElement originalModelElement = originalHTmodel.getModelElements().get(i);
             ExerciseModel originalItemModel = originalModelElement.getModel();
 
+            Node printNode = exerElement.getFFPrintNode(originalItemModel);
+
             nodeList.add(exerElement.getFFPrintNode(originalItemModel));
         }
 
@@ -536,10 +545,11 @@ public class HorizTreesExercise implements Exercise<HorizTreesModel, HorizTreesV
         RichTextArea explainRTA = printExercise.getExerciseView().getExplainDRTA().getEditor();
         explainRTA.prefHeightProperty().unbind();
         explainRTA.minWidthProperty().unbind();
-        double explainHeight = printModel.getExplainTextHeight();
-        explainRTA.setPrefHeight(explainHeight );  //35
-        explainRTA.setContentAreaWidth(nodeWidth);
+        explainRTA.maxWidthProperty().unbind();
+        explainRTA.setPrefHeight(Math.max(40, printModel.getCommentTextHeight() + RTA_PRINT_BMP));
+        explainRTA.setMaxWidth(nodeWidth);
         explainRTA.setMinWidth(nodeWidth);
+
         explainRTA.getStylesheets().clear(); statementRTA.getStylesheets().add("richTextAreaPrinter.css");
         nodeList.add(explainRTA);
 
@@ -556,8 +566,11 @@ public class HorizTreesExercise implements Exercise<HorizTreesModel, HorizTreesV
         RichTextArea commentRTA = printExercise.getExerciseView().getExerciseComment().getEditor();
         commentRTA.prefHeightProperty().unbind();
         commentRTA.minWidthProperty().unbind();
-        commentRTA.setPrefHeight(printModel.getCommentTextHeight());  //35
-        commentRTA.setContentAreaWidth(nodeWidth);
+        commentRTA.maxWidthProperty().unbind();
+        commentRTA.setPrefHeight(Math.max(40, printModel.getCommentTextHeight() + RTA_PRINT_BMP));
+        commentRTA.setMaxWidth(nodeWidth);
+        commentRTA.setMinWidth(nodeWidth);
+
         commentRTA.setMinWidth(nodeWidth);
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
 
@@ -569,7 +582,7 @@ public class HorizTreesExercise implements Exercise<HorizTreesModel, HorizTreesV
             anchorPane.setLeftAnchor(commentRTA, 0.0);
             anchorPane.setBottomAnchor(pointsLabel, 3.0);
             anchorPane.setRightAnchor(pointsLabel, 3.0);
-            anchorPane.setPrefHeight(printModel.getCommentTextHeight());
+  //          anchorPane.setPrefHeight(printModel.getCommentTextHeight());
             commentNode = anchorPane;
         }
         else commentNode = commentRTA;

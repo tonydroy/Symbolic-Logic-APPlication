@@ -291,9 +291,10 @@ public class PrintUtilities {
 
         MainWindowView.activateProgressIndicator("printing");
 
-        if (printer == null) {
-            System.out.println("null printer");    //?? problem here
-        }
+
+
+    //  System.out.println("printer:" + printer + " layout: " + pageLayout);    //?? problem here
+
 
         boolean success = true;
         int pageNum = 0;
@@ -400,10 +401,13 @@ public class PrintUtilities {
      */
     public static void sendBufferToPrint(String footerInfo) {
 
-        PrinterJob job = getPrinterJob();
+        PrinterJob job = PrinterJob.createPrinterJob(printer);
 
         if (job != null) {
-            //        boolean proceed = job.showPrintDialog(null);
+
+      //      job.showPageSetupDialog(mainStage);
+      //      job.setPrinter(printer);
+
             boolean proceed = job.showPrintDialog(mainStage);
             if (proceed) {
                 printNodes(footerInfo, job);
@@ -467,6 +471,8 @@ public class PrintUtilities {
 
         Bounds bounds = node.getLayoutBounds();
 
+      //  System.out.println("node: " + node + " width: " + bounds.getWidth());
+
         return new PrintBufferItem(node, bounds.getHeight(), bounds.getWidth());
     }
 
@@ -485,6 +491,7 @@ public class PrintUtilities {
         PrintBufferItem bufferItem = getNodeSize(node);
         double width = bufferItem.getWidth();
         double height = bufferItem.getHeight();
+
 
 
         if (width > getPageWidth() / baseScale) {

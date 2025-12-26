@@ -79,6 +79,8 @@ import java.util.*;
 import java.util.function.UnaryOperator;
 
 import static javafx.scene.control.ButtonType.OK;
+import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
+import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
 
 /**
  * Create window for horizontal tree exercise
@@ -130,6 +132,8 @@ public class HorizTreesCreate {
     private List<BoxedDRTA> targetFormulaList;
     private double formulaBoxHeight = 27;
     private BoxedDRTA focusedBoxedDRTA;
+
+
 
     /**
      * Create new horizontal tree exercise
@@ -199,9 +203,9 @@ public class HorizTreesCreate {
         statementRTA = statementDRTA.getEditor();
         statementRTA.setPromptText("Exercise Statement");
         statementRTA.getStylesheets().add("slappTextArea.css");
-        statementRTA.setPrefWidth(PrintUtilities.getPageWidth() );
-        statementRTA.setMinWidth(PrintUtilities.getPageWidth());
-        statementRTA.setMaxWidth(PrintUtilities.getPageWidth());
+        statementRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
+        statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
+        statementRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
         statementRTA.setMinHeight(100);
 
         double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
@@ -209,7 +213,7 @@ public class HorizTreesCreate {
         statementHeightSpinner.setPrefWidth(60);
         statementHeightSpinner.setDisable(false);
         statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
         statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
@@ -220,7 +224,7 @@ public class HorizTreesCreate {
         mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
             statementRTA.prefHeightProperty().unbind();
             statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+            statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
@@ -232,6 +236,7 @@ public class HorizTreesCreate {
         statementRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(statementDRTA, ControlType.AREA);
+                statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
             }
         });
 
@@ -242,9 +247,9 @@ public class HorizTreesCreate {
         staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
         staticHelpRTA.setPromptText("Static Help (complete if static help selected)");
         staticHelpRTA.getStylesheets().add("slappTextArea.css");
-        staticHelpRTA.setPrefWidth(350);
-        staticHelpRTA.setMinWidth(350);
-        staticHelpRTA.setMaxWidth(350);
+        staticHelpRTA.setMinWidth(400 + RTA_WIDTH_BMP);
+        staticHelpRTA.setMaxWidth(400 + RTA_WIDTH_BMP);
+        staticHelpRTA.setContentAreaWidth(400);
         staticHelpRTA.setMinHeight(100);
 
         double staticHelpInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
@@ -253,7 +258,7 @@ public class HorizTreesCreate {
         staticHelpHeightSpinner.setPrefWidth(60);
         staticHelpHeightSpinner.setDisable(false);
         staticHelpHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        staticHelpRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
         staticHelpHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = staticHelpHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
@@ -264,7 +269,7 @@ public class HorizTreesCreate {
         mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
             staticHelpRTA.prefHeightProperty().unbind();
             staticHelpHeightSpinner.getValueFactory().setValue((double) Math.round(staticHelpHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            staticHelpRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+            staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
@@ -285,9 +290,10 @@ public class HorizTreesCreate {
         interpretationRTA = interpretationDRTA.getEditor();
         interpretationRTA.setPromptText("Interpretation (may be blank)");
         interpretationRTA.getStylesheets().add("slappTextArea.css");
-        interpretationRTA.setPrefWidth(PrintUtilities.getPageWidth() );
-        interpretationRTA.setMinWidth(PrintUtilities.getPageWidth());
-        interpretationRTA.setMaxWidth(PrintUtilities.getPageWidth());
+        interpretationRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
+        interpretationRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
+        interpretationRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
+
         interpretationRTA.setMinHeight(100);
 
         double interpretationInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
@@ -297,7 +303,7 @@ public class HorizTreesCreate {
         interpretationHeightSpinner.setPrefWidth(60);
         interpretationHeightSpinner.setDisable(false);
         interpretationHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        interpretationRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(interpretationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        interpretationRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(interpretationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
         interpretationHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = interpretationHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
@@ -308,7 +314,7 @@ public class HorizTreesCreate {
         mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
             interpretationRTA.prefHeightProperty().unbind();
             interpretationHeightSpinner.getValueFactory().setValue((double) Math.round(interpretationHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            interpretationRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(interpretationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+            interpretationRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(interpretationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
@@ -604,11 +610,11 @@ public class HorizTreesCreate {
         stage.setScene(scene);
         stage.setTitle("Create Horizontal Tree(s) Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
-        stage.setWidth(930);
+        stage.setWidth(1040);
         stage.setHeight(1000);
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 930));
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1040));
         stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 1000));
         stage.initModality(Modality.WINDOW_MODAL);
         stage.setOnCloseRequest(e-> {
@@ -851,7 +857,7 @@ public class HorizTreesCreate {
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExerciseStatement(statementRTA.getDocument());
         model.setStatementTextHeight(statementTextHeight);
-        model.setStatementPrefHeight(Math.max(50, statementTextHeight + 20));   //+29
+        model.setStatementPrefHeight(Math.max(40, statementTextHeight + RTA_SCREEN_BMP));   //+29
 
 
         if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
@@ -867,7 +873,7 @@ public class HorizTreesCreate {
         checkSetup.setInterpretationDoc(interpretationRTA.getDocument());
 
         checkSetup.setInterpretationTextHeight(interpretationTextHeight);
-        checkSetup.setInterpretationPrefHeight(Math.max(90, interpretationTextHeight + 20));  //+29
+        checkSetup.setInterpretationPrefHeight(Math.max(90, interpretationTextHeight + RTA_SCREEN_BMP));  //+29
 
         String langName = null;
         for (String key : langMap.keySet()) {

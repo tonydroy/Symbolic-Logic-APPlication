@@ -9,13 +9,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d366fccc-ef06-4007-b459-d27194c8a785" name="Changes" comment="drvtn explain updated">
+    <list default="true" id="d366fccc-ef06-4007-b459-d27194c8a785" name="Changes" comment="test green line">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/PrintUtilities.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/PrintUtilities.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horiz_trees/HorizTreesCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horiz_trees/HorizTreesCreate.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horiz_trees/HorizTreesExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horiz_trees/HorizTreesExercise.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horiz_trees/HorizTreesView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horiz_trees/HorizTreesView.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/HorizontalTreeCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/HorizontalTreeCreate.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/HorizontalTreeExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/HorizontalTreeExercise.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/HorizontalTreeModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/HorizontalTreeModel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/HorizontalTreeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horizontal_tree/HorizontalTreeView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_edit/SimpleEditCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_edit/SimpleEditCreate.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,27 +36,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.SLAPP-8.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "git-widget-placeholder": "master",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/tonyd/Dropbox/MyFiles(DB)/JavaProgs/net.tonyroyphilosophy/SLAPP-8",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Artifacts",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.48735633",
-    "two.files.diff.last.used.file": "C:/Users/tonyd/Dropbox/MyFiles(DB)/JavaProgs/net.tonyroyphilosophy/SLAPP-3.2.1prelim/editor/src/main/java/slapp/editor/simple_edit/SimpleEditExercise.java",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.SLAPP-8.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/tonyd/Dropbox/MyFiles(DB)/JavaProgs/net.tonyroyphilosophy/SLAPP-8&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Artifacts&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.48735633&quot;,
+    &quot;two.files.diff.last.used.file&quot;: &quot;C:/Users/tonyd/Dropbox/MyFiles(DB)/JavaProgs/net.tonyroyphilosophy/SLAPP-3.2.1prelim/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpExercise.java&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\tonyd\Dropbox\MyFiles(DB)\JavaProgs\net.tonyroyphilosophy\SLAPP-8" />
@@ -113,7 +116,9 @@
       <workItem from="1766320924458" duration="20334000" />
       <workItem from="1766408383590" duration="2097000" />
       <workItem from="1766492637024" duration="24403000" />
-      <workItem from="1766579502736" duration="24244000" />
+      <workItem from="1766579502736" duration="29785000" />
+      <workItem from="1766667896146" duration="18496000" />
+      <workItem from="1766750527592" duration="17416000" />
     </task>
     <task id="LOCAL-00001" summary="first SLAPP-8 with javafx 25">
       <option name="closed" value="true" />
@@ -195,7 +200,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766605094105</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="test green line">
+      <option name="closed" value="true" />
+      <created>1766614794568</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1766614794568</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -212,6 +225,7 @@
     <MESSAGE value="simple trans updated" />
     <MESSAGE value="derivation updated" />
     <MESSAGE value="drvtn explain updated" />
-    <option name="LAST_COMMIT_MESSAGE" value="drvtn explain updated" />
+    <MESSAGE value="test green line" />
+    <option name="LAST_COMMIT_MESSAGE" value="test green line" />
   </component>
 </project>

@@ -187,6 +187,8 @@ public class HorizontalTreeCreate {
         statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
         statementRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
 
+ //       System.out.println("cont w: " + statementRTA.getContentAreaWidth());
+
         statementRTA.setMinHeight(100);
 
         double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
@@ -584,11 +586,11 @@ public class HorizontalTreeCreate {
         stage.setScene(scene);
         stage.setTitle("Create Horizontal Tree Explain Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
-        stage.setWidth(930);
+        stage.setWidth(1040);
         stage.setHeight(1000);
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 930));
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1040));
         stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 1000));
         stage.initModality(Modality.WINDOW_MODAL);
         stage.setOnCloseRequest(e-> {

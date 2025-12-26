@@ -44,8 +44,7 @@ import slapp.editor.main_window.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static slapp.editor.EditorMain.RTA_PRINT_BMP;
-import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
+import static slapp.editor.EditorMain.*;
 
 /**
  * Controller for the horizontal tree exercise
@@ -146,9 +145,11 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
         statementEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(statementDRTA, ControlType.STATEMENT);
+                mainView.getRTATextHeight(statementEditor);
             }
         });
         horizontalTreeView.setExerciseStatement(statementDRTA);
+        statementEditor.setPrefHeight(statementEditor.getFullHeight() + RTA_SCREEN_BMP);
 
 
 
@@ -169,6 +170,7 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
         commentEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(commentDRTA, ControlType.AREA);
+                horizontalTreeModel.setCommentTextHeight(mainView.getRTATextHeight(commentEditor));
             }
         });
         horizontalTreeView.setExerciseComment(commentDRTA);
@@ -190,6 +192,7 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
         explainEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(explainDRTA, ControlType.AREA);
+                horizontalTreeModel.setExplainTextHeight(mainView.getRTATextHeight(explainEditor));
             }
         });
 
@@ -395,9 +398,9 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
         RichTextArea statementRTA = printExercise.getExerciseView().getExerciseStatement().getEditor();
         statementRTA.prefHeightProperty().unbind();
         statementRTA.minWidthProperty().unbind();
-        double statementHeight = printModel.getStatementTextHeight();
-        statementRTA.setPrefHeight(statementHeight + 35.0);
-        statementRTA.setContentAreaWidth(nodeWidth);
+        statementRTA.maxWidthProperty().unbind();
+        statementRTA.setPrefHeight(printModel.getStatementTextHeight() + RTA_PRINT_BMP);
+        statementRTA.setMaxWidth(nodeWidth);
         statementRTA.setMinWidth(nodeWidth);
         statementRTA.getStylesheets().clear(); statementRTA.getStylesheets().add("richTextAreaPrinter.css");
         nodeList.add(statementRTA);
@@ -411,6 +414,7 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
 
         //content
         AnchorPane mainPane = printExercise.getExerciseView().getMainPane();
+        mainPane.setMinHeight(0.0);
         Group root = new Group();
         Scene scene = new Scene(root);
         root.getChildren().add(mainPane);
@@ -419,13 +423,17 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
 
         Ruler axis = new Ruler();
  //       double axisWidth = Math.max(nodeWidth, mainPane.getWidth() - 10);
-        double axisWidth = Math.max(nodeWidth, printModel.getMainPaneWidth() - 10);
+        double axisWidth = Math.max(nodeWidth, printModel.getMainPaneWidth() - RTA_WIDTH_BMP);
 
         axis.updateRuler(axisWidth);
 
         mainPane.setStyle("-fx-background-color: transparent");
-        mainPane.setPrefWidth(printModel.getMainPaneWidth());
-        mainPane.setMaxHeight(0.0);
+
+        mainPane.setPadding(new Insets(0));
+        mainPane.minWidthProperty().unbind();
+        mainPane.setMinWidth(printModel.getMainPaneWidth() - RTA_WIDTH_BMP);
+        mainPane.setMaxWidth(printModel.getMainPaneWidth() - RTA_WIDTH_BMP);
+
 
         printExercise.getExerciseView().simpleRemoveAxis();
 
@@ -455,7 +463,7 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
         if (!horizontalTreeModel.isAxis()) mainStack.getChildren().remove(axis);
         HBox contentHBox = new HBox(mainStack);
         contentHBox.setAlignment(Pos.CENTER);
-        contentHBox.setPadding(new Insets(5,0,5, 0));
+        contentHBox.setPadding(new Insets(0,0,0, 0));
         contentHBox.setMaxWidth(axisWidth);
         nodeList.add(contentHBox);
 
@@ -464,10 +472,10 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
         RichTextArea explainRTA = printExercise.getExerciseView().getExplainDRTA().getEditor();
         explainRTA.prefHeightProperty().unbind();
         explainRTA.minWidthProperty().unbind();
-        double explainHeight = printModel.getExplainTextHeight();
-        explainRTA.setPrefHeight(explainHeight + 35.0);
-        explainRTA.setContentAreaWidth(nodeWidth);
-        explainRTA.setMinWidth(nodeWidth);
+        explainRTA.maxWidthProperty().unbind();
+        explainRTA.maxHeightProperty().unbind();   // added to match change in view binding
+        statementRTA.setPrefHeight(printModel.getStatementTextHeight() + RTA_PRINT_BMP);
+        explainRTA.setMaxWidth(nodeWidth);
         explainRTA.getStylesheets().clear(); statementRTA.getStylesheets().add("richTextAreaPrinter.css");
         nodeList.add(explainRTA);
 
@@ -482,8 +490,9 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
         RichTextArea commentRTA = printExercise.getExerciseView().getExerciseComment().getEditor();
         commentRTA.prefHeightProperty().unbind();
         commentRTA.minWidthProperty().unbind();
-        commentRTA.setPrefHeight(printModel.getCommentTextHeight() + 35.0);
-        commentRTA.setContentAreaWidth(nodeWidth);
+        commentRTA.maxWidthProperty().unbind();
+        commentRTA.setPrefHeight(Math.max(40, printModel.getCommentTextHeight() + RTA_PRINT_BMP));
+        commentRTA.setMaxWidth(nodeWidth);
         commentRTA.setMinWidth(nodeWidth);
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
 
@@ -561,6 +570,7 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
 
         AnchorPane mainPane = printExercise.getExerciseView().getMainPane();
         mainPane.setMinHeight(0.0);
+
         Group root = new Group();
         Scene scene = new Scene(root);
         root.getChildren().add(mainPane);
@@ -568,12 +578,16 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
         root.layout();
 
         Ruler axis = new Ruler();
-        double axisWidth = Math.max(nodeWidth, printModel.getMainPaneWidth() - 10);
+        double axisWidth = Math.max(nodeWidth, printModel.getMainPaneWidth() - RTA_WIDTH_BMP);
 
         axis.updateRuler(axisWidth);
-
         mainPane.setStyle("-fx-background-color: transparent");
-        mainPane.setPrefWidth(printModel.getMainPaneWidth());
+
+        mainPane.setPadding(new Insets(0));
+        mainPane.minWidthProperty().unbind();
+        mainPane.setMinWidth(printModel.getMainPaneWidth() - RTA_WIDTH_BMP);
+        mainPane.setMaxWidth(printModel.getMainPaneWidth() - RTA_WIDTH_BMP);
+
         printExercise.getExerciseView().simpleRemoveAxis();
 
         ObservableList<Node> mainNodes = mainPane.getChildren();
@@ -603,7 +617,7 @@ public class HorizontalTreeExercise implements Exercise<HorizontalTreeModel, Hor
         HBox contentHBox = new HBox(mainStack);
         contentHBox.setAlignment(Pos.CENTER);
         contentHBox.setPadding(new Insets(0,0,0, 0));    //10, 0, 20, 0
-        contentHBox.setMaxWidth(axisWidth);
+        contentHBox.setMaxWidth(axisWidth );
 
         return contentHBox;
     }

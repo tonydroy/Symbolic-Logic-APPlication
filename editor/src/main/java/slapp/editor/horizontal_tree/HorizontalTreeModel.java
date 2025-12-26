@@ -28,7 +28,7 @@ import java.util.List;
  * Model for the horizontal tree exercise
  */
 public class HorizontalTreeModel implements ExerciseModel<Document>, Serializable {
-    private static final long serialVersionUID = 100L;
+    private static final long serialVersionUID = 100L;  //can't open as of 3.2.1
 
     private String exerciseName = new String("");
     private ExerciseType exerciseType = ExerciseType.HORIZONTAL_TREE;
