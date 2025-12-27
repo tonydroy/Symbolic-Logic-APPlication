@@ -282,7 +282,7 @@ public class HorizTreesCreate {
             }
         });
 
-        HBox textBoxes = new HBox(10, statementRTA, staticHelpRTA);
+
 
         //interpretation
         interpretationDRTA = new DecoratedRTA();
@@ -336,6 +336,8 @@ public class HorizTreesCreate {
         viewInterpButton.setOnAction(e -> {
             viewInterpretation();
         });
+
+        HBox textBoxes = new HBox(10, interpretationRTA, staticHelpRTA);
 
 
         //name field
@@ -399,6 +401,23 @@ public class HorizTreesCreate {
         HBox pointsBox = new HBox(pointsPossibleLabel, pointsPossibleTextField);
         pointsBox.setAlignment(Pos.CENTER_LEFT);
 
+        staticHelpCheck = new CheckBox();
+        staticHelpCheck.setSelected(false);
+        ChangeListener staticHelpCheckListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                fieldModified = true;
+            }
+        };
+        staticHelpCheck.selectedProperty().addListener(staticHelpCheckListener);
+        Label staticHelpCheckLabel = new Label("Static Help:");
+        HBox staticHelpBox = new HBox(10, staticHelpCheckLabel, staticHelpCheck);
+        staticHelpBox.setAlignment(Pos.CENTER_LEFT);
+
+        HBox pointsStaticHelpBox = new HBox(60, pointsBox, staticHelpBox);
+        pointsStaticHelpBox.setAlignment(Pos.CENTER_LEFT);
+
+
         //target formulas
         targetFormulasPane = new GridPane();
         targetFormulasPane.setVgap(10);
@@ -458,7 +477,7 @@ public class HorizTreesCreate {
 
 
 
-        topFieldsBox = new VBox(15, nameBox, promptBox, pointsBox, mainFormulasTop);
+        topFieldsBox = new VBox(15, nameBox, promptBox, pointsStaticHelpBox, mainFormulasTop);
         topFieldsBox.setPadding(new Insets(20, 0,20, 0));
 
         //help area
@@ -467,8 +486,7 @@ public class HorizTreesCreate {
                 "<ul>" +
                 "<li><p>Provide the exercise name.</p></li>" +
                 "<li><p>Provide a prompt for the explain field.</p></li>" +
-                "<li><p>If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
-                "<li><p>The static help check activates the Static Help button which pops up a message which you may state in the text area below.</p></li>" +
+                "<li><p>If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).  The static help check activates the Static Help button which pops up a message which you may state in the right-hand text area below.</p></li>" +
                 "<li><p>Check applies to a tree or trees, but does not evaluate (text) answers about truth, validity or the like:</p></li>" +
                 "<ul>" +
                 "<li><p>Enter the target formula(s).  If there are multiple targets, SLAPP activates an option in the exercise to permit multiple tree windows.</p></li>" +
@@ -484,22 +502,10 @@ public class HorizTreesCreate {
         webEngine.loadContent(helpText);
         helpArea.setPrefHeight(230);
 
-        //check items
-        Label helpCheckLabel = new Label("Help/Check: ");
+        //check items/
+        Label helpCheckLabel = new Label("HelpCheck: ");
         helpCheckLabel.setPrefWidth(80);
 
-        staticHelpCheck = new CheckBox();
-        staticHelpCheck.setSelected(false);
-        ChangeListener staticHelpCheckListener = new ChangeListener() {
-            @Override
-            public void changed(ObservableValue ob, Object ov, Object nv) {
-                fieldModified = true;
-            }
-        };
-        staticHelpCheck.selectedProperty().addListener(staticHelpCheckListener);
-        Label staticHelpCheckLabel = new Label("Static Help:");
-        HBox staticHelpBox = new HBox(10, staticHelpCheckLabel, staticHelpCheck);
-        staticHelpBox.setAlignment(Pos.CENTER_LEFT);
 
         checkMaxSpinner = new Spinner<>(-1, 99, 0);
         checkMaxSpinner.setPrefWidth(60);
@@ -537,11 +543,11 @@ public class HorizTreesCreate {
         Callback<String, ObservableValue<Boolean>> langToBoolean = (String item) -> langMap.get(item);
         languageListView.setCellFactory(CheckBoxListCell.forListView(langToBoolean));
 
-        HBox checkLine1 = new HBox(30, staticHelpBox, checkMaxBox, justificationCheckBox, languageLabel, languageListView);
+        HBox checkLine1 = new HBox(30, checkMaxBox, justificationCheckBox, languageLabel, languageListView);
         checkLine1.setAlignment(Pos.CENTER_LEFT);
 
         //center
-        centerBox = new VBox(10, topFieldsBox, checkLine1, textBoxes, interpretationRTA, helpArea);
+        centerBox = new VBox(10, topFieldsBox, checkLine1, textBoxes, statementRTA, helpArea);
         centerBox.setPadding(new Insets(10,0,10,20));
 
         spacerPane = new Pane();

@@ -63,6 +63,8 @@ import java.util.*;
 import java.util.function.UnaryOperator;
 
 import static javafx.scene.control.ButtonType.OK;
+import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
+import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
 
 /**
  * Create window for the truth table exercise
@@ -114,6 +116,7 @@ public class TruthTableCreate {
     private String defaultLangName = "\u2112\ud835\udcc8 (w/abv)";  //Ls (w/abv)
     Spinner<Double> staticHelpHeightSpinner;
     private RichTextArea currentSpinnerNode;
+
 
 
 
@@ -179,9 +182,10 @@ public class TruthTableCreate {
         statementRTA = statementDRTA.getEditor();
         statementRTA.setPromptText("Exercise Statement:");
         statementRTA.getStylesheets().add("slappTextArea.css");
-        statementRTA.setPrefWidth(PrintUtilities.getPageWidth() );
-        statementRTA.setMinWidth(PrintUtilities.getPageWidth());
-        statementRTA.setMaxWidth(PrintUtilities.getPageWidth());
+        statementRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
+        statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
+        statementRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
+
         statementRTA.setMinHeight(100);
 
         double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
@@ -189,7 +193,7 @@ public class TruthTableCreate {
         statementHeightSpinner.setPrefWidth(60);
         statementHeightSpinner.setDisable(false);
         statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
         statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
@@ -200,7 +204,7 @@ public class TruthTableCreate {
         mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
             statementRTA.prefHeightProperty().unbind();
             statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+            statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
@@ -211,6 +215,7 @@ public class TruthTableCreate {
         statementRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(statementDRTA, ControlType.AREA);
+                statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
             }
         });
 
@@ -221,10 +226,11 @@ public class TruthTableCreate {
         staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
         staticHelpRTA.setPromptText("Static Help (complete if static help selected)");
         staticHelpRTA.getStylesheets().add("slappTextArea.css");
-        staticHelpRTA.setPrefWidth(350);
-        staticHelpRTA.setMinWidth(350);
-        staticHelpRTA.setMaxWidth(350);
+        staticHelpRTA.setMinWidth(400 + RTA_WIDTH_BMP);
+        staticHelpRTA.setMaxWidth(400 + RTA_WIDTH_BMP);
+        staticHelpRTA.setContentAreaWidth(400);
         staticHelpRTA.setMinHeight(100);
+
 
         double staticHelpInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
 
@@ -233,7 +239,7 @@ public class TruthTableCreate {
         staticHelpHeightSpinner.setPrefWidth(60);
         staticHelpHeightSpinner.setDisable(false);
         staticHelpHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        staticHelpRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
         staticHelpHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = staticHelpHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
@@ -244,7 +250,7 @@ public class TruthTableCreate {
         mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
             staticHelpRTA.prefHeightProperty().unbind();
             staticHelpHeightSpinner.getValueFactory().setValue((double) Math.round(staticHelpHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            staticHelpRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+            staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
@@ -255,6 +261,7 @@ public class TruthTableCreate {
         staticHelpRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(staticHelpDRTA, ControlType.AREA);
+       //         staticHelpTextHeight = mainWindow.getMainView().getRTATextHeight(staticHelpRTA);
             }
         });
 
@@ -494,7 +501,7 @@ public class TruthTableCreate {
                 "<li><p>Then supply formulas to appear across the top of the truth table (not including the base column), again using the plus and minus buttons to add and remove fields.  The \"conclusion divider\" merely inserts an extra space and slash ('/') prior to the last formula.</p></li>" +
 
                 "<li><p>The static help check activates the Static Help button which pops up a message which you may state in the right hand text area below.</p></li>" +
-                "<li><p>For checking: If Check Max is 0, checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.  The Basic Sentences box says whether check requires that \"non-main\" basic sentence values be repeated in the main part of the table.  And you may need to select the object language.  </li></li>" +
+                "<li><p>For checking: If Check Max is 0, checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.  The Basic Sentences box says whether check requires that basic sentence values be repeated for basic proper subformulas in the main part of the table.  And you may need to select the object language.  </li></li>" +
 
                 "<li><p>Finally supply the exercise statement, and if desired the static help message.</p></li>" +
                 "</ul>";
@@ -631,10 +638,10 @@ public class TruthTableCreate {
         stage.setTitle("Create Truth Table Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
         stage.setWidth(930);
-        stage.setMinWidth(930);
+        stage.setMinWidth(1040);
         stage.setHeight(1000);
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 930));
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1040));
         stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 1000));
 
 
@@ -959,8 +966,8 @@ public class TruthTableCreate {
         if (statementRTA.isModified()) fieldModified = true;
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExerciseStatement(statementRTA.getDocument());
-        model.setStatementPrefHeight(statementTextHeight + 29);
         model.setStatementTextHeight(statementTextHeight);
+        model.setStatementPrefHeight(Math.max(40, statementTextHeight + RTA_SCREEN_BMP));
 
         List<String> unaryOperatorStrings = new ArrayList<>();
         for (BoxedDRTA bdrta : unaryOperatorList) {

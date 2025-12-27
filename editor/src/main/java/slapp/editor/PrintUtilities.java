@@ -402,6 +402,8 @@ public class PrintUtilities {
     public static void sendBufferToPrint(String footerInfo) {
 
         PrinterJob job = PrinterJob.createPrinterJob(printer);
+        job.setPrinter(printer);
+        job.getJobSettings().setPageLayout(pageLayout);
 
         if (job != null) {
 
