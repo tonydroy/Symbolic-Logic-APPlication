@@ -124,13 +124,16 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
     DerivationView(MainWindowView mainView) {
         this.mainView = mainView;
         Pane blankPane = new Pane();
-        blankPane.setMinWidth(0);
+        blankPane.setMinWidth(RTA_WIDTH_BMP);
+
         blankPane.setMaxWidth(1000);
         blankPane.setStyle("-fx-background-color: white;");
         contentSplitPane.getItems().addAll(grid, blankPane);
         contentSplitPane.setOrientation(Orientation.HORIZONTAL);
         contentSplitPane.setMinHeight(10.0);
         contentSplitPane.setMinWidth(10.0);
+        contentSplitPane.setStyle("-fx-focus-color: lightblue; -fx-faint-focuse-color: lightblue");
+
 
         ColumnConstraints fixedCol = new ColumnConstraints();
         fixedCol.setMinWidth(10);
@@ -267,12 +270,12 @@ public class DerivationView implements ExerciseView<DecoratedRTA> {
         commentWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
 
         //split pane
-        double splitPaneInitialWidth = Math.round(splitPanePrefWidth / mainView.getScalePageWidth() * 20.0) * 5.0;
-        splitPaneWidthSpinner = new Spinner<>(70.0, 999.0, splitPaneInitialWidth, 5.0);
+        double splitPaneInitialWidth = Math.round((splitPanePrefWidth - RTA_WIDTH_BMP) / mainView.getScalePageWidth() * 20.0) * 5.0;
+        splitPaneWidthSpinner = new Spinner<>(100.0, 999.0, splitPaneInitialWidth, 5.0);
         splitPaneWidthSpinner.setPrefWidth(65);
         splitPaneWidthSpinner.setDisable(false);
         splitPaneWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
-        contentSplitPane.prefWidthProperty().bind(Bindings.multiply(mainView.scalePageWidthProperty(), DoubleProperty.doubleProperty(splitPaneWidthSpinner.getValueFactory().valueProperty()).divide(100.0)));
+        contentSplitPane.prefWidthProperty().bind(Bindings.add(Bindings.multiply(mainView.scalePageWidthProperty(), DoubleProperty.doubleProperty(splitPaneWidthSpinner.getValueFactory().valueProperty()).divide(100.0)), RTA_WIDTH_BMP));
 
         splitPaneWidthSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = splitPaneWidthSpinner.lookup(".increment-arrow-button");

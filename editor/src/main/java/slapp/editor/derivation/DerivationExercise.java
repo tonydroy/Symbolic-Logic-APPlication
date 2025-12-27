@@ -54,8 +54,7 @@ import slapp.editor.main_window.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static slapp.editor.EditorMain.RTA_PRINT_BMP;
-import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
+import static slapp.editor.EditorMain.*;
 
 /**
  * Controller for the derivation exercise.
@@ -71,6 +70,8 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
     private Font labelFont = new Font("Noto Serif Combo", 11);
     private boolean editJustification;
     private EventHandler justificationClickFilter;
+    private ChangeListener<Boolean> rtaFocusListener;
+    private ChangeListener<Boolean> flowFocusListener;
     private RichTextArea lastJustificationRTA;
     private int lastJustificationRow;
     private UndoRedoList<DerivationModel> undoRedoList = new UndoRedoList<>(20);
@@ -491,15 +492,26 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
     private TextFlow getStyledJustificationFlow(TextFlow flow) {
         flow.setFocusTraversable(true);
         flow.setMouseTransparent(false);
+
+        flow.setPrefWidth(flow.USE_COMPUTED_SIZE);
+        flow.setMaxWidth(Double.MAX_VALUE);
+
         flow.setMinWidth(110);
-        flow.setMaxHeight(20);
-        flow.setPadding(new Insets(0, 0, 0, 5));
+        flow.setMaxHeight(40);
+        flow.setPadding(new Insets(0, 0, 0, 0));
         flow.setOnMouseClicked(e -> flow.requestFocus());
-        flow.focusedProperty().addListener((ob, ov, nv) -> {
-            if (nv) {
-                editJustificationField(flow);
+
+        flowFocusListener = new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue ob, Boolean ov, Boolean nv) {
+                if (nv) {
+          //          System.out.println("edit");
+                    flow.focusedProperty().removeListener(flowFocusListener);
+                    editJustificationField(flow);
+                }
             }
-        });
+        };
+        flow.focusedProperty().addListener(flowFocusListener);
         return flow;
     }
 
@@ -508,6 +520,8 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
      * @param flow the text flow
      */
     private void editJustificationField(TextFlow flow) {
+  //      System.out.println("flow: " + getStringFromJustificationFlow(flow));
+
         int rowIndex = derivationView.getGrid().getRowIndex(flow);
         DecoratedRTA drta = new DecoratedRTA();
         RichTextArea rta = drta.getEditor();
@@ -516,7 +530,8 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         rta.setPrefWidth(100);
         rta.getStylesheets().add("slappDerivation.css");
         rta.getActionFactory().open(new Document(getStringFromJustificationFlow(flow))).execute(new ActionEvent());
-        rta.getActionFactory().saveNow().execute(new ActionEvent());
+ //       rta.getActionFactory().saveNow().execute(new ActionEvent());
+ //       rta.autoSaveProperty().set(true);
 
         if (derivationView.getViewLines().get(rowIndex).getLineType() == LineType.PREMISE_LINE) rta.setEditable(false);
         lastJustificationRTA = rta;
@@ -541,15 +556,19 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
                 boolean clickRestricted = clickParaToolbarBox || clickFontsAndEditBox || clickKbdSel || clickUnicode;
 
                 if (clickOther && !clickRestricted) {
+
                     if (editJustification) {
                         editJustification = false;
+                        rta.getActionFactory().saveNow().execute(new ActionEvent());
+         //               System.out.println("save 1: " + rta.getDocument().getText());
                         saveJustificationRTA(rta, rowIndex);
                     }
                 }
             }
         };
 
-        ChangeListener<Boolean> focusListener = new ChangeListener<Boolean>() {
+
+        rtaFocusListener = new ChangeListener<Boolean>() {
             @Override
             public void changed(ObservableValue ob, Boolean ov, Boolean nv) {
                 if (nv) {
@@ -564,12 +583,14 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
 
                     if (editJustification && !restrictedFocus) {
                         editJustification = false;
+                        rta.getActionFactory().saveNow().execute(new ActionEvent());
+             //           System.out.println("save 2: " + rta.getDocument().getText());
                         saveJustificationRTA(rta, rowIndex);
                     }
                 }
             }
         };
-        rta.focusedProperty().addListener(focusListener);
+        rta.focusedProperty().addListener(rtaFocusListener);
 
 
         rta.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
@@ -640,6 +661,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
     private void saveJustificationRTA(RichTextArea rta, int rowIndex) {
 
         mainView.getMainScene().removeEventFilter(MouseEvent.MOUSE_PRESSED, justificationClickFilter);
+        rta.focusedProperty().removeListener(rtaFocusListener);
 
         rta.setEditable(true);
         boolean modified = rta.isModified();
@@ -655,6 +677,12 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         //removing the RTA from the grid seems to rewrite the grid, causing focus to jump.  Here we simply
         //blank the RTA (until the grid is next rewritten) so that it does not appear on top of new content
         rta.getActionFactory().newDocumentNow().execute(new ActionEvent());
+        rta.setMouseTransparent(true);
+        rta.setFocusTraversable(false);
+
+        GridPane grid = derivationView.getGrid();
+        grid.getChildren().remove(rta);
+
 
         derivationView.setJustificationFlowOnGrid(rowIndex);
         //       derivationView.setGridFromViewLines();
@@ -1221,7 +1249,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         GridPane derivationPane = printExercise.getExerciseView().getGrid();
         derivationPane.setPadding(new Insets(15,0,15,0));
 
-        double splitPaneWidth = Math.max(nodeWidth, printModel.getSplitPanePrefWidth());
+        double splitPaneWidth = Math.max(nodeWidth, printModel.getSplitPanePrefWidth() - RTA_WIDTH_BMP);
         double width = printModel.getGridWidth() * splitPaneWidth;
         derivationPane.setMaxWidth(width);
         derivationPane.setMinWidth(width);

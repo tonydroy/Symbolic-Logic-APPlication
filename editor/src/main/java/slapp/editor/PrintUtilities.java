@@ -471,7 +471,7 @@ public class PrintUtilities {
 
         Bounds bounds = node.getLayoutBounds();
 
-      //  System.out.println("node: " + node + " width: " + bounds.getWidth());
+     //   System.out.println("node: " + node + " width: " + bounds.getWidth());
 
         return new PrintBufferItem(node, bounds.getHeight(), bounds.getWidth());
     }
