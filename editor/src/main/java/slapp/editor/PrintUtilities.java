@@ -57,9 +57,9 @@ public class PrintUtilities {
 
     private static PageLayout internalPageLayout;
     private static double internalPrintHeight;
-
-
     // this is the layout with space for footer, for internal use
+
+
     private static Printer pdfPrinter = null;
     private static Printer printer = null;
     private static Region spacer = new Region();
