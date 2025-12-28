@@ -618,8 +618,8 @@ public class TruthTableExpView implements ExerciseView<DecoratedRTA> {
         choicesHeightSpinner.setDisable(true);
         choicesHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
 
-        choiceBox.maxWidthProperty().bind(mainView.scalePageWidthProperty());
-        choicesWidthSpinner = new Spinner<>(0.0, 999.0, 100.0, 1.0);
+        choiceBox.maxWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
+        choicesWidthSpinner = new Spinner<>(100.0, 999.0, 100.0, 1.0);
         choicesWidthSpinner.setPrefWidth(60);
         choicesWidthSpinner.setDisable(true);
         choicesWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));

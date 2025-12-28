@@ -503,6 +503,8 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
      */
     private void editJustificationField(TextFlow flow) {
         int rowIndex = drvtnExpView.getGrid().getRowIndex(flow);
+        drvtnExpView.getGrid().getChildren().remove(flow);
+
         DecoratedRTA drta = new DecoratedRTA();
         RichTextArea rta = drta.getEditor();
         rta.setContentAreaWidth(200);
@@ -510,7 +512,6 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         rta.setPrefWidth(100);
         rta.getStylesheets().add("slappDerivation.css");
         rta.getActionFactory().open(new Document(getStringFromJustificationFlow(flow))).execute(new ActionEvent());
-   //     rta.getActionFactory().saveNow().execute(new ActionEvent());
 
         if (drvtnExpView.getViewLines().get(rowIndex).getLineType() == LineType.PREMISE_LINE) rta.setEditable(false);
         lastJustificationRTA = rta;
@@ -598,7 +599,7 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
 
         });
 
-        drvtnExpView.getGrid().getChildren().remove(flow);
+
         drvtnExpView.getGrid().add(rta, 22, rowIndex);
         rta.requestFocus();
         mainView.editorInFocus(drta, ControlType.JUSTIFICATION);
@@ -638,17 +639,19 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         rta.getActionFactory().saveNow().execute(new ActionEvent());
         String justificationString = rta.getDocument().getText();
 
+        rta.getActionFactory().newDocumentNow().execute(new ActionEvent());
+        rta.setMouseTransparent(true);
+        rta.setFocusTraversable(false);
+        GridPane grid = drvtnExpView.getGrid();
+        grid.getChildren().remove(rta);
+
         TextFlow justificationFlow = getJustificationFlow(justificationString, drvtnExpView.getViewLines());
         if (drvtnExpView.getViewLines().get(rowIndex).isLineHighlight()) {
             justificationFlow.setStyle("-fx-background-color: mistyrose");
         }
         drvtnExpView.getViewLines().get(rowIndex).setJustificationFlow(justificationFlow);
 
-        rta.getActionFactory().newDocumentNow().execute(new ActionEvent());
-        rta.setMouseTransparent(true);
-        rta.setFocusTraversable(false);
-        GridPane grid = drvtnExpView.getGrid();
-        grid.getChildren().remove(rta);
+
 
         drvtnExpView.setJustificationFlowOnGrid(rowIndex);
  //       drvtnExpView.setGridFromViewLines();

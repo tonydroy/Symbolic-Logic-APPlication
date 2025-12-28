@@ -82,12 +82,11 @@ public class PrintUtilities {
             pageWidth.set(baseLayout.getPrintableWidth());
             printer = job.getPrinter();
             double bottomMargin = Math.max(baseLayout.getBottomMargin(), 48);
-            pageLayout = printer.createPageLayout(baseLayout.getPaper(), baseLayout.getPageOrientation(), baseLayout.getLeftMargin(), baseLayout.getRightMargin(), baseLayout.getTopMargin(), bottomMargin );
+            pageLayout = printer.createPageLayout(baseLayout.getPaper(), baseLayout.getPageOrientation(), baseLayout.getLeftMargin(), baseLayout.getRightMargin(), baseLayout.getTopMargin(), bottomMargin);
 
             PageLayout minLayout = printer.createPageLayout(baseLayout.getPaper(), pageLayout.getPageOrientation(), Printer.MarginType.HARDWARE_MINIMUM);
             minHorizOffset = minLayout.getLeftMargin();
             minVertOffset = minLayout.getTopMargin();
-
 
 
             //In portrait margins appear to be set at Margin + Printer Minimum instead of Math.max(Margin, printerMinimum)
@@ -114,15 +113,14 @@ public class PrintUtilities {
             if (pageLayout.getPageOrientation() == PageOrientation.LANDSCAPE) {
                 internalPrintHeight = pageLayout.getPaper().getWidth() - pageLayout.getTopMargin() - 18.0;
                 internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, rightMargin, bottom, topMargin);
-            }
-            else {
+            } else {
                 internalPrintHeight = pageLayout.getPaper().getHeight() - pageLayout.getTopMargin() - 18.0;
                 internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, rightMargin, topMargin, bottom);
             }
 
-        }
-        else {
-            pageHeight.set(684); pageWidth.set(504);
+        } else {
+            pageHeight.set(684);
+            pageWidth.set(504);
         }
     }
 
@@ -131,8 +129,7 @@ public class PrintUtilities {
         PrinterJob job = PrinterJob.createPrinterJob();
         if (job == null) {
             EditorAlerts.showSimpleAlert("Cannot find Printer", "I do not find an installed printer.  Please install printer and try again.");
-        }
-        else {
+        } else {
             if (printer == null) {
                 initializePrintSetup(job);
             }
@@ -146,7 +143,7 @@ public class PrintUtilities {
         pageWidth.set(baseLayout.getPrintableWidth());
         printer = job.getPrinter();
         double bottomM = Math.max(baseLayout.getBottomMargin(), 48);
-        pageLayout = printer.createPageLayout(baseLayout.getPaper(), baseLayout.getPageOrientation(), baseLayout.getLeftMargin(), baseLayout.getRightMargin(), baseLayout.getTopMargin(), bottomM );
+        pageLayout = printer.createPageLayout(baseLayout.getPaper(), baseLayout.getPageOrientation(), baseLayout.getLeftMargin(), baseLayout.getRightMargin(), baseLayout.getTopMargin(), bottomM);
 
         PageLayout minLayout = printer.createPageLayout(baseLayout.getPaper(), pageLayout.getPageOrientation(), Printer.MarginType.HARDWARE_MINIMUM);
         minHorizOffset = minLayout.getLeftMargin();
@@ -166,8 +163,7 @@ public class PrintUtilities {
         if (pageLayout.getPageOrientation() == PageOrientation.LANDSCAPE) {
             internalPrintHeight = pageLayout.getPaper().getWidth() - pageLayout.getTopMargin() - 18.0;
             internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, rightMargin, bottom, topMargin);
-        }
-        else {
+        } else {
             internalPrintHeight = pageLayout.getPaper().getHeight() - pageLayout.getTopMargin() - 18.0;
             internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, rightMargin, topMargin, bottom);
         }
@@ -181,13 +177,13 @@ public class PrintUtilities {
         if (job != null) {
             job.getJobSettings().setPageLayout(pageLayout);
 
-           // boolean proceed = job.showPageSetupDialog(null);
+            // boolean proceed = job.showPageSetupDialog(null);
             boolean proceed = job.showPageSetupDialog(mainStage);
 
             if (proceed) {
                 PageLayout baseLayout = job.getJobSettings().getPageLayout();
                 double bottomMargin = Math.max(baseLayout.getBottomMargin(), 48);
-                pageLayout = printer.createPageLayout(baseLayout.getPaper(), baseLayout.getPageOrientation(), baseLayout.getLeftMargin(), baseLayout.getRightMargin(), baseLayout.getTopMargin(), bottomMargin );
+                pageLayout = printer.createPageLayout(baseLayout.getPaper(), baseLayout.getPageOrientation(), baseLayout.getLeftMargin(), baseLayout.getRightMargin(), baseLayout.getTopMargin(), bottomMargin);
                 pageHeight.set(pageLayout.getPrintableHeight());
                 pageWidth.set(pageLayout.getPrintableWidth());
 
@@ -209,8 +205,7 @@ public class PrintUtilities {
                 if (pageLayout.getPageOrientation() == PageOrientation.LANDSCAPE) {
                     internalPrintHeight = pageLayout.getPaper().getWidth() - pageLayout.getTopMargin() - 18.0;
                     internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, rightMargin, bottom, topMargin);
-                }
-                else {
+                } else {
                     internalPrintHeight = pageLayout.getPaper().getHeight() - pageLayout.getTopMargin() - 18.0;
                     internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, rightMargin, topMargin, bottom);
                 }
@@ -224,7 +219,7 @@ public class PrintUtilities {
      * Select export printer with failure message
      */
     public static void exportSetup() {
-        if (!runExportSetup())  EditorAlerts.showSimpleAlert("Print Problem", "Export setup failed");
+        if (!runExportSetup()) EditorAlerts.showSimpleAlert("Print Problem", "Export setup failed");
     }
 
 
@@ -238,8 +233,7 @@ public class PrintUtilities {
         if (os.startsWith("Mac")) {
             EditorAlerts.showSimpleAlert("Use Print Option", "On Macintosh there is no independent PDF export option.  To create a PDF, select 'Print' and from the dropdown at the bottom of the print dialog, 'Save to PDF'.\n\n" +
                     "Export works by a \"PDF printer\".  Recent versions of the MAC OS exclude such printers from the printer list -- preferring to require the internal MAC option.");
-        }
-        else {
+        } else {
             PrinterJob job = getPrinterJob();
             if (job != null) {
                 String current = "None";
@@ -260,7 +254,7 @@ public class PrintUtilities {
 
 
                 if (proceed) {
-     //               proceed = job.showPrintDialog(null);
+                    //               proceed = job.showPrintDialog(null);
                     proceed = job.showPrintDialog(mainStage);
 
 
@@ -276,7 +270,8 @@ public class PrintUtilities {
     }
 
     private static void translateNode(Node node) {
-        if (pageLayout.getPageOrientation() == PageOrientation.LANDSCAPE) node.getTransforms().add(new Translate(0, minVertOffset));
+        if (pageLayout.getPageOrientation() == PageOrientation.LANDSCAPE)
+            node.getTransforms().add(new Translate(0, minVertOffset));
         else node.getTransforms().add(new Translate(minHorizOffset, minVertOffset));
     }
 
@@ -292,8 +287,7 @@ public class PrintUtilities {
         MainWindowView.activateProgressIndicator("printing");
 
 
-
-    //  System.out.println("printer:" + printer + " layout: " + pageLayout);    //?? problem here
+        //  System.out.println("printer:" + printer + " layout: " + pageLayout);    //?? problem here
 
 
         boolean success = true;
@@ -332,7 +326,7 @@ public class PrintUtilities {
                 //if all the nodes have been added print page
                 if (i == printBuffer.size()) {
 
-                    spacer.setPrefHeight(internalPrintHeight - (netHeight + 16.0)) ;  //24  temp fix to stop cutoff footer for vtree
+                    spacer.setPrefHeight(internalPrintHeight - (netHeight + 16.0));  //24  temp fix to stop cutoff footer for vtree
                     pageBox.getChildren().addAll(spacer, getFooterBox(++pageNum, footerInfo));
 
                     translateNode(pageBox);
@@ -406,17 +400,18 @@ public class PrintUtilities {
         job.getJobSettings().setPageLayout(pageLayout);
 
         if (job != null) {
-
-      //      job.showPageSetupDialog(mainStage);
-      //      job.setPrinter(printer);
-
-            boolean proceed = job.showPrintDialog(mainStage);
-            if (proceed) {
-                printNodes(footerInfo, job);
-            } else MainWindowView.deactivateProgressIndicator();
+            if (job.showPageSetupDialog(mainStage)) {
+                if (job.showPrintDialog(mainStage)) {
+                    printNodes(footerInfo, job);
+                }
+            }
             job.endJob();
         }
+        MainWindowView.deactivateProgressIndicator();
     }
+
+
+
 
 
     /*

@@ -523,6 +523,8 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
   //      System.out.println("flow: " + getStringFromJustificationFlow(flow));
 
         int rowIndex = derivationView.getGrid().getRowIndex(flow);
+        derivationView.getGrid().getChildren().remove(flow);
+
         DecoratedRTA drta = new DecoratedRTA();
         RichTextArea rta = drta.getEditor();
         rta.setContentAreaWidth(200);
@@ -530,8 +532,6 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         rta.setPrefWidth(100);
         rta.getStylesheets().add("slappDerivation.css");
         rta.getActionFactory().open(new Document(getStringFromJustificationFlow(flow))).execute(new ActionEvent());
- //       rta.getActionFactory().saveNow().execute(new ActionEvent());
- //       rta.autoSaveProperty().set(true);
 
         if (derivationView.getViewLines().get(rowIndex).getLineType() == LineType.PREMISE_LINE) rta.setEditable(false);
         lastJustificationRTA = rta;
@@ -627,10 +627,12 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
 
         });
 
-        derivationView.getGrid().getChildren().remove(flow);
+
+
         derivationView.getGrid().add(rta, 22, rowIndex);
         rta.requestFocus();
         mainView.editorInFocus(drta, ControlType.JUSTIFICATION);
+
     }
 
     /**
@@ -668,23 +670,24 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         rta.getActionFactory().saveNow().execute(new ActionEvent());
         String justificationString = rta.getDocument().getText();
 
-        TextFlow justificationFlow = getJustificationFlow(justificationString, derivationView.getViewLines());
-        if (derivationView.getViewLines().get(rowIndex).isLineHighlight()) {
-            justificationFlow.setStyle("-fx-background-color: mistyrose");
-        }
-        derivationView.getViewLines().get(rowIndex).setJustificationFlow(justificationFlow);
 
         //removing the RTA from the grid seems to rewrite the grid, causing focus to jump.  Here we simply
         //blank the RTA (until the grid is next rewritten) so that it does not appear on top of new content
         rta.getActionFactory().newDocumentNow().execute(new ActionEvent());
         rta.setMouseTransparent(true);
         rta.setFocusTraversable(false);
-
         GridPane grid = derivationView.getGrid();
         grid.getChildren().remove(rta);
 
+        TextFlow justificationFlow = getJustificationFlow(justificationString, derivationView.getViewLines());
+        if (derivationView.getViewLines().get(rowIndex).isLineHighlight()) {
+            justificationFlow.setStyle("-fx-background-color: mistyrose");
+        }
+        derivationView.getViewLines().get(rowIndex).setJustificationFlow(justificationFlow);
 
         derivationView.setJustificationFlowOnGrid(rowIndex);
+
+
         //       derivationView.setGridFromViewLines();
 
         if (modified) {
@@ -1395,7 +1398,7 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
         GridPane derivationPane = printExercise.getExerciseView().getGrid();
         derivationPane.setPadding(new Insets(15,0,15,0));
 
-        double splitPaneWidth = Math.max(nodeWidth, printModel.getSplitPanePrefWidth());
+        double splitPaneWidth = Math.max(nodeWidth, printModel.getSplitPanePrefWidth() - RTA_WIDTH_BMP);
         double width = printModel.getGridWidth() * splitPaneWidth;
 
         derivationPane.setMaxWidth(width);
