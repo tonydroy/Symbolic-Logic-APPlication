@@ -165,7 +165,7 @@ public class MapABExpModel implements ExerciseModel<Document>, Serializable {
 
     void setMainPanePrefHeight(double mainPanePrefHeight) {     this.mainPanePrefHeight = mainPanePrefHeight;  }
 
-    double getMainPanePrefWidth() {     return mainPanePrefWidth;   }
+    public double getMainPanePrefWidth() {     return mainPanePrefWidth;   }
 
     void setMainPanePrefWidth(double mainPanePrefWidth) {
         this.mainPanePrefWidth = mainPanePrefWidth;

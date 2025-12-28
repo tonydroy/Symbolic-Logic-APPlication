@@ -571,7 +571,7 @@ public class HorizTreesExercise implements Exercise<HorizTreesModel, HorizTreesV
         commentRTA.setMaxWidth(nodeWidth);
         commentRTA.setMinWidth(nodeWidth);
 
-        commentRTA.setMinWidth(nodeWidth);
+
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
 
         Node commentNode;

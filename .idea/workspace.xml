@@ -9,15 +9,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d366fccc-ef06-4007-b459-d27194c8a785" name="Changes" comment="tt explain updated">
+    <list default="true" id="d366fccc-ef06-4007-b459-d27194c8a785" name="Changes" comment="tt gen updated">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/PrintUtilities.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/PrintUtilities.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationExercise.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpExercise.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_explain/TruthTableExpView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_explain/TruthTableExpView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_generate/TruthTableGenCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_generate/TruthTableGenCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_generate/TruthTableGenExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_generate/TruthTableGenExercise.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_generate/TruthTableGenView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_generate/TruthTableGenView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horiz_trees/HorizTreesExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horiz_trees/HorizTreesExercise.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horiz_trees/HorizTreesView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/horiz_trees/HorizTreesView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/map_abexplain/MapABExpCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/map_abexplain/MapABExpCreate.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/map_abexplain/MapABExpExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/map_abexplain/MapABExpExercise.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/map_abexplain/MapABExpModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/map_abexplain/MapABExpModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/map_abexplain/MapABExpRootLayout.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/map_abexplain/MapABExpRootLayout.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/map_abexplain/MapABExpView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/map_abexplain/MapABExpView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_edit/SimpleEditCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_edit/SimpleEditCreate.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,7 +55,7 @@
     "project.structure.last.edited": "Artifacts",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.48735633",
-    "two.files.diff.last.used.file": "C:/Users/tonyd/Dropbox/MyFiles(DB)/JavaProgs/net.tonyroyphilosophy/SLAPP-3.2.1prelim/editor/src/main/java/slapp/editor/truth_table_explain/TruthTableExpExercise.java",
+    "two.files.diff.last.used.file": "C:/Users/tonyd/Dropbox/MyFiles(DB)/JavaProgs/net.tonyroyphilosophy/SLAPP-3.2.1prelim/editor/src/main/java/slapp/editor/horiz_trees/HorizTreesExercise.java",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -119,7 +122,7 @@
       <workItem from="1766667896146" duration="18496000" />
       <workItem from="1766750527592" duration="35055000" />
       <workItem from="1766838412813" duration="25281000" />
-      <workItem from="1766927892839" duration="7876000" />
+      <workItem from="1766927892839" duration="19474000" />
     </task>
     <task id="LOCAL-00001" summary="first SLAPP-8 with javafx 25">
       <option name="closed" value="true" />
@@ -241,7 +244,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766869483650</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="tt gen updated">
+      <option name="closed" value="true" />
+      <created>1766936497556</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1766936497556</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -263,6 +274,7 @@
     <MESSAGE value="derivations accommodate new rta width (and !reduce! justification field errors)" />
     <MESSAGE value="truth table updated" />
     <MESSAGE value="tt explain updated" />
-    <option name="LAST_COMMIT_MESSAGE" value="tt explain updated" />
+    <MESSAGE value="tt gen updated" />
+    <option name="LAST_COMMIT_MESSAGE" value="tt gen updated" />
   </component>
 </project>

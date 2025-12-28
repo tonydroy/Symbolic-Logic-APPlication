@@ -271,6 +271,8 @@ public class DerivationExercise implements Exercise<DerivationModel, DerivationV
 
 
 
+
+
             Stage metaHelpStage = derivationView.getMetaLangStage();
             if (metaHelpStage != null && metaHelpStage.isShowing()) metaHelpStage.close();
             else derivationView.showMetalanguageHelp(mainWindow.getSlappProgData().getMetalanguageHelp());

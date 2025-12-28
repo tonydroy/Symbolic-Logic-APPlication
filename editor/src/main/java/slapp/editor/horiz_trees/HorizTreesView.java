@@ -157,13 +157,13 @@ public class HorizTreesView implements ExerciseView<DecoratedRTA> {
         interpretationRTA.setPromptText("Interpretation");
         interpretationDRTA.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS);
 
-        double interpretationInitialHeight = Math.round(interpretationPrefHeight / mainView.getScalePageHeight() * 100 );
+        double interpretationInitialHeight = Math.round((interpretationPrefHeight - RTA_SCREEN_BMP)/ mainView.getScalePageHeight() * 100 );
 
         interpretationHeightSpinner = new Spinner<>(0.0, 999.0, interpretationInitialHeight, 1.0);
         interpretationHeightSpinner.setPrefWidth(60);
         interpretationHeightSpinner.setDisable(false);
         interpretationHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        interpretationRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(interpretationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        interpretationRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(interpretationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
         interpretationHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = interpretationHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
