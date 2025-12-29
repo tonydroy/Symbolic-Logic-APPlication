@@ -41,8 +41,8 @@ import slapp.editor.vertical_tree.drag_drop.DraggableNode;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
+
 
 public class MapABExpRootLayout extends AnchorPane {
 
