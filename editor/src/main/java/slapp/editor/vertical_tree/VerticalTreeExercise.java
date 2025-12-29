@@ -566,15 +566,15 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         for (Node node : nodes) {
             if (node instanceof TreeFormulaBox) {
                 TreeFormulaBox treeBox = (TreeFormulaBox) node;
-                treeBox.getFormulaBox().getRTA().setStyle("-fx-border-color: transparent");
+                treeBox.getFormulaBox().getRTA().setStyle("-fx-border-width: 0; -fx-border-color: transparent");
 
                 treeBox.getFormulaBox().getRTA().setMinWidth(treeBox.getPrintWidth());
 
-                if (treeBox.getAnnotationField() != null) treeBox.getAnnotationField().getRTA().setStyle("-fx-border-color: transparent");
+                if (treeBox.getAnnotationField() != null) treeBox.getAnnotationField().getRTA().setStyle("-fx-border-width: 0; -fx-border-color: transparent");
             }
             if (node instanceof MapFormulaBox) {
                 MapFormulaBox mapBox = (MapFormulaBox) node;
-                mapBox.getFormulaBox().getRTA().setStyle("-fx-border-color: transparent");
+                mapBox.getFormulaBox().getRTA().setStyle("-fx-border-width: 0; -fx-border-color: transparent");
 
                 mapBox.getFormulaBox().getRTA().setMinWidth(mapBox.getPrintWidth());
             }

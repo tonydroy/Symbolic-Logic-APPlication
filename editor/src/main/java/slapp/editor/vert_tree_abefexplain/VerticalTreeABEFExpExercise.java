@@ -61,6 +61,8 @@ import slapp.editor.vertical_tree.object_models.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import static slapp.editor.EditorMain.*;
+
 
 public class VerticalTreeABEFExpExercise implements Exercise<VerticalTreeABEFExpModel, VerticalTreeABEFExpView>, VTAuxExer {
 
@@ -127,9 +129,11 @@ public class VerticalTreeABEFExpExercise implements Exercise<VerticalTreeABEFExp
         statementEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(statementDRTA, ControlType.STATEMENT);
+                mainView.getRTATextHeight(statementEditor);
             }
         });
         verticalTreeABEFExpView.setExerciseStatement(statementDRTA);
+        statementEditor.setPrefHeight(statementEditor.getFullHeight() + RTA_SCREEN_BMP);
 
         //comment
         DecoratedRTA commentDRTA = new DecoratedRTA();
@@ -145,6 +149,7 @@ public class VerticalTreeABEFExpExercise implements Exercise<VerticalTreeABEFExp
         commentEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(commentDRTA, ControlType.AREA);
+                verticalTreeABEFExpModel.setCommentTextHeight(mainView.getRTATextHeight(commentEditor));
             }
         });
         verticalTreeABEFExpView.setExerciseComment(commentDRTA);
@@ -212,6 +217,7 @@ public class VerticalTreeABEFExpExercise implements Exercise<VerticalTreeABEFExp
         explainEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(explainDRTA, ControlType.AREA);
+                verticalTreeABEFExpModel.setExplainTextHeight(mainView.getRTATextHeight(explainEditor));
             }
         });
 
@@ -594,10 +600,11 @@ public class VerticalTreeABEFExpExercise implements Exercise<VerticalTreeABEFExp
         RichTextArea statementRTA = printExercise.getExerciseView().getExerciseStatement().getEditor();
         statementRTA.prefHeightProperty().unbind();
         statementRTA.minWidthProperty().unbind();
-        double statementHeight = printModel.getStatementTextHeight();
-        statementRTA.setPrefHeight(statementHeight + 35.0);
-        statementRTA.setContentAreaWidth(nodeWidth);
+        statementRTA.maxWidthProperty().unbind();
+        statementRTA.setPrefHeight(printModel.getStatementTextHeight() + RTA_PRINT_BMP);
+        statementRTA.setMaxWidth(nodeWidth);
         statementRTA.setMinWidth(nodeWidth);
+
         statementRTA.getStylesheets().clear(); statementRTA.getStylesheets().add("richTextAreaPrinter.css");
         nodeList.add(statementRTA);
 
@@ -611,22 +618,23 @@ public class VerticalTreeABEFExpExercise implements Exercise<VerticalTreeABEFExp
         //content node
         AnchorPane mainPane = printExercise.getExerciseView().getRootLayout().getMain_pane();
         mainPane.setStyle("-fx-background-color: transparent");
+        mainPane.setPadding(new Insets(0));
         mainPane.setMinHeight(0);
 
         VerticalTreeABEFExpModel originalVTmod = (VerticalTreeABEFExpModel) originalModel;
-        mainPane.setMinWidth(originalVTmod.getMainPanePrefWidth());
+        mainPane.setMinWidth(originalVTmod.getMainPanePrefWidth() - RTA_WIDTH_BMP);
 
         ObservableList<Node> nodes = mainPane.getChildren();
         for (Node node : nodes) {
             if (node instanceof ABEFExpTreeFormulaBox) {
                 ABEFExpTreeFormulaBox treeBox = (ABEFExpTreeFormulaBox) node;
-                treeBox.getFormulaBox().getRTA().setStyle("-fx-border-color: transparent");
+                treeBox.getFormulaBox().getRTA().setStyle("-fx-border-width: 0; -fx-border-color: transparent");
                 treeBox.getFormulaBox().getRTA().setMinWidth(treeBox.getPrintWidth());
-                if (treeBox.getAnnotationField() != null) treeBox.getAnnotationField().getRTA().setStyle("-fx-border-color: transparent");
+                if (treeBox.getAnnotationField() != null) treeBox.getAnnotationField().getRTA().setStyle("-fx-border-width: 0; -fx-border-color: transparent");
             }
             if (node instanceof ABEFExpMapFormulaBox) {
                 ABEFExpMapFormulaBox mapBox = (ABEFExpMapFormulaBox) node;
-                mapBox.getFormulaBox().getRTA().setStyle("-fx-border-color: transparent");
+                mapBox.getFormulaBox().getRTA().setStyle("-fx-border-width: 0; -fx-border-color: transparent");
                 mapBox.getFormulaBox().getRTA().setMinWidth(mapBox.getPrintWidth());
             }
         }
@@ -646,6 +654,7 @@ public class VerticalTreeABEFExpExercise implements Exercise<VerticalTreeABEFExp
 
         HBox abBox = new HBox(20);
         abBox.setPadding(new Insets(10,10,10,0));
+        abBox.setStyle("-fx-border-width: 0; -fx-border-color: transparent;");
         abBox.getChildren().addAll(abLeaderLabel, boxA, boxB);
         nodeList.add(abBox);
 
@@ -658,6 +667,7 @@ public class VerticalTreeABEFExpExercise implements Exercise<VerticalTreeABEFExp
 
         HBox efBox = new HBox(20);
         efBox.setPadding(new Insets(10,10,20,0));
+        efBox.setStyle("-fx-border-width: 0; -fx-border-color: transparent;");
         efBox.getChildren().addAll(efLeaderLabel, boxE, boxF);
         nodeList.add(efBox);
 
@@ -665,9 +675,11 @@ public class VerticalTreeABEFExpExercise implements Exercise<VerticalTreeABEFExp
         RichTextArea explanationRTA = printExercise.getExerciseView().getExplainDRTA().getEditor();
         explanationRTA.prefHeightProperty().unbind();
         explanationRTA.minWidthProperty().unbind();
-        explanationRTA.setPrefHeight(printModel.getExplainTextHeight() + 35.0);
-        explanationRTA.setContentAreaWidth(nodeWidth);
+        explanationRTA.maxWidthProperty().unbind();
+        explanationRTA.setPrefHeight(Math.max(40, printModel.getCommentTextHeight() + RTA_PRINT_BMP));
+        explanationRTA.setMaxWidth(nodeWidth);
         explanationRTA.setMinWidth(nodeWidth);
+
         explanationRTA.getStylesheets().clear(); statementRTA.getStylesheets().add("richTextAreaPrinter.css");
         nodeList.add(explanationRTA);
 
@@ -683,9 +695,11 @@ public class VerticalTreeABEFExpExercise implements Exercise<VerticalTreeABEFExp
         RichTextArea commentRTA = printExercise.getExerciseView().getExerciseComment().getEditor();
         commentRTA.prefHeightProperty().unbind();
         commentRTA.minWidthProperty().unbind();
-        commentRTA.setPrefHeight(printModel.getCommentTextHeight() + 35.0);
-        commentRTA.setContentAreaWidth(nodeWidth);
+        commentRTA.maxWidthProperty().unbind();
+        commentRTA.setPrefHeight(Math.max(40, printModel.getCommentTextHeight() + RTA_PRINT_BMP));
+        commentRTA.setMaxWidth(nodeWidth);
         commentRTA.setMinWidth(nodeWidth);
+
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
 
         Node commentNode;
@@ -696,7 +710,7 @@ public class VerticalTreeABEFExpExercise implements Exercise<VerticalTreeABEFExp
             anchorPane.setLeftAnchor(commentRTA, 0.0);
             anchorPane.setBottomAnchor(pointsLabel, 3.0);
             anchorPane.setRightAnchor(pointsLabel, 3.0);
-            anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
+    //        anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
             commentNode = anchorPane;
         }
         else commentNode = commentRTA;

@@ -65,6 +65,7 @@ import java.util.List;
 import static slapp.editor.EditorMain.*;
 import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
 
+
 public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, VTAuxExer {
 
     MainWindow mainWindow;
@@ -616,13 +617,13 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
         for (Node node : nodes) {
             if (node instanceof MapABExpTreeFormulaBox) {
                 MapABExpTreeFormulaBox treeBox = (MapABExpTreeFormulaBox) node;
-                treeBox.getFormulaBox().getRTA().setStyle("-fx-border-color: transparent");
+                treeBox.getFormulaBox().getRTA().setStyle("-fx-border-width: 0; -fx-border-color: transparent");
                 treeBox.getFormulaBox().getRTA().setMinWidth(treeBox.getPrintWidth());
-                if (treeBox.getAnnotationField() != null) treeBox.getAnnotationField().getRTA().setStyle("-fx-border-color: transparent");
+                if (treeBox.getAnnotationField() != null) treeBox.getAnnotationField().getRTA().setStyle("-fx-border-width: 0; -fx-border-color: transparent");
             }
             if (node instanceof MapABExpFormulaBox) {
                 MapABExpFormulaBox mapBox = (MapABExpFormulaBox) node;
-                mapBox.getFormulaBox().getRTA().setStyle("-fx-border-color: transparent");
+                mapBox.getFormulaBox().getRTA().setStyle("-fx-border-width: 0; -fx-border-color: transparent");
                 mapBox.getFormulaBox().getRTA().setMinWidth(mapBox.getPrintWidth());
             }
         }

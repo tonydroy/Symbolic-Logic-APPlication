@@ -47,6 +47,8 @@ import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.ExerciseView;
 import slapp.editor.main_window.MainWindowView;
 import java.util.function.UnaryOperator;
+import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
+import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
 
 public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
 
@@ -154,20 +156,21 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
         statementRTA.getStylesheets().add("slappTextArea.css");
         statementRTA.setEditable(false);
 
-        double statementInitialHeight = Math.round(statementPrefHeight / mainView.getScalePageHeight() * 100.0 );
+        double statementInitialHeight = Math.round((statementPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100.0);
         statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
         statementHeightSpinner.setPrefWidth(60);
         statementHeightSpinner.setDisable(false);
         statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
         statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = statementHeightSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+        statementRTA.maxWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
+        statementRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
 
-        statementRTA.maxWidthProperty().bind(mainView.scalePageWidthProperty());
         statementWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         statementWidthSpinner.setPrefWidth(60);
         statementWidthSpinner.setDisable(true);
@@ -178,21 +181,22 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
         commentRTA.getStylesheets().add("slappTextArea.css");
         commentRTA.setPromptText("Comment:");
 
-        double commentInitialHeight = Math.round(commentPrefHeight / mainView.getScalePageHeight() * 100.0 );
+        double commentInitialHeight = Math.round((commentPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100.0);
         commentHeightSpinner = new Spinner<>(0.0, 999.0, commentInitialHeight, 1.0);
         commentHeightSpinner.setPrefWidth(60);
         commentHeightSpinner.setDisable(false);
         commentHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        commentRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        commentRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
         commentHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = commentHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = commentHeightSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+        commentRTA.maxWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
+        commentRTA.minWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
+        commentRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
 
-        commentRTA.maxWidthProperty().bind(mainView.scalePageWidthProperty());
-        commentRTA.minWidthProperty().bind(mainView.scalePageWidthProperty());
         commentWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         commentWidthSpinner.setPrefWidth(60);
         commentWidthSpinner.setDisable(true);
@@ -203,21 +207,22 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
         explainRTA.getStylesheets().add("slappTextArea.css");
         explainRTA.setPromptText(explainPrompt);
 
-        double explainInitialHeight = Math.round(explainPrefHeight / mainView.getScalePageHeight() * 100.0 );
+        double explainInitialHeight = Math.round((explainPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100.0 );
         explainHeightSpinner = new Spinner<>(0.0, 999.0, explainInitialHeight, 1.0);
         explainHeightSpinner.setPrefWidth(60);
         explainHeightSpinner.setDisable(false);
         explainHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        explainRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(explainHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        explainRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(explainHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
         explainHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = explainHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = explainHeightSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+        explainRTA.maxWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
+        explainRTA.minWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
+        explainRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
 
-        explainRTA.maxWidthProperty().bind(mainView.scalePageWidthProperty());
-        explainRTA.minWidthProperty().bind(mainView.scalePageWidthProperty());
         explainWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         explainWidthSpinner.setPrefWidth(60);
         explainWidthSpinner.setDisable(true);
@@ -229,8 +234,8 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
         choicesHeightSpinner.setDisable(true);
         choicesHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
 
-        choiceBox.maxWidthProperty().bind(mainView.scalePageWidthProperty());
-        choicesWidthSpinner = new Spinner<>(0.0, 999.0, 100.0, 1.0);
+        choiceBox.maxWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
+        choicesWidthSpinner = new Spinner<>(100.0, 999.0, 100.0, 1.0);
         choicesWidthSpinner.setPrefWidth(60);
         choicesWidthSpinner.setDisable(true);
         choicesWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
@@ -240,7 +245,7 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
         mainPane = rootLayout.getBase_pane();
         mainPane.setStyle("-fx-focus-color: gainsboro;");
         mainPane1.setMinHeight(250.0);
-        mainPane1.setMinWidth(mainView.getScalePageWidth());
+        mainPane1.setMinWidth(mainView.getScalePageWidth() + RTA_WIDTH_BMP);
 
         mainPaneHeightSpinner = new Spinner<>(5, 999.0, 0, 1.0);
         mainPaneHeightSpinner.setPrefWidth(60);
@@ -255,7 +260,7 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
         mainPaneWidthSpinner.setDisable(true);
         mainPaneWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
         mainPane1.widthProperty().addListener((ob, ov, nv) -> {
-            mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round(mainPane1.getWidth() /mainView.getScalePageWidth() * 100));
+            mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round((mainPane1.getWidth() - RTA_WIDTH_BMP) /mainView.getScalePageWidth() * 100));
         });
 
 
@@ -264,15 +269,15 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
 
             statementRTA.prefHeightProperty().unbind();
             statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+            statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
             commentRTA.prefHeightProperty().unbind();
             commentHeightSpinner.getValueFactory().setValue((double) Math.round(commentHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            commentRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+            commentRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
             explainRTA.prefHeightProperty().unbind();
             explainHeightSpinner.getValueFactory().setValue((double) Math.round(explainHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            explainRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(explainHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+            explainRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(explainHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
             mainPaneHeightSpinner.getValueFactory().setValue((double) Math.round(mainPane1.getHeight() / mainView.getScalePageHeight() * 100.0));
 
@@ -282,9 +287,8 @@ public class VerticalTreeABExpView implements ExerciseView<DecoratedRTA> {
 
         mainView.scalePageWidthProperty().addListener((ob, ov, nv) -> {
             mainPane.prefWidthProperty().unbind();
-            mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round(mainPaneWidthSpinner.getValue() * ov.doubleValue() / nv.doubleValue() / 5.0) * 5.0);
-            mainPane.prefWidthProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(mainPaneWidthSpinner.getValueFactory().valueProperty()).divide(100.0))));
-        });
+            mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round((mainPane1.getWidth() - RTA_WIDTH_BMP) /mainView.getScalePageWidth() * 100));
+            });
 
         setSizeSpinners();
     }
