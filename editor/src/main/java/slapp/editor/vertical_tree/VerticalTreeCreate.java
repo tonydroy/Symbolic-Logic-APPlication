@@ -73,6 +73,9 @@ import static com.gluonhq.richtextarea.RichTextAreaSkin.KeyMapValue.*;
 import static javafx.scene.control.ButtonType.OK;
 import static slapp.editor.vertical_tree.drag_drop.DragIconType.*;
 import static slapp.editor.vertical_tree.object_models.ObjectControlType.*;
+import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
+import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
+
 
 public class VerticalTreeCreate {
     private MainWindow mainWindow;
@@ -211,10 +214,9 @@ public class VerticalTreeCreate {
         statementRTA = statementDRTA.getEditor();
         statementRTA.getStylesheets().add("slappTextArea.css");
         statementRTA.setPromptText("Exercise Statement:");
-
-        statementRTA.setPrefWidth(PrintUtilities.getPageWidth() );
-        statementRTA.setMinWidth(PrintUtilities.getPageWidth());
-        statementRTA.setMaxWidth(PrintUtilities.getPageWidth());
+        statementRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
+        statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
+        statementRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
 
         statementRTA.setMinHeight(100);
 
@@ -223,7 +225,7 @@ public class VerticalTreeCreate {
         statementHeightSpinner.setPrefWidth(60);
         statementHeightSpinner.setDisable(false);
         statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
         statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
@@ -234,7 +236,7 @@ public class VerticalTreeCreate {
         mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
             statementRTA.prefHeightProperty().unbind();
             statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+            statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
@@ -256,9 +258,9 @@ public class VerticalTreeCreate {
         staticHelpRTA = staticHelpDRTA.getEditor();
         staticHelpRTA.setPromptText("Static Help (complete if static help selected)");
         staticHelpRTA.getStylesheets().add("slappTextArea.css");
-        staticHelpRTA.setPrefWidth(350);
-        staticHelpRTA.setMinWidth(350);
-        staticHelpRTA.setMaxWidth(350);
+        staticHelpRTA.setMinWidth(400 + RTA_WIDTH_BMP);
+        staticHelpRTA.setMaxWidth(400 + RTA_WIDTH_BMP);
+        staticHelpRTA.setContentAreaWidth(400);
         staticHelpRTA.setMinHeight(100);
 
         double staticHelpInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
@@ -268,7 +270,7 @@ public class VerticalTreeCreate {
         staticHelpHeightSpinner.setPrefWidth(60);
         staticHelpHeightSpinner.setDisable(false);
         staticHelpHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        staticHelpRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
         staticHelpHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = staticHelpHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
@@ -751,11 +753,11 @@ public class VerticalTreeCreate {
         stage.setTitle("Create Vertical Tree Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
 
-        stage.setWidth(930);
+        stage.setWidth(1040);
         stage.setHeight(1025);
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 930));
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1040));
         stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 1025));
         stage.initModality(Modality.WINDOW_MODAL);
         stage.setOnCloseRequest(e-> {
@@ -962,8 +964,8 @@ public class VerticalTreeCreate {
         if (statementRTA.isModified()) modified = true;
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExerciseStatement(statementRTA.getDocument());
-        model.setStatementPrefHeight(statementTextHeight + 29);
         model.setStatementTextHeight(statementTextHeight);
+        model.setStatementPrefHeight(Math.max(40, statementTextHeight + RTA_SCREEN_BMP));
 
         if (!pointsPossibleTextField.getText().equals(""))
             model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));

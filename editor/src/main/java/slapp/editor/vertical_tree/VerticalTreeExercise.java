@@ -52,6 +52,7 @@ import slapp.editor.vertical_tree.drag_drop.*;
 import slapp.editor.vertical_tree.object_models.*;
 import java.util.ArrayList;
 import java.util.List;
+import static slapp.editor.EditorMain.*;
 
 public class VerticalTreeExercise implements Exercise<VerticalTreeModel, VerticalTreeView>,  VTAuxExer {
 
@@ -122,9 +123,11 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         statementEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(statementDRTA, ControlType.STATEMENT);
+                mainView.getRTATextHeight(statementEditor);
             }
         });
         verticalTreeView.setExerciseStatement(statementDRTA);
+        statementEditor.setPrefHeight(statementEditor.getFullHeight() + RTA_SCREEN_BMP);
 
         //comment
         DecoratedRTA commentDRTA = new DecoratedRTA();
@@ -140,6 +143,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         commentEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(commentDRTA, ControlType.AREA);
+                verticalTreeModel.setCommentTextHeight(mainView.getRTATextHeight(commentEditor));
             }
         });
         verticalTreeView.setExerciseComment(commentDRTA);
@@ -533,10 +537,10 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         RichTextArea statementRTA = printExercise.getExerciseView().getExerciseStatement().getEditor();
         statementRTA.prefHeightProperty().unbind();
         statementRTA.minWidthProperty().unbind();
-        double statementHeight = printModel.getStatementTextHeight();
-        statementRTA.setPrefHeight(statementHeight + 35.0);
-        statementRTA.setContentAreaWidth(nodeWidth);
-        statementRTA.setMinWidth(nodeWidth);
+        statementRTA.maxWidthProperty().unbind();
+        statementRTA.setPrefHeight(printModel.getStatementTextHeight() + RTA_PRINT_BMP);
+        statementRTA.setMaxWidth(nodeWidth);
+
         statementRTA.getStylesheets().clear(); statementRTA.getStylesheets().add("richTextAreaPrinter.css");
         nodeList.add(statementRTA);
 
@@ -550,12 +554,13 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         //content node
         AnchorPane mainPane = printExercise.getExerciseView().getRootLayout().getMainPane();
         mainPane.setStyle("-fx-background-color: transparent");
-
+        mainPane.setPadding(new Insets(0));
         mainPane.setMinHeight(0);
 
 
         VerticalTreeModel originalVTmod = (VerticalTreeModel) printModel;
-        mainPane.setMinWidth(originalVTmod.getMainPanePrefWidth());
+        mainPane.setMinWidth(originalVTmod.getMainPanePrefWidth() - RTA_WIDTH_BMP);
+
 
         ObservableList<Node> nodes = mainPane.getChildren();
         for (Node node : nodes) {
@@ -600,9 +605,11 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         RichTextArea commentRTA = printExercise.getExerciseView().getExerciseComment().getEditor();
         commentRTA.prefHeightProperty().unbind();
         commentRTA.minWidthProperty().unbind();
-        commentRTA.setPrefHeight(printModel.getCommentTextHeight() + 35.0);
-        commentRTA.setContentAreaWidth(nodeWidth);
+        commentRTA.maxWidthProperty().unbind();
+        commentRTA.setPrefHeight(Math.max(40, printModel.getCommentTextHeight() + RTA_PRINT_BMP));
+        commentRTA.setMaxWidth(nodeWidth);
         commentRTA.setMinWidth(nodeWidth);
+
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
 
         Node commentNode;
@@ -613,7 +620,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
             anchorPane.setLeftAnchor(commentRTA, 0.0);
             anchorPane.setBottomAnchor(pointsLabel, 3.0);
             anchorPane.setRightAnchor(pointsLabel, 3.0);
-            anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
+   //         anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
             commentNode = anchorPane;
         }
         else commentNode = commentRTA;
@@ -703,9 +710,11 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
 
         AnchorPane mainPane = printExercise.getExerciseView().getRootLayout().getMainPane();
         mainPane.setStyle("-fx-background-color: transparent");
+        mainPane.setPadding(new Insets(0));
+
 
         VerticalTreeModel originalVTmod = (VerticalTreeModel) originalModel;
-        mainPane.setMinWidth(originalVTmod.getMainPanePrefWidth());
+        mainPane.setMinWidth(originalVTmod.getMainPanePrefWidth() - RTA_WIDTH_BMP);
 
         ObservableList<Node> nodes = mainPane.getChildren();
         for (Node node : nodes) {

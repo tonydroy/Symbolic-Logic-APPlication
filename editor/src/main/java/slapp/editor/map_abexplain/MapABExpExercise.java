@@ -608,10 +608,6 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
         mainPane.setPadding(new Insets(0));
         mainPane.setMinHeight(0);
 
-        System.out.println("pref width: " + printModel.getMainPanePrefWidth());
-
-
-
         MapABExpModel originalVTmod = (MapABExpModel) originalModel;
         mainPane.setMinWidth(originalVTmod.getMainPanePrefWidth() - RTA_WIDTH_BMP);
 
@@ -689,7 +685,7 @@ public class MapABExpExercise implements Exercise<MapABExpModel, MapABExpView>, 
             anchorPane.setLeftAnchor(commentRTA, 0.0);
             anchorPane.setBottomAnchor(pointsLabel, 3.0);
             anchorPane.setRightAnchor(pointsLabel, 3.0);
-            anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
+       //     anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
             commentNode = anchorPane;
         }
         else commentNode = commentRTA;

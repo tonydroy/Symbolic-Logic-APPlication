@@ -215,6 +215,45 @@ public class PrintUtilities {
         }
     }
 
+    private static boolean refreshPageLayout() {
+        PrinterJob job = getPrinterJob();
+        if (job != null) {
+            job.getJobSettings().setPageLayout(pageLayout);
+
+            PageLayout baseLayout = job.getJobSettings().getPageLayout();
+            double bottomMargin = Math.max(baseLayout.getBottomMargin(), 48);
+            pageLayout = printer.createPageLayout(baseLayout.getPaper(), baseLayout.getPageOrientation(), baseLayout.getLeftMargin(), baseLayout.getRightMargin(), baseLayout.getTopMargin(), bottomMargin);
+            pageHeight.set(pageLayout.getPrintableHeight());
+            pageWidth.set(pageLayout.getPrintableWidth());
+
+            PageLayout minLayout = printer.createPageLayout(baseLayout.getPaper(), pageLayout.getPageOrientation(), Printer.MarginType.HARDWARE_MINIMUM);
+            minHorizOffset = minLayout.getLeftMargin();
+            minVertOffset = minLayout.getTopMargin();
+
+            double bottom = 18.0;
+            double leftMargin = pageLayout.getLeftMargin();
+            double rightMargin = pageLayout.getRightMargin();
+            double topMargin = pageLayout.getTopMargin();
+
+            if (leftMargin > minHorizOffset) {
+                leftMargin = leftMargin - minHorizOffset;
+            }
+            if (topMargin > minVertOffset) {
+                topMargin = topMargin - minVertOffset;
+            }
+            if (pageLayout.getPageOrientation() == PageOrientation.LANDSCAPE) {
+                internalPrintHeight = pageLayout.getPaper().getWidth() - pageLayout.getTopMargin() - 18.0;
+                internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, rightMargin, bottom, topMargin);
+            } else {
+                internalPrintHeight = pageLayout.getPaper().getHeight() - pageLayout.getTopMargin() - 18.0;
+                internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, rightMargin, topMargin, bottom);
+            }
+            job.endJob();
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Select export printer with failure message
      */
@@ -400,7 +439,7 @@ public class PrintUtilities {
         job.getJobSettings().setPageLayout(pageLayout);
 
         if (job != null) {
-            if (job.showPageSetupDialog(mainStage)) {
+            if (refreshPageLayout()) {
                 if (job.showPrintDialog(mainStage)) {
                     printNodes(footerInfo, job);
                 }
@@ -468,7 +507,7 @@ public class PrintUtilities {
 
         Bounds bounds = node.getLayoutBounds();
 
-        System.out.println("node: " + node + " width: " + bounds.getWidth());
+  //      System.out.println("node: " + node + " width: " + bounds.getWidth());
 
         return new PrintBufferItem(node, bounds.getHeight(), bounds.getWidth());
     }
