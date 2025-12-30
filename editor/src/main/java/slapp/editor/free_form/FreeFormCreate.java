@@ -51,6 +51,8 @@ import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 import static javafx.scene.control.ButtonType.OK;
+import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
+import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
 
 /**
  * Create window for derivation exercise
@@ -211,8 +213,8 @@ public class FreeFormCreate {
         statementRTA.getStylesheets().add("slappTextArea.css");
         statementRTA.setPromptText("Exercise Statement:");
 
-        statementRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), 25.0));
-        statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), 25.0));
+        statementRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
+        statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
         statementRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
 
         statementRTA.setMinHeight(100);
@@ -222,7 +224,7 @@ public class FreeFormCreate {
         statementHeightSpinner.setPrefWidth(60);
         statementHeightSpinner.setDisable(false);
         statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
         statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
@@ -233,7 +235,7 @@ public class FreeFormCreate {
         mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
             statementRTA.prefHeightProperty().unbind();
             statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            statementRTA.prefHeightProperty().bind(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))));
+            statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
@@ -245,6 +247,7 @@ public class FreeFormCreate {
         statementRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(statementDRTA, ControlType.AREA);
+                statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
             }
         });
 
@@ -436,11 +439,12 @@ public class FreeFormCreate {
 
         //help
         String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
-                "<p>The Free Form Exercise is appropriate for any exercise that combines text (usually) with other elements - tree, truth table, or derivation - where a student may insert these elements into the exercise in arbitrary combinations.</p> " +
+                "<p>The Free Form Exercise is appropriate for any exercise that combines text (usually) with other elements - tree, truth table, or derivation - where a student may insert these elements into the exercise in arbitrary combinations.  Setup is straightforward.</p> " +
                 "<ul>" +
                 "<li><p>Start with the exercise name and points possible.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
-                "<li><p>Then select items to insert into the exercise from among: Simple Edit, Truth Table, Horizontal Tree, Vertical Tree, Natural Derivation, and Axiomatic Derivation.</p>" +
-                "<p> The vertical tree, natural derivation, and axiomatic derivation options allow different default keyboards.  You will be able to select just one keyboard option per item.</p></li>" +
+                "<li><p>Then select items that may be inserted into the exercise from among: Simple Edit, Truth Table, Horizontal Tree, Vertical Tree, Natural Derivation, and Axiomatic Derivation.</p>" +
+                "<p>The vertical tree, natural derivation, and axiomatic derivation options allow different default keyboards.  You will be able to select just one keyboard option per item.</p></li>" +
+                "<li><p>Finally give the exercise statement.</li></p>" +
                 "</ul>";
         WebView helpArea = new WebView();
         WebEngine webEngine = helpArea.getEngine();
@@ -638,8 +642,8 @@ public class FreeFormCreate {
         if (statementRTA.isModified()) modified = true;
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExerciseStatement(statementRTA.getDocument());
-        model.setStatementPrefHeight(statementTextHeight + 29);
         model.setStatementTextHeight(statementTextHeight);
+        model.setStatementPrefHeight(Math.max(40, statementTextHeight + RTA_SCREEN_BMP));
 
         if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
         else {

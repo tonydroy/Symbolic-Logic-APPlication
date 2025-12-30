@@ -61,6 +61,8 @@ import java.util.List;
 
 import static com.gluonhq.richtextarea.RichTextAreaSkin.KeyMapValue.*;
 import static slapp.editor.derivation.DerivationExercise.inHierarchy;
+import static slapp.editor.EditorMain.RTA_PRINT_BMP;
+import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
 
 /**
  * Controller for the free form exercise
@@ -104,8 +106,7 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
                 for (int i = 0; i < exerciseList.size(); i++) {
                     ViewElement viewElement = viewElements.get(i);
                     if (inHierarchy(event.getPickResult().getIntersectedNode(), viewElement.getNode().getParent())) {
-                    //    viewElement.getNode().requestFocus();
-                        Exercise exer = exerciseList.get(i);
+                         Exercise exer = exerciseList.get(i);
                         activeExercise = exer;
 
                         ExerciseType type = ((ExerciseModel)exer.getExerciseModel()).getExerciseType();
@@ -124,6 +125,7 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
 
              //           viewElement.getNode().setStyle("-fx-border-color: lightblue");
                         freeFormView.setBorders(i);
+                        viewElement.getNode().requestFocus();
                         freeFormView.setContentSpinners(i, exerciseList.get(i).getFFHeightSpinner(), exerciseList.get(i).getFFWidthSpinner());
                     }
               //      else viewElement.getNode().setStyle("-fx-border-color: gainsboro");
@@ -159,9 +161,11 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
         statementEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(statementDRTA, ControlType.STATEMENT);
+                mainView.getRTATextHeight(statementEditor);
             }
         });
         freeFormView.setExerciseStatement(statementDRTA);
+        statementEditor.setPrefHeight(statementEditor.getFullHeight() + RTA_SCREEN_BMP);
 
         //comment
         DecoratedRTA commentDRTA = new DecoratedRTA();
@@ -177,6 +181,7 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
         commentEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(commentDRTA, ControlType.AREA);
+                freeFormModel.setCommentTextHeight(mainView.getRTATextHeight(commentEditor));
             }
         });
         freeFormView.setExerciseComment(commentDRTA);
@@ -850,9 +855,8 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
         RichTextArea statementRTA = printExercise.getExerciseView().getExerciseStatement().getEditor();
         statementRTA.prefHeightProperty().unbind();
         statementRTA.minWidthProperty().unbind();
-        double statementHeight = printModel.getStatementTextHeight();
-        statementRTA.setPrefHeight(statementHeight + 35.0);
-  //      statementRTA.setContentAreaWidth(nodeWidth);
+        statementRTA.maxWidthProperty().unbind();
+        statementRTA.setPrefHeight(printModel.getStatementTextHeight() + RTA_PRINT_BMP);
         statementRTA.setMaxWidth(nodeWidth);
         statementRTA.getStylesheets().clear(); statementRTA.getStylesheets().add("richTextAreaPrinter.css");
         nodeList.add(statementRTA);
@@ -892,8 +896,8 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
         RichTextArea commentRTA = printExercise.getExerciseView().getExerciseComment().getEditor();
         commentRTA.prefHeightProperty().unbind();
         commentRTA.minWidthProperty().unbind();
-        commentRTA.setPrefHeight(printModel.getCommentTextHeight() + 35.0);
-//        commentRTA.setContentAreaWidth(nodeWidth);
+        commentRTA.maxWidthProperty().unbind();
+        commentRTA.setPrefHeight(Math.max(40, printModel.getCommentTextHeight() + RTA_PRINT_BMP));
         commentRTA.setMaxWidth(nodeWidth);
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
 
@@ -905,7 +909,7 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
             anchorPane.setLeftAnchor(commentRTA, 0.0);
             anchorPane.setBottomAnchor(pointsLabel, 3.0);
             anchorPane.setRightAnchor(pointsLabel, 3.0);
-            anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
+      //      anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
             commentNode = anchorPane;
         }
         else commentNode = commentRTA;

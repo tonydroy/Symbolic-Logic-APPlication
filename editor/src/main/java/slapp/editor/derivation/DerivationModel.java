@@ -25,6 +25,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
+
 /**
  * Model for the derivation exercise.
  */
@@ -77,7 +79,7 @@ public class DerivationModel implements ExerciseModel<Document>, Serializable {
         this.exerciseStatement = exerciseStatement;
         this.exerciseComment = exerciseComment;
         this.derivationLines = derivationLines;
-        this.splitPanePrefWidth = PrintUtilities.getPageWidth();
+        this.splitPanePrefWidth = PrintUtilities.getPageWidth() + RTA_WIDTH_BMP;
         this.checkSetup = new CheckSetup();
         this.pointsPossible = 0;
         this.pointsEarned = -1;

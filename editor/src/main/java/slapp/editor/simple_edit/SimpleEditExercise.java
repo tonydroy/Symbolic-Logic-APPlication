@@ -334,10 +334,13 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
         RichTextArea responseRTA = printExercise.getExerciseView().getExerciseResponse().getEditor();
         responseRTA.prefHeightProperty().unbind();
         responseRTA.minWidthProperty().unbind();
-        responseRTA.setPrefHeight(printModel.getResponseTextHeight() + RTA_PRINT_BMP);
-   //     responseRTA.setContentAreaWidth(nodeWidth);
-        responseRTA.setMaxWidth(nodeWidth);
+        responseRTA.maxHeightProperty().unbind();
         responseRTA.getStylesheets().clear(); responseRTA.getStylesheets().add("richTextAreaPrinter.css");
+        responseRTA.setMaxWidth(nodeWidth);
+        double responseHeight = Math.max(40, printModel.getResponseTextHeight() + RTA_PRINT_BMP);
+        responseRTA.setMinHeight(responseHeight);
+        responseRTA.setMaxHeight(responseHeight);
+
         return responseRTA;
     }
 

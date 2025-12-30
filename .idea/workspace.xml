@@ -9,20 +9,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d366fccc-ef06-4007-b459-d27194c8a785" name="Changes" comment="vt exp updated">
+    <list default="true" id="d366fccc-ef06-4007-b459-d27194c8a785" name="Changes" comment="all vt updated">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/map_abexplain/MapABExpExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/map_abexplain/MapABExpExercise.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/ABEFExpRootLayout.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/ABEFExpRootLayout.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/VerticalTreeABEFExpCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/VerticalTreeABEFExpCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/VerticalTreeABEFExpExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/VerticalTreeABEFExpExercise.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/VerticalTreeABEFExpView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abefexplain/VerticalTreeABEFExpView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abexplain/ABExpRootLayout.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abexplain/ABExpRootLayout.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abexplain/VerticalTreeABExpCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abexplain/VerticalTreeABExpCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abexplain/VerticalTreeABExpExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abexplain/VerticalTreeABExpExercise.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abexplain/VerticalTreeABExpView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_abexplain/VerticalTreeABExpView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_explain/VerticalTreeExpCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vert_tree_explain/VerticalTreeExpCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/VerticalTreeCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/VerticalTreeCreate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/VerticalTreeExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/vertical_tree/VerticalTreeExercise.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation/DerivationView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/derivation_explain/DrvtnExpView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/free_form/FreeFormCreate.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/free_form/FreeFormCreate.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/free_form/FreeFormExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/free_form/FreeFormExercise.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/free_form/FreeFormView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/free_form/FreeFormView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_edit/SimpleEditExercise.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/simple_edit/SimpleEditExercise.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_generate/TruthTableGenView.java" beforeDir="false" afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/truth_table_generate/TruthTableGenView.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,7 +54,7 @@
     "project.structure.last.edited": "Artifacts",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.48735633",
-    "two.files.diff.last.used.file": "C:/Users/tonyd/Dropbox/MyFiles(DB)/JavaProgs/net.tonyroyphilosophy/SLAPP-3.2.1prelim/editor/src/main/java/slapp/editor/map_abexplain/MapABExpExercise.java",
+    "two.files.diff.last.used.file": "C:/Users/tonyd/Dropbox/MyFiles(DB)/JavaProgs/net.tonyroyphilosophy/SLAPP-3.2.1prelim/editor/src/main/java/slapp/editor/simple_edit/SimpleEditExercise.java",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -125,7 +122,8 @@
       <workItem from="1766750527592" duration="35055000" />
       <workItem from="1766838412813" duration="25281000" />
       <workItem from="1766927892839" duration="24705000" />
-      <workItem from="1767010453498" duration="16415000" />
+      <workItem from="1767010453498" duration="23961000" />
+      <workItem from="1767097427446" duration="16039000" />
     </task>
     <task id="LOCAL-00001" summary="first SLAPP-8 with javafx 25">
       <option name="closed" value="true" />
@@ -279,7 +277,15 @@
       <option name="project" value="LOCAL" />
       <updated>1767024750868</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="all vt updated">
+      <option name="closed" value="true" />
+      <created>1767036081475</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1767036081475</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -305,6 +311,7 @@
     <MESSAGE value="map updated" />
     <MESSAGE value="vt updated" />
     <MESSAGE value="vt exp updated" />
-    <option name="LAST_COMMIT_MESSAGE" value="vt exp updated" />
+    <MESSAGE value="all vt updated" />
+    <option name="LAST_COMMIT_MESSAGE" value="all vt updated" />
   </component>
 </project>
