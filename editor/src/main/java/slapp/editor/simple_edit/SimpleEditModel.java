@@ -135,7 +135,7 @@ public class SimpleEditModel implements ExerciseModel <Document>, Serializable {
      * The responseTextHeight is the height of the text in the response area (need not be height of window)
      * @return the height value
      */
-    double getResponseTextHeight() {     return responseTextHeight;  }
+    public double getResponseTextHeight() {     return responseTextHeight;  }
 
     /**
      * The responseTextHeight is the height of the text in the response area (need not be height of window)

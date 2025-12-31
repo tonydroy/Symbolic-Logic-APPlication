@@ -637,6 +637,7 @@ public class TruthTableGenExercise implements Exercise<TruthTableGenModel, Truth
         for (int i = 0; i < buttons.length; i ++) {
             tablePane.getChildren().remove(buttons[i]);
         }
+        tablePane.setPadding(new Insets(15, 0, 15, 0));
         tablePane.setStyle("-fx-border-width: 0; -webkit-fx-border-color: transparent;");
         tablePane.setPrefWidth(printModel.getGridWidth() - RTA_WIDTH_BMP);
         HBox gridBox = new HBox(tablePane);

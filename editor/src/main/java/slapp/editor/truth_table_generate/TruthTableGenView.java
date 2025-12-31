@@ -241,7 +241,7 @@ public class TruthTableGenView implements ExerciseView<DecoratedRTA> {
 
         tableGrid = new GridPane();
         tableGrid.setPadding(new Insets(15, RTA_WIDTH_BMP,15,10));
-        tableGrid.minWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
+     //   tableGrid.minWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
 
         centerBox = new VBox(10, interpretationDRTA.getEditor(), tableGrid, resultsBox);
         tableGrid.setStyle("-fx-border-color: gainsboro");
@@ -352,6 +352,7 @@ public class TruthTableGenView implements ExerciseView<DecoratedRTA> {
         }
         tableRowConstraints.add(new RowConstraints(5));
         tableRowConstraints.add(new RowConstraints());
+        tableGrid.requestFocus();
     }
 
     /**

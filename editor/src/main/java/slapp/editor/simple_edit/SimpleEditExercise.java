@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License along with SLA
 package slapp.editor.simple_edit;
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.event.ActionEvent;
@@ -129,7 +130,6 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
             exerciseModified = true;
             double responseTextHeight = mainView.getRTATextHeight(responseEditor);
             editModel.setResponseTextHeight(responseTextHeight);
-            //System.out.println("FH: " + responseTextHeight + "cursor: " + ((RichTextAreaSkin) responseEditor.getSkin()).getCaretPosition().getMaxY());
         });
 
 
@@ -139,8 +139,7 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
         responseEditor.focusedProperty().addListener((o, ov, nv) -> {
             if (nv) {
                 mainView.editorInFocus(responseDRTA, ControlType.AREA);
-                editModel.setResponseTextHeight(mainView.getRTATextHeight(responseEditor));
-
+                mainView.getRTATextHeight(responseEditor);
             }
         });
         editView.setExerciseResponse(responseDRTA);
@@ -327,7 +326,9 @@ public class SimpleEditExercise implements Exercise<SimpleEditModel, SimpleEditV
      */
     @Override
     public Node getFFPrintNode(ExerciseModel originalModel) {
-        SimpleEditModel printModel = editModel;
+     //   SimpleEditModel printModel = editModel;
+        SimpleEditModel printModel = (SimpleEditModel) originalModel;
+
         SimpleEditExercise printExercise = this;
         double nodeWidth = PrintUtilities.getPageWidth() / mainWindow.getBaseScale();
 

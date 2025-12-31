@@ -110,7 +110,7 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
                         activeExercise = exer;
 
                         ExerciseType type = ((ExerciseModel)exer.getExerciseModel()).getExerciseType();
-                        if (type == ExerciseType.SIMPLE_EDIT || type ==ExerciseType.HORIZONTAL_TREE) {
+                        if (type == ExerciseType.SIMPLE_EDIT || type ==ExerciseType.HORIZONTAL_TREE || type == ExerciseType.VERTICAL_TREE) {
                             freeFormView.getIndentButton().setDisable(true);
                             freeFormView.getOutdentButton().setDisable(true);
                         } else {
@@ -352,7 +352,7 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
 
         ExerciseType type = ((ExerciseModel)exer.getExerciseModel()).getExerciseType();
 
-        if (type == ExerciseType.SIMPLE_EDIT || type == ExerciseType.HORIZONTAL_TREE) {
+        if (type == ExerciseType.SIMPLE_EDIT || type == ExerciseType.HORIZONTAL_TREE || type == ExerciseType.VERTICAL_TREE) {
             freeFormView.getIndentButton().setDisable(true);
             freeFormView.getOutdentButton().setDisable(true);
         } else {
@@ -360,6 +360,8 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
             freeFormView.getOutdentButton().setDisable(false);
         }
         freeFormView.getRemoveButton().setDisable(false);
+
+
 
 
     //    exer.getFFViewNode().setStyle("-fx-border-color: lightblue");
@@ -497,12 +499,16 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
      */
     private void addHTreeAction() {
         freeFormModel = getFreeFormModelFromView();
+
         HorizontalTreeModel newMod = new HorizontalTreeModel();
         int index = exerciseList.indexOf(activeExercise);
+
         ModelElement element = new ModelElement(newMod, 0);
         freeFormModel.getModelElements().add(++index, element);
         setElementsFromModel();
+
         freeFormView.updateContentFromViewElements();
+
         setActiveExercise(index);
         freeFormView.getRemoveButton().setDisable(false);
         exerciseModified = true;
