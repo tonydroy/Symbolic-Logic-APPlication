@@ -20,12 +20,15 @@ import com.install4j.api.launcher.ApplicationLauncher;
 import com.install4j.api.update.UpdateSchedule;
 import com.install4j.api.update.UpdateScheduleRegistry;
 import com.license4j.License;
+import com.teamdev.jxbrowser.engine.EngineOptions;
+import com.teamdev.jxbrowser.engine.ProprietaryFeature;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -40,7 +43,11 @@ import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.MediaView;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Modality;
@@ -57,12 +64,20 @@ import slapp.editor.simple_edit.SimpleEditExercise;
 import slapp.editor.simple_edit.SimpleEditModel;
 import java.io.File;
 import java.io.IOException;
+import java.net.CookieHandler;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-
+import static com.teamdev.jxbrowser.engine.RenderingMode.HARDWARE_ACCELERATED;
+import static com.teamdev.jxbrowser.engine.RenderingMode.OFF_SCREEN;
 import static javafx.scene.control.ButtonType.OK;
+import com.teamdev.jxbrowser.browser.Browser;
+import com.teamdev.jxbrowser.engine.Engine;
+import com.teamdev.jxbrowser.view.javafx.BrowserView;
+
 
 /**
  * Controller for the SLAPP main window
@@ -76,12 +91,17 @@ public class MainWindow {
     private boolean assignmentContentModified = false;
     private ChangeListener<Node> focusListener;
     private Node lastFocusOwner;
-    private MediaViewer mediaViewer = new MediaViewer();
+//    private MediaViewer mediaViewer = new MediaViewer();
     private boolean isExerciseOpen = false;
     private DoubleProperty baseScale = new SimpleDoubleProperty(1.0);
     private boolean fitToPage = false;
-    private WebEngine videoWebEngine;
-    private WebView videoWebView;
+//    private WebEngine videoWebEngine;
+//    private WebView videoWebView;
+    private Engine engine;
+    private Browser browser;
+    private BrowserView view;
+
+
     private Stage videoStage;
     private SlappProgData slappProgData = new SlappProgData();
     private SlappUsrData slappUsrData = new SlappUsrData();
@@ -119,9 +139,39 @@ public class MainWindow {
         mainView = new MainWindowView(this);
         setupMainWindow();
 
-   //     mainView.setupDummyWindowRTASize();
+        Task<Void> engineInitTask = new Task<>() {
+            @Override
+            protected Void call() {
+                try {
+                    //create engine (can be time consuming)
+                    engine = Engine.newInstance(
+                            EngineOptions.newBuilder(HARDWARE_ACCELERATED)
+                                    .licenseKey("4UNGPZMYCRLIBBGYH1Y64D1OI3UTS8Q17ZP9G98CDUPHO0KXKF2L7BQXVEC5GVNDBI4B77JBBGGFN50FETR9PWS0KL247FBU3PYJSMDP6ZXS9VYJ87621NTCTGXQL4TUZMGGZBJEESK5DJ7OFOB").addSwitch("--disable-features=NativeNotifications")
+                                    .addSwitch("--disable-features=NativeNotifications")
+                            //        .enableProprietaryFeature(ProprietaryFeature.AAC)
+                            //        .enableProprietaryFeature(ProprietaryFeature.H_264)
+                            //        .enableProprietaryFeature(ProprietaryFeature.HEVC)
+                                    .build()
+                    );
+                    browser = engine.newBrowser();
+                }
+                catch (Exception e) {
+                    Platform.runLater(() ->
+                            EditorAlerts.fleetingRedPopup("Failed to initialize browser (for video viewing).")
+                    );
+                }
+                return null;
+            }
+        };
+        Thread initThread = new Thread(engineInitTask, "JxBrowser-Init-Thread");
+        initThread.setDaemon(true);
+        initThread.start();
 
-        videoWebView = new WebView();
+
+
+
+
+
 
         focusListener = (ob, ov, nv) ->  {
             if (nv != null) {
@@ -260,15 +310,16 @@ public class MainWindow {
 
 
 
-        mainView.getQuickStartItem().setOnAction(e -> videoHelp("https://www.slappservices.net/quick_start/quick_start_player.html", 900, 631));
-        mainView.getSlappEditorItem().setOnAction(e -> videoHelp("https://www.slappservices.net/slapp_editor/slapp_editor_player.html", 800, 677));
-        mainView.getFormMapItem().setOnAction(e -> videoHelp("https://www.slappservices.net/form_maps/form_maps_player.html",700, 603));
-        mainView.getVerticalTreeItem().setOnAction(e -> videoHelp("https://www.slappservices.net/vertical_trees/vertical_trees_player.html",700, 702));
-        mainView.getHorizontalTreeItem().setOnAction(e -> videoHelp("https://www.slappservices.net/horizontal_trees/horizontal_trees_player.html", 660, 700));
-        mainView.getTruthTableItem().setOnAction(e -> videoHelp("https://www.slappservices.net/truth_tables/truth_tables_player.html", 700, 597));
-        mainView.getDerivationItem().setOnAction(e -> videoHelp("https://www.slappservices.net/derivations/derivations_player.html", 700, 587));
+        mainView.getQuickStartItem().setOnAction(e -> videoHelp("https://www.slappservices.net/quick_start/quick_start_player1.html", 900, 631));
+        mainView.getSlappEditorItem().setOnAction(e -> videoHelp("https://www.slappservices.net/slapp_editor/slapp_editor_player1.html", 800, 677));
+        mainView.getFormMapItem().setOnAction(e -> videoHelp("https://www.slappservices.net/form_maps/form_maps_player1.html",700, 603));
+        mainView.getVerticalTreeItem().setOnAction(e -> videoHelp("https://www.slappservices.net/vertical_trees/vertical_trees_player1.html",700, 702));
+        mainView.getHorizontalTreeItem().setOnAction(e -> videoHelp("https://www.slappservices.net/horizontal_trees/horizontal_trees_player1.html", 660, 700));
+        mainView.getTruthTableItem().setOnAction(e -> videoHelp("https://www.slappservices.net/truth_tables/truth_tables_player1.html", 700, 597));
+        mainView.getDerivationItem().setOnAction(e -> videoHelp("https://www.slappservices.net/derivations/derivations_player1.html", 700, 587));
+
         mainView.getInstructorInfoItem().setOnAction(e -> mainView.showInstructorInfo());
-     //   mainView.getInstructorInfoItem().setOnAction(e -> videoHelp("https://www.slappservices.net/instructor/instructor_player.html", 900, 537));
+
 
         mainView.getCommonElementsTextItem().setOnAction(e -> generalTextHelp());
         mainView.getAboutItem().setOnAction(e -> aboutTextHelp());
@@ -1118,18 +1169,50 @@ public class MainWindow {
      * @param width - widith of view window
      * @param height - height of view window
      */
+    public void videoHelp(String urlString, double width, double height) {
+
+        if (videoStage != null) videoStage.close();
+
+        view = BrowserView.newInstance(browser);
+        browser.navigation().loadUrl(urlString);
+
+        VBox root = new VBox(view);
+        root.setVgrow(view, Priority.ALWAYS);
+        Scene scene = new Scene(root);
+
+        videoStage = new Stage();
+        videoStage.setScene(scene);
+        videoStage.setTitle("SLAPP Video Help");
+        videoStage.initModality(Modality.NONE);
+        videoStage.getIcons().addAll(EditorMain.icons);
+//        stage.initOwner(EditorMain.mainStage);
+        Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
+        videoStage.setX(Math.max(5, Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - (width + 20))));
+        videoStage.setY(Math.max(5, Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - (height + 20))));
+        videoStage.setWidth(width);
+        videoStage.setHeight(height);
+
+        videoStage.setOnCloseRequest(e -> {
+            browser.navigation().loadHtml("");
+            videoStage.close();
+        });
+
+        videoStage.show();
+    }
+
+    void closeVideoHelp() {
+        if (engine != null) engine.close();
+        if (videoStage != null) videoStage.close();
+    }
+
+
 
     /*
-    private void videoHelp(String urlString, double width, double height) {
-        if (mediaViewer == null) mediaViewer = new MediaViewer();
-        else mediaViewer.stopPlay();
-        mediaViewer.play(urlString, width, height);
-    }
-     */
-
     public void videoHelp(String urlString, double width, double height) {
-        closeVideoHelp();
 
+         closeVideoHelp();
+
+        videoWebView = new WebView();
         videoWebEngine = videoWebView.getEngine();
         videoWebEngine.setUserStyleSheetLocation("data:, body {font: 16px Noto Serif Combo; }");
 
@@ -1167,6 +1250,8 @@ public class MainWindow {
         if (videoWebEngine != null) videoWebEngine.load(null);
         if (videoStage != null) videoStage.close();
     }
+
+     */
 
     /*
      * Open 'general info' text help item
@@ -1234,7 +1319,7 @@ public class MainWindow {
         MailHelper.generate("messaging@slappservices.net", "SLAPP: (your issue)", message);
     }
 
-    MediaViewer getMediaViewer() {     return mediaViewer;  }
+//    MediaViewer getMediaViewer() {     return mediaViewer;  }
 
     /**
      * The MainWindowView is the main SLAPP window

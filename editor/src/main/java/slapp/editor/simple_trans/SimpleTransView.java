@@ -125,7 +125,7 @@ public class SimpleTransView implements ExerciseView<DecoratedRTA> {
         //comment rta
         RichTextArea commentRTA = exerciseComment.getEditor();
         commentRTA.getStylesheets().add("slappTextArea.css");
-        commentRTA.setPromptText("Commment:");
+        commentRTA.setPromptText("Comment:");
 
         double commentInitialHeight = Math.round((commentPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100.0);
         commentHeightSpinner = new Spinner<>(0.0, 999.0, commentInitialHeight, 1.0);

@@ -540,6 +540,7 @@ public class VerticalTreeExercise implements Exercise<VerticalTreeModel, Vertica
         statementRTA.maxWidthProperty().unbind();
         statementRTA.setPrefHeight(printModel.getStatementTextHeight() + RTA_PRINT_BMP);
         statementRTA.setMaxWidth(nodeWidth);
+        statementRTA.setMinWidth(nodeWidth);
 
         statementRTA.getStylesheets().clear(); statementRTA.getStylesheets().add("richTextAreaPrinter.css");
         nodeList.add(statementRTA);

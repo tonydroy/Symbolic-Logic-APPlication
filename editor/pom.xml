@@ -22,6 +22,13 @@
         <junit.version>5.9.1</junit.version>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>com.teamdev</id>
+            <url>https://europe-maven.pkg.dev/jxbrowser/releases</url>
+        </repository>
+    </repositories>
+
 
 
     <dependencies>
@@ -40,7 +47,18 @@
             <version>5.0.2</version> <!-- Use the latest version available -->
         </dependency>
 
+        <dependency>
+            <groupId>com.teamdev.jxbrowser</groupId>
+            <artifactId>jxbrowser-cross-platform</artifactId>
+            <version>8.15.0</version>
+            <type>pom</type>
+        </dependency>
 
+        <dependency>
+            <groupId>com.teamdev.jxbrowser</groupId>
+            <artifactId>jxbrowser-javafx</artifactId>
+            <version>8.15.0</version>
+        </dependency>
 
 
         <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->

@@ -278,14 +278,17 @@ public class DecoratedRTA {
                 createToggleButton("\uf038", "Align Right", property -> new ParagraphDecorateAction<>(editor, property, d -> d.getAlignment() == TextAlignment.RIGHT, (builder, a) -> builder.alignment(a ? TextAlignment.RIGHT : TextAlignment.LEFT).build())),
                 createToggleButton("\uf039", "Justify", property -> new ParagraphDecorateAction<>(editor, property, d -> d.getAlignment() == TextAlignment.JUSTIFY, (builder, a) -> builder.alignment(a ? TextAlignment.JUSTIFY : TextAlignment.LEFT).build())),
 
-                wideSeparator(2),
+                wideSeparator(.5),
 
-                createJumpSpinner("Spacing", "Space for wrapped lines (point value)", p -> new ParagraphDecorateAction<>(editor, p, v -> (int) v.getSpacing(), (builder, a) -> builder.spacing(a).build())),
-                createSpinner("Indent", "Indent Level", p -> new ParagraphDecorateAction<>(editor, p, ParagraphDecoration::getIndentationLevel, (builder, a) -> builder.indentationLevel(a).build())),
+                createJumpSpinner("Wrp", "Space for wrapped lines (point value)", p -> new ParagraphDecorateAction<>(editor, p, v -> (int) v.getSpacing(), (builder, a) -> builder.spacing(a).build())),
+
+                createJumpSpinner("Par", "Extra space after paragraph (point value)",  p -> new ParagraphDecorateAction<>(editor, p, v -> (int) v.getBottomInset(), (builder, a) -> builder.bottomInset(a).build())),
+
+                createSpinner("Ind", "Indent Level", p -> new ParagraphDecorateAction<>(editor, p, ParagraphDecoration::getIndentationLevel, (builder, a) -> builder.indentationLevel(a).build())),
                 new Label("Size"),
                 fontSize,
 
-                wideSeparator(3),
+                wideSeparator(.5),
 
                 createToggleButton("\uf0cb", "Numbered List", property -> new ParagraphDecorateAction<>(editor, property, d -> d.getGraphicType() == NUMBERED_LIST, (builder, a) -> builder.graphicType(a ? NUMBERED_LIST : NONE).build())),
                 createToggleButton("\uf0ca", "Unordered List/Outline", property -> new ParagraphDecorateAction<>(editor, property, d -> d.getGraphicType() == BULLETED_LIST, (builder, a) -> builder.graphicType(a ? BULLETED_LIST : NONE).build())),
@@ -301,10 +304,15 @@ public class DecoratedRTA {
                 textForeground,
                 textBackground,
 
+                wideSeparator(2),
+
                 createToggleButton("\uf12b", "Superscript (PgUp)", property -> new TextDecorateAction<>(editor, property, TextDecoration::isSuperscript, (builder, a) -> builder.superscript(a).subscript(false).transSuperscript(false).transSubscript(false).build())),
                 createColoredToggleButton("\uf12b", "Shifted superscript (Shift-PgUp)", property -> new TextDecorateAction<>(editor, property, TextDecoration::isTransSuperscript, (builder, a) -> builder.transSuperscript(a).transSubscript(false).subscript(false).superscript(false).build())),
                 createToggleButton("\uf12c", "Subscript (PgDn)", property -> new TextDecorateAction<>(editor, property, TextDecoration::isSubscript, (builder, a) -> builder.subscript(a).superscript(false).transSuperscript(false).transSubscript(false).build())),
                 createColoredToggleButton("\uf12c", "Shifted Subscript (Shift-PgDn)", property -> new TextDecorateAction<>(editor, property, TextDecoration::isTransSubscript, (builder, a) -> builder.transSubscript(a).transSuperscript(false).superscript(false).subscript(false).build())),
+
+                wideSeparator(2),
+
                 createToggleButton("\uf032", "Bold - not for symbol fonts (Ctrl/Cmd-B)", property -> new TextDecorateAction<>(editor, property, d -> d.getFontWeight() == BOLD, (builder, a) -> builder.fontWeight(a ? BOLD : NORMAL).build())),
                 createToggleButton("\uf033", "Italic - not for symbol fonts (Ctrl/Cmd-I)", property -> new TextDecorateAction<>(editor, property, d -> d.getFontPosture() == ITALIC, (builder, a) -> builder.fontPosture(a ? ITALIC : REGULAR).build())),
                 createToggleButton("\uf0cc", "Strikethrough", property -> new TextDecorateAction<>(editor, property, TextDecoration::isStrikethrough, (builder, a) -> builder.strikethrough(a).build())),
@@ -321,7 +329,7 @@ public class DecoratedRTA {
         editToolbar.getItems().setAll(
                 overlineButton,
 
-                wideSeparator(1),
+                wideSeparator(2),
 
                 cutButton,
                 copyButton,
@@ -519,6 +527,32 @@ public class DecoratedRTA {
         spinnerBox.setAlignment(Pos.CENTER);
         return spinnerBox;
     }
+
+    //start at 2
+    private HBox createJumpSpinner2(String text, String tooltip, Function<ObjectProperty<Integer>, DecorateAction<Integer>> function) {
+        Spinner<Integer> spinner = new Spinner<>();
+        //
+        //this is a kludge because the spinners do not stop on mouse release.  This behavior only appeared after I started
+        //switching headers on focus.  It doesn't happen to a spinner by itself, but only in combination with RTA logic.
+        //this "fix" prevents mouse down spinning, but that will be ok for me. I absolutly do not understand how this happens!
+        spinner.valueProperty().addListener((obs, ov, nv) -> {
+            Node increment = spinner.lookup(".increment-arrow-button");
+            if (increment != null) increment.getOnMouseReleased().handle(null);
+            Node decrement = spinner.lookup(".decrement-arrow-button");
+            if (decrement != null) decrement.getOnMouseReleased().handle(null);
+        });
+        //
+        spinner.setTooltip(new Tooltip(tooltip));
+        SpinnerValueFactory.IntegerSpinnerValueFactory valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 20,2,2);
+        spinner.setValueFactory(valueFactory);
+        spinner.setPrefWidth(55);
+        spinner.setEditable(false);
+        function.apply(valueFactory.valueProperty());
+        HBox spinnerBox = new HBox(5, new Label(text), spinner);
+        spinnerBox.setAlignment(Pos.CENTER);
+        return spinnerBox;
+    }
+
 
     /*
      * Button to insert image

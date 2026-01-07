@@ -25,6 +25,7 @@ import javafx.application.*;
 import slapp.editor.m_parse.MParserMain;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.parser.ParserMain;
+import slapp.editor.simpleTests.EncodeDecodeTest;
 import slapp.editor.simpleTests.RegexTest;
 import slapp.editor.simpleTests.SimpleEditor;
 
@@ -139,6 +140,7 @@ public class EditorMain extends Application {
       //     new ParserMain(mainStage);
        //    new RegexTest(mainStage);
       //    new SimpleEditor(mainStage);
+     //   new EncodeDecodeTest(mainStage);
 
      //   });
 

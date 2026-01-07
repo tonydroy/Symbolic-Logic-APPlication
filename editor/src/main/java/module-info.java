@@ -22,6 +22,8 @@ module slapp.editor {
     requires com.gluonhq.emoji;
     requires javafx.media;
 
+   // requires com.teamdev.jxbrowser.view.javafx;
+
 
     requires org.apache.commons.lang3;
     //requires org.apache.logging.log4j.core;
@@ -33,6 +35,8 @@ module slapp.editor {
     requires java.compiler;
     requires licensing.library;
     requires java.management;
+    requires jxbrowser;
+    requires jxbrowser.javafx;
 
     opens slapp.editor to javafx.fxml;
     exports slapp.editor;

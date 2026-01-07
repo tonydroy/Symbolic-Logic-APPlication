@@ -1401,9 +1401,6 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
         fullHeight = fullHeight - n * 7.0;
         //
 
-
-
-
         fullHeightProperty.set(fullHeight);
         // TODO
     }
