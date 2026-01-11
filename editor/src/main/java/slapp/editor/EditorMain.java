@@ -17,17 +17,11 @@ package slapp.editor;
 
 import com.install4j.api.launcher.StartupNotification;
 import javafx.collections.ObservableList;
-import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
 import javafx.scene.text.Font;
 import javafx.stage.*;
 import javafx.application.*;
-import slapp.editor.m_parse.MParserMain;
 import slapp.editor.main_window.MainWindow;
-import slapp.editor.parser.ParserMain;
-import slapp.editor.simpleTests.EncodeDecodeTest;
-import slapp.editor.simpleTests.RegexTest;
-import slapp.editor.simpleTests.SimpleEditor;
 
 import java.awt.*;
 import java.util.List;
@@ -140,7 +134,7 @@ public class EditorMain extends Application {
       //     new ParserMain(mainStage);
        //    new RegexTest(mainStage);
       //    new SimpleEditor(mainStage);
-     //   new EncodeDecodeTest(mainStage);
+     //   new EncodeDecode();
 
      //   });
 

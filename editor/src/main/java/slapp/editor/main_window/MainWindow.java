@@ -60,6 +60,8 @@ import slapp.editor.free_form.FreeFormExercise;
 import slapp.editor.front_page.FrontPageExercise;
 import slapp.editor.main_window.assignment.*;
 import slapp.editor.main_window.media_player.MediaViewer;
+//import slapp.editor.simpleTests.EncodeDecode;
+//import slapp.editor.simpleTests.Encoder;
 import slapp.editor.simple_edit.SimpleEditExercise;
 import slapp.editor.simple_edit.SimpleEditModel;
 import java.io.File;
@@ -67,6 +69,9 @@ import java.io.IOException;
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.security.spec.AlgorithmParameterSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -77,6 +82,12 @@ import static javafx.scene.control.ButtonType.OK;
 import com.teamdev.jxbrowser.browser.Browser;
 import com.teamdev.jxbrowser.engine.Engine;
 import com.teamdev.jxbrowser.view.javafx.BrowserView;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
 
 
 /**
@@ -111,6 +122,9 @@ public class MainWindow {
 
     private EventHandler mainSceneClickFilter;
 
+    private final static int GCM_IV_LENGTH = 12;
+    String keyString = "no key";
+
 
 
 
@@ -139,6 +153,20 @@ public class MainWindow {
         mainView = new MainWindowView(this);
         setupMainWindow();
 
+        //get JxBrowser key
+
+        try {
+            keyString = decrypt(slappProgData.getJxcipher(), slappProgData.getJxsecretKey(), slappProgData.getJxdata());
+        }
+        catch (Exception e) {
+            EditorAlerts.fleetingRedPopup("Failed to obtain JxBrowser key.");
+        }
+
+
+        //re-encode JxBrowserkey
+        encoder();
+
+
         Task<Void> engineInitTask = new Task<>() {
             @Override
             protected Void call() {
@@ -146,7 +174,7 @@ public class MainWindow {
                     //create engine (can be time consuming)
                     engine = Engine.newInstance(
                             EngineOptions.newBuilder(HARDWARE_ACCELERATED)
-                                    .licenseKey("4UNGPZMYCRLIBBGYH1Y64D1OI3UTS8Q17ZP9G98CDUPHO0KXKF2L7BQXVEC5GVNDBI4B77JBBGGFN50FETR9PWS0KL247FBU3PYJSMDP6ZXS9VYJ87621NTCTGXQL4TUZMGGZBJEESK5DJ7OFOB").addSwitch("--disable-features=NativeNotifications")
+                                    .licenseKey(keyString)
                                     .addSwitch("--disable-features=NativeNotifications")
                             //        .enableProprietaryFeature(ProprietaryFeature.AAC)
                             //        .enableProprietaryFeature(ProprietaryFeature.H_264)
@@ -166,11 +194,6 @@ public class MainWindow {
         Thread initThread = new Thread(engineInitTask, "JxBrowser-Init-Thread");
         initThread.setDaemon(true);
         initThread.start();
-
-
-
-
-
 
 
         focusListener = (ob, ov, nv) ->  {
@@ -219,11 +242,51 @@ public class MainWindow {
         });
 
 
-
-
         //install4j
         UpdateScheduleRegistry.setUpdateSchedule(UpdateSchedule.WEEKLY);
         autoOpen(startFileName);
+    }
+
+
+    /**
+     * Decrypts encrypted message ).
+     *
+     * @throws Exception if anything goes wrong
+     */
+    private String decrypt(byte[] cipherMessage, SecretKey secretKey, byte[] associatedData) throws Exception {
+        final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        //use first 12 bytes for iv
+        AlgorithmParameterSpec gcmIv = new GCMParameterSpec(128, cipherMessage, 0, GCM_IV_LENGTH);
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, gcmIv);
+
+        if (associatedData != null) {
+            cipher.updateAAD(associatedData);
+        }
+        //use everything from 12 bytes on as ciphertext
+        byte[] plainText = cipher.doFinal(cipherMessage, GCM_IV_LENGTH, cipherMessage.length - GCM_IV_LENGTH);
+
+        return new String(plainText, StandardCharsets.UTF_8);
+    }
+
+    private void encoder() {
+        return;        //out for set code otherwise in
+
+        /*in set code otherwise out
+        SecureRandom secureRandom = new SecureRandom();
+        byte[] key = new byte[16];
+        secureRandom.nextBytes(key);
+        slappProgData.setJxsecretKey(new SecretKeySpec(key, "AES"));
+        slappProgData.setJxdata("ProtocolVersion1".getBytes(StandardCharsets.UTF_8));
+
+        Encoder encoder = new Encoder();
+
+        try {
+            slappProgData.setJxcipher(encoder.encrypt(slappProgData.getJxsecretKey(), slappProgData.getJxdata()));
+        }
+        catch (Exception e) {
+            EditorAlerts.fleetingRedPopup("Could not encode JxKey.");
+        }
+        */
     }
 
 
@@ -847,6 +910,8 @@ public class MainWindow {
                 }
             }
 
+        //    mainView.deactivateProgressIndicator();
+
             if (!badExerciseList.isEmpty()) {
                 StringBuilder sb = new StringBuilder(badExerciseList.get(0));
                 for (int i = 1; i < badExerciseList.size(); i++) {
@@ -856,7 +921,12 @@ public class MainWindow {
                 String message = "Fit page not selected and " + sb.toString() + " include(s) at least one block that takes up more than a page.  Content exceeding page bounds will be cropped.\n\n Continue to print?";
                 Alert confirm = EditorAlerts.confirmationAlert("Page Problem:", message);
                 Optional<ButtonType> result = confirm.showAndWait();
-                if (result.get() == OK) heightGood = true;
+                if (result.get() == OK) {
+                    heightGood = true;
+                }
+                else {
+                    mainView.deactivateProgressIndicator();
+                }
             }
 
             PrintUtilities.setTopBox(mainView.getAssignmentHeader(assignmentPointsPossible, assignmentPointsEarned));
@@ -1154,6 +1224,39 @@ public class MainWindow {
         return continueClose;
     }
 
+    /**
+     * This is a kludge.  Mac does not properly revert to the app after print / page setup dialogues.
+     * This much is well-known.  Requesting focus as below restores all but menu dropdowns.
+     * The opening of a "fleeting stage" behind the main window seems to do the trick.
+     *
+     * Don't know if can do without request focus and just have the fleeting stage.
+     *
+     * @param stage the JavaFX Stage to refocus
+     */
+    public static void restoreMacFocus(Stage stage) {
+        if (stage == null) return;
+
+        // Only apply on macOS
+        String osName = System.getProperty("os.name").toLowerCase();
+        if (!osName.contains("mac")) {
+            return;
+        }
+
+        // Delay twice to ensure OS finishes closing native dialog
+        Platform.runLater(() ->
+                Platform.runLater(() -> {
+                    stage.requestFocus();
+                    if (stage.getScene() != null && stage.getScene().getRoot() != null) {
+                        stage.getScene().getRoot().requestFocus();
+                    }
+                    EditorAlerts.fleetingStage();
+                })
+        );
+
+    }
+
+
+
     /*
      * Open "about" text help popup
      */
@@ -1173,31 +1276,36 @@ public class MainWindow {
 
         if (videoStage != null) videoStage.close();
 
-        view = BrowserView.newInstance(browser);
-        browser.navigation().loadUrl(urlString);
+        if (browser != null) {
+            if (view == null) view = BrowserView.newInstance(browser);
+            browser.navigation().loadUrl(urlString);
 
-        VBox root = new VBox(view);
-        root.setVgrow(view, Priority.ALWAYS);
-        Scene scene = new Scene(root);
+            VBox root = new VBox(view);
+            root.setVgrow(view, Priority.ALWAYS);
+            Scene scene = new Scene(root);
 
-        videoStage = new Stage();
-        videoStage.setScene(scene);
-        videoStage.setTitle("SLAPP Video Help");
-        videoStage.initModality(Modality.NONE);
-        videoStage.getIcons().addAll(EditorMain.icons);
+            videoStage = new Stage();
+            videoStage.setScene(scene);
+            videoStage.setTitle("SLAPP Video Help");
+            videoStage.initModality(Modality.NONE);
+            videoStage.getIcons().addAll(EditorMain.icons);
 //        stage.initOwner(EditorMain.mainStage);
-        Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        videoStage.setX(Math.max(5, Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - (width + 20))));
-        videoStage.setY(Math.max(5, Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - (height + 20))));
-        videoStage.setWidth(width);
-        videoStage.setHeight(height);
+            Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
+            videoStage.setX(Math.max(5, Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - (width + 20))));
+            videoStage.setY(Math.max(5, Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - (height + 20))));
+            videoStage.setWidth(width);
+            videoStage.setHeight(height);
 
-        videoStage.setOnCloseRequest(e -> {
-            browser.navigation().loadHtml("");
-            videoStage.close();
-        });
+            videoStage.setOnCloseRequest(e -> {
+                browser.navigation().loadHtml("");
+                videoStage.close();
+            });
 
-        videoStage.show();
+            videoStage.show();
+        }
+        else {
+            EditorAlerts.fleetingRedPopup("Problem initializing JxBrowser.");
+        }
     }
 
     void closeVideoHelp() {

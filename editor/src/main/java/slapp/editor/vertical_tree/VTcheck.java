@@ -9,6 +9,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
+import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.m_parse.MLanguage;
 import slapp.editor.m_parse.MParseUtilities;
 import slapp.editor.m_parse.MSyntacticalFns;
@@ -2108,8 +2109,26 @@ public class VTcheck implements VTAuxCheck {
             //last box at level
             if ((i + 1 < sortedFormulaBoxes.size() && Math.abs(sortedFormulaBoxes.get(i + 1).getLayoutY() - sortedFormulaBoxes.get(i).getLayoutY()) > equalsEpsilon) || i + 1 >= sortedFormulaBoxes.size()) {
 
-                treeList.sort(Comparator.comparingDouble((treeBox -> treeBox.getMainTreeBox().getLayoutX())));
-                formulaTree.add(treeList);
+                if (treeList.size() > 0) {
+                    treeList.sort(Comparator.comparingDouble((treeBox -> treeBox.getMainTreeBox().getLayoutX())));
+                    formulaTree.add(treeList);
+                }
+                if (treeList.size() == 0 && justificationList.size() != 0) {
+                    if (!silent) {
+                        BoxedDRTA justificationBDRTA = justificationList.get(0).getFormulaBox();
+                        vtExercise.getMainWindow().getMainView().scrollToNode(justificationBDRTA.getRTA());
+                        justificationBDRTA.setVTtreeBoxHighlight();
+
+                        List<Text> messageList = new ArrayList<>();
+                        messageList.add(ParseUtilities.newRegularText("Justification without formula field on row."));
+                        EditorAlerts.showSimpleTxtListAlert("Tree Structure", messageList);
+                        for (MapFormulaBox mapBox : justificationList) {
+                            mapBox.getFormulaBox().resetVTtreeBoxHighlight();
+                        }
+                    }
+                    return false;
+                }
+
 
                 if (checkJustification || checkValueJustification)  {
                     if (justificationList.size() == 0) {

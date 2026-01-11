@@ -36,3 +36,4 @@ build/
 
 ### Mac OS ###
 .DS_Store
+/editor/src/main/java/slapp/editor/simpleTests/EncodeDecode.java

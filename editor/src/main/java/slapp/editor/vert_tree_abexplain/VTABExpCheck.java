@@ -2281,8 +2281,25 @@ public class VTABExpCheck implements VTAuxCheck {
 
             if ((i + 1 < sortedFormulaBoxes.size() && Math.abs(sortedFormulaBoxes.get(i + 1).getLayoutY() - sortedFormulaBoxes.get(i).getLayoutY()) > equalsEpsilon) || i + 1 >= sortedFormulaBoxes.size()) {
 
-                treeList.sort(Comparator.comparingDouble((treeBox -> treeBox.getMainTreeBox().getLayoutX())));
-                formulaTree.add(treeList);
+                if (treeList.size() > 0) {
+                    treeList.sort(Comparator.comparingDouble((treeBox -> treeBox.getMainTreeBox().getLayoutX())));
+                    formulaTree.add(treeList);
+                }
+                if (treeList.size() == 0 && justificationList.size() != 0) {
+                    if (!silent) {
+                        BoxedDRTA justificationBDRTA = justificationList.get(0).getFormulaBox();
+                        vtABExpExercise.getMainWindow().getMainView().scrollToNode(justificationBDRTA.getRTA());
+                        justificationBDRTA.setVTtreeBoxHighlight();
+
+                        List<Text> messageList = new ArrayList<>();
+                        messageList.add(ParseUtilities.newRegularText("Justification without formula field on row."));
+                        EditorAlerts.showSimpleTxtListAlert("Tree Structure", messageList);
+                        for (ABExpMapFormulaBox mapBox : justificationList) {
+                            mapBox.getFormulaBox().resetVTtreeBoxHighlight();
+                        }
+                    }
+                    return false;
+                }
 
                 if (checkJustification || checkValueJustification)  {
                     if (justificationList.size() == 0) {

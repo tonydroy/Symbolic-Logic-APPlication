@@ -496,10 +496,10 @@ public class KeyboardDiagram {
 
         ctrlChars = new Text("\ud83e\udc46 F1, F2, F3, F4, (shift F4), F5, F6, F7, F8 select keyboards (same order as dropdown)\n" +
         "    F9 toggles to previous keyboard\n" +
-        "    page-up: toggle superscript (+shift, shift back)\n" +
-        "    page-down: toggle subscript (+shift, shift back)\n" +
-        "    Ctrl:B bold, :I italic, :U underline, :0 (zero) overline\n" +
-        "    Ctrl:A select all, :C copy, :X cut, :V paste, :Z undo, :Z(+shift) redo\n\n");
+        "    page-up/fn-\u2191: toggle superscript (+shift, shift back)\n" +
+        "    page-down/fn-\u2193: toggle subscript (+shift, shift back)\n" +
+        "    Ctrl/Cmd:B bold, :I italic, :U underline, :0 (zero) overline\n" +
+        "    Ctrl/Cmd:A select all, :C copy, :X cut, :V paste, :Z undo, :Z(+shift) redo\n\n");
 
         ctrlChars.setFont(textFont);
     }

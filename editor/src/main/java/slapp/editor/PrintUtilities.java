@@ -43,6 +43,7 @@ import static slapp.editor.EditorMain.mainStage;
 import static slapp.editor.EditorMain.os;
 
 
+import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
 
 
@@ -179,6 +180,8 @@ public class PrintUtilities {
 
             // boolean proceed = job.showPageSetupDialog(null);
             boolean proceed = job.showPageSetupDialog(mainStage);
+
+            MainWindow.restoreMacFocus(mainStage);
 
             if (proceed) {
                 PageLayout baseLayout = job.getJobSettings().getPageLayout();
@@ -438,15 +441,21 @@ public class PrintUtilities {
         job.setPrinter(printer);
         job.getJobSettings().setPageLayout(pageLayout);
 
-        if (job != null) {
-            if (refreshPageLayout()) {
-                if (job.showPrintDialog(mainStage)) {
-                    printNodes(footerInfo, job);
+        Platform.runLater(() -> {
+
+            if (job != null) {
+                if (refreshPageLayout()) {
+
+                    if (job.showPrintDialog(mainStage)) {
+                        printNodes(footerInfo, job);
+                    }
+
+                    MainWindow.restoreMacFocus(mainStage);
                 }
+                job.endJob();
+                MainWindowView.deactivateProgressIndicator();
             }
-            job.endJob();
-        }
-        MainWindowView.deactivateProgressIndicator();
+        });
     }
 
 

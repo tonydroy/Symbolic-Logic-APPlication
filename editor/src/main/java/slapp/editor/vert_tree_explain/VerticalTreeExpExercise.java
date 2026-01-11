@@ -575,13 +575,13 @@ public class VerticalTreeExpExercise implements Exercise<VerticalTreeExpModel, V
         for (Node node : nodes) {
             if (node instanceof ExpTreeFormulaBox) {
                 ExpTreeFormulaBox treeBox = (ExpTreeFormulaBox) node;
-                treeBox.getFormulaBox().getRTA().setStyle("-fx-border-color: transparent");
+                treeBox.getFormulaBox().getRTA().setStyle("-fx-border-width: 0; -fx-border-color: transparent");
                 treeBox.getFormulaBox().getRTA().setMinWidth(treeBox.getPrintWidth());
-                if (treeBox.getAnnotationField() != null) treeBox.getAnnotationField().getRTA().setStyle("-fx-border-color: transparent");
+                if (treeBox.getAnnotationField() != null) treeBox.getAnnotationField().getRTA().setStyle("-fx-border-width: 0; -fx-border-color: transparent");
             }
             if (node instanceof ExpMapFormulaBox) {
                 ExpMapFormulaBox mapBox = (ExpMapFormulaBox) node;
-                mapBox.getFormulaBox().getRTA().setStyle("-fx-border-color: transparent");
+                mapBox.getFormulaBox().getRTA().setStyle("-fx-border-width: 0; -fx-border-color: transparent");
                 mapBox.getFormulaBox().getRTA().setMinWidth(mapBox.getPrintWidth());
 
             }

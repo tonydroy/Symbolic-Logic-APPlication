@@ -231,7 +231,7 @@ public class DrvtnExpView implements ExerciseView<DecoratedRTA> {
 
         double statementInitialHeight = Math.round((statementPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100.0);
         statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
-        statementHeightSpinner.setPrefWidth(60);
+        statementHeightSpinner.setPrefWidth(65);
         statementHeightSpinner.setDisable(false);
         statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
         statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
@@ -246,7 +246,7 @@ public class DrvtnExpView implements ExerciseView<DecoratedRTA> {
         else statementRTA.minWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
         statementRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
         statementWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
-        statementWidthSpinner.setPrefWidth(60);
+        statementWidthSpinner.setPrefWidth(65);
         statementWidthSpinner.setDisable(true);
         statementWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
 
@@ -257,7 +257,7 @@ public class DrvtnExpView implements ExerciseView<DecoratedRTA> {
 
         double commentInitialHeight = Math.round((commentPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100.0);
         commentHeightSpinner = new Spinner<>(0.0, 999.0, commentInitialHeight, 1.0);
-        commentHeightSpinner.setPrefWidth(60);
+        commentHeightSpinner.setPrefWidth(65);
         commentHeightSpinner.setDisable(false);
         commentHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
         commentRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
@@ -272,7 +272,7 @@ public class DrvtnExpView implements ExerciseView<DecoratedRTA> {
         commentRTA.minWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
         commentRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
         commentWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
-        commentWidthSpinner.setPrefWidth(60);
+        commentWidthSpinner.setPrefWidth(65);
         commentWidthSpinner.setDisable(true);
         commentWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
 
@@ -284,7 +284,7 @@ public class DrvtnExpView implements ExerciseView<DecoratedRTA> {
 
         double explanationInitialHeight = Math.round((explanationPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100.0 );
         explanationHeightSpinner = new Spinner<>(0.0, 999.0, explanationInitialHeight, 1.0);
-        explanationHeightSpinner.setPrefWidth(60);
+        explanationHeightSpinner.setPrefWidth(65);
         explanationHeightSpinner.setDisable(false);
         explanationHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
         explanationRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(explanationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
@@ -299,14 +299,14 @@ public class DrvtnExpView implements ExerciseView<DecoratedRTA> {
         explanationRTA.minWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
         explanationRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
         explanationWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
-        explanationWidthSpinner.setPrefWidth(60);
+        explanationWidthSpinner.setPrefWidth(65);
         explanationWidthSpinner.setDisable(true);
         explanationWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
 
        //split pane
         double splitPaneInitialWidth = Math.round((splitPanePrefWidth - RTA_WIDTH_BMP) / mainView.getScalePageWidth() * 20.0) * 5.0;
         splitPaneWidthSpinner = new Spinner<>(10.0, 999.0, splitPaneInitialWidth, 5.0);
-        splitPaneWidthSpinner.setPrefWidth(60);
+        splitPaneWidthSpinner.setPrefWidth(65);
         splitPaneWidthSpinner.setDisable(false);
         splitPaneWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
         contentSplitPane.prefWidthProperty().bind(Bindings.add(Bindings.multiply(mainView.scalePageWidthProperty(), DoubleProperty.doubleProperty(splitPaneWidthSpinner.getValueFactory().valueProperty()).divide(100.0)), RTA_WIDTH_BMP));
@@ -319,7 +319,7 @@ public class DrvtnExpView implements ExerciseView<DecoratedRTA> {
 
         contentSplitPane.setMinHeight(200);
         splitPaneHeightSpinner = new Spinner<>(0.0,999.0, 0,1.0);
-        splitPaneHeightSpinner.setPrefWidth(60);
+        splitPaneHeightSpinner.setPrefWidth(65);
         splitPaneHeightSpinner.setDisable(true);
         splitPaneHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
 

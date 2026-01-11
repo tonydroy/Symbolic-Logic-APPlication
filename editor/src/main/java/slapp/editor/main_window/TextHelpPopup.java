@@ -264,10 +264,10 @@ static {
             "<li>F7 Script/Sans keyboard     </li>" +
             "<li>F8 Greek/Fraktur keyboard     </li>" +
             "<li>F9 Toggle to previous keyboard     </li>" +
-            "<li>PgUp Toggle superscript on/off    </li>" +
-            "<li>Shift-PgUp Toggle shifted superscript on/off    </li>" +
-            "<li>PgDn Toggle subscript on/off    </li>" +
-            "<li>Shift-PgDn Toggle shifted subscript on/off    </li>" +
+            "<li>PgUp/fn-&#8593 Toggle superscript on/off    </li>" +
+            "<li>Shift-PgUp/fn-&#8593 Toggle shifted superscript on/off    </li>" +
+            "<li>PgDn/fn-&#8595 Toggle subscript on/off    </li>" +
+            "<li>Shift-PgDn/fn-&#8595 Toggle shifted subscript on/off    </li>" +
             "<li>Ctrl/Cmd-B Toggle bold on/off   </li>" +
             "<li>Ctrl/Cmd-I Toggle italic on/off    </li>" +
             "<li>Ctrl/Cmd-U Toggle underline on/off   </li>" +

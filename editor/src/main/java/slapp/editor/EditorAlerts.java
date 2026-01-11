@@ -16,17 +16,21 @@ You should have received a copy of the GNU General Public License along with SLA
 package slapp.editor;
 
 import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import slapp.editor.main_window.MainWindowView;
 
@@ -124,6 +128,26 @@ public class EditorAlerts {
         delay.play();
         alert.showAndWait();
 
+    }
+
+    public static void fleetingStage() {
+        VBox vBox = new VBox();
+        Scene fScene = new Scene(vBox);
+        Stage fStage = new Stage();
+        fStage.setScene(fScene);
+        fStage.initModality(Modality.NONE);
+
+        fStage.initStyle(StageStyle.UTILITY);
+        fStage.toBack();
+        fStage.setOpacity(0);
+
+        PauseTransition delay = new PauseTransition(Duration.seconds(2));
+        delay.setOnFinished(e -> fStage.close());
+        delay.play();
+
+
+        fStage.show();
+        vBox.requestFocus();
     }
 
     /**
