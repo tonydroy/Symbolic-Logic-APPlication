@@ -184,6 +184,7 @@ public class MainWindow {
                     browser = engine.newBrowser();
                 }
                 catch (Exception e) {
+                //    e.printStackTrace();
                     Platform.runLater(() ->
                             EditorAlerts.fleetingRedPopup("Failed to initialize browser (for video viewing).")
                     );
@@ -324,6 +325,8 @@ public class MainWindow {
             }
         }
     }
+
+
 
     /*
      * Initialize main window controls

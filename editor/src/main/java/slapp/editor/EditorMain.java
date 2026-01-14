@@ -64,6 +64,8 @@ public class EditorMain extends Application {
     public static void main(String[] args) {
 
         // register startup notification on AWT before JavaFX is initialized (required as per Ingo K)
+
+
         EventQueue.invokeLater(() -> {
             StartupNotification.registerStartupListener(parameters -> {
                         try {
@@ -75,6 +77,8 @@ public class EditorMain extends Application {
                     }
             );
         });
+
+
 
         launch(args);
     }
@@ -89,6 +93,9 @@ public class EditorMain extends Application {
      */
     @Override
     public void start(Stage stage) {
+   //     System.setProperty("jxbrowser.chromium.dir", "c:/");
+
+
         this.mainStage = stage;
 
         secondaryCopy = JustOneLock.isAppActive();
@@ -142,12 +149,15 @@ public class EditorMain extends Application {
 
     }
 
+
     private static void openFile(String parameters) {
 
         Platform.runLater(() -> {
             mainWindow.autoOpen(parameters);
         });
     }
+
+
 
 }
 

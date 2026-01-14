@@ -467,7 +467,7 @@ public class TruthTableGenExercise implements Exercise<TruthTableGenModel, Truth
         interpretationRTA.prefHeightProperty().unbind();
         interpretationRTA.minWidthProperty().unbind();
         interpretationRTA.maxWidthProperty().unbind();
-        interpretationRTA.setPrefHeight(printModel.getStatementTextHeight() + RTA_PRINT_BMP);
+        interpretationRTA.setPrefHeight(printModel.getInterpretationTextHeight() + RTA_PRINT_BMP);
         interpretationRTA.setMaxWidth(nodeWidth);
 
         interpretationRTA.getStylesheets().clear(); interpretationRTA.getStylesheets().add("richTextAreaPrinter.css");
