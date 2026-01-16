@@ -885,6 +885,7 @@ public class FreeFormExercise implements Exercise<FreeFormModel, FreeFormView> {
             Region spacer = new Region();
             spacer.setPrefWidth(20.0 * originalModelElement.getIndentLevel());
             HBox elementBox = new HBox(spacer, exerElement.getFFPrintNode(originalItemModel));
+            elementBox.setStyle("-fx-border-width: 0; -fx-border-color: transparent;");
 
             nodeList.add(elementBox);
         }

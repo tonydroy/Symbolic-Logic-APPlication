@@ -230,6 +230,7 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
 
         explanationEditor.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
+                mainView.getRTATextHeight(explanationEditor);
                 mainView.editorInFocus(explanationDRTA, ControlType.AREA);
             }
         });
@@ -1225,7 +1226,7 @@ public class DrvtnExpExercise implements Exercise<DrvtnExpModel, DrvtnExpView> {
         explanationRTA.prefHeightProperty().unbind();
         explanationRTA.minWidthProperty().unbind();
         explanationRTA.maxWidthProperty().unbind();
-        explanationRTA.setPrefHeight(Math.max(40, printModel.getCommentTextHeight() + RTA_PRINT_BMP));
+        explanationRTA.setPrefHeight(Math.max(40, printModel.getExplanationTextHeight() + RTA_PRINT_BMP));
         explanationRTA.setMaxWidth(nodeWidth);
         explanationRTA.setMinWidth(nodeWidth);
 
