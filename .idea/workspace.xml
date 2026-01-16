@@ -10,7 +10,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d366fccc-ef06-4007-b459-d27194c8a785" name="Changes" comment="Version 3.2.1">
-      <change afterPath="$PROJECT_DIR$/editor/src/main/java/slapp/editor/parser/symbols/Constant.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,7 +58,7 @@
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "git-widget-placeholder": "Merging master",
+    "git-widget-placeholder": "master",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/tonyd/Dropbox/MyFilesDB/JavaProgs/net.tonyroyphilosophy/SLAPP-8",
     "node.js.detected.package.eslint": "true",
@@ -66,7 +66,7 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Artifacts",
+    "project.structure.last.edited": "Libraries",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.48735633",
     "settings.editor.selected.configurable": "preferences.pluginManager",
@@ -155,7 +155,7 @@
       <workItem from="1768394714130" duration="17243000" />
       <workItem from="1768481025291" duration="3605000" />
       <workItem from="1768493125111" duration="8542000" />
-      <workItem from="1768578169555" duration="3857000" />
+      <workItem from="1768578169555" duration="4993000" />
     </task>
     <task id="LOCAL-00001" summary="first SLAPP-8 with javafx 25">
       <option name="closed" value="true" />
@@ -365,7 +365,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768585193549</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="Version 3.2.1">
+      <option name="closed" value="true" />
+      <created>1768585583054</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1768585583054</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
