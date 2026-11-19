@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License along with SLA
 
 package slapp.editor.main_window;
 
+import javafx.beans.property.DoubleProperty;
 import javafx.scene.Node;
 import javafx.scene.control.Spinner;
 import javafx.scene.input.MouseEvent;
@@ -95,6 +96,9 @@ public interface Exercise<T,U> {
     Spinner getFFHeightSpinner();
     Spinner getFFWidthSpinner();
 
+    default void cleanup() {}
+
+
     default void clearStandingPopups() {};
 
     default String getAuxExerName() {return "";}
@@ -103,6 +107,14 @@ public interface Exercise<T,U> {
 
     default void setAuxExerB(Exercise exercise) {}
 
+    default Node getAuxExerNode() {
+        return null;
+    }
+
     default void handleMouseEvent(MouseEvent event) {}
+
+
+
+
 
 }

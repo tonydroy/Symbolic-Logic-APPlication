@@ -25,6 +25,8 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -52,7 +54,52 @@ import java.util.function.UnaryOperator;
 import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
 import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
 
-public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
+
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.event.EventHandler;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import java.util.ArrayList;
+import java.util.List;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.ParallelTransition;
+import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+import javafx.scene.text.TextFlow;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.UnaryOperator;
+
+
+public class VerticalTreeView implements ExerciseView<DecoratedRTA> {
 
     private MainWindowView mainView;
     private RichTextAreaSkin.KeyMapValue defaultKeyboard;
@@ -95,19 +142,71 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
     private Color checkElementsColor;
     private boolean checkShowing = false;
     private Button staticHelpButton;
-    private Stage  staticHelpStage;;
+    private Stage staticHelpStage;
 
     private VerticalTreeExercise vtExercise;
 
+    private final DoubleProperty localScalePageHeight = new SimpleDoubleProperty(1.0);
+    private final DoubleProperty localScalePageWidth = new SimpleDoubleProperty(1.0);
+
+    // SCORCHED EARTH RULE 1 & 2: The Asynchronous Ghost "Kill Switch" & Named Listeners
+    private boolean isTornDown = false;
+    private ChangeListener<Node> exerciseFocusListener;
+    private ChangeListener<Number> mainPaneHeightListener;
+    private ChangeListener<Number> mainPaneWidthListener;
+    private ChangeListener<Number> localScalePageHeightListener;
+    private ChangeListener<Number> localScalePageWidthListener;
+    private EventHandler<MouseEvent> mainPaneClickHandler;
+    private UnaryOperator<TextFormatter.Change> pointsEarnedFilter;
+
+    private ChangeListener<Boolean> pointsEarnedFocusListener;
+    private EventHandler<MouseEvent> pointsEarnedClickHandler;
 
     VerticalTreeView(MainWindowView mainView, VerticalTreeExercise vtExercise) {
         this.mainView = mainView;
+
+        localScalePageHeight.bind(mainView.scalePageHeightProperty());
+        localScalePageWidth.bind(mainView.scalePageWidthProperty());
+
+        exerciseFocusListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null) return;
+
+            try {
+                RichTextArea statementRTA = exerciseStatement != null ? exerciseStatement.getEditor() : null;
+                RichTextArea commentRTA = exerciseComment != null ? exerciseComment.getEditor() : null;
+
+                if (statementRTA != null && inHierarchy(nv, statementRTA)) {
+                    if (currentSpinnerNode != statementRTA) {
+                        currentSpinnerNode = statementRTA;
+                        if (statementHeightSpinner != null && statementWidthSpinner != null) {
+                            this.mainView.updateSizeSpinners(statementHeightSpinner, statementWidthSpinner);
+                        }
+                    }
+                } else if (commentRTA != null && inHierarchy(nv, commentRTA)) {
+                    if (currentSpinnerNode != commentRTA) {
+                        currentSpinnerNode = commentRTA;
+                        if (commentHeightSpinner != null && commentWidthSpinner != null) {
+                            this.mainView.updateSizeSpinners(commentHeightSpinner, commentWidthSpinner);
+                        }
+                    }
+                } else if (mainPane != null && inHierarchy(nv, mainPane)) {
+                    if (currentSpinnerNode != mainPane) {
+                        currentSpinnerNode = mainPane;
+                        if (mainPaneHeightSpinner != null && mainPaneWidthSpinner != null) {
+                            this.mainView.updateSizeSpinners(mainPaneHeightSpinner, mainPaneWidthSpinner);
+                        }
+                    }
+                } else {
+                    currentSpinnerNode = null;
+                }
+            } catch (Exception e) {}
+        };
+
         this.vtExercise = vtExercise;
 
         root = new BorderPane();
         rootLayout = new RootLayout(this);
         root.setCenter(rootLayout);
-
 
         undoButton = new Button("Undo");
         redoButton = new Button("Redo");
@@ -117,8 +216,8 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
         redoButton.setPrefHeight(28);
 
         controlBox.getChildren().addAll(undoButton, redoButton);
-        controlBox.setAlignment(Pos.BASELINE_RIGHT);
-        controlBox.setPadding(new Insets(50,20,0,20));  //60
+        controlBox.setAlignment(Pos.TOP_CENTER);
+        controlBox.setPadding(new Insets(40,20,0,20));  //60
         controlBox.setMinWidth(150); controlBox.setMaxWidth(150);
         exerciseControlNode = controlBox;
 
@@ -126,111 +225,148 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
         pointsEarnedTextField.setPrefWidth(27);
         pointsEarnedTextField.setAlignment(Pos.CENTER_RIGHT);
         pointsEarnedTextField.setPadding(new Insets(0,5,0,3));
-        UnaryOperator<TextFormatter.Change> filter = change -> {
+
+        pointsEarnedFilter = change -> {
+            if (isTornDown || change == null) return null;
             String text = change.getText();
-            if (text.matches("[0-9]*")) {
-                return change;
-            }
+            if (text.matches("[0-9]*")) return change;
             return null;
         };
-        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        TextFormatter<String> textFormatter = new TextFormatter<>(pointsEarnedFilter);
         pointsEarnedTextField.setTextFormatter(textFormatter);
+
+        pointsEarnedFocusListener = (obs, wasFocused, isNowFocused) -> {
+            if (isTornDown || pointsEarnedTextField == null) return;
+            if (isNowFocused) {
+                Platform.runLater(() -> {
+                    if (!isTornDown && pointsEarnedTextField != null) {
+                        pointsEarnedTextField.selectAll();
+                    }
+                });
+                if (mainView != null) {
+                    mainView.textFieldInFocus();
+                }
+            } else if (pointsEarnedTextField.getText().isEmpty()) {
+                pointsEarnedTextField.setText("0");
+            }
+        };
+        pointsEarnedTextField.focusedProperty().addListener(pointsEarnedFocusListener);
+
+        pointsEarnedClickHandler = event -> {
+            if (isTornDown || pointsEarnedTextField == null) return;
+            if (pointsEarnedTextField.getSelectedText().isEmpty()) {
+                pointsEarnedTextField.selectAll();
+            }
+        };
+        pointsEarnedTextField.setOnMouseClicked(pointsEarnedClickHandler);
+
     }
 
     void initializeViewDetails() {
+        double spinnerMin = (double) ((int) (100 * 45.0 / localScalePageHeight.get()));
+
         //statement
         RichTextArea statementRTA = exerciseStatement.getEditor();
         statementRTA.getStylesheets().add("slappTextArea.css");
         statementRTA.setEditable(false);
 
-        double statementInitialHeight = Math.round((statementPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100.0);
-        statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
+        double statementInitialHeight = Math.ceil((statementPrefHeight - RTA_SCREEN_BMP) / localScalePageHeight.get() * 100.0);
+        statementHeightSpinner = new Spinner<>(spinnerMin, 999.0, statementInitialHeight, 1.0);
         statementHeightSpinner.setPrefWidth(65);
         statementHeightSpinner.setDisable(false);
-        statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
-        statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
-            Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
-            if (increment != null) increment.getOnMouseReleased().handle(null);
-            Node decrement = statementHeightSpinner.lookup(".decrement-arrow-button");
-            if (decrement != null) decrement.getOnMouseReleased().handle(null);
-        });
-        statementRTA.maxWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
+        statementHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        statementRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.contentAreaWidthProperty().bind(localScalePageWidth);
 
         statementWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         statementWidthSpinner.setPrefWidth(65);
         statementWidthSpinner.setDisable(true);
-        statementWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
+        statementWidthSpinner.setTooltip(new Tooltip("Window width as % of selected paper"));
 
         //comment
         RichTextArea commentRTA = exerciseComment.getEditor();
         commentRTA.getStylesheets().add("slappTextArea.css");
         commentRTA.setPromptText("Comment:");
 
-        double commentInitialHeight = Math.round((commentPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100.0);
-        commentHeightSpinner = new Spinner<>(0.0, 999.0, commentInitialHeight, 1.0);
+        double commentInitialHeight = Math.round((commentPrefHeight - RTA_SCREEN_BMP) / localScalePageHeight.get() * 100.0);
+        commentHeightSpinner = new Spinner<>(spinnerMin, 999.0, commentInitialHeight, 1.0);
         commentHeightSpinner.setPrefWidth(65);
         commentHeightSpinner.setDisable(false);
-        commentHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        commentRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
-        commentHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
-            Node increment = commentHeightSpinner.lookup(".increment-arrow-button");
-            if (increment != null) increment.getOnMouseReleased().handle(null);
-            Node decrement = commentHeightSpinner.lookup(".decrement-arrow-button");
-            if (decrement != null) decrement.getOnMouseReleased().handle(null);
-        });
-        commentRTA.maxWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
-        commentRTA.minWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
-        commentRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
+        commentHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        commentRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        commentRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        commentRTA.minWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        commentRTA.contentAreaWidthProperty().bind(localScalePageWidth);
 
         commentWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         commentWidthSpinner.setPrefWidth(65);
         commentWidthSpinner.setDisable(true);
-        commentWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
+        commentWidthSpinner.setTooltip(new Tooltip("Window width as % of selected paper"));
 
         //main pane
         AnchorPane mainPane1 = rootLayout.getMainPane();
         mainPane = rootLayout.getBase_pane();
         mainPane.setStyle("-fx-focus-color: gainsboro;");
         mainPane1.setMinHeight(250.0);   //150
-        mainPane1.setMinWidth(mainView.getScalePageWidth() + RTA_WIDTH_BMP);
+        mainPane1.setMinWidth(localScalePageWidth.get() + RTA_WIDTH_BMP);
 
         mainPaneHeightSpinner = new Spinner<>(5, 999.0, 0, 1.0);
         mainPaneHeightSpinner.setPrefWidth(65);
         mainPaneHeightSpinner.setDisable(true);
-        mainPaneHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        mainPane1.heightProperty().addListener((ob, ov, nv) -> {
-            mainPaneHeightSpinner.getValueFactory().setValue((double) Math.round(mainPane1.getHeight() / mainView.getScalePageHeight() * 100));
-        });
+        mainPaneHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+
+        mainPaneHeightListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || mainPaneHeightSpinner == null) return;
+            mainPaneHeightSpinner.getValueFactory().setValue((double) Math.round(mainPane1.getHeight() / localScalePageHeight.get() * 100));
+        };
+        mainPane1.heightProperty().addListener(mainPaneHeightListener);
 
 
         mainPaneWidthSpinner = new Spinner<>(70.0, 999.0, 0, 1.0);
         mainPaneWidthSpinner.setPrefWidth(65);
         mainPaneWidthSpinner.setDisable(true);
-        mainPaneWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
-        mainPane1.widthProperty().addListener((ob, ov, nv) -> {
-            mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round((mainPane1.getWidth() - RTA_WIDTH_BMP) /mainView.getScalePageWidth() * 100));
-        });
+        mainPaneWidthSpinner.setTooltip(new Tooltip("Window width as % of selected paper"));
+
+        mainPaneWidthListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || mainPaneWidthSpinner == null) return;
+            mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round((mainPane1.getWidth() - RTA_WIDTH_BMP) / localScalePageWidth.get() * 100));
+        };
+        mainPane1.widthProperty().addListener(mainPaneWidthListener);
 
         //page size listeners
-        mainView.scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeightListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || statementRTA == null || commentRTA == null) return;
+            double revSpinnerMin = (double) ((int) (100 * 45.0 / (double) nv));
 
             statementRTA.prefHeightProperty().unbind();
-            statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+            if (statementHeightSpinner != null && statementHeightSpinner.getValueFactory() != null) {
+                statementHeightSpinner.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(revSpinnerMin, 999.0, (double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()), 1.0));
+                statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+            }
 
             commentRTA.prefHeightProperty().unbind();
-            commentHeightSpinner.getValueFactory().setValue((double) Math.round(commentHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            commentRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+            if (commentHeightSpinner != null && commentHeightSpinner.getValueFactory() != null) {
+                commentHeightSpinner.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(revSpinnerMin, 999.0, (double) Math.round(commentHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()), 1.0));
+                commentRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+            }
 
-            mainPaneHeightSpinner.getValueFactory().setValue((double) Math.round(mainPane1.getHeight() / mainView.getScalePageHeight() * 100.0));
-        });
+            if (mainPaneHeightSpinner != null && mainPaneHeightSpinner.getValueFactory() != null) {
+                mainPaneHeightSpinner.getValueFactory().setValue((double) Math.round(mainPane1.getHeight() / localScalePageHeight.get() * 100.0));
+            }
+        };
+        localScalePageHeight.addListener(localScalePageHeightListener);
 
-        mainView.scalePageWidthProperty().addListener((ob, ov, nv) -> {
+        localScalePageWidthListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || mainPane == null) return;
             mainPane.prefWidthProperty().unbind();
-            mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round((mainPane1.getWidth() - RTA_WIDTH_BMP) /mainView.getScalePageWidth() * 100));
-        });
+            if (mainPaneWidthSpinner != null && mainPaneWidthSpinner.getValueFactory() != null) {
+                mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round((mainPane1.getWidth() - RTA_WIDTH_BMP) / localScalePageWidth.get() * 100));
+            }
+        };
+        localScalePageWidth.addListener(localScalePageWidthListener);
 
         setSizeSpinners();
     }
@@ -255,13 +391,9 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
 
         checkProgButton = new Button();
 
-   //     checkProgButton = new Button("Check Progress");
-   //     checkProgButton.setPrefWidth(105);
-   //     checkProgButton.setTooltip(new Tooltip("Check tree progress so far."));
         VBox checksBox = new VBox(10, checkButton, checkTriesLabel);
         checksBox.setAlignment(Pos.CENTER);
         checkTriesLabel.setAlignment(Pos.CENTER);
-//        checksBox.setMargin(checkProgButton, new Insets(0,0,10, 0));
 
         staticHelpButton = new Button("Static Help");
         staticHelpButton.setPrefWidth(105);
@@ -274,10 +406,10 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
         rightControlNode = rightControlBox;
 
         deactivateBigCheck();
-
     }
 
     public void activateBigCheck() {
+        if (isTornDown || bigCheck == null || checkedElements == null) return;
         bigCheck.setFill(checkColor);
         checkedElements.setText(checkMessage);
         checkedElements.setFill(checkElementsColor);
@@ -302,6 +434,7 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
 
     //record status, and deactivate
     public void deactivateBigCheck() {
+        if (isTornDown || bigCheck == null || checkedElements == null) return;
         if (bigCheck.getOpacity() > .5) checkShowing = true;
         else checkShowing = false;
         bigCheck.setOpacity(0.0);
@@ -309,16 +442,16 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
     }
 
     public void showStaticHelp(Document doc) {
-
+        if (isTornDown) return;
         if (staticHelpStage == null || !staticHelpStage.isShowing()) {
             RichTextArea hrta = new RichTextArea(EditorMain.mainStage);
             hrta.getActionFactory().open(doc).execute(new ActionEvent());
             hrta.setPadding(new Insets(20, 0, 20, 20));
             hrta.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
-            hrta.setPrefWidth(400);
+            hrta.setContentAreaWidth(400);
+            hrta.setPrefWidth(400 + RTA_WIDTH_BMP);
             hrta.setPrefHeight(300);
             hrta.setEditable(false);
-
 
             Scene scene = new Scene(hrta);
             scene.getStylesheets().add(RichTextArea.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
@@ -330,7 +463,7 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
             staticHelpStage.getIcons().addAll(EditorMain.icons);
             staticHelpStage.initOwner(EditorMain.mainStage);
             Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-            staticHelpStage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 420));
+            staticHelpStage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - (420 + RTA_WIDTH_BMP)));
             staticHelpStage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 320));
 
             staticHelpStage.show();
@@ -339,37 +472,47 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
 
     public Stage getStaticHelpStage() { return staticHelpStage; }
 
-
-
-
+    /*
     private void setSizeSpinners() {
-
-        mainPane.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
+        mainPaneClickHandler = e -> {
+            if (isTornDown || this.mainView == null || currentSpinnerNode == null) return;
             if (currentSpinnerNode != mainPane) {
                 mainPane.requestFocus();
             }
-        });
+        };
+        mainPane.addEventFilter(MouseEvent.MOUSE_CLICKED, mainPaneClickHandler);
 
-        mainView.getMainScene().focusOwnerProperty().addListener((ob, ov, nv) -> {
+        if (mainView != null && mainView.getMainScene() != null) {
+            mainView.getMainScene().focusOwnerProperty().addListener(exerciseFocusListener);
+        }
+    }
 
-            RichTextArea statementRTA = exerciseStatement.getEditor();
-            if (inHierarchy(nv, statementRTA) && currentSpinnerNode != statementRTA) {
-                currentSpinnerNode = statementRTA;
-                mainView.updateSizeSpinners(statementHeightSpinner, statementWidthSpinner);
-                return;
-            }
-            RichTextArea commentRTA = exerciseComment.getEditor();
-            if (inHierarchy(nv, commentRTA) && currentSpinnerNode != commentRTA) {
-                currentSpinnerNode = commentRTA;
-                mainView.updateSizeSpinners(commentHeightSpinner, commentWidthSpinner);
-                return;
-            }
-            if (inHierarchy(nv, mainPane) && currentSpinnerNode != mainPane) {
-                currentSpinnerNode = mainPane;
-                mainView.updateSizeSpinners(mainPaneHeightSpinner, mainPaneWidthSpinner);
-            }
+     */
 
-        });
+    private void setSizeSpinners() {
+        if (mainPane != null) {
+            mainPaneClickHandler = e -> {
+                // THE FIX: Notice there is NO "currentSpinnerNode == null" abort check here!
+                if (isTornDown || this.mainView == null) return;
+
+                if (currentSpinnerNode != mainPane) {
+                    currentSpinnerNode = mainPane;
+
+                    // Force the toolbars to appear immediately, bypassing the focus listener entirely!
+                    if (mainPaneHeightSpinner != null && mainPaneWidthSpinner != null) {
+                        mainView.updateSizeSpinners(mainPaneHeightSpinner, mainPaneWidthSpinner);
+                    }
+
+                    // Still request focus so the global Scene knows where we are
+                    mainPane.requestFocus();
+                }
+            };
+            mainPane.addEventFilter(MouseEvent.MOUSE_CLICKED, mainPaneClickHandler);
+        }
+
+        if (mainView != null && mainView.getMainScene() != null && exerciseFocusListener != null) {
+            mainView.getMainScene().focusOwnerProperty().addListener(exerciseFocusListener);
+        }
     }
 
     private static boolean inHierarchy(Node node, Node potentialHierarchyElement) {
@@ -384,6 +527,167 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
         }
         return false;
     }
+
+    // SCORCHED EARTH RULE 6: Sever Shared Nodes helper
+    private void severFromParent(Node node) {
+        try {
+            if (node != null && node.getParent() != null) {
+                if (node.getParent() instanceof javafx.scene.layout.Pane) ((javafx.scene.layout.Pane) node.getParent()).getChildren().remove(node);
+                else if (node.getParent() instanceof javafx.scene.Group) ((javafx.scene.Group) node.getParent()).getChildren().remove(node);
+            }
+        } catch (Exception e) {}
+    }
+
+
+    public void cleanup() {
+        // KILL SWITCH: Engaged!
+        isTornDown = true;
+
+        try {
+            if (pointsEarnedTextField != null) {
+                if (pointsEarnedFocusListener != null) {
+                    pointsEarnedTextField.focusedProperty().removeListener(pointsEarnedFocusListener);
+                }
+                if (pointsEarnedClickHandler != null) {
+                    pointsEarnedTextField.removeEventHandler(MouseEvent.MOUSE_CLICKED, pointsEarnedClickHandler);
+                }
+                pointsEarnedTextField.setOnMouseClicked(null);
+                pointsEarnedTextField.setTextFormatter(null);
+            }
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 5: Defensive unbinding and detachment via isolated try-catch blocks
+        try { if (mainPane != null && mainPaneClickHandler != null) mainPane.removeEventFilter(MouseEvent.MOUSE_CLICKED, mainPaneClickHandler); } catch (Exception e) {}
+        try { if (rootLayout != null && rootLayout.getMainPane() != null && mainPaneHeightListener != null) rootLayout.getMainPane().heightProperty().removeListener(mainPaneHeightListener); } catch (Exception e) {}
+        try { if (rootLayout != null && rootLayout.getMainPane() != null && mainPaneWidthListener != null) rootLayout.getMainPane().widthProperty().removeListener(mainPaneWidthListener); } catch (Exception e) {}
+
+        try { if (localScalePageHeight != null && localScalePageHeightListener != null) localScalePageHeight.removeListener(localScalePageHeightListener); } catch (Exception e) {}
+        try { if (localScalePageHeight != null) localScalePageHeight.unbind(); } catch (Exception e) {}
+
+        try { if (localScalePageWidth != null && localScalePageWidthListener != null) localScalePageWidth.removeListener(localScalePageWidthListener); } catch (Exception e) {}
+        try { if (localScalePageWidth != null) localScalePageWidth.unbind(); } catch (Exception e) {}
+
+        try { if (undoRedoFlag != null) undoRedoFlag.unbind(); } catch (Exception e) {}
+
+        // Isolate Exercise Statement unbindings
+        try { if (exerciseStatement != null && exerciseStatement.getEditor() != null) exerciseStatement.getEditor().prefHeightProperty().unbind(); } catch (Exception e) {}
+        try { if (exerciseStatement != null && exerciseStatement.getEditor() != null) exerciseStatement.getEditor().maxWidthProperty().unbind(); } catch (Exception e) {}
+        try { if (exerciseStatement != null && exerciseStatement.getEditor() != null) exerciseStatement.getEditor().contentAreaWidthProperty().unbind(); } catch (Exception e) {}
+
+        // Isolate Exercise Comment unbindings
+        try { if (exerciseComment != null && exerciseComment.getEditor() != null) exerciseComment.getEditor().prefHeightProperty().unbind(); } catch (Exception e) {}
+        try { if (exerciseComment != null && exerciseComment.getEditor() != null) exerciseComment.getEditor().prefWidthProperty().unbind(); } catch (Exception e) {}
+        try { if (exerciseComment != null && exerciseComment.getEditor() != null) exerciseComment.getEditor().maxWidthProperty().unbind(); } catch (Exception e) {}
+        try { if (exerciseComment != null && exerciseComment.getEditor() != null) exerciseComment.getEditor().minWidthProperty().unbind(); } catch (Exception e) {}
+        try { if (exerciseComment != null && exerciseComment.getEditor() != null) exerciseComment.getEditor().contentAreaWidthProperty().unbind(); } catch (Exception e) {}
+
+        // ---> SCORCHED EARTH RULE 4: THE JAVAFX SKIN HAMMER (DECOUPLED TIMER) <---
+        try {
+            final RichTextArea stEditor = (exerciseStatement != null) ? exerciseStatement.getEditor() : null;
+            final RichTextArea commEditor = (exerciseComment != null) ? exerciseComment.getEditor() : null;
+
+            // STAGE 1 (Immediate)
+            if (stEditor != null) {
+                try { stEditor.setPromptText(""); } catch (Exception e) {}
+                try { stEditor.setFocusTraversable(false); } catch (Exception e) {}
+                try { if (stEditor.getDocument() == null || stEditor.getDocument().getText().isEmpty()) stEditor.getActionFactory().open(new Document(" ")).execute(new ActionEvent()); } catch (Exception e) {}
+            }
+
+            if (commEditor != null) {
+                try { commEditor.setPromptText(""); } catch (Exception e) {}
+                try { commEditor.setFocusTraversable(false); } catch (Exception e) {}
+                try { if (commEditor.getDocument() == null || commEditor.getDocument().getText().isEmpty()) commEditor.getActionFactory().open(new Document(" ")).execute(new ActionEvent()); } catch (Exception e) {}
+            }
+
+            // STAGE 2 (Delayed Skin Removal)
+            javafx.animation.PauseTransition pt = new javafx.animation.PauseTransition(javafx.util.Duration.millis(1500));
+            pt.setOnFinished(ev -> {
+                try { if (stEditor != null) { stEditor.setSkin(null); } } catch (Exception ex) {}
+                try { if (commEditor != null) { commEditor.setSkin(null); } } catch (Exception ex) {}
+            });
+            pt.play();
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 8: The Undo/Redo Rebuild Fix (Prevent CME)
+        try {
+            if (rootLayout != null) {
+                if (rootLayout.getMainPane() != null) {
+                    if (rootLayout.getMainPane().getChildren() != null) {
+                        List<Node> childrenCopy = new ArrayList<>(rootLayout.getMainPane().getChildren());
+                        for (Node node : childrenCopy) {
+                            try { node.getClass().getMethod("cleanup").invoke(node); } catch (Exception e) {}
+                            severFromParent(node);
+                        }
+                    }
+                    rootLayout.getMainPane().getChildren().clear();
+                }
+                if (rootLayout.getBase_pane() != null) {
+                    rootLayout.getBase_pane().prefWidthProperty().unbind();
+                }
+            }
+        } catch (Exception e) {}
+
+        try { if (mainView != null && mainView.getMainScene() != null && exerciseFocusListener != null) mainView.getMainScene().focusOwnerProperty().removeListener(exerciseFocusListener); } catch (Exception e) {}
+        try { if (pointsEarnedTextField != null) pointsEarnedTextField.setTextFormatter(null); } catch (Exception e) {}
+
+        try { if (exerciseControlNode != null) severFromParent(exerciseControlNode); } catch (Exception e) {}
+        try { if (controlBox != null) { severFromParent(controlBox); controlBox.getChildren().clear(); } } catch (Exception e) {}
+        try { if (rightControlNode != null) severFromParent(rightControlNode); } catch (Exception e) {}
+        try { if (root != null) severFromParent(root); } catch (Exception e) {}
+        try { if (staticHelpStage != null) staticHelpStage.close(); } catch (Exception e) {}
+
+        try { if (undoButton != null) undoButton.setOnAction(null); } catch (Exception e) {}
+        try { if (redoButton != null) redoButton.setOnAction(null); } catch (Exception e) {}
+        try { if (checkButton != null) checkButton.setOnAction(null); } catch (Exception e) {}
+        try { if (checkProgButton != null) checkProgButton.setOnAction(null); } catch (Exception e) {}
+        try { if (staticHelpButton != null) staticHelpButton.setOnAction(null); } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 1: Final Nullification
+        this.mainView = null;
+        this.vtExercise = null;
+        this.defaultKeyboard = null;
+        this.defaultMapKeyboard = null;
+        this.exerciseStatement = null;
+        this.exerciseComment = null;
+        this.root = null;
+        this.rootLayout = null;
+        this.controlBox = null;
+        this.undoButton = null;
+        this.redoButton = null;
+        this.undoRedoFlag = null;
+        this.exerciseControlNode = null;
+        this.mainPane = null;
+        this.pointsEarnedTextField = null;
+        this.rightControlNode = null;
+        this.checkButton = null;
+        this.checkProgButton = null;
+        this.bigCheck = null;
+        this.checkMessage = null;
+        this.checkedElements = null;
+        this.checkTriesLabel = null;
+        this.checkColor = null;
+        this.checkElementsColor = null;
+        this.staticHelpButton = null;
+        this.staticHelpStage = null;
+        this.exerciseFocusListener = null;
+        this.statementHeightSpinner = null;
+        this.statementWidthSpinner = null;
+        this.commentHeightSpinner = null;
+        this.commentWidthSpinner = null;
+        this.mainPaneHeightSpinner = null;
+        this.mainPaneWidthSpinner = null;
+        this.currentSpinnerNode = null;
+        this.pointsEarnedFilter = null;
+        this.mainPaneHeightListener = null;
+        this.mainPaneWidthListener = null;
+        this.localScalePageHeightListener = null;
+        this.localScalePageWidthListener = null;
+        this.mainPaneClickHandler = null;
+
+        this.pointsEarnedFocusListener = null;
+        this.pointsEarnedClickHandler = null;
+    }
+
 
     public MainWindowView getMainView() {
         return mainView;
@@ -472,7 +776,7 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
     @Override
     public void setExerciseComment(DecoratedRTA exerciseComment) { this.exerciseComment = exerciseComment;  }
 
-     @Override
+    @Override
     public DecoratedRTA getExerciseStatement() {
         return exerciseStatement;
     }
@@ -523,4 +827,13 @@ public class VerticalTreeView  implements ExerciseView<DecoratedRTA> {
     public VerticalTreeExercise getVTExercise() {
         return vtExercise;
     }
+
+    public DoubleProperty localScalePageHeightProperty() { return localScalePageHeight; }
+
+    public DoubleProperty localScalePageWidthProperty() {
+        return localScalePageWidth;
+    }
+
+    public ChangeListener<Node> getExerciseFocusListener() { return exerciseFocusListener; }
+
 }

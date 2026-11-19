@@ -10,7 +10,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class RelationSymbol implements Expression {
+public class RelationSymbol extends LanguageElement implements Expression {
+    private static final long serialVersionUID = 100L;
 
     private ExpressionType type = ExpressionType.RELATION_SYMBOL;
     private String baseStr;
@@ -20,11 +21,13 @@ public class RelationSymbol implements Expression {
     private boolean permitInfix = false;
     private RelationSymbol complementSymbol = null;
 
+
 public RelationSymbol(String baseStr, String subscriptStr, String superscriptStr, int places) {
         this.baseStr = baseStr;
         this.subscriptStr = subscriptStr;
         this.superscriptStr = superscriptStr;
         this.places = places;
+
     }
 
     public RelationSymbol getComplementSymbol() {
@@ -39,10 +42,12 @@ public RelationSymbol(String baseStr, String subscriptStr, String superscriptStr
         this.superscriptStr = superscriptStr;
     }
 
+    @Override
     public String getSubscriptStr() {
         return subscriptStr;
     }
 
+    @Override
     public String getBaseStr() {
         return baseStr;
     }
@@ -55,6 +60,7 @@ public RelationSymbol(String baseStr, String subscriptStr, String superscriptStr
         this.type = type;
     }
 
+    @Override
     public int getPlaces() {
         return places;
     }
@@ -100,7 +106,7 @@ public RelationSymbol(String baseStr, String subscriptStr, String superscriptStr
         if (o instanceof RelationSymbol) {
             RelationSymbol other = (RelationSymbol) o;
             return baseStr.equals(other.baseStr) && places == other.places && subscriptStr.equals(other.subscriptStr) && superscriptStr.equals(other.superscriptStr);
-       //     return baseStr.equals(other.baseStr) && places == other.places && subscriptStr.equals(other.subscriptStr);
+            //return baseStr.equals(other.baseStr) && places == other.places && subscriptStr.equals(other.subscriptStr);
         }
         return false;
     }
@@ -110,5 +116,6 @@ public RelationSymbol(String baseStr, String subscriptStr, String superscriptStr
       return baseStr.hashCode() + places + subscriptStr.hashCode() + superscriptStr.hashCode();
    //     return baseStr.hashCode() + places + subscriptStr.hashCode();
     }
+
 
 }

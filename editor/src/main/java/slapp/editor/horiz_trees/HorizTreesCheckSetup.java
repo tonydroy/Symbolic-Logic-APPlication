@@ -24,6 +24,7 @@ public class HorizTreesCheckSetup implements Serializable {
     private boolean emptyBranchesOK;
     private boolean emptyBranchesSelected;
     private List<Document> targetFormulas = new ArrayList<>();
+    private int rootCount = 0;
 
 
     public HorizTreesCheckSetup() {
@@ -159,5 +160,13 @@ public class HorizTreesCheckSetup implements Serializable {
 
     public void setEmptyBranchesSelected(boolean emptyBranchesSelected) {
         this.emptyBranchesSelected = emptyBranchesSelected;
+    }
+
+    public int getRootCount() {
+        return rootCount;
+    }
+
+    public void setRootCount(int rootCount) {
+        this.rootCount = rootCount;
     }
 }

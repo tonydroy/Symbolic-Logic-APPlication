@@ -51,6 +51,7 @@ public class HorizTreesModel implements ExerciseModel<Document>, Serializable {
     private boolean axis = false;
     private int pointsPossible;
     private int pointsEarned;
+    private String auxExerName;
 
     private HorizTreesCheckSetup checkSetup;
 
@@ -64,6 +65,7 @@ public class HorizTreesModel implements ExerciseModel<Document>, Serializable {
         elementTypes = types;
         this.pointsPossible = 0;
         this.pointsEarned = -1;
+        this.auxExerName = "";
     }
 
     /**
@@ -186,6 +188,14 @@ public class HorizTreesModel implements ExerciseModel<Document>, Serializable {
 
     public void setExplainDocument(Document explainDocument) {
         this.explainDocument = explainDocument;
+    }
+
+    public String getAuxExerName() {
+        return auxExerName;
+    }
+
+    public void setAuxExerName(String auxExerName) {
+        this.auxExerName = auxExerName;
     }
 
     @Override

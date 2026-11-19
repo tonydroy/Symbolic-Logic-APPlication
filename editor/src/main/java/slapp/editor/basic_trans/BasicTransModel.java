@@ -13,47 +13,89 @@ You should have received a copy of the GNU General Public License along with SLA
 <https://www.gnu.org/licenses/>.
  */
 
-package slapp.editor.simple_trans;
+package slapp.editor.basic_trans;
 
 import com.gluonhq.richtextarea.model.Document;
 import slapp.editor.main_window.ExerciseModel;
 import slapp.editor.main_window.ExerciseType;
+import slapp.editor.parser.grammatical_parts.Formula;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * Model for the simple translate exercise.
  */
-public class SimpleTransModel implements ExerciseModel<Document>, Serializable {
+public class BasicTransModel implements ExerciseModel<Document>, Serializable {
     private static final long serialVersionUID = 100L;
+
     private String exerciseName = new String("");
-    private ExerciseType exerciseType = ExerciseType.SIMPLE_EDIT;
+    private ExerciseType exerciseType = ExerciseType.BASIC_TRANS;
     private ExerciseModel<Document> originalModel = null;
     private boolean started = false;
     private Document exerciseStatement = new Document();
     private double statementPrefHeight = 80;
     private double statementTextHeight = 0;
     private Document exerciseComment = new Document("");
-    private double commentPrefHeight = 60;
+    private double commentPrefHeight = 70;   //60
     private double commentTextHeight = 0;
-    private Document exerciseInterpretation = new Document("");
-    private double interpretationPrefHeight = 200;
-    private double interpretationTextHeight = 0;
+    private Document interpFnDoc = new Document();
+    private double interpFnPrefHeight = 125;   //90
+    private double interpFnTextHeight = 0;
     private Document exerciseResponse = new Document("");
-    private double responsePrefHeight = 60;
+    private double responsePrefHeight = 100;  // 55
     private double responseTextHeight = 0;
     private int pointsPossible;
     private int pointsEarned;
+    private String auxExerName;
+    private List<Document> targetFormulas;
+    private boolean interpFnIncluded;
+    private BTransCheckSetup checkSetup;
+    private KeyObject keyObject;
+    private Formula keyFormula;
 
 
     /**
      * Set up the simple translate model
      * @param name the exercise name.
      */
-    public SimpleTransModel(String name) {
+    public BasicTransModel(String name) {
         exerciseName = name;
         this.pointsPossible = 0;
         this.pointsEarned = -1;
+        this.auxExerName = "";
+    }
+
+    public BTransCheckSetup getCheckSetup() {
+        return checkSetup;
+    }
+
+    public void setCheckSetup(BTransCheckSetup checkSetup) {
+        this.checkSetup = checkSetup;
+    }
+
+    public boolean isInterpFnIncluded() {
+        return interpFnIncluded;
+    }
+
+    public void setInterpFnIncluded(boolean interpFnIncluded) {
+        this.interpFnIncluded = interpFnIncluded;
+    }
+
+    public KeyObject getKeyObject() {
+        return keyObject;
+    }
+
+    public void setKeyObject(KeyObject keyObject) {
+        this.keyObject = keyObject;
+    }
+
+    public List<Document> getTargetFormulas() {
+        return targetFormulas;
+    }
+
+    public void setTargetFormulas(List<Document> targetFormulas) {
+        this.targetFormulas = targetFormulas;
     }
 
     /**
@@ -138,37 +180,47 @@ public class SimpleTransModel implements ExerciseModel<Document>, Serializable {
      * The area for interpretation function
      * @return the interpretation document
      */
-    Document getExerciseInterpretation() {   return exerciseInterpretation;  }
+    Document getInterpFnDoc() {   return interpFnDoc;  }
 
     /**
      * The area for interpretation function
-     * @param exerciseInterpretation the interpretation document
+     * @param interpFnDoc the interpretation document
      */
-    void setExerciseInterpretation(Document exerciseInterpretation) {   this.exerciseInterpretation = exerciseInterpretation;  }
+    void setInterpFnDoc(Document interpFnDoc) {   this.interpFnDoc = interpFnDoc;  }
 
     /**
      * The preferred height of the interpretation window
      * @return the height value
      */
-    double getInterpretationPrefHeight() {     return interpretationPrefHeight;  }
+    double getInterpFnPrefHeight() {     return interpFnPrefHeight;  }
 
     /**
      * The preferred height of the interpretation window
-     * @param interpretationPrefHeight the height value
+     * @param interpFnPrefHeight the height value
      */
-    void setInterpretationPrefHeight(double interpretationPrefHeight) {    this.interpretationPrefHeight = interpretationPrefHeight;  }
+    void setInterpFnPrefHeight(double interpFnPrefHeight) {    this.interpFnPrefHeight = interpFnPrefHeight;  }
 
     /**
      * Height of text in the interpretation area
      * @return the height value
      */
-    double getInterpretationTextHeight() {     return interpretationTextHeight;  }
+    double getInterpFnTextHeight() {     return interpFnTextHeight;  }
 
     /**
      * Height of text in the interpretation area
-     * @param interpretationTextHeight the height value
+     * @param interpFnTextHeight the height value
      */
-    void setInterpretationTextHeight(double interpretationTextHeight) {     this.interpretationTextHeight = interpretationTextHeight;  }
+    void setInterpFnTextHeight(double interpFnTextHeight) {     this.interpFnTextHeight = interpFnTextHeight;  }
+
+    public String getAuxExerName() {
+        return auxExerName;
+    }
+
+    public void setAuxExerName(String auxExerName) {
+        this.auxExerName = auxExerName;
+    }
+
+
 
     /**
      * The exercise name (used also as file name)

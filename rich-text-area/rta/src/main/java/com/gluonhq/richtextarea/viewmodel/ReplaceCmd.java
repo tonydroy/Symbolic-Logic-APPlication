@@ -35,6 +35,7 @@ import com.gluonhq.richtextarea.model.UnitBuffer;
 
 import java.util.Objects;
 
+
 class ReplaceCmd extends AbstractEditCmd {
 
     private final UnitBuffer content;

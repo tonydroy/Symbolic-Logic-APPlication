@@ -20,6 +20,7 @@ public class TheoremSets implements Serializable {
         theoremSets.add(getADq_th());
         theoremSets.add(getAD_ax());
         theoremSets.add(getAD_th());
+        theoremSets.add(getAspec_ax());  //E3.9
         theoremSets.add(getAstar_ax());
         theoremSets.add(getAstar_th());
         theoremSets.add(getQND_ax());   //ND+
@@ -299,6 +300,7 @@ public class TheoremSets implements Serializable {
     }
 
 
+
     public static TheoremSet getADq_ax() {
         TheoremSet ADq_ax = new TheoremSet("\ud835\udc34\ud835\udc37\ud835\udc5e ax");
         List<ThrmSetElement> elements = ADq_ax.getElements();
@@ -308,6 +310,7 @@ public class TheoremSets implements Serializable {
         elements.add(new ThrmSetElement(TheoremType.ADQ_A5, "A.5", ""));
         return ADq_ax;
     }
+
 
     public static TheoremSet getADq_th() {
         TheoremSet ADq_th = new TheoremSet("\ud835\udc34\ud835\udc37\ud835\udc5e th");
@@ -321,6 +324,17 @@ public class TheoremSets implements Serializable {
         elements.add(new ThrmSetElement(TheoremType.ADQT3_32, "T3.32", ""));
         return ADq_th;
     }
+
+    public static TheoremSet getAspec_ax() {
+        TheoremSet Aspec_ax = new TheoremSet("AE3.29 ax");
+        List<ThrmSetElement> elements = Aspec_ax.getElements();
+
+        //axioms of ADs and,
+        elements.add(new ThrmSetElement(TheoremType.ADQ_A4, "A.4", ""));
+        elements.add(new ThrmSetElement(TheoremType.ADQT3_29, "T3.29", ""));
+        return Aspec_ax;
+    }
+
 
     public static TheoremSet getAstar_ax() {
         TheoremSet Astar_ax = new TheoremSet("A* ax");

@@ -41,7 +41,9 @@ import com.gluonhq.richtextarea.model.TextDecoration;
 import com.gluonhq.richtextarea.model.UnitBuffer;
 import com.gluonhq.richtextarea.viewmodel.ActionCmd;
 import com.gluonhq.richtextarea.viewmodel.ActionCmdFactory;
+import com.gluonhq.richtextarea.viewmodel.ActionCmdOverlineSelection;
 import com.gluonhq.richtextarea.viewmodel.RichTextAreaViewModel;
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -73,14 +75,7 @@ import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.Skin;
-import javafx.scene.control.SkinBase;
+import javafx.scene.control.*;
 import javafx.scene.control.skin.ListViewSkin;
 import javafx.scene.control.skin.VirtualFlow;
 import javafx.scene.image.Image;
@@ -116,6 +111,7 @@ import static java.util.Map.entry;
 
 import java.util.logging.Logger;
 import javafx.scene.input.KeyCode;
+import javafx.util.Duration;
 
 import static javafx.scene.input.KeyCode.*;
 import static javafx.scene.input.KeyCombination.*;
@@ -123,6 +119,7 @@ import static javafx.scene.text.FontPosture.ITALIC;
 import static javafx.scene.text.FontPosture.REGULAR;
 import static javafx.scene.text.FontWeight.BOLD;
 import static javafx.scene.text.FontWeight.NORMAL;
+
 
 public class RichTextAreaSkin extends SkinBase<RichTextArea> {
     private RichTextArea control;
@@ -138,6 +135,24 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
 
     private static final ActionCmdFactory ACTION_CMD_FACTORY = new ActionCmdFactory();
 
+    //ai added
+    private int lastScrollIndex = -1;
+    private long lastScrollTime = 0;
+    private long lastPixelScrollTime = 0;
+    private final CaretTracker caretTracker;
+    private ParagraphListView paragraphListView;
+    private double lastReportedFullHeight = -1.0;
+
+    // Cache these so we only instantiate them once
+    private RichListCell measurementCell;
+    private Scene measurementScene;
+    private boolean initialFocusHandled = false;
+
+
+
+    // Wait 250ms after the last change before calculating.
+// You can lower this to 100ms if you want it to feel more instant.
+    private final PauseTransition heightDebouncer = new PauseTransition(Duration.millis(250));
 
     
 
@@ -155,15 +170,18 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
     private final Map<KeyCodeCombination, String> BLACKBOARD_MAP = initializeBlackboardMap();
     private final Map<KeyCodeCombination, String> FRAKTUR_MAP = initializeFrakturMap();
     private final Map<KeyCodeCombination, String> SPECIAL_CHARACTER_MAP = initializeSpecialCharacterMap();
+    private final Map<KeyCodeCombination, String> SANS_ITALIC_ALT_MAP = initializeSansItalicAltMap();
     private final Map<KeyCodeCombination, String> SPECIAL_WITH_ITALIC_MAP;
     private final Map<KeyCodeCombination, String> SPECIAL_WITH_SANS_MAP;
     private final Map<KeyCodeCombination, String> SPECIAL_WITH_SCRIPT_MAP;
     private final Map<KeyCodeCombination, String> SPECIAL_WITH_BLACKBOARD_MAP;
     private final Map<KeyCodeCombination, String> SPECIAL_WITH_FRAKTUR_MAP;
+    private final Map<KeyCodeCombination, String> SPECIAL_WITH_SANS_ITAL_MAP;
 
     private DoubleProperty nodesWidth = new SimpleDoubleProperty();
 
     private BooleanProperty overlineOn = new SimpleBooleanProperty(false);
+    private boolean resettingOverline = false;
     private ObjectProperty<KeyMapValue> keyMapState = new SimpleObjectProperty<>(KeyMapValue.BASE);
     private ObjectProperty<KeyMapValue> lastKeyMapState = new SimpleObjectProperty<>(KeyMapValue.BASE);
 
@@ -189,7 +207,11 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
                 keyTypedCharMap = BASE_MAP;
                 break;
             }
-
+            case BASE_AND_SANS_ITALIC: {
+                keyPressedCharMap = SPECIAL_WITH_SANS_ITAL_MAP;
+                keyTypedCharMap = BASE_MAP;
+                break;
+            }
             case ITALIC_AND_SANS: {
                 keyPressedCharMap = SPECIAL_WITH_SANS_MAP;
                 keyTypedCharMap = ITALIC_MAP;
@@ -413,6 +435,11 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
                 setKeyMapState(KeyMapValue.BASE_AND_SANS);
                 return null;
             }),
+            entry(new KeyCodeCombination(F3, SHIFT_DOWN), e -> {
+                setKeyMapState(KeyMapValue.BASE_AND_SANS_ITALIC);
+                return null;
+            }),
+
             entry(new KeyCodeCombination(F4), e -> {
                 setKeyMapState(KeyMapValue.ITALIC_AND_SANS);
                 return null;
@@ -455,35 +482,50 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
             //to set character modifications
             entry(new KeyCodeCombination(Z, SHORTCUT_DOWN, ALT_DOWN, SHIFT_DOWN), e -> {
                 if (getModification() != OVERLINE) setModification(OVERLINE);
-                else setModification(NONE);
+                else {
+                    if (!overlineOn.getValue()) setModification(NONE);
+                }
                 return null;
             }),
 
             entry(new KeyCodeCombination(X, SHORTCUT_DOWN, ALT_DOWN, SHIFT_DOWN), e -> {
-                if (getModification() != MAC) setModification(MAC);
+                if (getModification() != MAC) {
+                    overlineOn.setValue(false);
+                    setModification(MAC);
+                }
                 else setModification(NONE);
                 return null;
             }),
 
             entry(new KeyCodeCombination(C, SHORTCUT_DOWN, ALT_DOWN, SHIFT_DOWN), e -> {
-                if (getModification() != VEC) setModification(VEC);
+                if (getModification() != VEC) {
+                    overlineOn.setValue(false);
+                    setModification(VEC);
+                }
                 else setModification(NONE);
                 return null;
             }),
 
             entry(new KeyCodeCombination(V, SHORTCUT_DOWN, ALT_DOWN, SHIFT_DOWN), e -> {
-                if (getModification() != HAT) setModification(HAT);
+                if (getModification() != HAT) {
+                    overlineOn.setValue(false);
+                    setModification(HAT);
+                }
                 else setModification(NONE);
                 return null;
             }),
 
             entry(new KeyCodeCombination(KeyCode.B, SHORTCUT_DOWN, ALT_DOWN, SHIFT_DOWN), e -> {
-                if (getModification() != SLASH) setModification(SLASH);
+                if (getModification() != SLASH) {
+                    overlineOn.setValue(false);
+                    setModification(SLASH);
+                }
                 else setModification(NONE);
                 return null;
             }),
 
             entry(new KeyCodeCombination(KeyCode.ESCAPE), e -> {
+                overlineOn.setValue(false);
                 setModification(NONE);
                 return null;
             }),
@@ -521,14 +563,17 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
 
     private static final Point2D DEFAULT_POINT_2D = new Point2D(-1, -1);
 
-    private final ParagraphListView paragraphListView;
+ //   private final ParagraphListView paragraphListView;  //ai added above
     private final SortedList<Paragraph> paragraphSortedList = new SortedList<>(viewModel.getParagraphList(), Comparator.comparing(Paragraph::getStart));
 
     final ContextMenu contextMenu = new ContextMenu();
+
     private ObservableList<MenuItem> tableCellContextMenuItems;
     private ObservableList<MenuItem> tableContextMenuItems;
+    private ObservableList<MenuItem> keyboardContextMenuItems;
     private ObservableList<MenuItem> editableContextMenuItems;
     private ObservableList<MenuItem> nonEditableContextMenuItems;
+
     private final EventHandler<ContextMenuEvent> contextMenuEventEventHandler = e -> {
         contextMenu.show((Node) e.getSource(), e.getScreenX(), e.getScreenY());
         e.consume();
@@ -546,6 +591,8 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
 
     private final Text promptNode;
 
+
+
     final DoubleProperty textFlowPrefWidthProperty = new SimpleDoubleProperty() {
         @Override
         protected void invalidated() {
@@ -554,6 +601,8 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
             }
         }
     };
+
+
     private final ChangeListener<Number> controlPrefWidthListener;
     private int nonTextNodesCount;
     AtomicInteger nonTextNodes = new AtomicInteger();
@@ -646,9 +695,10 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
                 String text = viewModel.getTextBuffer().getText(0, caret);
                 externalCaret = text.length();
             }
+            //ai modified
             getSkinnable().caretPosition.set(externalCaret);
             viewModel.getParagraphWithCaret()
-                    .ifPresent(paragraph -> Platform.runLater(paragraphListView::scrollIfNeeded));
+                    .ifPresent(paragraph -> RichTextAreaSkin.this.scrollIfNeeded());  //ai change
         }
     };
 
@@ -660,14 +710,1496 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
 
     private final ResourceBundle resources;
 
+    //ai added
+
+    // ---------------------------------------------------------
+    // 1. MISSING FACTORY METHOD (Fixes compilation error)
+    // ---------------------------------------------------------
+ //   protected RichListCell createCell() {
+  //      return new RichListCell(this);
+ //   }
+
+    // =========================================================================
+    // 2. BRIDGE METHOD (Connects Listeners to Layout Loop)
+    // =========================================================================
+    public void scrollIfNeeded () {
+        if (caretTracker != null) {
+            caretTracker.requestScroll();
+        }
+    }
+
+    // =========================================================================
+    // 3. DELEGATE METHODS (Fixes 'this::' scope in ViewModel)
+    // =========================================================================
+    public int getNextRowPosition(int caretPosition, boolean down) {
+        if (paragraphListView == null) return caretPosition;
+        return paragraphListView.getNextRowPosition (caretPosition, down);
+    }
+
+    public int getNextTableCellPosition (int caretPosition, boolean next) {
+        if (paragraphListView == null) return caretPosition;
+        return paragraphListView.getNextTableCellPosition (next);
+    }
+
+    //ai
+    // Add this interface inside your RichTextAreaSkin class
+    public interface UpdatableCell {
+        void forceUpdate();
+    }
+
+    // 1. REPLACED FACTORY METHOD
+
+    protected RichListCell createCell() {
+        class DiagnosticRichListCell extends RichListCell implements UpdatableCell {
+            private double stableHeight = -1.0;
+            private boolean mutingLayout = false; // Layout mute shield flag
+
+            public DiagnosticRichListCell (RichTextAreaSkin skin) {
+                super (skin);
+                setStyle("-fx-alignment: top-left;");
+                setAlignment(javafx.geometry.Pos.TOP_LEFT);
+            }
+
+            @Override
+            public void requestLayout() {
+                if (mutingLayout) return; // Silences VirtualFlow flex during Stealth Redraw
+                super.requestLayout();
+            }
+
+            @Override
+            public void updateItem(Paragraph item, boolean empty) {
+                super.updateItem(item, empty);
+                int currentIndex = getIndex();
+
+                // CRITICAL FIX: Wiping memory strictly on Empty or Offline Measurement cell!
+                // DO NOT wipe on index changes! Returns shift all paragraphs down, changing their index.
+                // Wiping here forces every single cell to bypass the 5px deadband and thrash layout.
+                if (empty || item == null || currentIndex == -1) {
+                    stableHeight = -1.0;
+                }
+            }
+
+            @Override
+            protected double computePrefHeight(double width) {
+                Paragraph p = getItem();
+                double safeWidth = width <= 0.0 ? (getWidth() > 0 ? getWidth() : (getSkinnable() != null ? getSkinnable().getContentAreaWidth() : 500.0)) : width;
+
+                // MEASUREMENT CELL ISOLATION: No deadband, pure math.
+                if (getIndex() == -1) {
+                    applyCss();
+                    double raw = super.computePrefHeight(safeWidth);
+                    return raw > 0 ? raw + 2.0 : 24.0;
+                }
+
+                if (p == null) return stableHeight > 0 ? stableHeight : 24.0;
+                if (width <= 0.0 && stableHeight > 0) return stableHeight;
+
+                if (stableHeight == -1.0) {
+                    applyCss();
+                    double raw = super.computePrefHeight(safeWidth);
+                    stableHeight = raw > 0 ? raw + 2.0 : 24.0;
+                    return stableHeight;
+                }
+
+                double raw = super.computePrefHeight(safeWidth);
+
+                // CRITICAL ZERO-HEIGHT SHIELD: Empty nodes can momentarily compute 0.0.
+                // Defaulting to 22.0 base ensures the cell mathematically shrinks instead of freezing!
+                if (raw <= 0.0) raw = 22.0;
+
+                double padded = raw + 2.0;
+                if (Math.abs(padded - stableHeight) >= 5.0) {
+                    stableHeight = padded;
+                }
+                return stableHeight;
+            }
+
+            @Override protected double computeMinHeight(double width) { return computePrefHeight(width); }
+            @Override protected double computeMaxHeight(double width) { return computePrefHeight(width); }
+
+            @Override
+            public void forceUpdate() {
+                Paragraph p = getItem();
+                if (p != null) {
+                    mutingLayout = true; // Engage Mute Shield
+                    updateItem(null, false);
+                    updateItem(p, false);
+                    mutingLayout = false; // Disengage Mute Shield
+
+                    applyCss();
+                    layout(); // Enforce local rendering safely
+                }
+            }
+        }
+        return new DiagnosticRichListCell(this);
+    }
+
+
+
+    //----------------------
+// 4. THE CARET TRACKER (Unchained Typist V585 The Mathematical Override)
+//
+    // 4. THE CARET TRACKER (Unchained Typist V585 The Mathematical Override)
+//
+    // 4. THE CARET TRACKER (Unchained Typist V585 The Mathematical Override)
+//
+    // 4. THE CARET TRACKER (Unchained Typist V585 The Mathematical Override)
+//
+    // 4. THE CARET TRACKER (Unchained Typist V585 The Mathematical Override)
+//
+    // 4. THE CARET TRACKER (Unchained Typist V585 The Mathematical Override)
+//
+    // 4. THE CARET TRACKER (Unchained Typist V585 The Mathematical Override)
+//
+
+    // 4. THE CARET TRACKER (Unchained Typist V585 The Mathematical Override)
+//
+    // 4. THE CARET TRACKER (Unchained Typist V585 The Mathematical Override)
+//
+    // 4. THE CARET TRACKER (Unchained Typist V585 The Mathematical Override)
+//
+    // 4. THE CARET TRACKER (Unchained Typist V585 The Mathematical Override)
+//
+    // 4. THE CARET TRACKER (Unchained Typist V585 The Mathematical Override)
+//
+    // 4. THE CARET TRACKER (Unchained Typist V585 The Mathematical Override)
+//
+    // 4. THE CARET TRACKER (Unchained Typist V585 The Mathematical Override)
+//
+    private class CaretTracker extends javafx.animation.AnimationTimer {
+        private final boolean DEBUG_MODE = false;
+        private boolean isBooted = false;
+
+        private int framesAlive = 0;
+        public int blackoutFrames = 0;
+        private int massiveCooldownFrames = 0;
+
+        private int bottomPegFrames = 0;
+        private boolean isTitaniumPeg = false;
+
+        private int radarPanicStreak = 0;
+        private int radarMuteFrames = 0;
+        private int recentDeleteFrames = 0;
+        private int mathShieldStreak = 0;
+
+        private double lastRadarJump = 0.0;
+        private int lastRadarCaretIdx = -1;
+        private int lastKnownCaretIdx = -1;
+        private int radarStuckStreak = 0;
+
+        private double lastCaretTop = -1000.0;
+        private int lastCaretTopPos = -1; // 🚨 V74: Binds physical coordinate to logical character position
+
+        private double lastKick = 0.0;
+        private int anchorStuckCount = 0;
+        private int stuckCount = 0;
+
+        private int yieldStreak = 0;
+        private boolean bypassShield = false;
+        private int collapseGuardFrames = 0;
+        private int invalidLayoutStreak = 0;
+
+        private int pinLockFrames = 0;
+        private int activeAnchorFrames = 0;
+        private int strictCaretPinFrames = 0;
+        private boolean pendingAnchorRecovery = false;
+
+        private int lastTextLen = -1;
+        private int lastListSize = -1;
+        public int lastCaretPos = -1;
+        private boolean lastCaretVisible = true;
+        private boolean isClamping = false;
+        private boolean isProcessing = false;
+
+        private boolean justScrolled = false;
+        private boolean targetAcquired = false;
+        private double estimatedRowHeight = 16.0;
+
+        private javafx.scene.control.ScrollBar cachedVerticalScrollBar = null;
+
+        // 🚨 PHOTOGRAPHIC MEMORY MAP
+        private final java.util.Map<Integer, Double> visibleCellsMemory = new java.util.HashMap<>();
+        private int memoryTopIdx = -1;
+        private double memoryTopMinY = -1000.0;
+
+        private int activeAnchorTargetIdx = -1;
+        private double activeExpectedMinY = -1000.0;
+
+        private double lastFlowPosition = -1.0;
+
+        private javafx.scene.Node getRefNode(RichVirtualFlow flow) {
+            try {
+                javafx.scene.layout.Region container = (javafx.scene.layout.Region) flow.lookup(".clipped-container");
+                if (container != null) return container;
+            } catch (Throwable t) {}
+            return flow;
+        }
+
+        private boolean isVerticalScrollBarVisible() {
+            // If we already found the scrollbar, check if it's currently active/visible.
+            if (cachedVerticalScrollBar != null) {
+                return cachedVerticalScrollBar.isVisible() && cachedVerticalScrollBar.getOpacity() > 0.0;
+            }
+
+            // If we haven't found it yet, look it up in the Scene Graph.
+            if (paragraphListView != null) {
+                for (javafx.scene.Node node : paragraphListView.lookupAll(".scroll-bar")) {
+                    if (node instanceof javafx.scene.control.ScrollBar) {
+                        javafx.scene.control.ScrollBar sb = (javafx.scene.control.ScrollBar) node;
+                        if (sb.getOrientation() == javafx.geometry.Orientation.VERTICAL) {
+                            cachedVerticalScrollBar = sb; // Cache it for all future fast-checks!
+                            return sb.isVisible() && sb.getOpacity() > 0.0;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        private boolean evaluateIsStrictStringEnd(int currentLen, int currentCaretPos) {
+            return (currentLen > 0 && currentCaretPos >= currentLen - 10);
+        }
+
+        private boolean evaluateIsDocSmall(RichVirtualFlow flow, double h, int currentList) {
+            if (currentList <= 0) return true;
+
+            double expectedDocHeight = currentList * estimatedRowHeight;
+            if (h > 10.0 && expectedDocHeight < (h * 1.5)) {
+                return true;
+            }
+
+            int firstVis = flow.getFirstVisibleIndex();
+            int lastVis = flow.getLastVisibleIndex();
+            if (firstVis != -1 && lastVis != -1) {
+                return (firstVis <= 4 && lastVis >= currentList - 3);
+            }
+            return false;
+        }
+
+        private boolean evaluateIsAbsoluteEnd(RichVirtualFlow flow, javafx.scene.Node refNode, double h, int currentLen, int currentList, int currentCaretPos, int cIdx) {
+            if (evaluateIsStrictStringEnd(currentLen, currentCaretPos)) return true;
+            if (currentLen > 0 && currentCaretPos < currentLen - 50) return false;
+
+            boolean isAbs = false;
+            if (currentLen > 0 && currentCaretPos >= currentLen - 25) isAbs = true;
+            else if (cIdx != -1 && currentList > 0 && cIdx >= currentList - 2) isAbs = true;
+            else if (lastKnownCaretIdx != -1 && lastListSize > 0 && lastKnownCaretIdx >= lastListSize - 2) isAbs = true;
+
+            // 🚨 V74: Strictly bypass heuristic if cursor logically moved
+            double currentCaretTop = (currentCaretPos == lastCaretTopPos) ? lastCaretTop : -1000.0;
+
+            CaretInfo currentInfo = getTrueCaretBounds(cIdx, refNode, flow, false);
+            if (currentInfo.bounds != null) currentCaretTop = currentInfo.bounds.getMinY();
+            else if (currentInfo.cellFound && currentInfo.cellBounds != null) currentCaretTop = currentInfo.cellBounds.getMinY();
+
+            if (isAbs && currentCaretTop != -1000.0 && h > 50) {
+                if (currentCaretTop < h * 0.5) isAbs = false;
+            } else if (isAbs && currentCaretTop == -1000.0 && h > 50) {
+                if (!evaluateIsStrictStringEnd(currentLen, currentCaretPos)) isAbs = false;
+            }
+            return isAbs;
+        }
+
+        public void requestScroll() {
+            if (isClamping || isProcessing) return;
+
+            isProcessing = true;
+            boolean shouldStartTimer = false;
+            try {
+                if (paragraphListView != null && paragraphListView.virtualFlow != null) {
+                    RichVirtualFlow flow = paragraphListView.virtualFlow;
+                    javafx.scene.Node refNode = getRefNode(flow);
+                    double h = refNode != null ? refNode.getLayoutBounds().getHeight() : 0.0;
+
+                    if (h < 10.0) {
+                        lastTextLen = viewModel.getTextLength();
+                        lastListSize = paragraphListView.getItems().size();
+                        lastCaretPos = viewModel.getCaretPosition();
+                        try {
+                            Object pOptObj = viewModel.getParagraphWithCaret();
+                            if (pOptObj != null && ((java.util.Optional<?>) pOptObj).isPresent()) {
+                                lastKnownCaretIdx = paragraphListView.getItems().indexOf(((java.util.Optional<?>) pOptObj).get());
+                            }
+                        } catch (Throwable t) {}
+
+                        boolean isTrackerAwake = (framesAlive > 0 || blackoutFrames > 0 || bottomPegFrames > 0 || activeAnchorFrames > 0 || collapseGuardFrames > 0 || strictCaretPinFrames > 0);
+                        if (!isTrackerAwake) {
+                            framesAlive = 0; blackoutFrames = 0; bottomPegFrames = 0;
+                            activeAnchorFrames = 0; strictCaretPinFrames = 0; collapseGuardFrames = 0;
+                            lastCaretTopPos = -1;
+                        }
+                        return;
+                    }
+
+                    shouldStartTimer = true;
+                    boolean isTrackerAwake = (framesAlive > 0 || blackoutFrames > 0 || bottomPegFrames > 0 || activeAnchorFrames > 0 || collapseGuardFrames > 0 || strictCaretPinFrames > 0);
+
+                    int cIdx = lastKnownCaretIdx;
+                    try {
+                        Object pOptObj = viewModel.getParagraphWithCaret();
+                        if (pOptObj != null && ((java.util.Optional<?>) pOptObj).isPresent()) {
+                            cIdx = paragraphListView.getItems().indexOf(((java.util.Optional<?>) pOptObj).get());
+                        }
+                    } catch (Throwable t) {}
+                    if (cIdx == -1) cIdx = lastKnownCaretIdx;
+
+                    int currentLen = viewModel.getTextLength();
+                    int currentList = paragraphListView.getItems().size();
+                    int currentCaretPos = viewModel.getCaretPosition();
+
+                    if (!isTrackerAwake && lastTextLen != -1) {
+                        double freshPos = flow.getPosition();
+                        if (freshPos >= -0.05 && freshPos <= 1.05) lastFlowPosition = freshPos;
+                        captureMemory(flow, refNode);
+
+                        CaretInfo info = getTrueCaretBounds(cIdx, refNode, flow, false);
+                        if (info.bounds != null) {
+                            lastCaretTop = info.bounds.getMinY();
+                            lastCaretTopPos = currentCaretPos;
+                        } else if (info.cellFound && info.cellBounds != null) {
+                            lastCaretTop = info.cellBounds.getMinY();
+                            lastCaretTopPos = currentCaretPos;
+                        }
+
+                        if (!visibleCellsMemory.isEmpty() && cIdx != -1) {
+                            int minVis = Integer.MAX_VALUE;
+                            int maxVis = Integer.MIN_VALUE;
+                            for (int idx : visibleCellsMemory.keySet()) {
+                                if (idx < minVis) minVis = idx;
+                                if (idx > maxVis) maxVis = idx;
+                            }
+                            lastCaretVisible = (cIdx >= minVis - 1 && cIdx <= maxVis + 1);
+                        } else {
+                            lastCaretVisible = true;
+                        }
+
+                        // Clean wake artifacts to prevent carry-over mutes
+                        lastRadarJump = 0.0; lastRadarCaretIdx = -1; radarStuckStreak = 0;
+                        anchorStuckCount = 0; stuckCount = 0; yieldStreak = 0; bypassShield = false;
+                    }
+
+                    boolean isDocSmall = evaluateIsDocSmall(flow, h, currentList);
+
+                    if (lastTextLen == -1) {
+                        lastTextLen = currentLen;
+                        lastListSize = currentList;
+                        lastCaretPos = currentCaretPos;
+                        lastKnownCaretIdx = cIdx;
+                        captureMemory(flow, refNode);
+                        double fp = flow.getPosition();
+                        if (fp >= -0.05 && fp <= 1.05) lastFlowPosition = fp;
+                        return;
+                    }
+
+                    boolean isAbsoluteEnd = evaluateIsAbsoluteEnd(flow, refNode, h, currentLen, currentList, currentCaretPos, cIdx);
+                    boolean isMutating = (currentLen != lastTextLen || currentList != lastListSize);
+
+                    if (isMutating) {
+                        processMutationEngine(flow, refNode, h, currentLen, currentList, currentCaretPos, cIdx, isAbsoluteEnd, isDocSmall);
+                    }
+
+                    double currentPos = flow.getPosition();
+                    boolean isSyncPanic = (currentPos > 1.05 || currentPos < -0.05);
+
+                    if (isSyncPanic) {
+                   //     System.out.println("[DIAG-TRACKER] SYNC Panic Rescue Net Triggered: " + currentPos + " -> Restoring Ratio smoothly");
+                        isClamping = true;
+
+                        try {
+                            double rescue = lastFlowPosition >= 0 ? lastFlowPosition : 0.95;
+                            if (rescue <= 0.01 && currentList > 0 && memoryTopIdx > 3) {
+                                rescue = ((double) memoryTopIdx / currentList);
+                            }
+                            if (rescue > 1.0) rescue = 1.0;
+                            if (rescue < 0.0) rescue = 0.0;
+                            if (!isAbsoluteEnd && rescue >= 0.99 && currentPos > 1.05) rescue = 0.98;
+                            if (isAbsoluteEnd && currentPos > 1.05) rescue = 1.0;
+
+                            if (isDocSmall && rescue >= 0.98) rescue = 0.95;
+
+                            flow.setPosition(rescue);
+                            executeAbsoluteSync(flow);
+                        } catch (Throwable t) {
+                     //       System.out.println("[DIAG-TRACKER] Rescue Net Exception: " + t);
+                        }
+
+                        collapseGuardFrames = Math.max(collapseGuardFrames, 3);
+                        if (lastCaretVisible) pendingAnchorRecovery = true;
+                        isClamping = false;
+                    }
+
+                    if (!isTrackerAwake && !isMutating) {
+                        if (currentPos >= -0.05 && currentPos <= 1.05) {
+                            if (!(currentPos == 0.0 && memoryTopIdx > 5)) {
+                                lastFlowPosition = currentPos;
+                            }
+                        }
+                        captureMemory(flow, refNode);
+                    }
+                }
+            } catch (Throwable t) {
+            //   System.out.println("[DIAG-TRACKER] Fatal RequestScroll Exception: " + t);
+            } finally {
+                isProcessing = false;
+                boolean isTrackerAwake = (framesAlive > 0 || blackoutFrames > 0 || bottomPegFrames > 0 || activeAnchorFrames > 0 || collapseGuardFrames > 0 || strictCaretPinFrames > 0);
+                if (shouldStartTimer || isTrackerAwake) {
+                    if (shouldStartTimer) {
+                        framesAlive = Math.max(framesAlive, 60);
+                        stuckCount = 0;
+                        bypassShield = false;
+                    }
+                    this.start();
+                } else {
+                    framesAlive = 0;
+                    this.stop();
+                }
+            }
+        }
+
+        private void processMutationEngine(RichVirtualFlow flow, javafx.scene.Node refNode, double h, int currentLen, int currentList, int currentCaretPos, int cIdx, boolean isAbsoluteEnd, boolean isDocSmall) {
+            double currentPos = flow.getPosition();
+            boolean isViewAtBottom = (lastFlowPosition >= 0.95 || currentPos >= 0.95 || (isAbsoluteEnd && lastCaretVisible));
+
+            int lenDelta = Math.abs(currentLen - lastTextLen);
+            int listDelta = currentList - lastListSize;
+
+            boolean textShrank = (currentLen < lastTextLen);
+            boolean textGrew = (currentLen > lastTextLen);
+            boolean listChanged = (currentList != lastListSize);
+            boolean listShrank = (currentList < lastListSize);
+            boolean listGrew = (currentList > lastListSize);
+
+            boolean isShrinking = (textShrank || listShrank);
+            boolean isGrowing = (textGrew || listGrew);
+
+            boolean paragraphChanged = (cIdx != -1 && lastKnownCaretIdx != -1 && cIdx != lastKnownCaretIdx);
+            boolean isMassiveEdit = (lenDelta > 20 || Math.abs(listDelta) > 1);
+            boolean isStructuralEdit = (isMassiveEdit || listChanged || (paragraphChanged && (textShrank || textGrew)));
+            boolean isInlineEdit = (!isStructuralEdit && (textShrank || textGrew));
+
+            boolean useBottomPeg = isAbsoluteEnd && isViewAtBottom;
+
+            lastKick = 0.0; stuckCount = 0; anchorStuckCount = 0;
+
+            int minCaret = cIdx;
+            if (lastKnownCaretIdx != -1 && cIdx != -1) {
+                minCaret = Math.min(lastKnownCaretIdx, cIdx);
+            }
+            if (minCaret < 0) minCaret = 0;
+
+            boolean keepExistingAnchor = (activeAnchorFrames > 0 && activeAnchorTargetIdx != -1 && activeExpectedMinY != -1000.0 && activeAnchorTargetIdx < minCaret);
+            int protectedAnchorIdx = activeAnchorTargetIdx;
+            double protectedAnchorY = activeExpectedMinY;
+
+            activeAnchorTargetIdx = -1;
+            activeExpectedMinY = -1000.0;
+
+            if (keepExistingAnchor) {
+                activeAnchorTargetIdx = protectedAnchorIdx;
+                activeExpectedMinY = protectedAnchorY;
+             //   System.out.println("[DIAG-TRACKER] Anchor Protection Matrix: Sequence Sabotage Blocked! Retained safe anchor: " + protectedAnchorIdx);
+            } else {
+                if (!visibleCellsMemory.isEmpty()) {
+                    int bestAbove = -1;
+                    for (int idx : visibleCellsMemory.keySet()) {
+                        if (idx < minCaret && (bestAbove == -1 || idx > bestAbove)) bestAbove = idx;
+                    }
+
+                    if (bestAbove != -1) {
+                        activeAnchorTargetIdx = bestAbove;
+                        activeExpectedMinY = visibleCellsMemory.get(bestAbove);
+                   //     System.out.println("[DIAG-TRACKER] Anchor mapped to untouched line ABOVE: " + bestAbove);
+                    } else if (visibleCellsMemory.containsKey(minCaret)) {
+                        activeAnchorTargetIdx = minCaret;
+                        activeExpectedMinY = visibleCellsMemory.get(minCaret);
+                  //      System.out.println("[DIAG-TRACKER] Anchor mapped to Top-Line Survivor: " + minCaret);
+                    } else if (memoryTopIdx != -1) {
+                        activeAnchorTargetIdx = memoryTopIdx;
+                        if (listDelta < 0 && memoryTopIdx > minCaret) {
+                            activeAnchorTargetIdx = Math.max(0, memoryTopIdx + listDelta);
+                        } else if (listDelta > 0 && memoryTopIdx >= minCaret) {
+                            activeAnchorTargetIdx = memoryTopIdx + listDelta;
+                        }
+                        activeExpectedMinY = memoryTopMinY;
+                  //      System.out.println("[DIAG-TRACKER] Anchor mapped to Fallback Top Line: " + activeAnchorTargetIdx);
+                    }
+                } else if (memoryTopIdx != -1) {
+                    activeAnchorTargetIdx = memoryTopIdx;
+                    if (listDelta < 0 && memoryTopIdx > minCaret) {
+                        activeAnchorTargetIdx = Math.max(0, memoryTopIdx + listDelta);
+                    } else if (listDelta > 0 && memoryTopIdx >= minCaret) {
+                        activeAnchorTargetIdx = memoryTopIdx + listDelta;
+                    }
+                    activeExpectedMinY = memoryTopMinY;
+                 //   System.out.println("[DIAG-TRACKER] Anchor mapped to Fallback Top Line: " + activeAnchorTargetIdx);
+                }
+
+                if (activeAnchorTargetIdx < 0 && activeAnchorTargetIdx != -1) {
+                    activeAnchorTargetIdx = 0;
+                }
+            }
+
+            if (textShrank || listShrank) recentDeleteFrames = 15;
+            else if (textGrew || listGrew) recentDeleteFrames = 0;
+
+            if (isMassiveEdit) {
+                blackoutFrames = 15; massiveCooldownFrames = 45;
+                if (isShrinking) recentDeleteFrames = 30;
+                activeAnchorTargetIdx = -1; activeExpectedMinY = -1000.0;
+            } else if (!lastCaretVisible) {
+                // 🚨 V74: Test 8 completely excluded as requested. Offscreen yielding left natively intact.
+           //     System.out.println("[DIAG-TRACKER] Offscreen Edit - Complete Native Yield");
+                collapseGuardFrames = Math.max(collapseGuardFrames, 8);
+                bottomPegFrames = 0; pinLockFrames = 0; activeAnchorFrames = 0; strictCaretPinFrames = 0;
+                activeAnchorTargetIdx = -1; activeExpectedMinY = -1000.0;
+            } else if (isShrinking && useBottomPeg) {
+            //    System.out.println("[DIAG-TRACKER] Absolute Bottom Delete - Titanium Peg (" + (isDocSmall ? "Pixel" : "Ratio") + ")");
+                bottomPegFrames = Math.max(bottomPegFrames, 12);
+                isTitaniumPeg = true; collapseGuardFrames = 0; pinLockFrames = 0; activeAnchorFrames = 0; strictCaretPinFrames = 0;
+                activeAnchorTargetIdx = -1; activeExpectedMinY = -1000.0;
+                if (h >= 10.0) {
+                    if (isDocSmall) flow.scrollPixels(Math.max(h * 2.0, 1000.0)); else flow.setPosition(1.0);
+                    executeAbsoluteSync(flow);
+                    if (isDocSmall) flow.scrollPixels(Math.max(h * 2.0, 1000.0)); else flow.setPosition(1.0);
+                }
+            } else if (isGrowing && useBottomPeg) {
+            //    System.out.println("[DIAG-TRACKER] Absolute Bottom Return - Fast Peg (" + (isDocSmall ? "Pixel" : "Ratio") + ")");
+                bottomPegFrames = Math.max(bottomPegFrames, 3);
+                isTitaniumPeg = false;
+                collapseGuardFrames = 0; pinLockFrames = 0; activeAnchorFrames = 0; strictCaretPinFrames = 0;
+                activeAnchorTargetIdx = -1; activeExpectedMinY = -1000.0;
+                if (h >= 10.0) {
+                    if (isDocSmall) flow.scrollPixels(Math.max(h * 2.0, 1000.0)); else flow.setPosition(1.0);
+                    executeAbsoluteSync(flow);
+                    if (isDocSmall) flow.scrollPixels(Math.max(h * 2.0, 1000.0)); else flow.setPosition(1.0);
+                }
+            } else if (activeAnchorTargetIdx != -1 && (isStructuralEdit || isInlineEdit) && !useBottomPeg) {
+           //     System.out.println("[DIAG-TRACKER] Universal Titanium Vise Armed (" + (isStructuralEdit ? "Structural" : "Inline") + ")");
+                activeAnchorFrames = Math.max(activeAnchorFrames, isStructuralEdit ? 12 : 6);
+                bottomPegFrames = 0; pinLockFrames = 0; collapseGuardFrames = 0;
+                radarMuteFrames = Math.max(radarMuteFrames, isStructuralEdit ? 15 : 5);
+                strictCaretPinFrames = 0;
+            } else if (isShrinking && activeAnchorTargetIdx == -1 && lastCaretTop != -1000.0 && !useBottomPeg) {
+         //       System.out.println("[DIAG-TRACKER] Top Line Deletion Detected. Activating Strict Caret Pin.");
+                strictCaretPinFrames = Math.max(strictCaretPinFrames, 8);
+                collapseGuardFrames = 0; pinLockFrames = 0; activeAnchorFrames = 0;
+                radarMuteFrames = 15;
+            } else {
+           //     System.out.println("[DIAG-TRACKER] Blind Edit - Disarming Vise");
+                collapseGuardFrames = 0;
+                pinLockFrames = 4; activeAnchorFrames = 0; strictCaretPinFrames = 0;
+            }
+
+            lastTextLen = currentLen; lastListSize = currentList; lastCaretPos = currentCaretPos;
+            lastKnownCaretIdx = cIdx;
+        }
+
+        @Override
+        public void handle(long now) {
+            if (!isBooted) {
+           //     System.out.println("====== V74 MASTER CARET TRACKER (TEST 4 ARROW LAG FIX) ======");
+                isBooted = true;
+
+                // 🚨 ANTI-BUBBLE SHIELD
+                try {
+                    if (paragraphListView != null) {
+                        paragraphListView.addEventHandler(
+                                javafx.scene.input.ScrollEvent.ANY,
+                                event -> {
+                                    // 🚨 CONDITIONAL CONSUME: Only consume if the RichTextArea has a scrollbar
+                                    if (isVerticalScrollBarVisible()) {
+                                        event.consume();
+                                    }
+                                }
+                        );
+                        //        System.out.println("[DIAG-TRACKER] Anti-Bubble Scroll Shield Installed.");
+                    }
+                    /*
+                    if (paragraphListView != null) {
+                        paragraphListView.addEventHandler(
+                                javafx.scene.input.ScrollEvent.ANY,
+                                event -> event.consume()
+                        );
+                //        System.out.println("[DIAG-TRACKER] Anti-Bubble Scroll Shield Installed.");
+                    }
+                     */
+                } catch (Throwable t) {
+            //        System.out.println("[DIAG-TRACKER] Failed to install Anti-Bubble Shield: " + t);
+                }
+            }
+            if (isProcessing) return;
+            isProcessing = true;
+            try {
+                processTrackingFrame();
+            } catch (Throwable t) {
+          //      System.out.println("[DIAG-TRACKER] Fatal Handle Exception: " + t);
+            } finally {
+                isProcessing = false;
+            }
+        }
+
+        private void processTrackingFrame() {
+            if (paragraphListView == null || paragraphListView.virtualFlow == null) return;
+            RichVirtualFlow flow = paragraphListView.virtualFlow;
+
+            boolean isLayoutInvalid = (flow.getScene() == null || flow.getScene().getWindow() == null || !flow.getScene().getWindow().isShowing());
+            javafx.scene.Node refNode = getRefNode(flow);
+            double h = refNode != null ? refNode.getLayoutBounds().getHeight() : 0.0;
+            if (h < 10.0) isLayoutInvalid = true;
+
+            boolean isTightViewport = (h <= 380.0);
+            boolean isUltraTight = (h <= 150.0);
+
+            if (isLayoutInvalid) {
+                invalidLayoutStreak++;
+                boolean isHolding = false;
+
+                if (invalidLayoutStreak > 60) {
+                    if (activeAnchorFrames > 0) { activeAnchorFrames--; isHolding = true; }
+                    if (strictCaretPinFrames > 0) { strictCaretPinFrames--; isHolding = true; }
+                    if (blackoutFrames > 0) { blackoutFrames--; isHolding = true; }
+                    if (collapseGuardFrames > 0) { collapseGuardFrames--; isHolding = true; }
+                    if (framesAlive > 0) { framesAlive--; isHolding = true; }
+                } else {
+                    isHolding = (activeAnchorFrames > 0 || strictCaretPinFrames > 0 || blackoutFrames > 0 || collapseGuardFrames > 0 || framesAlive > 0);
+                }
+
+                if (isHolding) {
+                    return;
+                }
+
+                framesAlive = 0; blackoutFrames = 0; massiveCooldownFrames = 0;
+                radarPanicStreak = 0; radarMuteFrames = 0; collapseGuardFrames = 0; recentDeleteFrames = 0;
+                lastRadarJump = 0.0; lastRadarCaretIdx = -1; radarStuckStreak = 0; lastKnownCaretIdx = -1;
+                justScrolled = false; bypassShield = false; bottomPegFrames = 0; activeAnchorFrames = 0; strictCaretPinFrames = 0; pendingAnchorRecovery = false;
+                mathShieldStreak = 0; lastCaretTopPos = -1;
+                this.stop();
+                return;
+            } else {
+                invalidLayoutStreak = 0;
+            }
+
+            if (framesAlive <= 0 && blackoutFrames <= 0 && bottomPegFrames <= 0 && activeAnchorFrames <= 0 && collapseGuardFrames <= 0 && strictCaretPinFrames <= 0) {
+                justScrolled = false; bypassShield = false; mathShieldStreak = 0; this.stop(); return;
+            }
+
+            if (framesAlive > 0) framesAlive--;
+            if (radarMuteFrames > 0) radarMuteFrames--;
+            if (massiveCooldownFrames > 0) massiveCooldownFrames--;
+            if (strictCaretPinFrames > 0) strictCaretPinFrames--;
+
+            if (blackoutFrames > 0) {
+                lastFlowPosition = -1.0; blackoutFrames--;
+                visibleCellsMemory.clear(); memoryTopIdx = -1; memoryTopMinY = -1000.0; activeAnchorTargetIdx = -1;
+                lastKick = 0.0; lastCaretTop = -1000.0; lastCaretTopPos = -1; lastRadarJump = 0.0; lastRadarCaretIdx = -1; radarStuckStreak = 0;
+                lastKnownCaretIdx = -1; stuckCount = 0; yieldStreak = 0; bypassShield = false; collapseGuardFrames = 0;
+                radarPanicStreak = 0; radarMuteFrames = 0; pinLockFrames = 0; framesAlive = Math.max(framesAlive, 45);
+                recentDeleteFrames = 0; bottomPegFrames = 0; activeAnchorFrames = 0; strictCaretPinFrames = 0;
+                mathShieldStreak = 0;
+                if (blackoutFrames == 0 && flow != null) executeAbsoluteSync(flow);
+                return;
+            }
+
+            int currentListSize = paragraphListView.getItems().size();
+            int caretIdx = -1;
+            Object pOptObj = viewModel.getParagraphWithCaret();
+            if (pOptObj != null && ((java.util.Optional<?>) pOptObj).isPresent()) {
+                Paragraph targetPara = (Paragraph) ((java.util.Optional<?>) pOptObj).get();
+                caretIdx = paragraphListView.getItems().indexOf(targetPara);
+            }
+            if (caretIdx == -1) caretIdx = lastKnownCaretIdx;
+
+            boolean isGhostCaret = (caretIdx == -1);
+
+            int currentTextLen = viewModel.getTextLength();
+            int currentCaretPos = viewModel.getCaretPosition();
+
+            boolean isDocSmall = evaluateIsDocSmall(flow, h, currentListSize);
+
+            boolean isAbsoluteEnd = evaluateIsAbsoluteEnd(flow, refNode, h, currentTextLen, currentListSize, currentCaretPos, caretIdx);
+            boolean isStrictStringEnd = evaluateIsStrictStringEnd(currentTextLen, currentCaretPos);
+
+            if (lastTextLen != -1 && (currentTextLen != lastTextLen || currentListSize != lastListSize)) {
+                processMutationEngine(flow, refNode, h, currentTextLen, currentListSize, currentCaretPos, caretIdx, isAbsoluteEnd, isDocSmall);
+            } else if (recentDeleteFrames > 0) {
+                recentDeleteFrames--;
+            }
+
+            boolean peggedToBottom = (bottomPegFrames > 0);
+
+            // =================================================================
+            // 🚨 2. ACTIVE BOTTOM PEG EXECUTION
+            // =================================================================
+            if (bottomPegFrames > 0) {
+                bottomPegFrames--;
+                if (isDocSmall) flow.scrollPixels(Math.max(h * 2.0, 1000.0)); else flow.setPosition(1.0);
+                if (isTitaniumPeg && bottomPegFrames > 2) {
+                    executeAbsoluteSync(flow);
+                    if (isDocSmall) flow.scrollPixels(Math.max(h * 2.0, 1000.0)); else flow.setPosition(1.0);
+                } else if (bottomPegFrames == 0) {
+                    if (isTitaniumPeg) {
+                        executeAbsoluteSync(flow);
+                        if (isDocSmall) flow.scrollPixels(Math.max(h * 2.0, 1000.0)); else flow.setPosition(1.0);
+                    }
+                    captureMemory(flow, refNode);
+                    lastFlowPosition = 1.0;
+                }
+                framesAlive = Math.max(framesAlive, 2);
+                mathShieldStreak = 0;
+                return;
+            }
+
+            // =================================================================
+            // 🚨 3. VOID RESCUE NET
+            // =================================================================
+            if (flow.getScene() != null && flow.getScene().getWindow() != null && flow.getScene().getWindow().isShowing()) {
+                double currentFlowPos = flow.getPosition();
+                boolean isSyncPanic = (currentFlowPos > 1.05 || currentFlowPos < -0.05);
+
+                if (isSyncPanic) {
+                    if (activeAnchorFrames > 0 || strictCaretPinFrames > 0) {
+                        // Muted. Anchor will Pre-Sync Rescue.
+                    } else if (collapseGuardFrames > 0 && bottomPegFrames == 0) {
+                        framesAlive = Math.max(framesAlive, 2);
+                        return;
+                    } else {
+                        double rescuePos = lastFlowPosition >= 0 ? lastFlowPosition : 0.95;
+                        if (rescuePos <= 0.01 && currentListSize > 0 && memoryTopIdx > 3) {
+                            rescuePos = ((double) memoryTopIdx / currentListSize);
+                        }
+                        if (rescuePos > 1.0) rescuePos = 1.0;
+                        if (rescuePos < 0.0) rescuePos = 0.0;
+
+                        if (!isAbsoluteEnd && rescuePos >= 0.99 && currentFlowPos > 1.05) rescuePos = 0.98;
+                        if (isAbsoluteEnd && currentFlowPos > 1.05) rescuePos = 1.0;
+
+                        if (isDocSmall && rescuePos >= 0.98) rescuePos = 0.95;
+
+                   //     System.out.println("[DIAG-TRACKER] Void Rescue Net Triggered: " + rescuePos);
+                        flow.setPosition(rescuePos);
+
+                        if (isAbsoluteEnd) { visibleCellsMemory.clear(); memoryTopIdx = -1; memoryTopMinY = -1000.0; }
+                        if (collapseGuardFrames < 2) collapseGuardFrames = 2;
+                        framesAlive = Math.max(framesAlive, 2);
+                    }
+                }
+            }
+
+            if (collapseGuardFrames > 0) {
+                collapseGuardFrames--;
+                if (activeAnchorFrames == 0 && bottomPegFrames == 0) {
+                    framesAlive = Math.max(framesAlive, 2);
+                    return;
+                }
+            }
+
+            // =================================================================
+            // 🚨 5. THE TITANIUM VISE
+            // =================================================================
+            if (activeAnchorFrames > 0) {
+                activeAnchorFrames--;
+                framesAlive = Math.max(framesAlive, 2);
+
+                double preSyncPos = flow.getPosition();
+                boolean isNativePanic = (preSyncPos > 1.05 || preSyncPos < -0.05);
+
+                if (isNativePanic) {
+                    double safePos = lastFlowPosition >= 0 ? lastFlowPosition : 0.95;
+                    if (safePos <= 0.01 && currentListSize > 0 && memoryTopIdx > 3) {
+                        safePos = ((double) memoryTopIdx / currentListSize);
+                    }
+                    if (safePos > 1.0) safePos = 1.0;
+                    if (safePos < 0.0) safePos = 0.0;
+
+                    if (!isAbsoluteEnd && safePos >= 0.99 && preSyncPos > 1.05) safePos = 0.98;
+                    if (isAbsoluteEnd && preSyncPos > 1.05) safePos = 1.0;
+
+                    if (isDocSmall && safePos >= 0.98) safePos = 0.95;
+
+                    flow.setPosition(safePos);
+                //    System.out.println("[DIAG-TRACKER] Anchor Pre-Sync Rescue: Crushed Native Panic (" + preSyncPos + ") to " + safePos);
+                }
+
+                executeAbsoluteSync(flow);
+
+                double postSyncPos = flow.getPosition();
+                boolean postPanic = (postSyncPos > 1.05 || postSyncPos < -0.05);
+
+                if (postPanic) {
+                    double safePos = lastFlowPosition >= 0 ? lastFlowPosition : 0.95;
+                    if (safePos <= 0.01 && currentListSize > 0 && memoryTopIdx > 3) {
+                        safePos = ((double) memoryTopIdx / currentListSize);
+                    }
+                    if (safePos > 1.0) safePos = 1.0;
+                    if (safePos < 0.0) safePos = 0.0;
+
+                    if (isDocSmall && safePos >= 0.98) safePos = 0.95;
+
+               //     System.out.println("[DIAG-TRACKER] Synchronous Panic Caught during Vise Sync! " + postSyncPos + " -> Reverting to " + safePos);
+                    flow.setPosition(safePos);
+                    executeAbsoluteSync(flow);
+                }
+
+                if (activeAnchorTargetIdx != -1 && activeExpectedMinY != -1000.0) {
+                    int targetIdx = activeAnchorTargetIdx;
+                    if (targetIdx >= paragraphListView.getItems().size()) targetIdx = paragraphListView.getItems().size() - 1;
+
+                    for (int lockPass = 0; lockPass < 3; lockPass++) {
+                        double currentMinY = getCellMinY(flow, refNode, targetIdx);
+                        double expectedMinY = activeExpectedMinY;
+
+                        if (currentMinY == -1000.0) {
+                            for(int i = 1; i <= 30; i++) {
+                                int fallbackIdx = targetIdx - i;
+                                if (fallbackIdx >= 0) {
+                                    double fallbackMinY = getCellMinY(flow, refNode, fallbackIdx);
+                                    if (fallbackMinY != -1000.0) {
+                                        currentMinY = fallbackMinY;
+                                        if (visibleCellsMemory.containsKey(fallbackIdx)) {
+                                            expectedMinY = visibleCellsMemory.get(fallbackIdx);
+                                 //           System.out.println("[DIAG-TRACKER] Vise Blind! Mapped to strict memory fallback ABOVE: " + fallbackIdx);
+                                        } else {
+                                            expectedMinY = activeExpectedMinY - (estimatedRowHeight * i);
+                                  //          System.out.println("[DIAG-TRACKER] Vise Blind! Mapped to geometric fallback ABOVE: " + fallbackIdx);
+                                        }
+                                        targetIdx = fallbackIdx;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (currentMinY == -1000.0) {
+                      //      System.out.println("[DIAG-TRACKER] Vise Fatal Blind! Executing Ratio-based RAM recovery for index " + targetIdx);
+                            try {
+                                double safe = lastFlowPosition >= 0 ? lastFlowPosition : 0.5;
+                                if (safe <= 0.01 && currentListSize > 0 && memoryTopIdx > 3) {
+                                    safe = ((double) memoryTopIdx / currentListSize);
+                                }
+                                if (safe > 1.0) safe = 1.0;
+                                if (safe < 0.0) safe = 0.0;
+
+                                if (isDocSmall && safe >= 0.98) safe = 0.95;
+
+                                flow.setPosition(safe);
+                                executeAbsoluteSync(flow);
+                                currentMinY = getCellMinY(flow, refNode, targetIdx);
+                                expectedMinY = activeExpectedMinY;
+                            } catch (Throwable t) {
+                          //      System.out.println("[DIAG-TRACKER] Ratio Recovery Exception: " + t);
+                            }
+                        }
+
+                        if (currentMinY != -1000.0) {
+                            double shift = currentMinY - expectedMinY;
+                            shift = applyPhysicalClamp(flow, refNode, h, shift, true);
+
+                            double maxShift = Math.max(h * 4.0, estimatedRowHeight * 40.0);
+
+                            if (Math.abs(shift) > 0.1 && Math.abs(shift) < maxShift) {
+                                double clampedShift = Math.round(shift);
+
+                                if (Math.abs(clampedShift) >= 1.0) {
+                                    if (Math.abs(clampedShift) <= 2.0 && Math.abs(lastKick) == Math.abs(clampedShift)) {
+                                        anchorStuckCount++;
+                                    } else if (lastKick == clampedShift) {
+                                        anchorStuckCount++;
+                                    } else {
+                                        anchorStuckCount = 0;
+                                    }
+
+                                    if (anchorStuckCount >= 2) {
+                                //        System.out.println("[DIAG-TRACKER] Vise hit physical floor loop-lock. Disarming Vise permanently.");
+                                        activeAnchorFrames = 0;
+                                        break;
+                                    }
+
+                               //     System.out.println("[DIAG-TRACKER] Titanium Vise Lock-Pass " + lockPass + " Kick: " + clampedShift);
+                                    doScroll(flow, clampedShift, isTightViewport ? "Tight Vise" : "Space Vise");
+                                    executeAbsoluteSync(flow);
+
+                                    double postSyncY = getCellMinY(flow, refNode, targetIdx);
+                                    if (postSyncY != -1000.0 && Math.abs(postSyncY - currentMinY) < 1.0) {
+                                        activeAnchorFrames = Math.max(activeAnchorFrames, 2);
+                                    }
+
+                                    lastKick = clampedShift;
+
+                                    if (targetIdx != activeAnchorTargetIdx) {
+                                        activeAnchorTargetIdx = targetIdx;
+                                        activeExpectedMinY = expectedMinY;
+                                    }
+                                    continue;
+                                } else {
+                             //       System.out.println("[DIAG-TRACKER] Vise Perfect Lock Achieved (< 1.0px).");
+                                    break;
+                                }
+                            } else if (Math.abs(shift) >= maxShift) {
+                        //        System.out.println("[DIAG-TRACKER] Massive Hallucination Ignored in Vise Loop! Shift: " + shift);
+                                break;
+                            } else {
+                       //         System.out.println("[DIAG-TRACKER] Vise Perfect Lock Achieved (< 0.1px).");
+                                break;
+                            }
+                        } else {
+                       //     System.out.println("[DIAG-TRACKER] Vise Fatal Blind! Native RAM recovery failed.");
+                            break;
+                        }
+                    }
+                } else {
+              //     System.out.println("[DIAG-TRACKER] Anchor Failed: TargetIdx (" + activeAnchorTargetIdx + ") invalid.");
+                    activeAnchorFrames = 0;
+                }
+
+                if (activeAnchorFrames == 0) {
+                    captureMemory(flow, refNode);
+                    pinLockFrames = 3;
+                    radarMuteFrames = Math.max(radarMuteFrames, 5);
+                    anchorStuckCount = 0;
+                }
+
+                return;
+            }
+
+            // =================================================================
+            // 🚨 6. NORMAL TRACKING LOGIC
+            // =================================================================
+            targetAcquired = false;
+
+            if (strictCaretPinFrames > 0) strictCaretPinFrames--;
+
+            if (isGhostCaret) {
+                targetAcquired = true;
+            } else {
+                boolean isInlineEdit = (currentTextLen != lastTextLen && activeAnchorFrames == 0 && bottomPegFrames == 0 && strictCaretPinFrames == 0);
+                if (isInlineEdit && !peggedToBottom) pinLockFrames = Math.max(pinLockFrames, 4);
+                else if (pinLockFrames > 0 && currentTextLen == lastTextLen) pinLockFrames--;
+
+                int currentFirstIdx = flow.getFirstVisibleIndex();
+                justScrolled = false;
+
+                double pad = 1.0;
+                double triggerBottom = Math.max(10.0, h - pad);
+                double triggerTop = pad;
+
+                for (int pass = 0; pass < 8; pass++) {
+                    boolean effectiveShield = (!isTightViewport && !bypassShield && pass == 0 && strictCaretPinFrames == 0);
+                    CaretInfo info = getTrueCaretBounds(caretIdx, refNode, flow, effectiveShield);
+
+                    if (info.bounds == null && info.cellFound && info.cellBounds != null) {
+                        double cellH = info.cellBounds.getMaxY() - info.cellBounds.getMinY();
+                        if (massiveCooldownFrames > 0 && !isUltraTight) { yieldStreak = 0; framesAlive = Math.max(framesAlive, 2); break; }
+                        if (cellH > Math.max(h * 2.0, 400.0)) { yieldStreak = 0; framesAlive = Math.max(framesAlive, 2); break; }
+
+                        // 🚨 V74: Ensures bounds hallucination doesn't fire across active logical cursor navigation
+                        if (!isTightViewport && bypassShield && lastCaretTop != -1000.0 && currentCaretPos == lastCaretTopPos) {
+                            double activeTop = lastCaretTop;
+                            if (activeTop < info.cellBounds.getMinY()) activeTop = info.cellBounds.getMinY();
+                            if (activeTop > info.cellBounds.getMaxY() - estimatedRowHeight) activeTop = Math.max(info.cellBounds.getMinY(), info.cellBounds.getMaxY() - estimatedRowHeight);
+                            double activeBot = activeTop + estimatedRowHeight;
+                            info.bounds = new javafx.geometry.BoundingBox(0, activeTop, 10, activeBot - activeTop);
+                        } else if (lastCaretTop != -1000.0 && currentCaretPos == lastCaretTopPos) {
+                            double activeTop = lastCaretTop;
+                            if (activeTop < info.cellBounds.getMinY()) activeTop = info.cellBounds.getMinY();
+                            if (activeTop > info.cellBounds.getMaxY() - estimatedRowHeight) activeTop = Math.max(info.cellBounds.getMinY(), info.cellBounds.getMaxY() - estimatedRowHeight);
+                            double activeBot = activeTop + estimatedRowHeight;
+                            if (isAbsoluteEnd && info.cellBounds.getMaxY() > activeBot) activeBot = info.cellBounds.getMaxY();
+                            info.bounds = new javafx.geometry.BoundingBox(0, activeTop, 10, activeBot - activeTop);
+                        } else {
+                            double cTop = info.cellBounds.getMinY();
+                            double cBot = isTightViewport ? (cTop + Math.max(1.0, Math.min(10.0, cellH))) : info.cellBounds.getMaxY();
+                            if (isAbsoluteEnd) cBot = info.cellBounds.getMaxY();
+                            info.bounds = new javafx.geometry.BoundingBox(0, cTop, 10, Math.max(1.0, cBot - cTop));
+                        }
+                    }
+
+                    double activeBot = -1000.0;
+                    double activeTop = -1000.0;
+
+                    if (info.bounds != null) {
+                        activeBot = info.bounds.getMaxY();
+                        activeTop = info.bounds.getMinY();
+                    } else if (!isTightViewport && lastCaretTop != -1000.0 && currentCaretPos == lastCaretTopPos) {
+                        activeTop = lastCaretTop;
+                        if (info.cellBounds != null && lastCaretTop < info.cellBounds.getMinY() - 10.0) activeTop = info.cellBounds.getMinY();
+                        activeBot = activeTop + estimatedRowHeight;
+                    } else if (!isTightViewport && info.cellBounds != null) {
+                        activeTop = info.cellBounds.getMinY();
+                        activeBot = activeTop + estimatedRowHeight;
+                    }
+
+                    if (effectiveShield && info.cellMutating) {
+                        if (activeBot != -1000.0) {
+                            boolean isClippedOffScreen = (activeBot > h + 2.0 || activeTop < -2.0);
+                            if (isClippedOffScreen) {
+                                if (recentDeleteFrames > 0) { yieldStreak = 0; framesAlive = Math.max(framesAlive, 2); break; }
+                                else { bypassShield = true; }
+                            } else { yieldStreak = 0; framesAlive = Math.max(framesAlive, 2); break; }
+                        } else { yieldStreak = 0; framesAlive = Math.max(framesAlive, 2); break; }
+                    }
+
+                    if (info.bounds == null && info.cellFound && info.cellBounds != null) {
+                        if (bypassShield && lastCaretTop != -1000.0 && currentCaretPos == lastCaretTopPos) {
+                            info.bounds = new javafx.geometry.BoundingBox(0, activeTop, 10, activeBot - activeTop);
+                        } else {
+                            yieldStreak = 0; framesAlive = Math.max(framesAlive, 2); break;
+                        }
+                    }
+
+                    if (info.bounds == null) {
+                        if (strictCaretPinFrames > 0 && caretIdx != -1) {
+                       //     System.out.println("[DIAG-TRACKER] Caret Pin Blind! Forcing Ratio recovery");
+                            try {
+                                double safe = lastFlowPosition >= 0 ? lastFlowPosition : 0.5;
+                                if (isDocSmall && safe >= 0.98) safe = 0.95;
+
+                                flow.setPosition(safe);
+                                executeAbsoluteSync(flow);
+                            } catch (Throwable t) {
+                          //      System.out.println("[DIAG-TRACKER] Pin Recovery Exception: " + t);
+                            }
+                            continue;
+                        }
+
+                        if (info.cellFound) {
+                            boolean activelyTypingCheck = (framesAlive > 5);
+                            if (!activelyTypingCheck) break;
+                        }
+
+                        int currentLast = flow.getLastVisibleIndex();
+
+                        boolean isPhysicallyVisible = false;
+                        if (activeBot != -1000.0 && activeTop != -1000.0) {
+                            if (activeBot >= triggerTop - 10.0 && activeTop <= triggerBottom + 10.0) {
+                                isPhysicallyVisible = true;
+                            }
+                        }
+
+                        if ((caretIdx > currentLast || caretIdx < currentFirstIdx) && !isPhysicallyVisible) {
+                            if (radarMuteFrames > 0) { yieldStreak = 0; framesAlive = Math.max(framesAlive, 2); break; }
+
+                            // 🚨 V74: Math Shield drops instantly if user navigates to a new logical character
+                            if (lastCaretTop != -1000.0 && framesAlive > 0 && currentCaretPos == lastCaretTopPos) {
+                                double projectedY = lastCaretTop;
+                                double safeTop = triggerTop - (estimatedRowHeight * 1.5);
+                                double safeBottom = triggerBottom + (estimatedRowHeight * 1.5);
+
+                                if (projectedY >= safeTop && projectedY <= safeBottom) {
+                                    mathShieldStreak++;
+                                    if (mathShieldStreak <= 5) {
+                                   //     System.out.println("[DIAG-TRACKER] Math Shield: Suppressing false Radar kick. Cursor geometrically proven on screen. Streak: " + mathShieldStreak);
+                                        radarPanicStreak = 0;
+                                        framesAlive = Math.max(framesAlive, 2);
+                                        break;
+                                    } else {
+                                //        System.out.println("[DIAG-TRACKER] Math Shield: Streak timeout reached. Yielding to native Radar.");
+                                    }
+                                } else {
+                                    mathShieldStreak = 0;
+                                }
+                            } else {
+                                mathShieldStreak = 0;
+                            }
+
+                            if (!isTightViewport) {
+                                radarPanicStreak++;
+                                if (radarPanicStreak < 3) { framesAlive = Math.max(framesAlive, 2); break; }
+                            }
+
+                            if (pass == 0) {
+                                executeAbsoluteSync(flow);
+                                int newFirst = flow.getFirstVisibleIndex(); int newLast = flow.getLastVisibleIndex();
+                                if (newFirst != -1 && newLast != -1) {
+                                    if (caretIdx >= newFirst && caretIdx <= newLast) {
+                                        mathShieldStreak = 0;
+                                        continue;
+                                    }
+                                    currentFirstIdx = newFirst; currentLast = newLast;
+                                }
+                            }
+
+                            double rawDistance = (caretIdx > currentLast) ? (caretIdx - currentLast) * estimatedRowHeight : (currentFirstIdx - caretIdx) * estimatedRowHeight;
+                            double jump = Math.round(rawDistance); jump = Math.max(jump, 1.0); if (jump > 150.0) jump = 150.0;
+
+                            if (!isTightViewport) {
+                                if (Math.abs(jump - lastRadarJump) < 1.0 && caretIdx == lastRadarCaretIdx) radarStuckStreak++;
+                                else radarStuckStreak = 0;
+
+                                lastRadarJump = jump; lastRadarCaretIdx = caretIdx;
+                                if (radarStuckStreak > 1) { radarMuteFrames = 5; radarStuckStreak = 0; break; }
+                            }
+
+                            double kick = caretIdx > currentLast ? jump : -jump;
+                            double clampedKick = applyPhysicalClamp(flow, refNode, h, kick, false);
+
+                            if (Math.abs(clampedKick) < 0.5) {
+                                targetAcquired = true;
+                                break;
+                            }
+
+                            doScroll(flow, clampedKick, isTightViewport ? "Tight Radar" : "Space Radar");
+                            justScrolled = true; executeAbsoluteSync(flow); continue;
+                        }
+
+                        mathShieldStreak = 0;
+
+                        if (!isTightViewport) {
+                            boolean isTargetVisibleRange = (currentFirstIdx != -1 && currentLast != -1 && caretIdx >= currentFirstIdx && caretIdx <= currentLast);
+                            if (isTargetVisibleRange && !bypassShield) {
+                                yieldStreak++;
+                                if (yieldStreak > 15) { executeAbsoluteSync(flow); yieldStreak = 0; bypassShield = true; break; }
+                                framesAlive = Math.max(framesAlive, 2); break;
+                            } else yieldStreak = 0;
+                        }
+
+                        break;
+                    } else {
+                        yieldStreak = 0; radarPanicStreak = 0; radarStuckStreak = 0; lastRadarJump = 0.0; mathShieldStreak = 0;
+                        double caretTop = info.bounds.getMinY(); double caretBottom = info.bounds.getMaxY();
+
+                        // Strict Caret Pin explicitly relies on previous unverified coordinate.
+                        double targetCaretY = lastCaretTop;
+
+                        // 🚨 V74: Anti-Bounce (Stuck Count) is perfectly bypassed if the user's cursor logically navigated.
+                        // This fixes the "Arrow-Down Lag" without breaking text insertion stability.
+                        if (lastCaretTop != -1000.0 && Math.abs(lastKick) > 0.5 && strictCaretPinFrames == 0) {
+                            if (currentCaretPos == lastCaretTopPos) {
+                                double actualMove = Math.abs(caretTop - lastCaretTop);
+                                if (actualMove < Math.abs(lastKick) * 0.2) {
+                                    stuckCount++; if (stuckCount >= 2) { targetAcquired = true; break; }
+                                } else stuckCount = 0;
+                            } else {
+                                stuckCount = 0; // Navigating logical index permanently bypasses the stuck floor lock!
+                            }
+                        } else if (Math.abs(lastKick) <= 0.5) stuckCount = 0;
+
+                        double kick = 0.0;
+
+                        if (strictCaretPinFrames > 0 && targetCaretY != -1000.0) {
+                            kick = caretTop - targetCaretY;
+                        } else if (caretBottom > triggerBottom) {
+                            if (!isTightViewport && recentDeleteFrames > 0 && !isAbsoluteEnd) kick = 0.0;
+                            else {
+                                kick = (caretBottom - triggerBottom);
+                                if (caretTop - kick < triggerTop) kick = Math.max(0, caretTop - triggerTop);
+                            }
+                        } else if (caretTop < triggerTop) {
+                            if (!isTightViewport && recentDeleteFrames > 0 && !isAbsoluteEnd) kick = 0.0;
+                            else kick = (caretTop - triggerTop);
+                        }
+
+                        kick = Math.round(kick);
+
+                        if (kick > 0.0 && flow.getPosition() >= 0.999 && isStrictStringEnd) {
+                            kick = 0.0;
+                        }
+
+                        double clampedKick = applyPhysicalClamp(flow, refNode, h, kick, strictCaretPinFrames > 0);
+
+                        if (Math.abs(clampedKick) <= 2.0) {
+                            targetAcquired = true; lastKick = 0.0;
+                            lastCaretTop = (strictCaretPinFrames > 0 && targetCaretY != -1000.0) ? targetCaretY : caretTop;
+                            lastCaretTopPos = currentCaretPos; // Lock logical position
+                            if (strictCaretPinFrames > 0) {
+                                // Pin continues holding layout hostage until timeout
+                            } else {
+                                break;
+                            }
+                        }
+                        if (lastKick != 0.0 && Math.signum(clampedKick) != Math.signum(lastKick)) {
+                            if (Math.abs(clampedKick) < 30.0) { targetAcquired = true; break; }
+                        }
+
+                        double maxSafeKick = Math.max(150.0, h * 1.5);
+                        if (clampedKick > maxSafeKick) clampedKick = maxSafeKick;
+                        if (clampedKick < -maxSafeKick) clampedKick = -maxSafeKick;
+                        clampedKick = Math.round(clampedKick);
+
+                        lastCaretTop = (strictCaretPinFrames > 0 && targetCaretY != -1000.0) ? targetCaretY : caretTop;
+                        lastCaretTopPos = currentCaretPos; // Lock logical position
+                        lastKick = clampedKick;
+
+                        if (Math.abs(clampedKick) > 0.0) {
+                            doScroll(flow, clampedKick, isTightViewport ? (strictCaretPinFrames > 0 ? "Tight Caret Pin" : "Tight Lock") : (strictCaretPinFrames > 0 ? "Space Caret Pin" : "Space Lock"));
+                            executeAbsoluteSync(flow);
+                        }
+                        continue;
+                    }
+                }
+            }
+
+            if (targetAcquired) {
+                mathShieldStreak = 0;
+                if (peggedToBottom) framesAlive = 0;
+                else if (justScrolled || pinLockFrames > 0 || pendingAnchorRecovery || strictCaretPinFrames > 0) framesAlive = Math.max(framesAlive, 1);
+                else framesAlive = 0;
+            } else framesAlive = Math.max(framesAlive, 3);
+
+            boolean isYielding = (collapseGuardFrames > 0 || bottomPegFrames > 0 || blackoutFrames > 0 || activeAnchorFrames > 0 || strictCaretPinFrames > 0);
+
+            if (!isYielding) {
+                captureMemory(flow, refNode);
+
+                if (!visibleCellsMemory.isEmpty() && lastKnownCaretIdx != -1) {
+                    int minVis = Integer.MAX_VALUE;
+                    int maxVis = Integer.MIN_VALUE;
+                    for (int idx : visibleCellsMemory.keySet()) {
+                        if (idx < minVis) minVis = idx;
+                        if (idx > maxVis) maxVis = idx;
+                    }
+                    lastCaretVisible = (lastKnownCaretIdx >= minVis - 1 && lastKnownCaretIdx <= maxVis + 1);
+                } else {
+                    lastCaretVisible = true;
+                }
+
+                double finalPos = flow.getPosition();
+                if (finalPos >= -0.05 && finalPos <= 1.05) {
+                    if (!(finalPos == 0.0 && memoryTopIdx > 5)) {
+                        lastFlowPosition = finalPos;
+                    }
+                }
+            }
+        }
+
+        private void doScroll(RichVirtualFlow flow, double pixels, String source) {
+            if (Math.abs(pixels) > 0.0) {
+            //    System.out.println("[DIAG-TRACKER] " + source + " Kick: " + pixels);
+                flow.scrollPixels(pixels);
+                justScrolled = true;
+            }
+        }
+
+        private double applyPhysicalClamp(RichVirtualFlow flow, javafx.scene.Node refNode, double h, double kick, boolean isAnchor) {
+            if (isAnchor) return kick; // Absolute Immunity
+
+            if (kick > 0.0) {
+                int currentLast = flow.getLastVisibleIndex();
+                if (currentLast != -1 && currentLast >= paragraphListView.getItems().size() - 2) {
+                    double lastCellMaxY = getCellMaxY(flow, refNode, paragraphListView.getItems().size() - 1);
+                    if (lastCellMaxY != -1000.0) {
+                        double maxAllowed = Math.max(0.0, lastCellMaxY - h);
+                        if (kick > maxAllowed) return Math.floor(maxAllowed);
+                    }
+                }
+            } else if (kick < 0.0) {
+                int currentFirst = flow.getFirstVisibleIndex();
+                if (currentFirst <= 1) {
+                    double firstCellMinY = getCellMinY(flow, refNode, 0);
+                    if (firstCellMinY != -1000.0) {
+                        double minAllowed = Math.min(0.0, firstCellMinY);
+                        if (kick < minAllowed) return Math.ceil(minAllowed);
+                    }
+                }
+            }
+            return kick;
+        }
+
+        private void executeAbsoluteSync(RichVirtualFlow flow) {
+            try {
+                if (paragraphListView.getParent() != null) {
+                    paragraphListView.getParent().layout();
+                }
+                paragraphListView.requestLayout();
+                flow.requestLayout();
+                paragraphListView.applyCss();
+                flow.applyCss();
+                paragraphListView.layout();
+                flow.layout();
+            } catch (Throwable t) {}
+        }
+
+        private double getCellMinY(RichVirtualFlow flow, javafx.scene.Node refNode, int targetIdx) {
+            try {
+                javafx.scene.Group sheet = (javafx.scene.Group) flow.lookup(".sheet");
+                if (sheet != null) {
+                    for (javafx.scene.Node node : sheet.getChildren()) {
+                        if (node instanceof javafx.scene.control.ListCell) {
+                            javafx.scene.control.ListCell<?> cell = (javafx.scene.control.ListCell<?>) node;
+                            if (cell.getIndex() == targetIdx) {
+                                javafx.geometry.Bounds cb = cell.getBoundsInLocal();
+                                if (cb != null) {
+                                    javafx.geometry.Bounds scene = cell.localToScene(cb);
+                                    if (scene != null && refNode != null) {
+                                        javafx.geometry.Bounds local = refNode.sceneToLocal(scene);
+                                        if (local != null) return local.getMinY();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable t) {}
+            return -1000.0;
+        }
+
+        private double getCellMaxY(RichVirtualFlow flow, javafx.scene.Node refNode, int targetIdx) {
+            try {
+                javafx.scene.Group sheet = (javafx.scene.Group) flow.lookup(".sheet");
+                if (sheet != null) {
+                    for (javafx.scene.Node node : sheet.getChildren()) {
+                        if (node instanceof javafx.scene.control.ListCell) {
+                            javafx.scene.control.ListCell<?> cell = (javafx.scene.control.ListCell<?>) node;
+                            if (cell.getIndex() == targetIdx) {
+                                javafx.geometry.Bounds cb = cell.getBoundsInLocal();
+                                if (cb != null) {
+                                    javafx.geometry.Bounds scene = cell.localToScene(cb);
+                                    if (scene != null && refNode != null) {
+                                        javafx.geometry.Bounds local = refNode.sceneToLocal(scene);
+                                        if (local != null) return local.getMaxY();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable t) {}
+            return -1000.0;
+        }
+
+        private class CaretInfo {
+            boolean cellFound = false;
+            boolean cellMutating = false;
+            javafx.geometry.Bounds bounds = null;
+            javafx.geometry.Bounds cellBounds = null;
+        }
+
+        private CaretInfo getTrueCaretBounds(int caretIdx, javafx.scene.Node refNode, RichVirtualFlow flow, boolean useShield) {
+            CaretInfo info = new CaretInfo();
+            try {
+                javafx.scene.Group sheet = (javafx.scene.Group) flow.lookup(".sheet");
+                if (sheet != null) {
+                    for (javafx.scene.Node node : sheet.getChildren()) {
+                        if (node instanceof javafx.scene.control.ListCell) {
+                            javafx.scene.control.ListCell<?> cell = (javafx.scene.control.ListCell<?>) node;
+                            if (cell.getIndex() == caretIdx) {
+                                info.cellFound = true;
+                                javafx.geometry.Bounds cbCell = cell.getBoundsInLocal();
+                                if (cbCell != null) {
+                                    javafx.geometry.Bounds cellScene = cell.localToScene(cbCell);
+                                    if (cellScene != null) info.cellBounds = refNode.sceneToLocal(cellScene);
+                                }
+                                for (javafx.scene.Node caretNode : cell.lookupAll(".caret")) {
+                                    if (caretNode instanceof javafx.scene.shape.Path) {
+                                        javafx.scene.shape.Path path = (javafx.scene.shape.Path) caretNode;
+                                        if (!path.getElements().isEmpty()) {
+                                            javafx.geometry.Bounds cbLocal = path.getBoundsInLocal();
+                                            if (cbLocal.getWidth() > 0.1 || cbLocal.getHeight() > 0.1) {
+                                                javafx.geometry.Bounds caretSceneBounds = path.localToScene(cbLocal);
+                                                if (caretSceneBounds != null) {
+                                                    info.bounds = refNode.sceneToLocal(caretSceneBounds);
+                                                    if (info.bounds != null) {
+                                                        double ch = info.bounds.getHeight();
+                                                        if (ch > 8.0 && ch < 50.0) {
+                                                            if (Math.abs(ch - estimatedRowHeight) > 5.0) estimatedRowHeight = ch;
+                                                            else estimatedRowHeight = (estimatedRowHeight * 0.95) + (ch * 0.05);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable t) {}
+            return info;
+        }
+
+        private void captureMemory(RichVirtualFlow flow, javafx.scene.Node refNode) {
+            int prevIdx = memoryTopIdx;
+
+            int newFirstIdx = flow.getFirstVisibleIndex();
+            int newLastIdx = flow.getLastVisibleIndex();
+
+            if (newFirstIdx <= 0 && prevIdx > 5) {
+                double currentRatio = flow.getPosition();
+                int totalItems = paragraphListView.getItems().size();
+                if (totalItems > 10 && currentRatio > 0.15) {
+                    return;
+                }
+            }
+
+            if (newFirstIdx == -1 || newLastIdx == -1) {
+                return;
+            }
+
+            java.util.Map<Integer, Double> tempMemory = new java.util.HashMap<>();
+            int tempTopIdx = -1;
+            double tempTopMinY = -1000.0;
+
+            try {
+                javafx.scene.Group sheet = (javafx.scene.Group) flow.lookup(".sheet");
+                if (sheet != null) {
+                    int capFirst = Math.max(0, newFirstIdx);
+                    int capLast = Math.min(paragraphListView.getItems().size() - 1, newLastIdx);
+
+                    double h = refNode != null ? refNode.getLayoutBounds().getHeight() : 1000.0;
+
+                    for (javafx.scene.Node node : sheet.getChildren()) {
+                        if (node instanceof javafx.scene.control.ListCell) {
+                            javafx.scene.control.ListCell<?> cell = (javafx.scene.control.ListCell<?>) node;
+                            int idx = cell.getIndex();
+                            if (idx >= capFirst && idx <= capLast) {
+                                double y = getCellMinY(flow, refNode, idx);
+                                if (y != -1000.0) {
+                                    double maxY = getCellMaxY(flow, refNode, idx);
+                                    if (maxY != -1000.0 && maxY >= -1.0 && y <= h + 1.0) {
+                                        tempMemory.put(idx, y);
+                                        if (tempTopIdx == -1 || idx < tempTopIdx) {
+                                            if (idx >= newFirstIdx) {
+                                                tempTopIdx = idx;
+                                                tempTopMinY = y;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable t) {}
+
+            if (!tempMemory.isEmpty()) {
+                visibleCellsMemory.clear();
+                visibleCellsMemory.putAll(tempMemory);
+                if (tempTopIdx != -1) {
+                    memoryTopIdx = tempTopIdx;
+                    memoryTopMinY = tempTopMinY;
+                } else {
+                    int minKey = Integer.MAX_VALUE;
+                    for (int k : tempMemory.keySet()) {
+                        if (k < minKey) minKey = k;
+                    }
+                    memoryTopIdx = minKey;
+                    memoryTopMinY = tempMemory.get(minKey);
+                }
+            }
+        }
+    }
+
+
+
+    //------------------ ai end ------------------------
+
 
     private class RichVirtualFlow extends VirtualFlow<ListCell<Paragraph>> {
-
         RichVirtualFlow(RichTextArea control) {
+            super();
+
+            // BOOT-TRACE: Catch exactly when and where the native scrollbar moves
+            positionProperty().addListener((obs, oldVal, newVal) -> {
+            //    System.out.println("[BOOT-TRACE] VirtualFlow Position Changed: " + oldVal + " -> " + newVal);
+            });
+
             ReadOnlyObjectProperty<Bounds> clippedBounds = lookup(".clipped-container").layoutBoundsProperty();
-            textFlowPrefWidthProperty.bind(Bindings.createDoubleBinding(() -> control.getContentAreaWidth() > 0 ?
-                    control.getContentAreaWidth() :
-                            clippedBounds.get().getWidth() > 0 ? clippedBounds.get().getWidth() - 10 : -1,
+            textFlowPrefWidthProperty.bind(Bindings.createDoubleBinding(() ->
+                            control.getContentAreaWidth() > 0 ?
+                                    control.getContentAreaWidth() :
+                                    clippedBounds.get().getWidth() > 0 ?
+                                            clippedBounds.get().getWidth() - 10 : -1,
                     control.contentAreaWidthProperty(), clippedBounds));
         }
 
@@ -675,17 +2207,50 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
         protected void rebuildCells() {
             super.rebuildCells();
         }
+
+        int getLastVisibleIndex() {
+            ListCell<Paragraph> last = getLastVisibleCell();
+            return (last != null) ? last.getIndex() : -1;
+        }
+
+        int getFirstVisibleIndex() {
+            ListCell<Paragraph> first = getFirstVisibleCell();
+            return (first != null) ? first.getIndex() : -1;
+        }
     }
+
+
+
+
+
 
     private class ParagraphListView extends ListView<Paragraph> {
 
-        private final RichVirtualFlow virtualFlow;
+        final RichVirtualFlow virtualFlow;
         private Group sheet;
         private Region container;
+
+        //ai
+        private final javafx.beans.value.ChangeListener<Boolean> uiRefreshListener = (obs, oldVal, newVal) -> {
+            javafx.application.Platform.runLater(this::refreshAllVisibleCells);
+        };
 
         public ParagraphListView(RichTextArea control) {
             virtualFlow = new RichVirtualFlow(control);
             getStyleClass().setAll("paragraph-list-view");
+
+            //ai added
+            this.setFixedCellSize(Region.USE_COMPUTED_SIZE);
+
+            // AI ADDED: Listen for the paste signal from the ViewModel
+            // --> Replace "viewModel" with the actual reference inside RichTextAreaSkin <--
+    //        viewModel.forceUiRefreshProperty().addListener((obs, oldVal, newVal) -> {
+    //            javafx.application.Platform.runLater(this::refreshAllVisibleCells);
+     //       });
+
+            viewModel.forceUiRefreshProperty().addListener(new javafx.beans.value.WeakChangeListener<>(uiRefreshListener));
+
+            //
 
             addEventHandler(MouseEvent.MOUSE_DRAGGED, e -> {
                 // if a dragging event was started from a listCell, but the event gets out of the
@@ -784,6 +2349,8 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
             }
         }
 
+
+
         int getNextRowPosition(double x, boolean down) {
             return getSheet().getChildren().stream()
                     .filter(RichListCell.class::isInstance)
@@ -814,45 +2381,100 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
         }
 
         void updateLayout() {
-            // force updateItem call to recalculate backgroundPath positions
-            virtualFlow.rebuildCells();
-        }
-
-        void scrollIfNeeded() {
-            final Bounds vfBounds = virtualFlow.localToScene(virtualFlow.getBoundsInLocal());
-            double viewportMinY = vfBounds.getMinY();
-            double viewportMaxY = vfBounds.getMaxY();
-            caret().ifPresentOrElse(caret -> {
-                final Bounds bounds = caret.localToScene(caret.getBoundsInLocal());
-                double minY = bounds.getMinY();
-                double maxY = bounds.getMaxY();
-                if (!(maxY <= viewportMaxY && minY >= viewportMinY)) {
-                    // If caret is not fully visible, scroll line by line as needed
-                    virtualFlow.scrollPixels(maxY > viewportMaxY ?
-                            maxY - viewportMaxY + 1 : minY - viewportMinY - 1);   //was 1 seems to help (not solve) flicker
+            Group sheet = getSheet();
+            if (sheet != null) {
+                for (javafx.scene.Node node : sheet.getChildren()) {
+                    if (node instanceof RichListCell) {
+                        RichListCell cell = (RichListCell) node;
+                        Paragraph p = cell.getItem();
+                        if (p != null && cell.hasCaret()) {
+                            if (cell instanceof UpdatableCell) {
+                                ((UpdatableCell) cell).forceUpdate();
+                            } else {
+                                cell.updateItem(null, false);
+                                cell.updateItem(p, false);
+                                cell.applyCss();
+                                cell.layout();
+                            }
+                        }
+                    }
                 }
-            }, () -> {
-                // In case no caret was found (paragraph is not in a listCell yet),
-                // scroll directly to the paragraph
-                viewModel.getParagraphWithCaret().ifPresent(this::scrollTo);
-            });
+            }
+
+            if (RichTextAreaSkin.this.caretTracker != null) {
+                RichTextAreaSkin.this.caretTracker.requestScroll();
+            }
         }
-/*
-        private double computeTotalHeight() {
-            double totalHeight = 0.0;
 
-            for (int i = 0; i < this.getItems().size(); i++) {
-                Paragraph paragraph = this.getItems().get(i);
-                totalHeight += (paragraph.getParaHeight() + 1.5);
+        //ai added
 
+        //ai added
+        void refreshAllVisibleCells() {
+            Group sheet = getSheet();
+            if (sheet != null) {
+                for (javafx.scene.Node node : sheet.getChildren()) {
+                    if (node instanceof RichListCell) {
+                        RichListCell cell = (RichListCell) node;
+                        Paragraph p = cell.getItem();
+
+                        // Notice we removed the && cell.hasCaret() limitation here!
+                        if (p != null) {
+                            if (cell instanceof UpdatableCell) {
+                                ((UpdatableCell) cell).forceUpdate();
+                            } else {
+                                // Hard reset clears recycled text node formatting (superscript bleed)
+                                cell.updateItem(null, false);
+                                cell.updateItem(p, false);
+                                cell.applyCss();
+                                cell.layout();
+                                cell.requestLayout();
+                            }
+                        }
+                    }
                 }
-            return totalHeight;
+            }
+            paragraphHeightCache.clear();
+            lastReportedFullHeight = -1.0;
+            virtualFlow.requestLayout();
+            heightDebouncer.playFromStart();
         }
- */
+
+        /*
+        void refreshAllVisibleCells() {
+            Group sheet = getSheet();
+            if (sheet != null) {
+                for (javafx.scene.Node node : sheet.getChildren()) {
+                    if (node instanceof RichListCell) {
+                        RichListCell cell = (RichListCell) node;
+                        Paragraph p = cell.getItem();
+
+                        // Notice we removed the && cell.hasCaret() limitation here!
+                        if (p != null) {
+                            if (cell instanceof UpdatableCell) {
+                                ((UpdatableCell) cell).forceUpdate();
+                            } else {
+                                // Hard reset clears recycled text node formatting (superscript bleed)
+                                cell.updateItem(null, false);
+                                cell.updateItem(p, false);
+                                cell.applyCss();
+                                cell.layout();
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+         */
+
     }
 
 
-     // --- prompt text fill
+
+
+
+    // --- prompt text fill
     private final StyleableProperty<Paint> promptTextFill = FACTORY.createStyleablePaintProperty(getSkinnable(), "promptTextFill", "-fx-prompt-text-fill", c -> {
         final RichTextAreaSkin skin = (RichTextAreaSkin) c.getSkin();
         return skin.promptTextFill;
@@ -875,18 +2497,74 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
     };
 
 
+
+
     protected RichTextAreaSkin(final RichTextArea control) {
         super(control);
+
+        //ai added
+        this.paragraphListView = new ParagraphListView(control);
+        getChildren().add(paragraphListView);
+        this.paragraphListView.setCellFactory(p -> createCell());
+
+        this.caretTracker = new CaretTracker();
+        this.caretTracker.start();
+
+        // Tell the timer to run your method when it finishes counting down
+     //   heightDebouncer.setOnFinished(event -> computeFullHeight());
+        heightDebouncer.setOnFinished(event -> Platform.runLater(this::computeFullHeight));
+
+        // TRIGGER 1: Window/Control resizing (changes text wrapping)
+        getSkinnable().widthProperty().addListener((obs, oldVal, newVal) -> {
+            heightDebouncer.playFromStart(); // playFromStart() resets and restarts the clock
+        });
+
+        // TRIGGER 2: If Gluon's document items list changes (e.g. new paragraph)
+        paragraphSortedList.addListener((javafx.collections.ListChangeListener.Change<? extends Paragraph> c) -> {
+            paragraphHeightCache.clear();
+            heightDebouncer.playFromStart();
+        });
+
+        // TRIGGER 2: If Gluon's document items list changes (e.g. new paragraph)
+    //    paragraphListView.getItems().addListener((javafx.collections.ListChangeListener.Change<?> c) -> {
+    //        heightDebouncer.playFromStart();
+     //   });
 
         this.control = control;
 
         nodesWidth.bind(viewModel.nodesWidthProperty());
 
         overlineOnProperty().addListener((ob, ov, nv) -> {
+            if (resettingOverline) {
+                return;
+            }
+            if (viewModel.getSelection().isDefined()) {
+                execute(new ActionCmdOverlineSelection(charModMaps.getOverlineMap()));
+                setModification(NONE);
+                if (nv) {
+                    Platform.runLater(() -> {
+                        resettingOverline = true;
+                        try {
+                            overlineOn.set(false);
+                        } finally {
+                            resettingOverline = false;
+                        }
+                    });
+                }
+                return;
+            }
+            if (nv) setModification(OVERLINE);
+            else setModification(NONE);
+        });
+
+        /*
+        overlineOnProperty().addListener((ob, ov, nv) -> {
             if (nv) setModification(OVERLINE);
             else setModification(NONE);
 
         });
+
+         */
 
 
         Map<KeyCodeCombination, String> tempMap = new HashMap();
@@ -914,14 +2592,22 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
         tempMap4.putAll(SCRIPT_ALT_MAP);
         SPECIAL_WITH_SCRIPT_MAP = Collections.unmodifiableMap(tempMap4);
 
+        Map<KeyCodeCombination, String> tempMap5 = new HashMap<>();
+        tempMap5.putAll(SPECIAL_CHARACTER_MAP);
+        tempMap5.putAll(SANS_ITALIC_ALT_MAP);
+        SPECIAL_WITH_SANS_ITAL_MAP = Collections.unmodifiableMap(tempMap5);
+
 
         resources = ResourceBundle.getBundle("com.gluonhq.richtextarea.rich-text-area");
 
-        paragraphListView = new ParagraphListView(control);
+    //    paragraphListView = new ParagraphListView(control);  //ai moved this line up
+
+
+
         paragraphListView.setItems(paragraphSortedList);
         paragraphListView.setFocusTraversable(false);
-        getChildren().add(paragraphListView);
-        paragraphListView.setCellFactory(p -> new RichListCell(this));
+//        getChildren().add(paragraphListView);   //ai moved up
+        paragraphListView.setCellFactory(p -> new RichListCell(this));  //comment out in favor of line at top of constructor??
         objectsCacheEvictionTimer = new SmartTimer(paragraphListView::evictUnusedObjects, 1000, 60000);
         controlPrefWidthListener = (obs, ov, nv) -> {
             refreshTextFlow();
@@ -932,7 +2618,28 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
         skinToneChangeListener = (obs, ov, nv) -> refreshTextFlow();
 
 
-        focusListener = o -> paragraphListView.updateLayout();
+
+        focusListener = obs -> {
+            if (getSkinnable().isFocused()) {
+                // Ignore the very first focus event on boot to prevent corrupt layout snapshots
+                if (!initialFocusHandled) {
+                    initialFocusHandled = true;
+                    paragraphListView.updateLayout();
+                    return;
+                }
+
+                if (caretTracker != null) {
+                    // Paralyze the tracker so it doesn't fight the native focus assignment
+                    caretTracker.blackoutFrames = Math.max(caretTracker.blackoutFrames, 15);
+                }
+
+                // V585 Passive Focus Fix:
+                // Do ABSOLUTELY NOTHING else here. No updateLayout(), no resetCaret().
+                // Manually forcing a cell redraw while the native focus event is trying to
+                // re-attach the caret path causes fractional height shifts and VirtualFlow panics.
+            }
+        };
+
 
         control.documentProperty().addListener((obs, ov, nv) -> {
             if (viewModel.isSaved()) {
@@ -959,6 +2666,17 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
         if (actionCmd != null) {
             execute(actionCmd);
         }
+
+        //ai added
+
+
+        Platform.runLater(() -> {
+            control.requestLayout();
+            // Force the scene graph to resolve
+            // This often wakes up the caret path if it's stuck at (0,0)
+            control.layout();
+            scrollIfNeeded();
+        });
     }
 
     /// PROPERTIES ///////////////////////////////////////////////////////////////
@@ -968,6 +2686,8 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
 
     @Override
     public void dispose() {
+
+
         viewModel.clearSelection();
         viewModel.removeChangeListener(textChangeListener);
         viewModel.documentProperty().removeListener(documentChangeListener);
@@ -986,9 +2706,12 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
         contextMenu.getItems().clear();
         tableCellContextMenuItems = null;
         tableContextMenuItems = null;
+        keyboardContextMenuItems = null;
         editableContextMenuItems = null;
         nonEditableContextMenuItems = null;
         attachedProperty.set(false);
+        objectsCacheEvictionTimer.pause();
+        LOG.fine("Disposed skin and paused timer");
     }
 
     public RichTextAreaViewModel getViewModel() {
@@ -1005,37 +2728,135 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
 
     /// PRIVATE METHODS /////////////////////////////////////////////////////////
 
-    private void setup(Document document) {
+    private void setup (Document document) {
         if (document == null) {
             return;
         }
         attachedProperty.set(false);
-        viewModel.setTextBuffer(new PieceTable(document));
-        lastValidCaretPosition = viewModel.getTextBuffer().getInternalPosition(document.getCaretPosition());
-        viewModel.setCaretPosition(lastValidCaretPosition);
-        viewModel.setDecorationAtParagraph(viewModel.getTextBuffer().getParagraphDecorationAtCaret(lastValidCaretPosition));
-        viewModel.addChangeListener(textChangeListener);
-        viewModel.setDocument(document);
+
+        viewModel.setTextBuffer (new PieceTable (document));
+
+        // 1. SEED SYNCHRONOUSLY
+        // We stop asking PieceTable for position 0, because it returns the end of the text chunk (e.g. 3069).
+        lastValidCaretPosition = 0;
+        viewModel.setCaretPosition(0);
+
+        viewModel.addChangeListener (textChangeListener);
+
+        // 2. Load the Document
+        viewModel.setDocument (document);
+
         viewModel.documentProperty().addListener(documentChangeListener);
         viewModel.autoSaveProperty().bind(getSkinnable().autoSaveProperty());
         promptNode.textProperty().bind(getSkinnable().promptTextProperty());
         promptNode.fillProperty().bind(promptTextFillProperty());
-
-//        getSkinnable().setOnContextMenuRequested(contextMenuEventEventHandler);
+        getSkinnable().setOnContextMenuRequested (contextMenuEventEventHandler);
         getSkinnable().editableProperty().addListener(this::editableChangeListener);
-        getSkinnable().tableAllowedProperty().addListener(tableAllowedListener);
-        viewModel.setTableAllowed(getSkinnable().isTableAllowed());
+        getSkinnable().tableAllowedProperty().addListener (tableAllowedListener);
+        viewModel.setTableAllowed (getSkinnable().isTableAllowed());
+        getSkinnable().setOnKeyPressed (this::keyPressedListener);
+        getSkinnable().setOnKeyTyped (this::keyTypedListener);
+        getSkinnable().widthProperty().addListener (controlPrefWidthListener);
 
-        getSkinnable().setOnKeyPressed(this::keyPressedListener);
-        getSkinnable().setOnKeyTyped(this::keyTypedListener);
-        getSkinnable().widthProperty().addListener(controlPrefWidthListener);
-        getSkinnable().focusedProperty().addListener(focusListener);
-        getSkinnable().addEventHandler(DragEvent.ANY, dndHandler);
-        getSkinnable().skinToneProperty().addListener(skinToneChangeListener);
+        // =========================================================
+        // NEW FIX: FORCE LINE RE-WRAPPING ON RESIZE
+        // JavaFX ListViews aggressively cache cell layouts. When the width
+        // changes, we must force the internal paragraphListView to remeasure
+        // the text so it can accurately re-wrap lines (especially when editable is false).
+        // =========================================================
+        getSkinnable().widthProperty().addListener((obs, oldVal, newVal) -> {
+            if (paragraphListView != null && oldVal.doubleValue() != newVal.doubleValue()) {
+
+                // Platform.runLater ensures the outer RichTextArea has fully adopted
+                // the new bounds before we ask the text cells to remeasure themselves.
+                javafx.application.Platform.runLater(() -> {
+
+                    // This is the magic bullet: it forces the virtualized list to
+                    // completely discard its cached bounds and redraw the text nodes.
+                    paragraphListView.refresh();
+
+                });
+            }
+        });
+        // =========================================================
+
+
+
+
+        getSkinnable().focusedProperty().addListener (focusListener);
+        getSkinnable().addEventHandler (DragEvent.ANY, dndHandler);
+        getSkinnable().skinToneProperty().addListener (skinToneChangeListener);
+
         refreshTextFlow();
         requestLayout();
-        editableChangeListener(null); // sets up all related listeners
+        editableChangeListener(null);
         attachedProperty.set(true);
+
+        // 3. Keep the viewport locked to the top AND forcefully pin the caret
+        Runnable applyBootSync = () -> {
+            if (viewModel != null) {
+                // Fire the 'HOME' keyboard command to guarantee the caret goes to the absolute top
+                ActionCmd homeCmd = ACTION_CMD_FACTORY.caretMove(Direction.BACK, false, false, true);
+                if (homeCmd != null) {
+                    homeCmd.apply(viewModel);
+                }
+                if (caretTracker != null) {
+                    caretTracker.lastCaretPos = viewModel.getCaretPosition();
+                }
+            }
+            if (paragraphListView != null) {
+                // Force an explicit layout pass before scrolling
+                paragraphListView.requestLayout();
+                paragraphListView.layout();
+                paragraphListView.scrollTo(0);
+            }
+
+            // =========================================================
+            // NEW FIX: BOOTSTRAP PROMPT TEXT VISIBILITY
+            // =========================================================
+            // 1. Manually trigger the focus listener to evaluate prompt visibility.
+            //    By passing the inverse of the current focus as the "old value",
+            //    we simulate a state transition that guarantees the listener runs.
+            boolean currentFocus = getSkinnable().isFocused();
+            if (focusListener instanceof javafx.beans.value.ChangeListener) {
+                @SuppressWarnings("unchecked")
+                javafx.beans.value.ChangeListener<Boolean> listener =
+                        (javafx.beans.value.ChangeListener<Boolean>) focusListener;
+                listener.changed(getSkinnable().focusedProperty(), !currentFocus, currentFocus);
+            } else if (focusListener instanceof javafx.beans.InvalidationListener) {
+                ((javafx.beans.InvalidationListener) focusListener).invalidated(getSkinnable().focusedProperty());
+            }
+
+            // 2. Position the prompt text based on the newly calculated caret layout.
+            //    (Safe to do here because paragraphListView.layout() just populated caretOriginProperty)
+            if (promptNode.isVisible() && caretOriginProperty.get() != null) {
+                updatePromptNodeLocation();
+            }
+            // =========================================================
+
+            paragraphHeightCache.clear();
+            lastReportedFullHeight = -1.0;
+            heightDebouncer.playFromStart();
+
+        };
+
+
+        if (getSkinnable().getHeight() > 0) {
+            // Double runLater ensures JavaFX completes its layout pulse before we scroll
+            Platform.runLater(() -> Platform.runLater(applyBootSync));
+        } else {
+            javafx.beans.value.ChangeListener<Number> heightListener = new javafx.beans.value.ChangeListener<Number>() {
+                @Override
+                public void changed(javafx.beans.value.ObservableValue<? extends Number> obs, Number oldVal, Number newVal) {
+                    if (newVal.doubleValue() > 0) {
+                        getSkinnable().heightProperty().removeListener(this);
+                        // Double runLater to survive the Pagination load cycle
+                        Platform.runLater(() -> Platform.runLater(applyBootSync));
+                    }
+                }
+            };
+            getSkinnable().heightProperty().addListener(heightListener);
+        }
     }
 
     private void setupPromptNode() {
@@ -1087,22 +2908,32 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
 
     // TODO Need more optimal way of rendering text fragments.
     //  For now rebuilding the whole text flow
+
     private void refreshTextFlow() {
         objectsCacheEvictionTimer.pause();
         try {
             nonTextNodes.set(0);
             viewModel.resetCharacterIterator();
-            // this ensures changes in decoration are applied:
+
+            // This natively destroys and recreates the cell
             paragraphListView.updateLayout();
-            computeFullHeight();
 
-
-
-            if (nonTextNodesCount != nonTextNodes.get()) {
-                // when number of images changes, caret
-                requestLayout();
-                nonTextNodesCount = nonTextNodes.get();
+            // =========================================================
+            // V585 FIX 1: STOP THE DOWNWARD TYPING SAG
+            // ALWAYS request a clean layout on the parent control!
+            // This prevents the newly rebuilt cell from accumulating "dirty" fractional
+            // heights that push the text down while typing.
+            // =========================================================
+            if (getSkinnable() != null) {
+                getSkinnable().requestLayout();
             }
+
+            // Keep the original image/table refresh logic
+            if (nonTextNodesCount != nonTextNodes.get()) {
+                requestLayout();
+            }
+
+            nonTextNodesCount = nonTextNodes.get();
             getSkinnable().requestFocus();
         } finally {
             objectsCacheEvictionTimer.start();
@@ -1121,7 +2952,7 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
         viewModel.setCaretPosition(editable ? lastValidCaretPosition : -1);
         paragraphListView.setCursor(editable ? Cursor.TEXT : Cursor.DEFAULT);
         populateContextMenu(editable);
-        Platform.runLater(paragraphListView::scrollIfNeeded);
+        Platform.runLater(RichTextAreaSkin.this::scrollIfNeeded);  //before ai had paragraphListView::scrollIfNeeded
     }
 
     private void requestLayout() {
@@ -1192,6 +3023,11 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
 
     private void execute(ActionCmd action) {
         Objects.requireNonNull(action).apply(viewModel);
+
+        if (heightDebouncer != null) {
+            heightDebouncer.stop();
+            heightDebouncer.playFromStart();
+        }
     }
 
     private void keyPressedListener(KeyEvent e) {
@@ -1217,14 +3053,6 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
                 return;
             }
         }
-        /*
-        if (LOG.isLoggable(Level.FINEST)) {
-            long a1 = System.nanoTime();
-            LOG.finest("KeyPressed processed in " + (a1 - a0) + "ns");
-        }
-
-         */
-
     }
 
     private void keyTypedListener(KeyEvent e) {
@@ -1256,17 +3084,7 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
             sendKeyboardContent(text);
             e.consume();
         }
-        /*
-        if (LOG.isLoggable(Level.FINEST)) {
-            long a1 = System.nanoTime();
-            LOG.finest("KeyTyped processed in "+ (a1-a0) + "ns");
-        }
-
-         */
-
     }
-
-
 
 
     private void sendKeyboardContent(String s) {
@@ -1365,6 +3183,182 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
         return outString;
     }
 
+    public double getInsets() {
+        double listInsets = 0;
+        if (paragraphListView.getInsets() != null) {
+            listInsets = paragraphListView.getInsets().getTop() + paragraphListView.getInsets().getBottom();
+        }
+        return listInsets;
+    }
+
+
+    private final java.util.Map<Paragraph, Double> paragraphHeightCache = new java.util.WeakHashMap<>();
+
+    private void computeFullHeight() {
+        if (getSkinnable() == null || paragraphListView == null) {
+            fullHeightProperty.set(0);
+            return;
+        }
+
+        var items = paragraphListView.getItems();
+        if (items == null || items.isEmpty()) {
+            fullHeightProperty.set(0);
+            return;
+        }
+
+        //new ai version
+        if (measurementCell == null) {
+            measurementCell = createCell();
+
+            // CRITICAL FIX: Inject the ListView reference into the measurement cell.
+            // This triggers the listViewProperty listener in RichListCell, activating
+            // the "Iron Wall" width bindings so offscreen items measure perfectly.
+            measurementCell.updateListView(paragraphListView);
+
+            javafx.scene.layout.Pane dummyList = new javafx.scene.layout.Pane(measurementCell) {
+                @Override public void requestLayout() {}
+            };
+            dummyList.getStyleClass().addAll(paragraphListView.getStyleClass());
+            dummyList.setManaged(false);
+            dummyList.setVisible(false);
+            getChildren().add(dummyList);
+        }
+
+        /*
+        if (measurementCell == null) {
+            measurementCell = createCell();
+            javafx.scene.layout.Pane dummyList = new javafx.scene.layout.Pane(measurementCell) {
+                @Override public void requestLayout() {}
+            };
+            dummyList.getStyleClass().addAll(paragraphListView.getStyleClass());
+            dummyList.setManaged(false);
+            dummyList.setVisible(false);
+            getChildren().add(dummyList);
+        }
+
+         */
+
+        double availableWidth = textFlowPrefWidthProperty.get();
+        if (availableWidth <= 0) availableWidth = getSkinnable().getContentAreaWidth();
+        if (availableWidth <= 0) availableWidth = 500;
+
+        measurementCell.getParent().applyCss();
+
+        java.util.Map<Integer, Double> visibleHeights = new java.util.HashMap<>();
+
+        //newer version
+        for (javafx.scene.Node node : paragraphListView.lookupAll(".list-cell")) {
+            if (node instanceof javafx.scene.control.ListCell) {
+                @SuppressWarnings("unchecked")
+                javafx.scene.control.ListCell<Paragraph> cell = (javafx.scene.control.ListCell<Paragraph>) node;
+                Paragraph p = cell.getItem();
+
+                if (p != null && cell.getHeight() > 0) {
+                    // Remove prefHeight(-1). Use the exact physical layout height.
+                    double h = cell.getHeight();
+
+                    if (paragraphHeightCache.containsKey(p)) {
+                        double cached = paragraphHeightCache.get(p);
+                        if (Math.abs(h - cached) <= 5.0) {
+                            h = cached;
+                        }
+                    }
+                    visibleHeights.put(cell.getIndex(), h);
+                }
+            }
+        }
+
+        /*
+        for (javafx.scene.Node node : paragraphListView.lookupAll(".list-cell")) {
+            if (node instanceof javafx.scene.control.ListCell) {
+                @SuppressWarnings("unchecked")
+                javafx.scene.control.ListCell<Paragraph> cell = (javafx.scene.control.ListCell<Paragraph>) node;
+                Paragraph p = cell.getItem();
+
+                if (p != null && cell.getHeight() > 0) {
+                    double prefH = cell.prefHeight(-1);
+                    double h = prefH > 0 ? prefH : cell.getHeight();
+                    if (paragraphHeightCache.containsKey(p)) {
+                        double cached = paragraphHeightCache.get(p);
+                        if (Math.abs(h - cached) <= 5.0) {
+                            h = cached;
+                        }
+                    }
+                    visibleHeights.put(cell.getIndex(), h);
+                }
+            }
+        }
+
+         */
+
+        double fullHeight = 0;
+        for (int i = 0; i < items.size(); i++) {
+            var item = items.get(i);
+
+            if (visibleHeights.containsKey(i)) {
+                double h = visibleHeights.get(i);
+                fullHeight += h;
+                paragraphHeightCache.put(item, h);
+            } else if (paragraphHeightCache.containsKey(item)) {
+                fullHeight += paragraphHeightCache.get(item);
+
+                //newer version
+            } else {
+                measurementCell.updateItem(null, true);
+                measurementCell.updateItem(item, false);
+                measurementCell.applyCss();
+                measurementCell.layout();
+
+                // Just raw calculation. No +2.0 padding.
+                double prefH = measurementCell.prefHeight(availableWidth);
+                double h = prefH > 0 ? prefH : measurementCell.getHeight();
+
+                fullHeight += h;
+                paragraphHeightCache.put(item, h);
+                measurementCell.updateItem(null, true);
+            }
+
+            /*
+            } else {
+                measurementCell.updateItem(null, true);
+                measurementCell.updateItem(item, false);
+
+                // The cell width is already strictly bound by the "Iron Wall" in your RichListCell
+                // constructor. We do not need to (and cannot) set it manually. Just force the layout.
+                measurementCell.applyCss();
+                measurementCell.layout();
+
+                // Calculate the width to pass into the prefHeight measurement
+                double cellWidth = paragraphListView.getWidth() - 25.0;
+                if (cellWidth <= 0) cellWidth = availableWidth; // Fallback if listview isn't laid out yet
+
+                // Measure it strictly against that width
+                double prefH = measurementCell.prefHeight(cellWidth);
+                double h = prefH > 0 ? prefH : measurementCell.getHeight();
+
+                fullHeight += h;
+                paragraphHeightCache.put(item, h);
+                measurementCell.updateItem(null, true);
+            }
+
+             */
+        }
+
+        double diff = Math.abs(fullHeight - lastReportedFullHeight);
+        if (lastReportedFullHeight < 0 || diff > 10.0) {
+            if (lastReportedFullHeight >= 0) {
+          //      System.out.println("[DIAG-DOC] Full Height Changed! Old: " + lastReportedFullHeight + " | New: " + fullHeight + " | Diff: " + diff);
+            }
+            lastReportedFullHeight = fullHeight;
+            fullHeightProperty.set(fullHeight);
+            if (caretTracker != null) {
+                caretTracker.requestScroll();
+            }
+        }
+    }
+
+
+    /*
     private void computeFullHeight() {
         fullHeightProperty.set(0);
         RichListCell cell = new RichListCell(RichTextAreaSkin.this);
@@ -1373,17 +3367,6 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
         if (getSkinnable().getScene() != null) {
             scene.getStylesheets().setAll(getSkinnable().getScene().getStylesheets());
         }
-        /*
-        //first try
-        paragraphListView.getItems().forEach(item -> {
-            cell.updateItem(item, false);
-            cell.applyCss();
-            cell.layout();
-            double cellHeight = cell.prefHeight(rtaWidth);
-            fullHeightProperty.set(fullHeightProperty.get() + cellHeight);
-        });
-
-         */
 
         double fullHeight = paragraphListView.getItems().stream()
                 .mapToDouble(item -> {
@@ -1404,6 +3387,7 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
         fullHeightProperty.set(fullHeight);
         // TODO
     }
+     */
 
     private void populateContextMenu(boolean isEditable) {
         if (isEditable && editableContextMenuItems == null) {
@@ -1427,6 +3411,8 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
                         createMenuItem(resources.getString("rta.context.menu.table.cell.alignright"), ACTION_CMD_FACTORY.alignTableCell(TextAlignment.RIGHT))
                 );
                 Menu tableCellMenu = new Menu(resources.getString("rta.context.menu.table.cell"));
+                tableCellMenu.setStyle("-fx-selection-bar: #0096C9; -fx-selection-bar-text: white;");
+
                 tableCellMenu.getItems().addAll(tableCellContextMenuItems);
                 MenuItem insertTableMenuItem = createMenuItem(resources.getString("rta.context.menu.table.insert"), ACTION_CMD_FACTORY.insertTable(new TableDecoration(1, 2)));
                 tableCellMenu.disableProperty().bind(insertTableMenuItem.disableProperty().not());
@@ -1446,7 +3432,49 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
                 );
                 Menu tableMenu = new Menu(resources.getString("rta.context.menu.table"));
                 tableMenu.getItems().addAll(tableContextMenuItems);
-                editableContextMenuItems.addAll(new SeparatorMenuItem(), tableMenu);
+
+
+                Menu keyboardMenu = new Menu("Keyboards");
+                keyboardMenu.setStyle("-fx-selection-bar: #0096C9; -fx-selection-bar-text: white;");
+
+                MenuItem baseItalicItem = new MenuItem("Base/Italic");
+                baseItalicItem.setOnAction(e -> setKeyMapState(KeyMapValue.BASE))
+                ;
+                MenuItem baseScriptItem = new MenuItem("Base/Script");
+                baseScriptItem.setOnAction(e -> setKeyMapState(KeyMapValue.BASE_AND_SCRIPT));
+
+                MenuItem baseSansItem = new MenuItem("Base/Sans");
+                baseSansItem.setOnAction(e -> setKeyMapState(KeyMapValue.BASE_AND_SANS));
+
+                MenuItem italicSansItem = new MenuItem("Italic/Sans");
+                italicSansItem.setOnAction(e -> setKeyMapState(KeyMapValue.ITALIC_AND_SANS));
+
+                MenuItem sansItalicItem = new MenuItem("Sans/Italic");
+                sansItalicItem.setOnAction(e -> setKeyMapState(KeyMapValue.SANS_AND_ITALIC));
+
+                MenuItem italicBlackboardItem = new MenuItem("Italic/Blackboard");
+                italicBlackboardItem.setOnAction(e -> setKeyMapState(KeyMapValue.ITALIC_AND_BLACKBOARD));
+
+                MenuItem scriptItalicItem = new MenuItem("Script/Italic");
+                scriptItalicItem.setOnAction(e -> setKeyMapState(KeyMapValue.SCRIPT_AND_ITALIC));
+
+                MenuItem scriptSansItem = new MenuItem("Script/Sans");
+                scriptSansItem.setOnAction(e -> setKeyMapState(KeyMapValue.SCRIPT_AND_SANS));
+
+                MenuItem greekFrakturItem = new MenuItem("Greek/Fraktur");
+                greekFrakturItem.setOnAction(e -> setKeyMapState(KeyMapValue.GREEK_AND_FRAKTUR));
+
+
+                keyboardContextMenuItems = FXCollections.observableArrayList(
+                        baseItalicItem, baseScriptItem, baseSansItem, italicSansItem, sansItalicItem, italicBlackboardItem, scriptItalicItem, scriptSansItem, greekFrakturItem
+                );
+           //     keyboardMenu.getItems().clear();
+                keyboardMenu.getItems().addAll(keyboardContextMenuItems);
+
+                editableContextMenuItems.addAll(new SeparatorMenuItem(), keyboardMenu, tableMenu);
+
+
+
             }
         } else if (!isEditable && nonEditableContextMenuItems == null) {
             nonEditableContextMenuItems = FXCollections.observableArrayList(
@@ -1455,6 +3483,7 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
                     createMenuItem(resources.getString("rta.context.menu.selectall"), ACTION_CMD_FACTORY.selectAll()));
         }
         contextMenu.getItems().setAll(isEditable ? editableContextMenuItems : nonEditableContextMenuItems);
+        contextMenu.setStyle("-fx-selection-bar: #0096C9; -fx-selection-bar-text: white;");
     }
 
     private MenuItem createMenuItem(String text, ActionCmd actionCmd) {
@@ -2160,6 +4189,73 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
 
     }
 
+    private Map<KeyCodeCombination, String> initializeSansItalicAltMap() {
+        return Map.ofEntries(
+                entry(new KeyCodeCombination(KeyCode.A, KeyCombination.ALT_DOWN), "\ud835\ude22"),
+                entry(new KeyCodeCombination(KeyCode.B, KeyCombination.ALT_DOWN), "\ud835\ude23"),
+                entry(new KeyCodeCombination(KeyCode.C, KeyCombination.ALT_DOWN), "\ud835\ude24"),
+                entry(new KeyCodeCombination(KeyCode.D, KeyCombination.ALT_DOWN), "\ud835\ude25"),
+                entry(new KeyCodeCombination(KeyCode.E, KeyCombination.ALT_DOWN), "\ud835\ude26"),
+                entry(new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN), "\ud835\ude27"),
+                entry(new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN), "\ud835\ude28"),
+                entry(new KeyCodeCombination(KeyCode.H, KeyCombination.ALT_DOWN), "\ud835\ude29"),
+                entry(new KeyCodeCombination(KeyCode.I, KeyCombination.ALT_DOWN), "\ud835\ude2a"),
+                entry(new KeyCodeCombination(KeyCode.J, KeyCombination.ALT_DOWN), "\ud835\ude2b"),
+                entry(new KeyCodeCombination(KeyCode.K, KeyCombination.ALT_DOWN), "\ud835\ude2c"),
+                entry(new KeyCodeCombination(KeyCode.L, KeyCombination.ALT_DOWN), "\ud835\ude2d"),
+                entry(new KeyCodeCombination(KeyCode.M, KeyCombination.ALT_DOWN), "\ud835\ude2e"),
+                entry(new KeyCodeCombination(KeyCode.N, KeyCombination.ALT_DOWN), "\ud835\ude2f"),
+                entry(new KeyCodeCombination(KeyCode.O, KeyCombination.ALT_DOWN), "\ud835\ude30"),
+                entry(new KeyCodeCombination(KeyCode.P, KeyCombination.ALT_DOWN), "\ud835\ude31"),
+                entry(new KeyCodeCombination(KeyCode.Q, KeyCombination.ALT_DOWN), "\ud835\ude32"),
+                entry(new KeyCodeCombination(KeyCode.R, KeyCombination.ALT_DOWN), "\ud835\ude33"),
+                entry(new KeyCodeCombination(KeyCode.S, KeyCombination.ALT_DOWN), "\ud835\ude34"),
+                entry(new KeyCodeCombination(KeyCode.T, KeyCombination.ALT_DOWN), "\ud835\ude35"),
+                entry(new KeyCodeCombination(KeyCode.U, KeyCombination.ALT_DOWN), "\ud835\ude36"),
+                entry(new KeyCodeCombination(KeyCode.V, KeyCombination.ALT_DOWN), "\ud835\ude37"),
+                entry(new KeyCodeCombination(KeyCode.W, KeyCombination.ALT_DOWN), "\ud835\ude38"),
+                entry(new KeyCodeCombination(KeyCode.X, KeyCombination.ALT_DOWN), "\ud835\ude39"),
+                entry(new KeyCodeCombination(KeyCode.Y, KeyCombination.ALT_DOWN), "\ud835\ude3a"),
+                entry(new KeyCodeCombination(KeyCode.Z, KeyCombination.ALT_DOWN), "\ud835\ude3b"),
+                entry(new KeyCodeCombination(KeyCode.DIGIT0, KeyCombination.ALT_DOWN), "\ud835\udfe2"),
+                entry(new KeyCodeCombination(KeyCode.DIGIT1, KeyCombination.ALT_DOWN), "\ud835\udfe3"),
+                entry(new KeyCodeCombination(KeyCode.DIGIT2, KeyCombination.ALT_DOWN), "\ud835\udfe4"),
+                entry(new KeyCodeCombination(KeyCode.DIGIT3, KeyCombination.ALT_DOWN), "\ud835\udfe5"),
+                entry(new KeyCodeCombination(KeyCode.DIGIT4, KeyCombination.ALT_DOWN), "\ud835\udfe6"),
+                entry(new KeyCodeCombination(KeyCode.DIGIT5, KeyCombination.ALT_DOWN), "\ud835\udfe7"),
+                entry(new KeyCodeCombination(KeyCode.DIGIT6, KeyCombination.ALT_DOWN), "\ud835\udfe8"),
+                entry(new KeyCodeCombination(KeyCode.DIGIT7, KeyCombination.ALT_DOWN), "\ud835\udfe9"),
+                entry(new KeyCodeCombination(KeyCode.DIGIT8, KeyCombination.ALT_DOWN), "\ud835\udfea"),
+                entry(new KeyCodeCombination(KeyCode.DIGIT9, KeyCombination.ALT_DOWN), "\ud835\udfeb"),
+                entry(new KeyCodeCombination(KeyCode.A, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude08"),
+                entry(new KeyCodeCombination(KeyCode.B, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude09"),
+                entry(new KeyCodeCombination(KeyCode.C, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude0a"),
+                entry(new KeyCodeCombination(KeyCode.D, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude0b"),
+                entry(new KeyCodeCombination(KeyCode.E, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude0c"),
+                entry(new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude0d"),
+                entry(new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude0e"),
+                entry(new KeyCodeCombination(KeyCode.H, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude0f"),
+                entry(new KeyCodeCombination(KeyCode.I, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude10"),
+                entry(new KeyCodeCombination(KeyCode.J, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude11"),
+                entry(new KeyCodeCombination(KeyCode.K, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude12"),
+                entry(new KeyCodeCombination(KeyCode.L, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude13"),
+                entry(new KeyCodeCombination(KeyCode.M, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude14"),
+                entry(new KeyCodeCombination(KeyCode.N, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude15"),
+                entry(new KeyCodeCombination(KeyCode.O, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude16"),
+                entry(new KeyCodeCombination(KeyCode.P, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude17"),
+                entry(new KeyCodeCombination(KeyCode.Q, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude18"),
+                entry(new KeyCodeCombination(KeyCode.R, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude19"),
+                entry(new KeyCodeCombination(KeyCode.S, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude1a"),
+                entry(new KeyCodeCombination(KeyCode.T, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude1b"),
+                entry(new KeyCodeCombination(KeyCode.U, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude1c"),
+                entry(new KeyCodeCombination(KeyCode.V, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude1d"),
+                entry(new KeyCodeCombination(KeyCode.W, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude1e"),
+                entry(new KeyCodeCombination(KeyCode.X, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude1f"),
+                entry(new KeyCodeCombination(KeyCode.Y, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude20"),
+                entry(new KeyCodeCombination(KeyCode.Z, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\ud835\ude21")
+        );
+
+    }
 
 
     private Map<KeyCodeCombination, String> initializeSansAltMap() {
@@ -2377,7 +4473,7 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
                 entry(new KeyCodeCombination(KeyCode.QUOTE, KeyCombination.ALT_DOWN), "\u22ac"),                                                                  //not proves
                 entry(new KeyCodeCombination(KeyCode.COMMA, KeyCombination.ALT_DOWN), "\u22a8"),                                                                  //entails
                 entry(new KeyCodeCombination(KeyCode.PERIOD, KeyCombination.ALT_DOWN), "\u22ad"),                                                                 //not entails
-                entry(new KeyCodeCombination(KeyCode.SLASH, KeyCombination.ALT_DOWN), "\u2032"),                                                                  //prime
+                entry(new KeyCodeCombination(KeyCode.SLASH, KeyCombination.ALT_DOWN), "\ue8bc"),                                                                  //prime
 
 
                 entry(new KeyCodeCombination(KeyCode.BACK_QUOTE, KeyCombination.ALT_DOWN, KeyCombination.SHIFT_DOWN), "\u223c"),                                  //tilde
@@ -2464,6 +4560,7 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
         BASE("Base/Italic"),
         BASE_AND_SCRIPT("Base/Script"),
         BASE_AND_SANS("Base/Sans"),
+        BASE_AND_SANS_ITALIC ("Base/Sans-Ital"),
         ITALIC_AND_SANS("Italic/Sans"),
         SANS_AND_ITALIC("Sans/Italic"),
         ITALIC_AND_BLACKBOARD("Italic/Blackboard"),
@@ -2560,7 +4657,7 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
             bounds = caret.localToScene(caret.getBoundsInLocal());
         }, () ->
         {
-            System.out.println("caret not present");
+        //    System.out.println("caret not present");
         });
         return bounds;
     }
@@ -2569,4 +4666,7 @@ public class RichTextAreaSkin extends SkinBase<RichTextArea> {
     public DoubleProperty nodesWidthProperty() {
         return nodesWidth;
     }
+
+
+
 }

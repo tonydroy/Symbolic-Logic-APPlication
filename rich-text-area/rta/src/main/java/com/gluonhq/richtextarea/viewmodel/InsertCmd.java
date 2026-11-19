@@ -38,6 +38,7 @@ import java.util.Objects;
 class InsertCmd extends AbstractEditCmd {
 
     private final UnitBuffer content;
+    private boolean hadSelection = false;
 
     public InsertCmd(String content) {
         this.content = UnitBuffer.convertTextToUnits(content);
@@ -54,6 +55,7 @@ class InsertCmd extends AbstractEditCmd {
     @Override
     public void doRedo( RichTextAreaViewModel viewModel ) {
         if (content != null) {
+            hadSelection = viewModel.hasSelection();
             viewModel.insert(content.getText());
         }
     }
@@ -61,6 +63,9 @@ class InsertCmd extends AbstractEditCmd {
     @Override
     public void doUndo( RichTextAreaViewModel viewModel ) {
         Objects.requireNonNull(viewModel).undo();
+        if (hadSelection) {
+            viewModel.undo();
+        }
     }
 
     @Override

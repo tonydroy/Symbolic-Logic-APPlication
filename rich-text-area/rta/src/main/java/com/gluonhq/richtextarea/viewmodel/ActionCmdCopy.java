@@ -27,6 +27,7 @@
  */
 package com.gluonhq.richtextarea.viewmodel;
 
+import com.gluonhq.richtextarea.Alerts;
 import com.gluonhq.richtextarea.Selection;
 import javafx.beans.binding.BooleanBinding;
 
@@ -35,6 +36,8 @@ class ActionCmdCopy implements ActionCmd {
     @Override
     public void apply(RichTextAreaViewModel viewModel) {
         viewModel.clipboardCopy(false);
+        Alerts.fleetingMiniPopup("Copied To Clipboard");
+     //   System.out.println("copied to clipboard");
     }
 
     @Override

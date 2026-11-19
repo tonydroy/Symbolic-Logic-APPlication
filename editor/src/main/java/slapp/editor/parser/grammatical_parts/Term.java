@@ -115,6 +115,14 @@ public class Term implements Expression {
         else {
             List<Expression> newChildren = new ArrayList<>();
             for (Expression child : children) {
+
+         //       System.out.println("child: " + child + " match: " + child.getMatch());
+         //       child.toString().codePoints().forEach(cp -> {
+                    // Convert code point to a string (handles surrogate pairs correctly)
+         //           String character = new String(Character.toChars(cp));
+         //           System.out.printf("%s -> U+%04X%n", character, cp);
+         //       });
+
                 if (child.getMatch() == null) return null;
                 else newChildren.add(child.getMatch());
             }

@@ -36,6 +36,7 @@ import com.gluonhq.richtextarea.model.Document;
 import com.gluonhq.richtextarea.model.TableDecoration;
 import com.gluonhq.richtextarea.viewmodel.ActionCmdFactory;
 
+
 public class ActionFactory {
 
     private static final ActionCmdFactory ACTION_CMD_FACTORY = new ActionCmdFactory();
@@ -116,12 +117,12 @@ public class ActionFactory {
     }
 
 
-    /*
+
     public Action openNow(Document document) {
         return new ImmediateBasicAction(control, action -> ACTION_CMD_FACTORY.open(document));
     }
 
-     */
+
 
 
 

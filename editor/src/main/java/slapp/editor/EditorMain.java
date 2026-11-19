@@ -13,18 +13,30 @@ You should have received a copy of the GNU General Public License along with SLA
 If not, see <https://www.gnu.org/licenses/>.
  */
 
+//RTA v. 1.2.5
+
 package slapp.editor;
 
 import com.install4j.api.launcher.StartupNotification;
+import com.teamdev.jxbrowser.engine.ChromiumBinaries;
 import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
 import javafx.scene.text.Font;
 import javafx.stage.*;
 import javafx.application.*;
 import slapp.editor.main_window.MainWindow;
+//import slapp.editor.simpleTests.TransEquivTest;
 
 import java.awt.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import com.teamdev.jxbrowser.VersionInfo;
+
 
 /**
  * Includes the main and start methods for the SLAPP editor.
@@ -34,8 +46,8 @@ public class EditorMain extends Application {
     /** Stage for the main window   */
     public static Stage mainStage;
 
-    public static double RTA_SCREEN_BMP = 23;
-    public static double RTA_PRINT_BMP = 25;
+    public static double RTA_SCREEN_BMP = 18;  //17
+    public static double RTA_PRINT_BMP = 18;    //was 25
     public static double RTA_WIDTH_BMP = 35;
 
     /** Window icons     */
@@ -53,7 +65,9 @@ public class EditorMain extends Application {
  //   private static String fileToOpen = null;
     private static String fileToOpen = "";
 
-    private static MainWindow mainWindow;
+    public static MainWindow mainWindow;
+
+
 
 
     /**
@@ -64,7 +78,6 @@ public class EditorMain extends Application {
     public static void main(String[] args) {
 
         // register startup notification on AWT before JavaFX is initialized (required as per Ingo K)
-
 
         EventQueue.invokeLater(() -> {
             StartupNotification.registerStartupListener(parameters -> {
@@ -78,7 +91,21 @@ public class EditorMain extends Application {
             );
         });
 
+        System.setProperty("javafx.dnd.deserializeObjectGraph", "true");
 
+        if (System.getProperty("os.name", "").toLowerCase().contains("win")) {
+            java.nio.file.Path appDir = java.nio.file.Paths.get(System.getProperty("user.dir"));
+            java.nio.file.Path bundledDjlCache = appDir.resolve("djl_cache");
+            if (!java.nio.file.Files.isDirectory(bundledDjlCache)) {
+                bundledDjlCache = appDir.resolve("SLAPPfiles").resolve("djl_cache");
+            }
+            if (!java.nio.file.Files.isDirectory(bundledDjlCache) && System.getProperty("java.home") != null) {
+                bundledDjlCache = java.nio.file.Paths.get(System.getProperty("java.home")).getParent().resolve("djl_cache");
+            }
+            if (java.nio.file.Files.isDirectory(bundledDjlCache)) {
+                System.setProperty("ENGINE_CACHE_DIR", bundledDjlCache.toAbsolutePath().toString());
+            }
+        }
 
         launch(args);
     }
@@ -93,13 +120,20 @@ public class EditorMain extends Application {
      */
     @Override
     public void start(Stage stage) {
-   //     System.setProperty("jxbrowser.chromium.dir", "c:/");
-
 
         this.mainStage = stage;
 
         secondaryCopy = JustOneLock.isAppActive();
-        os = System.getProperty("os.name");
+        os = System.getProperty("os.name").toLowerCase();
+
+        if (os.contains("mac")) {
+            Path macHelpersDir = Paths.get(
+                    System.getProperty("user.home"),
+                    "Library", "Application Support", "SLAPP", "Helpers",
+                    VersionInfo.version()
+            );
+            System.setProperty("jxbrowser.chromium.dir", macHelpersDir.toString());
+        }
 
         if (!secondaryCopy) {
             stage.getIcons().add(new Image(EditorMain.class.getResourceAsStream("/icon32x32.png")));
@@ -137,9 +171,12 @@ public class EditorMain extends Application {
            mainWindow = new MainWindow(fileToOpen);
 
 
+   //     new TransEquivTest(mainStage);
+
+
      //   new MParserMain(mainStage);
       //     new ParserMain(mainStage);
-       //    new RegexTest(mainStage);
+     //      new RegexTest(mainStage);
       //    new SimpleEditor(mainStage);
      //   new EncodeDecode();
 

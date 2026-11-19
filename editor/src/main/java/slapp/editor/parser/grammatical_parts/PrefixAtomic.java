@@ -108,4 +108,6 @@ public class PrefixAtomic extends Formula implements Expression {
         for (Expression child : getChildren()) {code = code + child.hashCode();}
         return code;
     }
+
+
 }

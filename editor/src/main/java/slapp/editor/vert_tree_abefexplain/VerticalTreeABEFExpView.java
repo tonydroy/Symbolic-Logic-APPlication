@@ -21,10 +21,13 @@ import com.gluonhq.richtextarea.model.Document;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.animation.ParallelTransition;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -46,9 +49,32 @@ import slapp.editor.EditorMain;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.ExerciseView;
 import slapp.editor.main_window.MainWindowView;
+
+import java.util.List;
 import java.util.function.UnaryOperator;
 import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
 import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
+
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.event.EventHandler;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import java.util.ArrayList;
 
 
 public class VerticalTreeABEFExpView implements ExerciseView<DecoratedRTA> {
@@ -66,7 +92,6 @@ public class VerticalTreeABEFExpView implements ExerciseView<DecoratedRTA> {
     private CheckBox eCheckBox = new CheckBox();
     private CheckBox fCheckBox = new CheckBox();
     private HBox choiceBox2;
-
 
     private BorderPane root;
     private ABEFExpRootLayout rootLayout;
@@ -90,7 +115,6 @@ public class VerticalTreeABEFExpView implements ExerciseView<DecoratedRTA> {
     private Node currentSpinnerNode;
     VBox choicesBox;
 
-
     private DecoratedRTA explainDRTA = new DecoratedRTA();
     private VBox controlBox = new VBox(25);
     private Button undoButton;
@@ -113,14 +137,86 @@ public class VerticalTreeABEFExpView implements ExerciseView<DecoratedRTA> {
     private Color checkElementsColor;
     private boolean checkShowing = false;
     private Button staticHelpButton;
-    private Stage  staticHelpStage;;
+    private Stage  staticHelpStage;
+
+    private final DoubleProperty localScalePageHeight = new SimpleDoubleProperty(1.0);
+    private final DoubleProperty localScalePageWidth = new SimpleDoubleProperty(1.0);
+
+    // SCORCHED EARTH RULE 1: The Asynchronous Ghost "Kill Switch"
+    private boolean isTornDown = false;
+
+    // SCORCHED EARTH RULE 3: Eradicate Anonymous Lambdas
+    private ChangeListener<Node> exerciseFocusListener;
+    private ChangeListener<Number> mainPaneHeightListener;
+    private ChangeListener<Number> mainPaneWidthListener;
+    private ChangeListener<Number> localScalePageHeightListener;
+    private ChangeListener<Number> localScalePageWidthListener;
+    private EventHandler<MouseEvent> mainPaneClickHandler;
+    private EventHandler<MouseEvent> choicesBoxClickHandler;
+    private UnaryOperator<TextFormatter.Change> pointsEarnedFilter;
+
+    private ChangeListener<Boolean> pointsEarnedFocusListener;
+    private EventHandler<MouseEvent> pointsEarnedClickHandler;
 
 
     VerticalTreeABEFExpView(MainWindowView mainView, VerticalTreeABEFExpExercise vtABEFExpExercise) {
         this.mainView = mainView;
+
+        localScalePageHeight.bind(mainView.scalePageHeightProperty());
+        localScalePageWidth.bind(mainView.scalePageWidthProperty());
+
+        exerciseFocusListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null) return;
+            try {
+                RichTextArea statementRTA = exerciseStatement != null ? exerciseStatement.getEditor() : null;
+                RichTextArea commentRTA = exerciseComment != null ? exerciseComment.getEditor() : null;
+                RichTextArea explainRTA = explainDRTA != null ? explainDRTA.getEditor() : null;
+
+                if (statementRTA != null && inHierarchy(nv, statementRTA)) {
+                    if (currentSpinnerNode != statementRTA) {
+                        currentSpinnerNode = statementRTA;
+                        if (statementHeightSpinner != null && statementWidthSpinner != null) {
+                            this.mainView.updateSizeSpinners(statementHeightSpinner, statementWidthSpinner);
+                        }
+                    }
+                } else if (commentRTA != null && inHierarchy(nv, commentRTA)) {
+                    if (currentSpinnerNode != commentRTA) {
+                        currentSpinnerNode = commentRTA;
+                        if (commentHeightSpinner != null && commentWidthSpinner != null) {
+                            this.mainView.updateSizeSpinners(commentHeightSpinner, commentWidthSpinner);
+                        }
+                    }
+                } else if (explainRTA != null && inHierarchy(nv, explainRTA)) {
+                    if (currentSpinnerNode != explainRTA) {
+                        currentSpinnerNode = explainRTA;
+                        if (explainHeightSpinner != null && explainWidthSpinner != null) {
+                            this.mainView.updateSizeSpinners(explainHeightSpinner, explainWidthSpinner);
+                        }
+                    }
+                } else if (choicesBox != null && inHierarchy(nv, choicesBox)) {
+                    if (currentSpinnerNode != choicesBox) {
+                        currentSpinnerNode = choicesBox;
+                        if (choicesHeightSpinner != null && choicesHeightSpinner.getValueFactory() != null && choicesWidthSpinner != null) {
+                            double choicesHeightValue = Math.round(choicesBox.getHeight() / localScalePageHeight.get() * 100);
+                            choicesHeightSpinner.getValueFactory().setValue(choicesHeightValue);
+                            this.mainView.updateSizeSpinners(choicesHeightSpinner, choicesWidthSpinner);
+                        }
+                    }
+                } else if (mainPane != null && inHierarchy(nv, mainPane)) {
+                    if (currentSpinnerNode != mainPane) {
+                        currentSpinnerNode = mainPane;
+                        if (mainPaneHeightSpinner != null && mainPaneWidthSpinner != null) {
+                            this.mainView.updateSizeSpinners(mainPaneHeightSpinner, mainPaneWidthSpinner);
+                        }
+                    }
+                } else {
+                    currentSpinnerNode = null;
+                }
+            } catch (Exception e) {}
+        };
+
         this.vtABEFExpExercise = vtABEFExpExercise;
 
-//        aCheckBox.setFocusTraversable(false); bCheckBox.setFocusTraversable(false); eCheckBox.setFocusTraversable(false); fCheckBox.setFocusTraversable(false);
         Font labelFont = new Font("Noto Serif Combo", 11);
         abChoiceLeadLabel.setFont(labelFont); aCheckBox.setFont(labelFont); bCheckBox.setFont(labelFont);
         choiceBox1 = new HBox(20, abChoiceLeadLabel, aCheckBox, bCheckBox);
@@ -146,8 +242,8 @@ public class VerticalTreeABEFExpView implements ExerciseView<DecoratedRTA> {
         redoButton.setPrefHeight(28);
 
         controlBox.getChildren().addAll(undoButton, redoButton);
-        controlBox.setAlignment(Pos.BASELINE_RIGHT);
-        controlBox.setPadding(new Insets(50,20,0,20));
+        controlBox.setAlignment(Pos.TOP_CENTER);
+        controlBox.setPadding(new Insets(40,20,0,20));
         controlBox.setMinWidth(150); controlBox.setMaxWidth(150);
         exerciseControlNode = controlBox;
 
@@ -155,158 +251,206 @@ public class VerticalTreeABEFExpView implements ExerciseView<DecoratedRTA> {
         pointsEarnedTextField.setPrefWidth(27);
         pointsEarnedTextField.setAlignment(Pos.CENTER_RIGHT);
         pointsEarnedTextField.setPadding(new Insets(0,5,0,3));
-        UnaryOperator<TextFormatter.Change> filter = change -> {
+
+        pointsEarnedFilter = change -> {
+            if (isTornDown || this.mainView == null || change == null) return null;
             String text = change.getText();
             if (text.matches("[0-9]*")) {
                 return change;
             }
             return null;
         };
-        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        TextFormatter<String> textFormatter = new TextFormatter<>(pointsEarnedFilter);
         pointsEarnedTextField.setTextFormatter(textFormatter);
+
+        pointsEarnedFocusListener = (obs, wasFocused, isNowFocused) -> {
+            if (isTornDown || pointsEarnedTextField == null) return;
+            if (isNowFocused) {
+                Platform.runLater(() -> {
+                    if (!isTornDown && pointsEarnedTextField != null) {
+                        pointsEarnedTextField.selectAll();
+                    }
+                });
+                if (mainView != null) {
+                    mainView.textFieldInFocus();
+                }
+            } else if (pointsEarnedTextField.getText().isEmpty()) {
+                pointsEarnedTextField.setText("0");
+            }
+        };
+        pointsEarnedTextField.focusedProperty().addListener(pointsEarnedFocusListener);
+
+        pointsEarnedClickHandler = event -> {
+            if (isTornDown || pointsEarnedTextField == null) return;
+            if (pointsEarnedTextField.getSelectedText().isEmpty()) {
+                pointsEarnedTextField.selectAll();
+            }
+        };
+        pointsEarnedTextField.setOnMouseClicked(pointsEarnedClickHandler);
+
+
+
     }
 
     void initializeViewDetails() {
+        double spinnerMin = (double) ((int) (100 * 45.0 / localScalePageHeight.get()));
+
         //statement
         RichTextArea statementRTA = exerciseStatement.getEditor();
         statementRTA.getStylesheets().add("slappTextArea.css");
         statementRTA.setEditable(false);
 
-        double statementInitialHeight = Math.round((statementPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100.0);
-        statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
+        double statementInitialHeight = Math.ceil((statementPrefHeight - RTA_SCREEN_BMP) / localScalePageHeight.get() * 100.0);
+        statementHeightSpinner = new Spinner<>(spinnerMin, 999.0, statementInitialHeight, 1.0);
         statementHeightSpinner.setPrefWidth(65);
         statementHeightSpinner.setDisable(false);
-        statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
-        statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
-            Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
-            if (increment != null) increment.getOnMouseReleased().handle(null);
-            Node decrement = statementHeightSpinner.lookup(".decrement-arrow-button");
-            if (decrement != null) decrement.getOnMouseReleased().handle(null);
-        });
-        statementRTA.maxWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
+        statementHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        statementRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.contentAreaWidthProperty().bind(localScalePageWidth);
 
         statementWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         statementWidthSpinner.setPrefWidth(65);
         statementWidthSpinner.setDisable(true);
-        statementWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
+        statementWidthSpinner.setTooltip(new Tooltip("Window width as % of selected paper"));
 
         //comment
         RichTextArea commentRTA = exerciseComment.getEditor();
         commentRTA.getStylesheets().add("slappTextArea.css");
         commentRTA.setPromptText("Comment:");
 
-        double commentInitialHeight = Math.round((commentPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100.0);
-        commentHeightSpinner = new Spinner<>(0.0, 999.0, commentInitialHeight, 1.0);
+        double commentInitialHeight = Math.round((commentPrefHeight - RTA_SCREEN_BMP) / localScalePageHeight.get() * 100.0);
+        commentHeightSpinner = new Spinner<>(spinnerMin, 999.0, commentInitialHeight, 1.0);
         commentHeightSpinner.setPrefWidth(65);
         commentHeightSpinner.setDisable(false);
-        commentHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        commentRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
-        commentHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
-            Node increment = commentHeightSpinner.lookup(".increment-arrow-button");
-            if (increment != null) increment.getOnMouseReleased().handle(null);
-            Node decrement = commentHeightSpinner.lookup(".decrement-arrow-button");
-            if (decrement != null) decrement.getOnMouseReleased().handle(null);
-        });
-        commentRTA.maxWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
-        commentRTA.minWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
-        commentRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
+        commentHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        commentRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        commentRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        commentRTA.minWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        commentRTA.contentAreaWidthProperty().bind(localScalePageWidth);
 
         commentWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         commentWidthSpinner.setPrefWidth(65);
         commentWidthSpinner.setDisable(true);
-        commentWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
+        commentWidthSpinner.setTooltip(new Tooltip("Window width as % of selected paper"));
 
         //explain
         RichTextArea explainRTA = explainDRTA.getEditor();
         explainRTA.getStylesheets().add("slappTextArea.css");
         explainRTA.setPromptText(explainPrompt);
 
-        double explainInitialHeight = Math.round((explainPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100.0 );
-        explainHeightSpinner = new Spinner<>(0.0, 999.0, explainInitialHeight, 1.0);
+        double explainInitialHeight = Math.round((explainPrefHeight - RTA_SCREEN_BMP) / localScalePageHeight.get() * 100.0 );
+        explainHeightSpinner = new Spinner<>(spinnerMin, 999.0, explainInitialHeight, 1.0);
         explainHeightSpinner.setPrefWidth(65);
         explainHeightSpinner.setDisable(false);
-        explainHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        explainRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(explainHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
-        explainHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
-            Node increment = explainHeightSpinner.lookup(".increment-arrow-button");
-            if (increment != null) increment.getOnMouseReleased().handle(null);
-            Node decrement = explainHeightSpinner.lookup(".decrement-arrow-button");
-            if (decrement != null) decrement.getOnMouseReleased().handle(null);
-        });
-        explainRTA.maxWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
-        explainRTA.minWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
-        explainRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
+        explainHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        explainRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(explainHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        explainRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        explainRTA.minWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        explainRTA.contentAreaWidthProperty().bind(localScalePageWidth);
 
         explainWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         explainWidthSpinner.setPrefWidth(65);
         explainWidthSpinner.setDisable(true);
-        explainWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
+        explainWidthSpinner.setTooltip(new Tooltip("Window width as % of selected paper"));
 
-       //choices (null spinners)
+        //choices (null spinners)
         choicesHeightSpinner = new Spinner<>(0.0, 999.0, 0, 1.0);
         choicesHeightSpinner.setPrefWidth(65);
         choicesHeightSpinner.setDisable(true);
-        choicesHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
+        choicesHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
 
-        choicesBox.maxWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
+        choicesBox.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
         choicesWidthSpinner = new Spinner<>(100.0, 999.0, 100.0, 1.0);
         choicesWidthSpinner.setPrefWidth(65);
         choicesWidthSpinner.setDisable(true);
-        choicesWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
+        choicesWidthSpinner.setTooltip(new Tooltip("Window width as % of selected paper"));
 
         //main pane
         AnchorPane mainPane1 = rootLayout.getMain_pane();
         mainPane = rootLayout.getBase_pane();
         mainPane.setStyle("-fx-focus-color: gainsboro;");
         mainPane1.setMinHeight(250.0);
-        mainPane1.setMinWidth(mainView.getScalePageWidth() + RTA_WIDTH_BMP);
+        mainPane1.setMinWidth(localScalePageWidth.get() + RTA_WIDTH_BMP);
 
         mainPaneHeightSpinner = new Spinner<>(5, 999.0, 0, 1.0);
         mainPaneHeightSpinner.setPrefWidth(65);
         mainPaneHeightSpinner.setDisable(true);
-        mainPaneHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        mainPane1.heightProperty().addListener((ob, ov, nv) -> {
-            mainPaneHeightSpinner.getValueFactory().setValue((double) Math.round(mainPane1.getHeight() / mainView.getScalePageHeight() * 100));
-        });
+        mainPaneHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+
+        mainPaneHeightListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || mainPaneHeightSpinner == null || mainPaneHeightSpinner.getValueFactory() == null) return;
+            mainPaneHeightSpinner.getValueFactory().setValue((double) Math.round(mainPane1.getHeight() / localScalePageHeight.get() * 100));
+        };
+        mainPane1.heightProperty().addListener(mainPaneHeightListener);
 
         mainPaneWidthSpinner = new Spinner<>(100.0, 999.0, 0, 1.0);
         mainPaneWidthSpinner.setPrefWidth(65);
         mainPaneWidthSpinner.setDisable(true);
-        mainPaneWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
-        mainPane1.widthProperty().addListener((ob, ov, nv) -> {
-            mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round((mainPane1.getWidth() - RTA_WIDTH_BMP) /mainView.getScalePageWidth() * 100));
-        });
+        mainPaneWidthSpinner.setTooltip(new Tooltip("Window width as % of selected paper"));
+
+        mainPaneWidthListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || mainPaneWidthSpinner == null || mainPaneWidthSpinner.getValueFactory() == null) return;
+            mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round((mainPane1.getWidth() - RTA_WIDTH_BMP) / localScalePageWidth.get() * 100));
+        };
+        mainPane1.widthProperty().addListener(mainPaneWidthListener);
 
         //page size listeners
-        mainView.scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeightListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null) return;
+            double revSpinnerMin = (double) ((int) (100 * 45.0 / (double) nv));
 
-            statementRTA.prefHeightProperty().unbind();
-            statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+            if (exerciseStatement != null && exerciseStatement.getEditor() != null) {
+                RichTextArea stRTA = exerciseStatement.getEditor();
+                stRTA.prefHeightProperty().unbind();
+                if (statementHeightSpinner != null && statementHeightSpinner.getValueFactory() != null) {
+                    statementHeightSpinner.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(revSpinnerMin, 999.0, (double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()), 1.0));
+                    stRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+                }
+            }
 
-            commentRTA.prefHeightProperty().unbind();
-            commentHeightSpinner.getValueFactory().setValue((double) Math.round(commentHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            commentRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+            if (exerciseComment != null && exerciseComment.getEditor() != null) {
+                RichTextArea commRTA = exerciseComment.getEditor();
+                commRTA.prefHeightProperty().unbind();
+                if (commentHeightSpinner != null && commentHeightSpinner.getValueFactory() != null) {
+                    commentHeightSpinner.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(revSpinnerMin, 999.0, (double) Math.round(commentHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()), 1.0));
+                    commRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+                }
+            }
 
-            explainRTA.prefHeightProperty().unbind();
-            explainHeightSpinner.getValueFactory().setValue((double) Math.round(explainHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            explainRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(explainHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+            if (explainDRTA != null && explainDRTA.getEditor() != null) {
+                RichTextArea expRTA = explainDRTA.getEditor();
+                expRTA.prefHeightProperty().unbind();
+                if (explainHeightSpinner != null && explainHeightSpinner.getValueFactory() != null) {
+                    explainHeightSpinner.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(revSpinnerMin, 999.0, (double) Math.round(explainHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()), 1.0));
+                    expRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(explainHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+                }
+            }
 
-            mainPaneHeightSpinner.getValueFactory().setValue((double) Math.round(mainPane1.getHeight() / mainView.getScalePageHeight() * 100.0));
+            if (mainPaneHeightSpinner != null && mainPaneHeightSpinner.getValueFactory() != null && rootLayout != null && rootLayout.getMain_pane() != null) {
+                mainPaneHeightSpinner.getValueFactory().setValue((double) Math.round(rootLayout.getMain_pane().getHeight() / localScalePageHeight.get() * 100.0));
+            }
 
-            double choicesHeightValue = Math.round(choicesBox.getHeight() / mainView.getScalePageHeight() * 100);
-            choicesHeightSpinner.getValueFactory().setValue(choicesHeightValue);
-        });
+            if (choicesHeightSpinner != null && choicesHeightSpinner.getValueFactory() != null && choicesBox != null) {
+                double choicesHeightValue = Math.round(choicesBox.getHeight() / localScalePageHeight.get() * 100);
+                choicesHeightSpinner.getValueFactory().setValue(choicesHeightValue);
+            }
+        };
+        localScalePageHeight.addListener(localScalePageHeightListener);
 
-        mainView.scalePageWidthProperty().addListener((ob, ov, nv) -> {
+        localScalePageWidthListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || mainPane == null) return;
             mainPane.prefWidthProperty().unbind();
-            mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round((mainPane1.getWidth() - RTA_WIDTH_BMP) /mainView.getScalePageWidth() * 100));
-        });
+            if (mainPaneWidthSpinner != null && mainPaneWidthSpinner.getValueFactory() != null && rootLayout != null && rootLayout.getMain_pane() != null) {
+                mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round((rootLayout.getMain_pane().getWidth() - RTA_WIDTH_BMP) / localScalePageWidth.get() * 100));
+            }
+        };
+        localScalePageWidth.addListener(localScalePageWidthListener);
 
         setSizeSpinners();
-
     }
 
     public void setRightControlBox() {
@@ -329,13 +473,9 @@ public class VerticalTreeABEFExpView implements ExerciseView<DecoratedRTA> {
 
         checkProgButton = new Button();
 
-        //     checkProgButton = new Button("Check Progress");
-        //     checkProgButton.setPrefWidth(105);
-        //     checkProgButton.setTooltip(new Tooltip("Check tree progress so far."));
         VBox checksBox = new VBox(10, checkButton, checkTriesLabel);
         checksBox.setAlignment(Pos.CENTER);
         checkTriesLabel.setAlignment(Pos.CENTER);
-//        checksBox.setMargin(checkProgButton, new Insets(0,0,10, 0));
 
         staticHelpButton = new Button("Static Help");
         staticHelpButton.setPrefWidth(105);
@@ -352,6 +492,7 @@ public class VerticalTreeABEFExpView implements ExerciseView<DecoratedRTA> {
     }
 
     public void activateBigCheck() {
+        if (isTornDown || bigCheck == null || checkedElements == null) return;
         bigCheck.setFill(checkColor);
         checkedElements.setText(checkMessage);
         checkedElements.setFill(checkElementsColor);
@@ -376,6 +517,7 @@ public class VerticalTreeABEFExpView implements ExerciseView<DecoratedRTA> {
 
     //record status, and deactivate
     public void deactivateBigCheck() {
+        if (isTornDown || bigCheck == null || checkedElements == null) return;
         if (bigCheck.getOpacity() > .5) checkShowing = true;
         else checkShowing = false;
         bigCheck.setOpacity(0.0);
@@ -383,16 +525,15 @@ public class VerticalTreeABEFExpView implements ExerciseView<DecoratedRTA> {
     }
 
     public void showStaticHelp(Document doc) {
-
-        if (staticHelpStage == null || !staticHelpStage.isShowing()) {
+        if (isTornDown || staticHelpStage == null || !staticHelpStage.isShowing()) {
             RichTextArea hrta = new RichTextArea(EditorMain.mainStage);
             hrta.getActionFactory().open(doc).execute(new ActionEvent());
             hrta.setPadding(new Insets(20, 0, 20, 20));
             hrta.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
-            hrta.setPrefWidth(400);
+            hrta.setContentAreaWidth(400);
+            hrta.setPrefWidth(400 + RTA_WIDTH_BMP);
             hrta.setPrefHeight(300);
             hrta.setEditable(false);
-
 
             Scene scene = new Scene(hrta);
             scene.getStylesheets().add(RichTextArea.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
@@ -404,7 +545,7 @@ public class VerticalTreeABEFExpView implements ExerciseView<DecoratedRTA> {
             staticHelpStage.getIcons().addAll(EditorMain.icons);
             staticHelpStage.initOwner(EditorMain.mainStage);
             Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-            staticHelpStage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 420));
+            staticHelpStage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - (420 + RTA_WIDTH_BMP)));
             staticHelpStage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 320));
 
             staticHelpStage.show();
@@ -413,56 +554,42 @@ public class VerticalTreeABEFExpView implements ExerciseView<DecoratedRTA> {
 
     public Stage getStaticHelpStage() { return staticHelpStage; }
 
-
-
     private void setSizeSpinners() {
+        if (mainPane != null) {
+            mainPaneClickHandler = e -> {
+                if (isTornDown || this.mainView == null) return;
+                if (currentSpinnerNode != mainPane) {
+                    currentSpinnerNode = mainPane;
+                    if (mainPaneHeightSpinner != null && mainPaneWidthSpinner != null) {
+                        mainView.updateSizeSpinners(mainPaneHeightSpinner, mainPaneWidthSpinner);
+                    }
+                    mainPane.requestFocus();
+                }
+            };
+            mainPane.addEventFilter(MouseEvent.MOUSE_CLICKED, mainPaneClickHandler);
+        }
 
-        mainPane.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-            if (currentSpinnerNode != mainPane) {
-                mainPane.requestFocus();
-            }
-        });
-        choicesBox.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-            if (currentSpinnerNode != choicesBox) {
-                choicesBox.requestFocus();
-            }
-        });
+        if (choicesBox != null) {
+            choicesBoxClickHandler = e -> {
+                if (isTornDown || this.mainView == null) return;
+                if (currentSpinnerNode != choicesBox) {
+                    currentSpinnerNode = choicesBox;
+                    if (choicesHeightSpinner != null && choicesHeightSpinner.getValueFactory() != null && choicesWidthSpinner != null) {
+                        double choicesHeightValue = Math.round(choicesBox.getHeight() / localScalePageHeight.get() * 100);
+                        choicesHeightSpinner.getValueFactory().setValue(choicesHeightValue);
+                        mainView.updateSizeSpinners(choicesHeightSpinner, choicesWidthSpinner);
+                    }
+                    choicesBox.requestFocus();
+                }
+            };
+            choicesBox.addEventFilter(MouseEvent.MOUSE_CLICKED, choicesBoxClickHandler);
+        }
 
-        mainView.getMainScene().focusOwnerProperty().addListener((ob, ov, nv) -> {
-
-            RichTextArea statementRTA = exerciseStatement.getEditor();
-            if (inHierarchy(nv, statementRTA) && currentSpinnerNode != statementRTA) {
-                currentSpinnerNode = statementRTA;
-                mainView.updateSizeSpinners(statementHeightSpinner, statementWidthSpinner);
-                return;
-            }
-            RichTextArea commentRTA = exerciseComment.getEditor();
-            if (inHierarchy(nv, commentRTA) && currentSpinnerNode != commentRTA) {
-                currentSpinnerNode = commentRTA;
-                mainView.updateSizeSpinners(commentHeightSpinner, commentWidthSpinner);
-                return;
-            }
-            RichTextArea explainRTA = explainDRTA.getEditor();
-            if (inHierarchy(nv, explainRTA) && currentSpinnerNode != explainRTA) {
-                currentSpinnerNode = explainRTA;
-                mainView.updateSizeSpinners(explainHeightSpinner, explainWidthSpinner);
-                return;
-            }
-            if (inHierarchy(nv, choicesBox) && currentSpinnerNode != choicesBox) {
-                currentSpinnerNode = choicesBox;
-                double choicesHeightValue = Math.round(choicesBox.getHeight() / mainView.getScalePageHeight() * 100);
-                choicesHeightSpinner.getValueFactory().setValue(choicesHeightValue);
-                mainView.updateSizeSpinners(choicesHeightSpinner, choicesWidthSpinner);
-                return;
-            }
-            if (inHierarchy(nv, mainPane) && currentSpinnerNode != mainPane) {
-                currentSpinnerNode = mainPane;
-                mainView.updateSizeSpinners(mainPaneHeightSpinner, mainPaneWidthSpinner);
-                return;
-            }
-
-        });
+        if (mainView != null && mainView.getMainScene() != null && exerciseFocusListener != null) {
+            mainView.getMainScene().focusOwnerProperty().addListener(exerciseFocusListener);
+        }
     }
+
 
     private static boolean inHierarchy(Node node, Node potentialHierarchyElement) {
         if (potentialHierarchyElement == null) {
@@ -476,6 +603,297 @@ public class VerticalTreeABEFExpView implements ExerciseView<DecoratedRTA> {
         }
         return false;
     }
+
+    // SCORCHED EARTH RULE 6: Sever Shared Nodes helper
+    private void severFromParent(Node node) {
+        try {
+            if (node != null && node.getParent() != null) {
+                if (node.getParent() instanceof javafx.scene.layout.Pane) ((javafx.scene.layout.Pane) node.getParent()).getChildren().remove(node);
+                else if (node.getParent() instanceof javafx.scene.Group) ((javafx.scene.Group) node.getParent()).getChildren().remove(node);
+            }
+        } catch (Exception e) {}
+    }
+
+    // SCORCHED EARTH RULE 5: Dozens of isolated try-catch blocks
+    public void cleanup() {
+        // KILL SWITCH: Engaged! Prevent any focus listeners from doing UI operations mid-teardown
+        isTornDown = true;
+
+        try {
+            if (pointsEarnedTextField != null) {
+                if (pointsEarnedFocusListener != null) {
+                    pointsEarnedTextField.focusedProperty().removeListener(pointsEarnedFocusListener);
+                }
+                if (pointsEarnedClickHandler != null) {
+                    pointsEarnedTextField.removeEventHandler(MouseEvent.MOUSE_CLICKED, pointsEarnedClickHandler);
+                }
+                pointsEarnedTextField.setOnMouseClicked(null);
+                pointsEarnedTextField.setTextFormatter(null);
+            }
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 2: Clear global MainView references safely
+        try {
+            if (mainView != null) {
+                mainView.textFieldInFocus(); // Remove toolbars for RTAs safely
+            }
+        } catch (Exception e) {}
+
+        // 1. Unbind scaling properties and event handlers defensively
+        try {
+            if (mainPane != null && mainPaneClickHandler != null) mainPane.removeEventFilter(MouseEvent.MOUSE_CLICKED, mainPaneClickHandler);
+        } catch (Exception e) {}
+
+        try {
+            if (choicesBox != null && choicesBoxClickHandler != null) choicesBox.removeEventFilter(MouseEvent.MOUSE_CLICKED, choicesBoxClickHandler);
+        } catch (Exception e) {}
+
+        try {
+            if (rootLayout != null && rootLayout.getMain_pane() != null) {
+                if (mainPaneHeightListener != null) rootLayout.getMain_pane().heightProperty().removeListener(mainPaneHeightListener);
+                if (mainPaneWidthListener != null) rootLayout.getMain_pane().widthProperty().removeListener(mainPaneWidthListener);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (localScalePageHeight != null) {
+                if (localScalePageHeightListener != null) localScalePageHeight.removeListener(localScalePageHeightListener);
+                localScalePageHeight.unbind();
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (localScalePageWidth != null) {
+                if (localScalePageWidthListener != null) localScalePageWidth.removeListener(localScalePageWidthListener);
+                localScalePageWidth.unbind();
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (undoRedoFlag != null) undoRedoFlag.unbind();
+        } catch (Exception e) {}
+
+        try {
+            if (mainView != null && mainView.getMainScene() != null && exerciseFocusListener != null) {
+                mainView.getMainScene().focusOwnerProperty().removeListener(exerciseFocusListener);
+            }
+        } catch (Exception e) {}
+
+        // Unbind RTA properties synchronously
+        try {
+            if (exerciseStatement != null && exerciseStatement.getEditor() != null) {
+                exerciseStatement.getEditor().prefHeightProperty().unbind();
+                exerciseStatement.getEditor().maxWidthProperty().unbind();
+                exerciseStatement.getEditor().contentAreaWidthProperty().unbind();
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (exerciseComment != null && exerciseComment.getEditor() != null) {
+                exerciseComment.getEditor().prefHeightProperty().unbind();
+                exerciseComment.getEditor().prefWidthProperty().unbind();
+                exerciseComment.getEditor().maxWidthProperty().unbind();
+                exerciseComment.getEditor().minWidthProperty().unbind();
+                exerciseComment.getEditor().contentAreaWidthProperty().unbind();
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (explainDRTA != null && explainDRTA.getEditor() != null) {
+                explainDRTA.getEditor().prefHeightProperty().unbind();
+                explainDRTA.getEditor().prefWidthProperty().unbind();
+                explainDRTA.getEditor().maxWidthProperty().unbind();
+                explainDRTA.getEditor().minWidthProperty().unbind();
+                explainDRTA.getEditor().contentAreaWidthProperty().unbind();
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (choicesBox != null) choicesBox.maxWidthProperty().unbind();
+        } catch (Exception e) {}
+
+        // ---> SCORCHED EARTH RULE 4: THE JAVAFX SKIN HAMMER (DECOUPLED TIMER) <---
+        try {
+            final RichTextArea stEditor = (exerciseStatement != null) ? exerciseStatement.getEditor() : null;
+            final RichTextArea commEditor = (exerciseComment != null) ? exerciseComment.getEditor() : null;
+            final RichTextArea expEditor = (explainDRTA != null) ? explainDRTA.getEditor() : null;
+
+            // STAGE 1 (Immediate)
+            if (stEditor != null) {
+                try { stEditor.setPromptText(""); } catch (Exception e) {}
+                try { stEditor.setFocusTraversable(false); } catch (Exception e) {}
+                try { if (stEditor.getDocument() == null || stEditor.getDocument().getText().isEmpty()) stEditor.getActionFactory().open(new Document(" ")).execute(new ActionEvent()); } catch (Exception e) {}
+            }
+
+            if (commEditor != null) {
+                try { commEditor.setPromptText(""); } catch (Exception e) {}
+                try { commEditor.setFocusTraversable(false); } catch (Exception e) {}
+                try { if (commEditor.getDocument() == null || commEditor.getDocument().getText().isEmpty()) commEditor.getActionFactory().open(new Document(" ")).execute(new ActionEvent()); } catch (Exception e) {}
+            }
+
+            if (expEditor != null) {
+                try { expEditor.setPromptText(""); } catch (Exception e) {}
+                try { expEditor.setFocusTraversable(false); } catch (Exception e) {}
+                try { if (expEditor.getDocument() == null || expEditor.getDocument().getText().isEmpty()) expEditor.getActionFactory().open(new Document(" ")).execute(new ActionEvent()); } catch (Exception e) {}
+            }
+
+            // STAGE 2 (Delayed Skin Removal)
+            javafx.animation.PauseTransition pt = new javafx.animation.PauseTransition(javafx.util.Duration.millis(1500));
+            pt.setOnFinished(ev -> {
+                try { if (stEditor != null) { stEditor.setSkin(null); } } catch (Exception ex) {}
+                try { if (commEditor != null) { commEditor.setSkin(null); } } catch (Exception ex) {}
+                try { if (expEditor != null) { expEditor.setSkin(null); } } catch (Exception ex) {}
+            });
+            pt.play();
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 8: The Undo/Redo Rebuild Fix (Prevent CME)
+        try {
+            if (rootLayout != null) {
+                if (rootLayout.getMain_pane() != null) {
+                    if (rootLayout.getMain_pane().getChildren() != null) {
+                        List<Node> childrenCopy = new ArrayList<>(rootLayout.getMain_pane().getChildren());
+                        for (Node node : childrenCopy) {
+                            try { node.getClass().getMethod("cleanup").invoke(node); } catch (Exception e) {}
+                            severFromParent(node);
+                        }
+                    }
+                    rootLayout.getMain_pane().getChildren().clear();
+                }
+                if (rootLayout.getBase_pane() != null) {
+                    rootLayout.getBase_pane().prefWidthProperty().unbind();
+                }
+            }
+        } catch (Exception e) {}
+
+        // ---> 4. DISMANTLE THE UI TREE <---
+        try {
+            if (choiceBox1 != null) {
+                severFromParent(choiceBox1);
+                choiceBox1.getChildren().clear();
+            }
+        } catch (Exception e) {}
+        try {
+            if (choiceBox2 != null) {
+                severFromParent(choiceBox2);
+                choiceBox2.getChildren().clear();
+            }
+        } catch (Exception e) {}
+        try {
+            if (choicesBox != null) {
+                severFromParent(choicesBox);
+                choicesBox.setOnMouseClicked(null);
+                choicesBox.getChildren().clear();
+            }
+        } catch (Exception e) {}
+        try {
+            if (controlBox != null) {
+                severFromParent(controlBox);
+                controlBox.getChildren().clear();
+            }
+        } catch (Exception e) {}
+        try {
+            if (exerciseControlNode != null) {
+                severFromParent(exerciseControlNode);
+            }
+        } catch (Exception e) {}
+        try {
+            if (rightControlNode != null) {
+                severFromParent(rightControlNode);
+            }
+        } catch (Exception e) {}
+        try {
+            if (root != null) {
+                severFromParent(root);
+                root.setCenter(null);
+            }
+        } catch (Exception e) {}
+
+        try { if (mainPane != null) mainPane.setOnMouseClicked(null); } catch (Exception e) {}
+
+        try {
+            if (pointsEarnedTextField != null) {
+                pointsEarnedTextField.setTextFormatter(null);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (undoButton != null) undoButton.setOnAction(null);
+            if (redoButton != null) redoButton.setOnAction(null);
+            if (checkButton != null) checkButton.setOnAction(null);
+            if (checkProgButton != null) checkProgButton.setOnAction(null);
+            if (staticHelpButton != null) staticHelpButton.setOnAction(null);
+        } catch (Exception e) {}
+
+        // 5. Clear OS-level popups
+        try {
+            if (staticHelpStage != null) {
+                staticHelpStage.close();
+            }
+        } catch (Exception e) {}
+
+        // 8. Final severed ties
+        this.mainView = null;
+        this.vtABEFExpExercise = null;
+        this.defaultKeyboard = null;
+        this.defaultMapKeyboard = null;
+        this.explainPrompt = null;
+        this.abChoiceLeadLabel = null;
+        this.aCheckBox = null;
+        this.bCheckBox = null;
+        this.choiceBox1 = null;
+        this.efChoiceLeadLabel = null;
+        this.eCheckBox = null;
+        this.fCheckBox = null;
+        this.choiceBox2 = null;
+        this.root = null;
+        this.rootLayout = null;
+        this.exerciseComment = null;
+        this.exerciseStatement = null;
+        this.explainDRTA = null;
+        this.statementHeightSpinner = null;
+        this.statementWidthSpinner = null;
+        this.commentHeightSpinner = null;
+        this.commentWidthSpinner = null;
+        this.explainHeightSpinner = null;
+        this.explainWidthSpinner = null;
+        this.mainPaneHeightSpinner = null;
+        this.mainPaneWidthSpinner = null;
+        this.choicesHeightSpinner = null;
+        this.choicesWidthSpinner = null;
+        this.currentSpinnerNode = null;
+        this.choicesBox = null;
+        this.controlBox = null;
+        this.undoButton = null;
+        this.redoButton = null;
+        this.exerciseControlNode = null;
+        this.mainPane = null;
+        this.pointsEarnedTextField = null;
+        this.rightControlNode = null;
+        this.checkButton = null;
+        this.checkProgButton = null;
+        this.bigCheck = null;
+        this.checkMessage = null;
+        this.checkedElements = null;
+        this.checkTriesLabel = null;
+        this.checkColor = null;
+        this.checkElementsColor = null;
+        this.staticHelpButton = null;
+        this.staticHelpStage = null;
+        this.exerciseFocusListener = null;
+        this.mainPaneHeightListener = null;
+        this.mainPaneWidthListener = null;
+        this.localScalePageHeightListener = null;
+        this.localScalePageWidthListener = null;
+        this.mainPaneClickHandler = null;
+        this.choicesBoxClickHandler = null;
+        this.pointsEarnedFilter = null;
+        try { this.undoRedoFlag = null; } catch (Exception e) {}
+
+        this.pointsEarnedFocusListener = null;
+        this.pointsEarnedClickHandler = null;
+    }
+
 
     public MainWindowView getMainView() {
         return mainView;
@@ -605,7 +1023,7 @@ public class VerticalTreeABEFExpView implements ExerciseView<DecoratedRTA> {
     @Override
     public Node getPointsNode() {
         if (pointsPossible > 0) {
-            if (!mainView.isInstructorFunctions()) pointsEarnedTextField.setDisable(true);
+            if (mainView != null && !mainView.isInstructorFunctions()) pointsEarnedTextField.setDisable(true);
             return pointsEarnedTextField;
         }
         return null;
@@ -625,4 +1043,17 @@ public class VerticalTreeABEFExpView implements ExerciseView<DecoratedRTA> {
     public VerticalTreeABEFExpExercise getVtABEFExpExercise() {
         return vtABEFExpExercise;
     }
+
+    public VBox getChoicesBox() {
+        return choicesBox;
+    }
+
+    public DoubleProperty localScalePageHeightProperty() { return localScalePageHeight; }
+
+    public DoubleProperty localScalePageWidthProperty() {
+        return localScalePageWidth;
+    }
+
+    public ChangeListener<Node> getExerciseFocusListener() { return exerciseFocusListener; }
+
 }

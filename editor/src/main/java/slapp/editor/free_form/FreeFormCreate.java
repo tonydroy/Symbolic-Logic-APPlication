@@ -16,12 +16,17 @@ You should have received a copy of the GNU General Public License along with SLA
 package slapp.editor.free_form;
 
 import com.gluonhq.richtextarea.RichTextArea;
+import com.gluonhq.richtextarea.RichTextAreaSkin;
+import com.teamdev.jxbrowser.browser.Browser;
+import com.teamdev.jxbrowser.view.javafx.BrowserView;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -30,10 +35,10 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.transform.Scale;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
+
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import slapp.editor.EditorAlerts;
@@ -44,6 +49,7 @@ import slapp.editor.decorated_rta.KeyboardDiagram;
 import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
+import slapp.editor.main_window.TextHelpPopup;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,6 +71,7 @@ public class FreeFormCreate {
     private double statementTextHeight;
     private TextArea helpArea;
     private ChangeListener nameListener;
+    private ChangeListener auxExerListener;
     private boolean modified = false;
     private CheckBox simpleEditCheck;
     private CheckBox truthTableCheck;
@@ -97,6 +104,17 @@ public class FreeFormCreate {
     private Pane spacerPane;
     private Spinner<Double> statementHeightSpinner;
     private TextField pointsPossibleTextField;
+    private TextField auxExerNameField;
+
+    private CheckBox staticHelpCheck;
+    private Spinner<Double> staticHelpHeightSpinner;
+    private RichTextArea staticHelpRTA;
+    private DecoratedRTA staticHelpDRTA;
+
+    private FFCheckSetup checkSetup;
+
+    private final DoubleProperty localScalePageHeight = new SimpleDoubleProperty(1.0);
+    private final DoubleProperty localScalePageWidth = new SimpleDoubleProperty(1.0);
 
     /**
      * Create new Free Form exercise
@@ -104,6 +122,9 @@ public class FreeFormCreate {
      */
     public FreeFormCreate(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
+        localScalePageHeight.bind(mainWindow.getMainView().scalePageHeightProperty());
+        localScalePageWidth.bind(mainWindow.getMainView().scalePageWidthProperty());
+
         setupWindow();
     }
 
@@ -119,8 +140,19 @@ public class FreeFormCreate {
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         statementTextHeight = originalModel.getStatementTextHeight();
         nameField.setText(originalModel.getExerciseName());
+        auxExerNameField.setText(originalModel.getAuxExerName());
         pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
         setChecks(originalModel);
+
+        checkSetup = originalModel.getCheckSetup();
+        if (checkSetup == null) checkSetup = new FFCheckSetup();
+
+
+        staticHelpCheck.setSelected(checkSetup.isStaticHelp());
+        staticHelpRTA.getActionFactory().open(checkSetup.getStaticHelpDoc()).execute(new ActionEvent());
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
+
         modified = false;
     }
 
@@ -213,43 +245,104 @@ public class FreeFormCreate {
         statementRTA.getStylesheets().add("slappTextArea.css");
         statementRTA.setPromptText("Exercise Statement:");
 
-        statementRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
+        statementRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.minWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.contentAreaWidthProperty().bind(localScalePageWidth);
 
         statementRTA.setMinHeight(100);
 
-        double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
-        statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
+        double statementInitialHeight = Math.round(100 / localScalePageHeight.get() * 100.0);
+        statementHeightSpinner = new Spinner<>(statementInitialHeight, 999.0, statementInitialHeight, 1.0);
         statementHeightSpinner.setPrefWidth(60);
         statementHeightSpinner.setDisable(false);
-        statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+        statementHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        /*
         statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = statementHeightSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+         */
 
-        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeight.addListener((ob, ov, nv) -> {
             statementRTA.prefHeightProperty().unbind();
             statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+            statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
-
-        statementRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            modified = true;
-            statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
+        final boolean[] statementPrimed = {false};
+        statementRTA.fullHeightProperty().addListener((ob, ov, nv) -> {
+            if (!statementPrimed[0]) {
+                statementPrimed[0] = true;
+                return;
+            }
+            double height = (double) nv;
+            statementTextHeight = height;
         });
+
         statementRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(statementDRTA, ControlType.AREA);
-                statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
             }
         });
+        statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
+        //-------------
+
+        staticHelpDRTA = new DecoratedRTA();
+        staticHelpDRTA.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.BASE_AND_SANS);
+        staticHelpRTA = staticHelpDRTA.getEditor();
+        staticHelpRTA.setPromptText("Static Help (complete if static help selected)");
+        staticHelpRTA.getStylesheets().add("slappTextArea.css");
+        staticHelpRTA.setMinWidth(400 + RTA_WIDTH_BMP);
+        staticHelpRTA.setMaxWidth(400 + RTA_WIDTH_BMP);
+        staticHelpRTA.setContentAreaWidth(400);
+        staticHelpRTA.setMinHeight(100);
+
+        double staticHelpInitialHeight = Math.round(100 / localScalePageHeight.get() * 100 );
+        staticHelpHeightSpinner = new Spinner<>(staticHelpInitialHeight, 999.0, staticHelpInitialHeight, 1.0);
+        staticHelpHeightSpinner.setPrefWidth(60);
+        staticHelpHeightSpinner.setDisable(false);
+        staticHelpHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        localScalePageHeight.addListener((ob, ov, nv) -> {
+            staticHelpRTA.prefHeightProperty().unbind();
+            staticHelpHeightSpinner.getValueFactory().setValue((double) Math.round(staticHelpHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
+            staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        });
+        staticHelpRTA.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) {
+                editorInFocus(staticHelpDRTA, ControlType.AREA);
+            }
+        });
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
+        staticHelpCheck = new CheckBox();
+        staticHelpCheck.setSelected(false);
+        ChangeListener staticHelpCheckListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                modified = true;
+            }
+        };
+        staticHelpCheck.selectedProperty().addListener(staticHelpCheckListener);
+        Label staticHelpCheckLabel = new Label("Static Help ");
+        staticHelpCheckLabel.setPrefWidth(85);
+        staticHelpCheckLabel.setAlignment(Pos.CENTER_LEFT);
+        HBox staticHelpBox = new HBox(5, staticHelpCheck, staticHelpCheckLabel);
+        staticHelpBox.setAlignment(Pos.CENTER_LEFT);
+
+        HBox textBoxes = new HBox(10, statementRTA, staticHelpRTA);
+
+
+
+
 
         //name
         Label nameLabel = new Label("Exercise Name: ");
@@ -261,29 +354,66 @@ public class FreeFormCreate {
             if (nv) textFieldInFocus();
         });
 
+        Label auxExerLabel = new Label("Aux Exer Name: ");
+        auxExerLabel.setPrefWidth(100);
+        auxExerNameField = new TextField();
+        auxExerNameField.setPadding(new Insets(5));
+        auxExerNameField.setPromptText("(plain text)");
+        auxExerNameField.setPrefWidth(200);
+        auxExerListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                modified = true;
+            }
+        };
+        auxExerNameField.textProperty().addListener(auxExerListener);
+        auxExerNameField.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) textFieldInFocus();
+        });
+
 
 
         Label pointsPossibleLabel = new Label("Points Possible: ");
         pointsPossibleLabel.setPrefWidth(100);
+
+
         pointsPossibleTextField = new TextField();
         pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setAlignment(Pos.CENTER_RIGHT);
         pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
-        UnaryOperator<TextFormatter.Change> filter = change -> {
-            String text = change.getText();
-            if (text.matches("[0-9]*")) {
-                return change;
-            }
-            return null;
-        };
-        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
-        pointsPossibleTextField.setTextFormatter(textFormatter);
+
         pointsPossibleTextField.setText("0");
         pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { modified = true; });
-        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
 
-        HBox nameBox = new HBox(nameLabel, nameField, pointsPossibleLabel, pointsPossibleTextField);
+        UnaryOperator<TextFormatter.Change> pointsPossibleFilter = change -> {
+            if (change == null) return null;
+            String text = change.getText();
+            if (text.matches("[0-9]*")) return change;
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(pointsPossibleFilter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+
+
+        pointsPossibleTextField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+            if (isNowFocused) {
+                Platform.runLater(() -> pointsPossibleTextField.selectAll());
+                textFieldInFocus();
+            } else if (pointsPossibleTextField.getText().isEmpty()) {
+                pointsPossibleTextField.setText("0");
+            }
+        });
+
+        pointsPossibleTextField.setOnMouseClicked(event -> {
+            if (pointsPossibleTextField.getSelectedText().isEmpty()) {
+                pointsPossibleTextField.selectAll();
+            }
+        });
+
+        HBox nameBox = new HBox(nameLabel, nameField, auxExerLabel, auxExerNameField, pointsPossibleLabel, pointsPossibleTextField);
         nameBox.setAlignment(Pos.BASELINE_LEFT);
         nameBox.setMargin(pointsPossibleLabel, new Insets(0, 0, 0, 30));
+        nameBox.setMargin(auxExerLabel, new Insets(0,0,0,30));
 
 
         //checks
@@ -432,28 +562,45 @@ public class FreeFormCreate {
         HBox checks3 = new HBox(30, natDrvtnItalSansCheck, natDrvtnScriptItalicCheck, natDrvtnScriptSansCheck, natDrvtnItalBBCheck);
         HBox checks4 = new HBox(30, axDrvtnItalSansCheck, axDrvtnScriptItalicCheck, axDrvtnScriptSansCheck, axDrvtnItalBBCheck);
 
-        fieldsBox = new VBox(15, nameBox, checks1, checks2, checks3, checks4);
+        fieldsBox = new VBox(15, nameBox, checks1, checks2, checks3, checks4, staticHelpBox);
 
         fieldsBox.setPadding(new Insets(20, 0, 0, 40));
         nameBox.setPadding(new Insets(0,0,10,0));
 
         //help
-        String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
-                "<p>The Free Form Exercise is appropriate for any exercise that combines text (usually) with other elements - tree, truth table, or derivation - where a student may insert these elements into the exercise in arbitrary combinations.  Setup is straightforward.</p> " +
+        String header = TextHelpPopup.getHeader14();
+        String footer = TextHelpPopup.getFooter();
+        String helpText = header +
+                "<p>The Free Form Exercise is appropriate for any exercise that combines text (usually) with other elements - tree, truth table, or derivation - where a student may insert these elements into the exercise in arbitrary combinations. </p> " +
                 "<ul>" +
-                "<li><p>Start with the exercise name and points possible.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
+                "<li><p>Start with the exercise name, aux exercise, and points possible.  In the context of an assignment containing a previous exercise relevant to the one being worked, it is possible to add its name in order to include a thumbnail that will pop up its work area. " +
+                "If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
                 "<li><p>Then select items that may be inserted into the exercise from among: Simple Edit, Truth Table, Horizontal Tree, Vertical Tree, Natural Derivation, and Axiomatic Derivation.</p>" +
                 "<p>The vertical tree, natural derivation, and axiomatic derivation options allow different default keyboards.  You will be able to select just one keyboard option per item.</p></li>" +
+                "<li><p>The Static Help check activates the Static Help button which pops up a message which you may state in the right-hand text area below.  </p></li>" +
                 "<li><p>Finally give the exercise statement.</li></p>" +
-                "</ul>";
-        WebView helpArea = new WebView();
-        WebEngine webEngine = helpArea.getEngine();
-        webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
-        webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(200);
+                "</ul>" +
+                footer;
+
+        scene = new Scene(borderPane);
+
+        Browser browser = mainWindow.getCreateHlpBrowser();
+        if (browser != null) {
+            BrowserView view = BrowserView.newInstance(browser);
+            view.setMouseTransparent(true);
+            Platform.runLater(() -> TextHelpPopup.loadHtmlSmoothly(browser, view, helpText));
+            view.setPrefHeight(360);
+            view.prefWidthProperty().bind(textBoxes.widthProperty());
+            centerBox = new VBox(10, fieldsBox, textBoxes, view);
+            centerBox.setFillWidth(true);
+        }
+        else {
+            centerBox = new VBox(10, fieldsBox, textBoxes, new Label("JxBrowser not started.  Please try again."));
+        }
+
 
         //center
-        centerBox = new VBox(10, fieldsBox, statementRTA, helpArea);
+
         centerBox.setPadding(new Insets(10,0,10,20));
 
         spacerPane = new Pane();
@@ -494,13 +641,15 @@ public class FreeFormCreate {
 
         //finish up with top
         Label zoomLabel = new Label(" Zoom ");
-        Spinner<Integer> zoomSpinner = new Spinner(25, 500, 100, 5);
+        Spinner<Integer> zoomSpinner = new Spinner(25, 500, 100, 1);
         zoomSpinner.setPrefSize(65,25);
         zoomSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            /*
             Node increment = zoomSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = zoomSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
+             */
 
             scale = (double) nv/100;
             updateZoom();
@@ -513,23 +662,31 @@ public class FreeFormCreate {
         sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     V Sz:"), statementHeightSpinner);
 
         //generate view
-        scene = new Scene(borderPane);
+
         scene.getStylesheets().add(DecoratedRTA.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
 
         stage = new Stage();
-        stage.initOwner(EditorMain.mainStage);
+    //    stage.initOwner(EditorMain.mainStage);
         stage.setScene(scene);
         stage.setTitle("Create Free Form Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
 
-        stage.setWidth(890);
-        stage.setHeight(800);
+        stage.setWidth(1040);
+
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 890));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 800));
+        double stageHeight = Math.min(900, bounds.getHeight() - 20);
+        stage.setHeight(stageHeight);
+        double mainWinY = EditorMain.mainStage.getY();
+        if (mainWinY + stageHeight + 20 < bounds.getMaxY()) {
+            stage.setY(mainWinY + 10);
+        }
+        else {
+            stage.setY(bounds.getMaxY() - (stageHeight + 10));
+        }
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1040));
 
-
-        stage.initModality(Modality.WINDOW_MODAL);
+    //    stage.initModality(Modality.WINDOW_MODAL);
+        EditorAlerts.makeIndependentBlockingStage(stage);
         stage.setOnCloseRequest(e-> {
             e.consume();
             closeWindow();
@@ -539,7 +696,7 @@ public class FreeFormCreate {
         statementRTA.getActionFactory().save().execute(new ActionEvent());
         centerBox.layout();
 
-        Platform.runLater(() -> nameField.requestFocus());
+        Platform.runLater(() -> Platform.runLater(() -> nameField.requestFocus()));
     }
 
     /*
@@ -567,7 +724,7 @@ public class FreeFormCreate {
      */
     private boolean checkContinue(String title, String content) {
         boolean okcontinue = true;
-        if (modified || statementRTA.isModified()) {
+        if (modified || statementRTA.isModified() || staticHelpRTA.isModified()) {
             Alert confirm = EditorAlerts.confirmationAlert(title, content);
             Optional<ButtonType> result = confirm.showAndWait();
             if (result.get() != OK) okcontinue = false;
@@ -580,6 +737,8 @@ public class FreeFormCreate {
      */
     private void closeWindow() {
         if (checkContinue("Confirm Close", "This exercise appears to have unsaved changes.\nContinue to close window?")) {
+            localScalePageHeight.unbind();
+            localScalePageWidth.unbind();
             mainWindow.closeExercise();
             stage.close();
         }
@@ -591,7 +750,9 @@ public class FreeFormCreate {
     private void clearExercise() {
         if (checkContinue("Confirm Clear", "This exercise appears to have unsaved changes.\nContinue to clear exercise?")) {
             nameField.clear();
+            auxExerNameField.clear();
             statementRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
+            staticHelpRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
             viewExercise();
             modified = false;
         }
@@ -642,8 +803,21 @@ public class FreeFormCreate {
         if (statementRTA.isModified()) modified = true;
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExerciseStatement(statementRTA.getDocument());
+
+        statementTextHeight = statementRTA.getFullHeight();
         model.setStatementTextHeight(statementTextHeight);
         model.setStatementPrefHeight(Math.max(40, statementTextHeight + RTA_SCREEN_BMP));
+        model.setAuxExerName(auxExerNameField.getText());
+
+        FFCheckSetup checkSetup = model.getCheckSetup();
+        if (checkSetup == null) checkSetup = new FFCheckSetup();
+
+        if (staticHelpRTA.isModified()) modified = true;
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+        checkSetup.setStaticHelpDoc(staticHelpRTA.getDocument());
+        checkSetup.setStaticHelp(staticHelpCheck.isSelected());
+        model.setCheckSetup(checkSetup);
+
 
         if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
         else {

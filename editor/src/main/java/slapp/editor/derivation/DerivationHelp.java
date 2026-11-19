@@ -4,6 +4,7 @@ import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
@@ -26,6 +27,8 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
 import static javafx.stage.StageStyle.TRANSPARENT;
+
+
 
 public class DerivationHelp {
     private DerivationExercise derivationExercise;
@@ -55,31 +58,44 @@ public class DerivationHelp {
     private List<Expression> termList2 = new ArrayList<>();
     private boolean helpShowing;
 
+    // SCORCHED EARTH RULE 2: Kill Switch
+    private boolean isTornDown = false;
+
+    // SCORCHED EARTH RULE 3: Eradicate Anonymous Lambdas
+    private EventHandler<ActionEvent> helpButtonHandler;
 
 
 
     public DerivationHelp(DerivationExercise derivationExercise) {
         this.derivationExercise = derivationExercise;
         this.derivationView = derivationExercise.getExerciseView();
-        this.derivationModel= derivationExercise.getExerciseModel();
+        this.derivationModel = derivationExercise.getExerciseModel();
         this.derivationCheck = derivationExercise.getDerivationCheck();
 
-
-        derivationView.getHelpButton().setOnAction(e -> {
+        helpButtonHandler = e -> {
+            if (isTornDown || derivationView == null) return;
             helpShowing = false;
-            for (Stage stage : helpStages) { if (stage != null && stage.isShowing()) helpShowing = true; }
+            if (helpStages != null) {
+                for (Stage stage : helpStages) {
+                    if (stage != null && stage.isShowing()) helpShowing = true;
+                }
+            }
             closeHelpWindows();
 
             //this is to let the windows close (esp. on Mac) before initiating the 250ms delay in runHelp().
             Platform.runLater(() -> {
+                if (isTornDown || this.derivationExercise == null) return;
                 runHelp();
             });
-        });
-
-
+        };
+        if (derivationView != null && derivationView.getHelpButton() != null) {
+            derivationView.getHelpButton().setOnAction(helpButtonHandler);
+        }
     }
 
+
     public void closeHelpWindows() {
+        if (helpStages == null) return;
         for (Stage stage : helpStages) {
             if (stage != null) {
                 stage.close();
@@ -174,6 +190,7 @@ public class DerivationHelp {
                     @Override
                     public void run() {
                         latch.countDown();
+                        timer.cancel();
                     }
                 }, 250);   //250
 
@@ -219,6 +236,7 @@ public class DerivationHelp {
                     @Override
                     public void run() {
                         latch.countDown();
+                        timer.cancel();
                     }
                 }, 250);   //250
 
@@ -1876,12 +1894,43 @@ public class DerivationHelp {
         return screen;
     }
 
+    // SCORCHED EARTH RULE 1: Cascading Cleanup
+    public void cleanup() {
+        isTornDown = true;
 
+        try {
+            if (derivationView != null && derivationView.getHelpButton() != null) {
+                if (helpButtonHandler != null) {
+                    derivationView.getHelpButton().removeEventHandler(ActionEvent.ACTION, helpButtonHandler);
+                }
+                derivationView.getHelpButton().setOnAction(null);
+            }
+        } catch (Exception e) {}
 
+        try { closeHelpWindows(); } catch (Exception e) {}
+        try { if (helpStages != null) helpStages.clear(); } catch (Exception e) {}
+        try { MatchUtilities.clearFormMatch(); } catch (Exception e) {}
+        try { MVariable.clear(); } catch (Exception e) {}
 
-
-
-
-
+        this.derivationExercise = null;
+        this.derivationView = null;
+        this.derivationModel = null;
+        this.derivationCheck = null;
+        this.viewLines = null;
+        this.helpStage = null;
+        this.targetLine = null;
+        this.targetFormula = null;
+        this.objectLanguage = null;
+        this.metaLanguage = null;
+        this.accessibleFormulas = null;
+        this.eObtainableFormulas = null;
+        this.ePotentialFormulas = null;
+        this.helpStages = null;
+        this.footnotes = null;
+        this.termList = null;
+        this.formulaVars = null;
+        this.termList2 = null;
+        this.helpButtonHandler = null;
+    }
 
 }

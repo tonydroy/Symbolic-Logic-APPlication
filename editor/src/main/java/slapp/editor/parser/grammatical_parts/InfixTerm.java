@@ -19,6 +19,7 @@ public class InfixTerm extends Term implements Expression {
     public InfixTerm getMatch() {
         List<Expression> newChildren = new ArrayList<>();
         for (Expression child : getChildren()) {
+    //        System.out.println("child: " + child + " match: " + child.getMatch());
             if (child.getMatch() == null) return null;
             else newChildren.add(child.getMatch());
         }

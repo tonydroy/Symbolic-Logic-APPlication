@@ -33,54 +33,12 @@ public enum ExerciseType {
     /**
      * Exercise requires binary choice with an explanation.
      */
-    AB_EXPLAIN("AB explain", "Exercise requires binary choice with an explanation."),
+    AB_EXPLAIN("AB Explain", "Exercise requires binary choice with an explanation."),
 
     /**
      * Exercise requires both binary and tertiary choice with an explanation.
      */
-    ABEFG_EXPLAIN("AB/EFG explain", "Exercise requires both binary and tertiary choice with an explanation."),
-
-    /**
-     * Exercise with fields for interpretation function and formal translation.
-     */
-    SIMPLE_TRANS("Simple Translation", "Exercise with fields for interpretation function and formal translation."),
-
-    /**
-     * Exercise requires a derivation.
-     */
-    DERIVATION("Derivation", "Exercise requires a derivation."),
-
-    /**
-     * Exercise requires a derivation and explanation.
-     */
-    DRVTN_EXP("Derivation explain", "Exercise requires a derivation and explanation."),
-
-    /**
-     * Exercise requires one or more horizontal trees (of the type encountered in chapters 4 and 5 of SL) and an explanation
-     */
-    HORIZ_TREES("Horizontal Tree(s)", "Exercise requires one or more horizontal trees (of the type encountered in chapters 4 and 5 of SL) and an explanation."),
-
-    /**
-     * Exercise requires a horizontal tree (of the type encountered in chapters 4 and 5 of SL) and an explanation.
-     */
-    HORIZONTAL_TREE("Horizontal Tree", "Exercise requires a horizontal tree (of the type encountered in chapters 4 and 5 of SL) and an explanation."),
-
-    /**
-     * Exercise requires a truth table.
-     */
-    TRUTH_TABLE("Truth table", "Exercise requires a truth table."),
-
-    /**
-     * Exercise requires a truth table with a binary choice and explanation.
-     */
-    TRUTH_TABLE_ABEXP("Truth table AB explain", "Exercise requires a truth table with a binary choice and explanation."),
-
-    /**
-     * Exercise requires an interpretation, creation of truth table, with a binary choice and explanation.
-     */
-    TRUTH_TABLE_GENERATE("Truth table gen explain", "Exercise requires an interpretation, creation of truth table, with a binary choice and explanation."),
-
-
+    ABEFG_EXPLAIN("AB/EFG Explain", "Exercise requires both binary and tertiary choice with an explanation."),
 
     MAP_AB_EXPLAIN("Map AB Explain", "Exercise requires a form map, with a binary choice and explanation."),
 
@@ -103,6 +61,48 @@ public enum ExerciseType {
      * Exercise requires a vertical tree (or map) with a pair of binary choices and explanation.
      */
     VERTICAL_TREE_ABEFEXP ("Vertical Tree AB/EF Explain", "Exercise requires a vertical tree (or map) with a pair of binary choices and explanation."),
+
+    /**
+     * Exercise requires a truth table.
+     */
+    TRUTH_TABLE("Truth Table", "Exercise requires a truth table."),
+
+    /**
+     * Exercise requires a truth table with a binary choice and explanation.
+     */
+    TRUTH_TABLE_ABEXP("Truth Table AB Explain", "Exercise requires a truth table with a binary choice and explanation."),
+
+    /**
+     * Exercise requires an interpretation, creation of truth table, with a binary choice and explanation.
+     */
+    TRUTH_TABLE_GENERATE("Truth Table Gen Explain", "Exercise requires an interpretation, creation of truth table, with a binary choice and explanation."),
+
+    /**
+     * Exercise requires one or more horizontal trees (of the type encountered in chapters 4 and 5 of SL) and an explanation
+     */
+    HORIZ_TREES("Horizontal Tree(s)", "Exercise requires one or more horizontal trees (of the type encountered in chapters 4 and 5 of SL) and an explanation."),
+
+    /**
+     * Exercise requires a horizontal tree (of the type encountered in chapters 4 and 5 of SL) and an explanation.
+     */
+    HORIZONTAL_TREE("Horizontal Tree", "Exercise requires a horizontal tree (of the type encountered in chapters 4 and 5 of SL) and an explanation."),
+
+    TRANS_ULINE("Translation Underlines", "Exercise requires underlines to identify sentential operator structure."),
+
+    TRANS_TREES("Translation Trees", "Exercise requires parse and parallel trees for translation."),
+
+    BASIC_TRANS("Basic Translation", "Exercise with fields for interpretation function and formal translation."),
+
+    /**
+     * Exercise requires a derivation.
+     */
+    DERIVATION("Derivation", "Exercise requires a derivation."),
+
+    /**
+     * Exercise requires a derivation and explanation.
+     */
+    DRVTN_EXP("Derivation Explain", "Exercise requires a derivation and explanation."),
+
 
     /**
      * Exercise permits the insertion of elements from multiple exercise types.

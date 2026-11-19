@@ -18,6 +18,10 @@ package slapp.editor.vert_tree_abefexplain;
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.model.Document;
+import com.teamdev.jxbrowser.browser.Browser;
+import com.teamdev.jxbrowser.view.javafx.BrowserView;
+import javafx.animation.PauseTransition;
+import javafx.animation.SequentialTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
@@ -26,6 +30,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -35,14 +40,15 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Scale;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
+
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import javafx.util.Duration;
 import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
 import slapp.editor.PrintUtilities;
@@ -61,6 +67,7 @@ import slapp.editor.m_parse.m_symbols.MInterpretationVariable;
 import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
+import slapp.editor.main_window.TextHelpPopup;
 import slapp.editor.parser.*;
 import slapp.editor.parser.grammatical_parts.Term;
 import slapp.editor.vertical_tree.VTCheckType;
@@ -160,9 +167,16 @@ public class VerticalTreeABEFExpCreate {
     CheckBox choiceEBox;
     CheckBox choiceFBox;
 
+    private final DoubleProperty localScalePageHeight = new SimpleDoubleProperty(1.0);
+    private final DoubleProperty localScalePageWidth = new SimpleDoubleProperty(1.0);
+
 
     public VerticalTreeABEFExpCreate(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
+
+        localScalePageHeight.bind(mainWindow.getMainView().scalePageHeightProperty());
+        localScalePageWidth.bind(mainWindow.getMainView().scalePageWidthProperty());
+
         setupWindow();
         modified = false;
     }
@@ -184,7 +198,6 @@ public class VerticalTreeABEFExpCreate {
         bPromptField.setText(originalModel.getbPrompt());
         ePromptField.setText(originalModel.getePrompt());
         fPromptField.setText(originalModel.getfPrompt());
-        pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
 
         List<DragIconType> dragIconList = originalModel.getDragIconList();
         treeBoxItalicSansCheck.setSelected(dragIconList.contains(tree_field) && treeBoxKeyboardSelector == ITALIC_AND_SANS);
@@ -250,43 +263,53 @@ public class VerticalTreeABEFExpCreate {
         statementRTA = statementDRTA.getEditor();
         statementRTA.getStylesheets().add("slappTextArea.css");
         statementRTA.setPromptText("Exercise Statement:");
-        statementRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
+        statementRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.minWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.contentAreaWidthProperty().bind(localScalePageWidth);
 
         statementRTA.setMinHeight(100);
 
-        double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
-        statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
+        double statementInitialHeight = Math.round(100 / localScalePageHeight.get() * 100.0);
+        statementHeightSpinner = new Spinner<>(statementInitialHeight, 999.0, statementInitialHeight, 1.0);
         statementHeightSpinner.setPrefWidth(60);
         statementHeightSpinner.setDisable(false);
-        statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+        statementHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        /*
         statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = statementHeightSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+         */
 
-        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeight.addListener((ob, ov, nv) -> {
             statementRTA.prefHeightProperty().unbind();
             statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+            statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
-
-        statementRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            modified = true;
-            statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
+        final boolean[] statementPrimed = {false};
+        statementRTA.fullHeightProperty().addListener((ob, ov, nv) -> {
+            if (!statementPrimed[0]) {
+                statementPrimed[0] = true;
+                return;
+            }
+            double height = (double) nv;
+            statementTextHeight = height;
         });
+
         statementRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(statementDRTA, ControlType.AREA);
-                statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
             }
         });
+        statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
+
 
         //static help editor
         staticHelpDRTA = new DecoratedRTA();
@@ -300,35 +323,36 @@ public class VerticalTreeABEFExpCreate {
         staticHelpRTA.setContentAreaWidth(400);
         staticHelpRTA.setMinHeight(100);
 
-        double staticHelpInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
+        double staticHelpInitialHeight = Math.round(100 / localScalePageHeight.get() * 100 );
 
-        staticHelpHeightSpinner = new Spinner<>(0.0, 999.0, staticHelpInitialHeight, 1.0);
+        staticHelpHeightSpinner = new Spinner<>(staticHelpInitialHeight, 999.0, staticHelpInitialHeight, 1.0);
         staticHelpHeightSpinner.setPrefWidth(60);
         staticHelpHeightSpinner.setDisable(false);
-        staticHelpHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+        staticHelpHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        /*
         staticHelpHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = staticHelpHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = staticHelpHeightSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+         */
 
-        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeight.addListener((ob, ov, nv) -> {
             staticHelpRTA.prefHeightProperty().unbind();
             staticHelpHeightSpinner.getValueFactory().setValue((double) Math.round(staticHelpHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
             staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
-        staticHelpRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            modified = true;
-        });
         staticHelpRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(staticHelpDRTA, ControlType.AREA);
             }
         });
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
 
         HBox textBoxes = new HBox(10, statementRTA, staticHelpRTA);
 
@@ -354,21 +378,41 @@ public class VerticalTreeABEFExpCreate {
 
         Label pointsPossibleLabel = new Label("Points Possible: ");
         pointsPossibleLabel.setPrefWidth(100);
+
         pointsPossibleTextField = new TextField();
         pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setAlignment(Pos.CENTER_RIGHT);
         pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
-        UnaryOperator<TextFormatter.Change> filter = change -> {
-            String text = change.getText();
-            if (text.matches("[0-9]*")) {
-                return change;
-            }
-            return null;
-        };
-        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
-        pointsPossibleTextField.setTextFormatter(textFormatter);
+
         pointsPossibleTextField.setText("0");
         pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { modified = true; });
-        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
+
+        UnaryOperator<TextFormatter.Change> pointsPossibleFilter = change -> {
+            if (change == null) return null;
+            String text = change.getText();
+            if (text.matches("[0-9]*")) return change;
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(pointsPossibleFilter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+
+
+        pointsPossibleTextField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+            if (isNowFocused) {
+                Platform.runLater(() -> pointsPossibleTextField.selectAll());
+                textFieldInFocus();
+            } else if (pointsPossibleTextField.getText().isEmpty()) {
+                pointsPossibleTextField.setText("0");
+            }
+        });
+
+        pointsPossibleTextField.setOnMouseClicked(event -> {
+            if (pointsPossibleTextField.getSelectedText().isEmpty()) {
+                pointsPossibleTextField.selectAll();
+            }
+        });
+
+
         HBox pointsBox = new HBox(pointsPossibleLabel, pointsPossibleTextField);
         pointsBox.setAlignment(Pos.BASELINE_LEFT);
 
@@ -585,7 +629,7 @@ public class VerticalTreeABEFExpCreate {
         dragBox.setAlignment(Pos.TOP_LEFT);
 
         //control pane
-        Label controlLabel = new Label("Controls Pane: ");
+        Label controlLabel = new Label("Control Pane: ");
         controlLabel.setPrefWidth(80);
 
         boxingFormulaCheck = new CheckBox("Box Button");
@@ -652,7 +696,7 @@ public class VerticalTreeABEFExpCreate {
         //language list view
         Label languageLabel = new Label("   Language:");
         langMap = new LinkedHashMap<>();
-        for (int i = 0; i < Languages.getFixedLanguages().size() - 1; i++) {
+        for (int i = 0; i < Languages.getFixedLanguages().size() - 3; i++) {
             Language language = Languages.getFixedLanguages().get(i);
             SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
             if (language.getNameString().equals(defaultLangName)) booleanProperty.setValue(true); //default check
@@ -660,7 +704,7 @@ public class VerticalTreeABEFExpCreate {
             langMap.put(language.getNameString(), booleanProperty);
         }
         ListView<String> languageListView = new ListView<>();
-        languageListView.setPrefSize(120, 95);
+        languageListView.setPrefSize(150, 95);
 
         languageListView.getItems().addAll(langMap.keySet());
         Callback<String, ObservableValue<Boolean>> langToBoolean = (String item) -> langMap.get(item);
@@ -874,7 +918,9 @@ public class VerticalTreeABEFExpCreate {
 
 
         //center
-        String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
+        String header = TextHelpPopup.getHeader14();
+        String footer = TextHelpPopup.getFooter();
+        String helpText = header +
                 "<p>The Vertical Tree AB/EF Explain Exercise is like Vertical Tree AB Explain Exercise except that it requires a pair of binary choices.  It is appropriate for any exercise that builds tree diagrams and requires the choices together with an explanation of some sort.  It includes checking for diagrams of the sort encountered in chapters 2 and 4 of <em>Symbolic Logic</em> and possible check of the choices.</p>" +
                 "<ul>" +
                 "<li><p>Start with the exercise name, point possible, and explain prompt fields.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
@@ -886,28 +932,40 @@ public class VerticalTreeABEFExpCreate {
                 "<li><p>It is unlikely that any one exercise will include all the drag and control options (especially \"star\" and \"annotation\" cannot both apply to the same node) -- but the different options make it possible to accomodate a wide variety of exercises.</p></li>" +
                 "<li><p>In combination with the Mapping Button, map boxes retain the capacity for links from one box to another.  In the usual case, this functionality isn't useful except for the explicit Map exercise type. </p></li>" +
                 "</ul>" +
-                "<li><p>Checking applies to formula, unabbreviation, and semantic truth value or term value trees.  First select the check type." +
+                "<li><p>Checking applies to syntax, unabbreviation, and semantic truth value or term value trees.  First select the check type." +
                 "<ul>" +
                 "<li><p>For syntactical checking, select whether to check markup (bracket, dashed line, and functions represented by controls down the left), and give the target (root) formula or term for the tree.</li></p>" +
                 "<p>In case Syntactical Check is selected without a target formula, checking will identify broken rules in a tree but then go on to evaluate the choice (in case Check Choices or Instructor Functions are active).  So it may be useful in case a partial tree is used to illustrate failure.</p>" +
 
-                "<li><p>The semantic truth value or term value checks also require a target formula or term.  SLAPP extracts an interpretation and/or variable assignments from the problem statement.  If the statement includes 'interpretation \ue3bd' it includes a preconfigured \"fragment\" of \ue3bd from <i>Symbolic Logic</i> with a universe including just 0 ... 99 and the functions all mod 100 - so that values outside 0 ... 99 (which you should never need) \"wrap around\" to their last two digits.  View the parsed result by the \"view interp\" button. (If one or more components are missing, be sure that you specify members using the proper fonts and regular equals sign (not the Shift-Alt/Option version).</li></p>" +
+                "<li><p>The semantic truth value or term value checks also require a target formula or term.  SLAPP extracts an interpretation and/or variable assignments from the problem statement.  " +
+                "If the statement includes 'interpretation \ue3bd' it includes a preconfigured \"fragment\" of \ue3bd from <i>Symbolic Logic</i> for the math languages with a universe including just 0 ... 99 and the functions all mod 100 - so that values outside 0 ... 99 (which you should never need) \"wrap around\" to their last two digits.  View the parsed result by the \"view interp\" button. (If one or more components are missing, be sure that you specify members using the proper fonts and regular equals sign (not the Shift-Alt/Option version).</li></p>" +
 
-                "<li><p>Unabbreviation check works only in the context of an assignment including a vertical tree exercise (of some sort) that constructs the formula to be unabbreviated.  So state the auxiliary exercise name.  It is also possible to include a (viewable) auxiliary vertical tree exercise even without unabbreviation.</p></li>  " +
+                "<li><p>Unabbreviation check works only in the context of an assignment including a vertical tree exercise (of some sort) that constructs the formula to be unabbreviated.  So, in this case, the auxiliary exercise is required (of course it remains possible to have a viewable auxiliary exercise for other purposes).</p></li>  " +
                 "</ul>" +
                 "For any sort of check, choose whether to check justification fields, and the object language.  If CheckMax is 0 checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.</li></p>" +
 
                 "<li><p>The static help check activates the Static Help button which pops up a message which you may state in the right hand text area below.</li></p>" +
                 "<li><p>Selecting an A/B and E/F choice by itself enables choice check for instructors.  For students choice check is enabled only if, in addition, Check Choices is selected (in which case the check essentially gives the answers).</li></p>" +
                 "<li><p>Finally provide the exercise statement and, if desired the static help message.</p></li>" +
-                "</ul>";
-        WebView helpArea = new WebView();
-        WebEngine webEngine = helpArea.getEngine();
-        webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
-        webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(230);
+                "</ul>" +
+                footer;
 
-        centerBox = new VBox(10, fieldsBox, checksBox, textBoxes, helpArea);
+        scene = new Scene(borderPane);
+
+        Browser browser = mainWindow.getCreateHlpBrowser();
+        if (browser != null) {
+            BrowserView view = BrowserView.newInstance(browser);
+            view.setMouseTransparent(true);
+            Platform.runLater(() -> TextHelpPopup.loadHtmlSmoothly(browser, view, helpText));
+            view.setPrefHeight(990);
+            view.prefWidthProperty().bind(textBoxes.widthProperty());
+            centerBox = new VBox(10, fieldsBox, checksBox, textBoxes, view);
+            centerBox.setFillWidth(true);
+        }
+        else {
+            centerBox = new VBox(10, fieldsBox, checksBox, textBoxes, new Label("JxBrowser not started.  Please try again."));
+        }
+
         centerBox.setPadding(new Insets(10,0,10,20));
 
         spacerPane = new Pane();
@@ -950,13 +1008,15 @@ public class VerticalTreeABEFExpCreate {
 
         //finish up with top
         Label zoomLabel = new Label(" Zoom ");
-        Spinner<Integer> zoomSpinner = new Spinner(25, 500, 100, 5);
+        Spinner<Integer> zoomSpinner = new Spinner(25, 500, 100, 1);
         zoomSpinner.setPrefSize(65,25);
         zoomSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            /*
             Node increment = zoomSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = zoomSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
+            */
 
             scale = (double) nv/100;
             updateZoom();
@@ -975,22 +1035,31 @@ public class VerticalTreeABEFExpCreate {
         kbdDiaToolBar.setPrefHeight(38);
 
         //generate view
-        scene = new Scene(borderPane);
+
         scene.getStylesheets().add(DecoratedRTA.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
 
         setSizeSpinners();
         stage = new Stage();
-        stage.initOwner(EditorMain.mainStage);
+      //  stage.initOwner(EditorMain.mainStage);
         stage.setScene(scene);
         stage.setTitle("Create Vertical Tree AB/EF Explain Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
         stage.setWidth(1040);
-        stage.setHeight(1025);
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
+        double stageHeight = Math.min(1025, bounds.getHeight() - 20);
+        stage.setHeight(stageHeight);
+        double mainWinY = EditorMain.mainStage.getY();
+        if (mainWinY + stageHeight + 20 < bounds.getMaxY()) {
+            stage.setY(mainWinY + 10);
+        }
+        else {
+            stage.setY(bounds.getMaxY() - (stageHeight + 10));
+        }
         stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1040));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 1025));
-        stage.initModality(Modality.WINDOW_MODAL);
+
+      //  stage.initModality(Modality.WINDOW_MODAL);
+        EditorAlerts.makeIndependentBlockingStage(stage);
         stage.setOnCloseRequest(e-> {
             e.consume();
             closeWindow();
@@ -1002,8 +1071,7 @@ public class VerticalTreeABEFExpCreate {
         staticHelpRTA.getActionFactory().save().execute(new ActionEvent());
         centerBox.layout();
 
-        Platform.runLater(() -> nameField.requestFocus());
-
+        Platform.runLater(() -> Platform.runLater(() -> nameField.requestFocus()));
     }
 
     //force single selection on list views
@@ -1080,6 +1148,8 @@ public class VerticalTreeABEFExpCreate {
 
     private void closeWindow() {
         if (checkContinue("Confirm Close", "This exercise appears to have unsaved changes.\nContinue to close window?")) {
+            localScalePageHeight.unbind();
+            localScalePageWidth.unbind();
             mainWindow.closeExercise();
             stage.close();
         }
@@ -1090,6 +1160,7 @@ public class VerticalTreeABEFExpCreate {
         if (checkContinue("Confirm Clear", "This exercise appears to have unsaved changes.\nContinue to clear exercise?")) {
             nameField.clear();
             nameField.textProperty().addListener(nameListener);
+            auxNameField.clear();
             targetBoxedDRTA.getRTA().getActionFactory().newDocumentNow().execute(new ActionEvent());
             statementRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
             staticHelpRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
@@ -1226,6 +1297,8 @@ public class VerticalTreeABEFExpCreate {
         if (statementRTA.isModified()) modified = true;
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExerciseStatement(statementRTA.getDocument());
+
+        statementTextHeight = statementRTA.getFullHeight();
         model.setStatementTextHeight(statementTextHeight);
         model.setStatementPrefHeight(Math.max(40, statementTextHeight + RTA_SCREEN_BMP));
 
@@ -1391,7 +1464,7 @@ public class VerticalTreeABEFExpCreate {
             }
 
             if (goodCheck && interpAssignTerm == null) {
-                message = "Exercise statement does not include Interpretation / assignment [formula] for expression to be evaluated. Check disabled.";
+                message = "Exercise statement does not include target for evaluation: Interpretation / assignment / [formula]. Check disabled.";
                 goodCheck = false;
             }
             if (goodCheck) targetTerm = interpAssignTerm.getTerm();

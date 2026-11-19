@@ -10,7 +10,8 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class VariableSym implements Expression {
+public class VariableSym extends LanguageElement implements Expression { // extends LanguageElement?
+    private static final long serialVersionUID = 100L;
 
     private ExpressionType type = ExpressionType.VARIABLE_SYM;
     private String baseStr;

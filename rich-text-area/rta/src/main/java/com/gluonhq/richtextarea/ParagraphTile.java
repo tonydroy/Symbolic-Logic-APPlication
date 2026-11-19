@@ -79,7 +79,6 @@ import static com.gluonhq.richtextarea.RichTextAreaSkin.DEFAULT_FONT_SIZE;
 import static com.gluonhq.richtextarea.model.TableDecoration.TABLE_SEPARATOR;
 
 
-
 class ParagraphTile extends HBox {
 
     private static final double INDENT_PADDING = 20.0;
@@ -100,8 +99,11 @@ class ParagraphTile extends HBox {
     private final ChangeListener<Number> caretPositionListener = (o, ocp, p) -> updateCaretPosition(p.intValue());
     private final ChangeListener<Selection> selectionListener = (o, os, selection) -> updateSelection(selection);
 
-
-
+    // =========================================================
+    // FOCUS LISTENERS (Fixes Issue 2 & 3: Whitespace clicks and Multi-cursors)
+    // =========================================================
+    private final javafx.beans.value.ChangeListener<Boolean> focusListener;
+    private final javafx.beans.value.WeakChangeListener<Boolean> weakFocusListener;
 
     public ParagraphTile(RichTextAreaSkin richTextAreaSkin) {
         this.richTextAreaSkin = richTextAreaSkin;
@@ -113,6 +115,16 @@ class ParagraphTile extends HBox {
         contentPane.setPadding(new Insets(1));
         contentPane.getStyleClass().setAll("content-area");
         layers = new ArrayList<>();
+
+        // Initialize the listeners HERE, after richTextAreaSkin and layers are safely assigned
+        this.focusListener = (obs, oldVal, newVal) -> {
+            boolean active = newVal || this.richTextAreaSkin.dragAndDropStart != -1;
+            layers.forEach(l -> l.updateFocus(active));
+        };
+        this.weakFocusListener = new javafx.beans.value.WeakChangeListener<>(this.focusListener);
+
+        // Bind the focus tracker to this specific control instance
+        this.control.focusedProperty().addListener(this.weakFocusListener);
 
         graphicBox = new HBox();
         graphicBox.getStyleClass().add("graphic-box");
@@ -141,19 +153,21 @@ class ParagraphTile extends HBox {
             if (!fragments.isEmpty()) {
                 HBox gridBox = createGridBox(fragments, positions, background, decoration);
                 contentPane.getChildren().add(gridBox);
-                contentPane.layout();
+                contentPane.setPrefWidth(gridBox.getPrefWidth());
+                contentPane.requestLayout();
             }
         } else {
             Layer layer = new Layer(paragraph.getStart(), paragraph.getEnd(), false);
             layer.setContent(fragments, background, decoration);
             layers.add(layer);
             contentPane.getChildren().add(layer);
+            //     contentPane.setPrefWidth(layer.getPrefWidth());   //in 4.2.5 messes up rta field boxes
             updateGraphicBox(layer, control.getParagraphGraphicFactory());
             graphicBox.setPadding(new Insets(decoration.getTopInset(), 2, decoration.getBottomInset(), 0));
-            contentPane.layout();
+            contentPane.requestLayout();
         }
         //*** added by TR
-   //     paragraph.setParaHeight(contentPane.prefHeight(control.getPrefWidth()));
+        //     paragraph.setParaHeight(contentPane.prefHeight(control.getPrefWidth()));
 
     }
 
@@ -221,35 +235,27 @@ class ParagraphTile extends HBox {
         graphicBox.getChildren().add(graphicNode);
 
         double nodePrefWidth = 0d, nodePrefHeight = 0d;
-        if (graphicNode instanceof Label) {
-            Label numberedListLabel = (Label) graphicNode;
-            String text = numberedListLabel.getText();
+        Font font = layer.getFont();
+        if (graphicNode instanceof Label label) {
+            String text = label.getText();
             if (text != null) {
-                if (text.contains("#")) {
-                    // numbered list
-                    AtomicInteger ordinal = new AtomicInteger();
-                    viewModel.getParagraphList().stream()
-                            .peek(p -> {
-                                if (p.getDecoration().getGraphicType() != ParagraphDecoration.GraphicType.NUMBERED_LIST ||
-                                        p.getDecoration().getIndentationLevel() != indentationLevel) {
-                                    // restart ordinal if previous paragraph has different indentation,
-                                    // or if it is not a numbered list
-                                    ordinal.set(0);
-                                } else {
-                                    ordinal.incrementAndGet();
-                                }
-                            })
-                            .filter(p -> paragraph.equals(p))
-                            .findFirst()
-                            .ifPresent(p ->
-                                    numberedListLabel.setText(text.replace("#", "" + ordinal.get())));
-                }
-
-                Font font = layer.getFont();
-                numberedListLabel.setFont(font);
-                double w = Tools.computeStringWidth(font, numberedListLabel.getText());
+                text = formatNumber(text, indentationLevel);
+                label.setText(text);
+                label.setFont(font);
+                double w = Tools.computeStringWidth(font, text);
                 nodePrefWidth = Math.max(w + 1, INDENT_PADDING);
-                nodePrefHeight = Tools.computeStringHeight(font, numberedListLabel.getText());
+                nodePrefHeight = Tools.computeStringHeight(font, text);
+            }
+        } else if (graphicNode instanceof Text textNode) {
+            String text = textNode.getText();
+            if (text != null) {
+                text = formatNumber(text, indentationLevel);
+                textNode.setText(text);
+                textNode.setFont(font);
+                double w = Tools.computeStringWidth(font, text);
+
+                nodePrefWidth = Math.max(w + 1, INDENT_PADDING);
+                nodePrefHeight = Tools.computeStringHeight(font, text);
             }
         } else {
             nodePrefWidth = Math.max(graphicNode.prefWidth(-1), INDENT_PADDING);
@@ -263,6 +269,29 @@ class ParagraphTile extends HBox {
         layer.updatePrefWidth(richTextAreaSkin.textFlowPrefWidthProperty.get() - boxPrefWidth);
     }
 
+    private String formatNumber(String text, int indentationLevel) {
+        if (text.contains("#")) {
+            // numbered list
+            AtomicInteger ordinal = new AtomicInteger();
+            return viewModel.getParagraphList().stream()
+                    .peek(p -> {
+                        if (p.getDecoration().getGraphicType() != ParagraphDecoration.GraphicType.NUMBERED_LIST ||
+                                p.getDecoration().getIndentationLevel() != indentationLevel) {
+                            // restart ordinal if previous paragraph has different indentation,
+                            // or if it is not a numbered list
+                            ordinal.set(0);
+                        } else {
+                            ordinal.incrementAndGet();
+                        }
+                    })
+                    .filter(p -> paragraph.equals(p))
+                    .findFirst()
+                    .map(p -> text.replace("#", "" + ordinal.get()))
+                    .orElse(text);
+        }
+        return text;
+    }
+
     void mousePressedListener(MouseEvent e) {
         if (control.isDisabled()) {
             return;
@@ -271,14 +300,16 @@ class ParagraphTile extends HBox {
         try {
             layers.forEach(l -> {
                 Point2D localEvent = l.screenToLocal(e.getScreenX(), e.getScreenY());
-                if (l.getLayoutBounds().contains(localEvent)) {
+           //     if (l.getLayoutBounds().contains(localEvent)) {
+                if (!l.isTableCell || l.getLayoutBounds().contains(localEvent)) {
                     l.mousePressedListener(e);
                 }
             });
         }
         catch (ConcurrentModificationException ex) {
-            String message = "Concurrent Modification Exception (Paragraph Tile, 002).  Please save your work and restart SLAPP.  You should not have lost any of your work.";
-            Alerts.showSimpleAlert("RTA Error", message, RichTextArea.mainStage);
+    //        ex.printStackTrace();
+    //        String message = "Concurrent Modification Exception (Paragraph Tile, 002).  Please save your work and restart SLAPP.  You should not have lost any of your work.";
+    //        Alerts.showSimpleAlert("RTA Error", message, RichTextArea.mainStage);
         }
     }
 
@@ -287,7 +318,8 @@ class ParagraphTile extends HBox {
             Point2D localEvent = l.screenToLocal(e.getScreenX(), e.getScreenY());
             if (e.getEventType() == MouseDragEvent.MOUSE_DRAG_OVER || l.isTableCell) {
                 // mouse drag from own cell
-                if (l.getLayoutBounds().contains(localEvent)) {
+           //     if (l.getLayoutBounds().contains(localEvent)) {
+                if (!l.isTableCell || l.getLayoutBounds().contains(localEvent)) {
                     l.mouseDraggedListener(e);
                 }
             } else if (e.getEventType() == MouseEvent.MOUSE_DRAGGED) {
@@ -306,8 +338,9 @@ class ParagraphTile extends HBox {
             layers.forEach(layer -> layer.evictUnusedObjects(usedFonts, usedImages));
         }
         catch (ConcurrentModificationException e) {
-            String message = "Concurrent Modification Exception (Paragraph Tile, 001).  Please save your work and restart SLAPP.  You should not have lost any of your work.";
-            Alerts.showSimpleAlert("RTA Error", message, RichTextArea.mainStage);
+   //         e.printStackTrace();
+   //         String message = "Concurrent Modification Exception (Paragraph Tile, 001).  Please save your work and restart SLAPP.  You should not have lost any of your work.";
+    //        Alerts.showSimpleAlert("RTA Error", message, RichTextArea.mainStage);
         }
     }
 
@@ -338,7 +371,7 @@ class ParagraphTile extends HBox {
 
     int getNextTableCellPosition(boolean down) {
         if (!paragraph.getDecoration().hasTableDecoration() ||
-            layers.stream().noneMatch(Layer::hasCaret)) {
+                layers.stream().noneMatch(Layer::hasCaret)) {
             return -1;
         }
         int r = paragraph.getDecoration().getTableDecoration().getRows();
@@ -389,15 +422,18 @@ class ParagraphTile extends HBox {
         private final TextFlow textFlow = new TextFlow();
         private double textFlowLayoutX, textFlowLayoutY;
 
-
-
         private final int start, end;
         private final boolean isTableCell;
+
+        private List<IndexRangeColor> background;  //ai flicker fix
 
         public Layer(int start, int end, boolean isTableCell) {
             this.start = start;
             this.end = end;
             this.isTableCell = isTableCell;
+
+
+
             caretTimeline.setCycleCount(Timeline.INDEFINITE);
             textFlow.setFocusTraversable(false);
             textFlow.getStyleClass().setAll("text-flow");
@@ -412,24 +448,65 @@ class ParagraphTile extends HBox {
             getChildren().addAll(textBackgroundColorPaths);
             getChildren().addAll(selectionShape, caretShape, textFlow);
             getStyleClass().add("layer");
+
+            sceneProperty().addListener((obs, oldScene, newScene) -> {
+                if (newScene == null) {
+                    caretTimeline.stop();
+                } else {
+                    boolean active = control.isFocused() || richTextAreaSkin.dragAndDropStart != -1;
+                    if (hasCaret() && active) caretTimeline.playFromStart();
+                }
+            });
         }
+
+
+
+
+
 
         @Override
         protected double computePrefHeight(double width) {
             return textFlow.prefHeight(textFlow.getPrefWidth()) + 1;
         }
 
+
+
         @Override
         protected double computePrefWidth(double height) {
             // take into account selection width: whether it is visible or not,
             // the layer's width doesn't change
-
             return textFlow.prefWidth(textFlow.getPrefHeight()) + 2;
         }
 
+        //ai flicker fix overrides method
+        @Override
+        protected void layoutChildren() {
+            super.layoutChildren();
+            textFlow.layout();
+            if (background != null) {
+                addBackgroundPathsToLayers(background);
+            }
+        }
+
+
+        // =========================================================
+        // FORCE FOCUS UPDATE
+        // =========================================================
+        void updateFocus(boolean active) {
+            if (active) {
+                // Forcefully rebuild and show the caret for this layer upon gaining focus
+                updateCaretPosition(viewModel.getCaretPosition());
+            } else {
+                // Pause animation and hide instantly on focus loss
+                caretTimeline.stop();
+                setCaretVisibility(false);
+            }
+        }
 
         void setContent(List<Node> fragments, List<IndexRangeColor> background, ParagraphDecoration decoration) {
-            textFlow.getChildren().setAll(fragments);
+            try {
+                textFlow.getChildren().setAll(fragments);
+            } catch (IllegalArgumentException e) {}
             textFlow.setTextAlignment(decoration.getAlignment());
             textFlow.setLineSpacing(decoration.getSpacing());
             textFlow.setPadding(new Insets(decoration.getTopInset(), decoration.getRightInset(), decoration.getBottomInset(), decoration.getLeftInset()));
@@ -437,11 +514,11 @@ class ParagraphTile extends HBox {
             textFlowLayoutX = 1d + decoration.getLeftInset();
             textFlowLayoutY = 1d + decoration.getTopInset();
 
-            Platform.runLater(() -> addBackgroundPathsToLayers(background));
+            //ai flicker fix
+            // Platform.runLater(() -> addBackgroundPathsToLayers(background));
+            this.background = background;
 
-
-//           This gets the content width.  Appears to be the number I need to grow nodes with content.
-
+            //          This gets the content width.  Appears to be the number I need to grow nodes with content.
             if (fragments != null) {
                 double nodesWidth = 0;
                 for (Node fragment : fragments) {
@@ -455,6 +532,32 @@ class ParagraphTile extends HBox {
             caretTimeline.stop();
         }
 
+
+        //ai flicker fix replaces method
+        private void addBackgroundPathsToLayers(List<IndexRangeColor> backgroundIndexRanges) {
+            Map<Paint, Path> fillPathMap = backgroundIndexRanges.stream()
+                    .map(indexRangeBackground -> {
+                        final Path path = new BackgroundColorPath(textFlow.rangeShape(indexRangeBackground.getStart(), indexRangeBackground.getEnd()));
+                        path.setManaged(false);
+                        path.setStrokeWidth(0);
+                        path.setFill(indexRangeBackground.getColor());
+                        path.setLayoutX(textFlowLayoutX);
+                        path.setLayoutY(textFlowLayoutY);
+                        return path;
+                    })
+                    .collect(Collectors.toMap(Path::getFill, Function.identity(), (p1, p2) -> {
+                        Path union = (Path) Shape.union(p1, p2);
+                        union.setManaged(false);
+                        union.setStrokeWidth(0);
+                        union.setFill(p1.getFill());
+                        return union;
+                    }));
+            textBackgroundColorPaths.removeIf(path -> !fillPathMap.containsValue(path));
+            textBackgroundColorPaths.addAll(fillPathMap.values());
+        }
+
+
+        /*
         private void addBackgroundPathsToLayers(List<IndexRangeColor> backgroundIndexRanges) {
             Map<Paint, Path> fillPathMap = backgroundIndexRanges.stream()
                     .map(indexRangeBackground -> {
@@ -474,6 +577,8 @@ class ParagraphTile extends HBox {
             textBackgroundColorPaths.addAll(fillPathMap.values());
         }
 
+         */
+
         void mousePressedListener(MouseEvent e) {
             Point2D localEvent = screenToLocal(e.getScreenX(), e.getScreenY());
 
@@ -482,7 +587,19 @@ class ParagraphTile extends HBox {
             if (localEvent == null) localEvent = new Point2D(0,0);
             //
             if (e.getButton() == MouseButton.PRIMARY && !(e.isMiddleButtonDown() || e.isSecondaryButtonDown())) {
-                HitInfo hitInfo = textFlow.hitTest(new Point2D(localEvent.getX() - textFlowLayoutX, localEvent.getY() - textFlowLayoutY));
+
+                // =========================================================
+                // REQUEST FOCUS BEFORE DOING CARET MATH!
+                // =========================================================
+                if (!control.isFocused()) {
+                    control.requestFocus();
+                }
+
+            //    HitInfo hitInfo = textFlow.hitTest(new Point2D(localEvent.getX() - textFlowLayoutX, localEvent.getY() - textFlowLayoutY));
+                double hitX = Math.max(0, localEvent.getX() - textFlowLayoutX);
+                double hitY = Math.max(0, localEvent.getY() - textFlowLayoutY);
+                HitInfo hitInfo = textFlow.hitTest(new Point2D(hitX, hitY));
+
                 Selection prevSelection = viewModel.getSelection();
                 int prevCaretPosition = viewModel.getCaretPosition();
                 int insertionIndex = hitInfo.getInsertionIndex();
@@ -511,7 +628,7 @@ class ParagraphTile extends HBox {
                         viewModel.setCaretPosition(globalInsertionIndex);
                     }
                 }
-                control.requestFocus();
+
                 e.consume();
             }
             if (richTextAreaSkin.contextMenu.isShowing()) {
@@ -521,7 +638,12 @@ class ParagraphTile extends HBox {
 
         void mouseDraggedListener(MouseEvent e) {
             Point2D localEvent = screenToLocal(e.getScreenX(), e.getScreenY());
-            HitInfo hitInfo = textFlow.hitTest(new Point2D(localEvent.getX() - textFlowLayoutX, localEvent.getY() - textFlowLayoutY));
+
+            double hitX = Math.max(0, localEvent.getX() - textFlowLayoutX);
+            double hitY = Math.max(0, localEvent.getY() - textFlowLayoutY);
+            HitInfo hitInfo = textFlow.hitTest(new Point2D(hitX, hitY));
+
+       //     HitInfo hitInfo = textFlow.hitTest(new Point2D(localEvent.getX() - textFlowLayoutX, localEvent.getY() - textFlowLayoutY));
             if (hitInfo.getInsertionIndex() >= 0) {
                 int dragEnd = start + hitInfo.getInsertionIndex();
                 viewModel.setSelection(new Selection(richTextAreaSkin.mouseDragStart, dragEnd));
@@ -586,13 +708,16 @@ class ParagraphTile extends HBox {
 
         private void updateCaretPosition(int caretPosition) {
             caretShape.getElements().clear();
-            if ((!control.isFocused() && richTextAreaSkin.dragAndDropStart == -1) ||
-                    paragraph == null || caretPosition < start || getParagraphLimit() <= caretPosition) {
+
+            // >>> FIX: Unconditionally create path geometry without blocking via isFocused()
+            if (paragraph == null || caretPosition < start || getParagraphLimit() <= caretPosition) {
                 caretTimeline.stop();
+                setCaretVisibility(false);
                 return;
             }
             if (caretPosition < 0 || !control.isEditable()) {
                 caretTimeline.stop();
+                setCaretVisibility(false);
             } else {
                 var pathElements = textFlow.caretShape(caretPosition - start, true);
                 if (pathElements.length > 0) {
@@ -614,7 +739,19 @@ class ParagraphTile extends HBox {
                         caretShape.getElements().add(new LineTo(originX, caretSize));
                     }
                     richTextAreaSkin.lastValidCaretPosition = caretPosition;
-                    caretTimeline.play();
+
+                    // >>> FIX: Evaluate visibility & blinking timeline natively based on focus status
+                    boolean active = control.isFocused() || richTextAreaSkin.dragAndDropStart != -1;
+                    if (active) {
+                        if (getScene() != null) {
+                            caretTimeline.playFromStart();
+                        }
+                        setCaretVisibility(true);
+                    } else {
+                        caretTimeline.stop();
+                        setCaretVisibility(false);
+                    }
+
                     updateCaretOrigin();
                 }
             }
@@ -670,7 +807,4 @@ class ParagraphTile extends HBox {
             });
         }
     }
-
-
-
 }

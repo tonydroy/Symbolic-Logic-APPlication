@@ -14,7 +14,7 @@ import java.util.Objects;
 public class InfixAtomic extends Formula implements Expression {
 
     private RelationSymbol mainRelation;
-    private RelationSymbol complementRelation = null;
+    private RelationSymbol complementRelation = null; //new RelationSymbol("", "", "", 2);
 
     public InfixAtomic(RelationSymbol mainRelation, RelationSymbol complementRelation, boolean negating) {
         super();
@@ -34,10 +34,15 @@ public class InfixAtomic extends Formula implements Expression {
     public InfixAtomic getMatch() {
         List<Expression> newChildren = new ArrayList<>();
         for (Expression child : getChildren()) {
+       //     System.out.println("child: " + child + " match: " + child.getMatch());
             if (child.getMatch() == null) return null;
             else newChildren.add(child.getMatch());
         }
-        InfixAtomic newAtomic = new InfixAtomic(mainRelation.getMatch(), complementRelation.getMatch(), isNegatingInfix());
+
+        RelationSymbol compRelSym = complementRelation == null ? null : complementRelation.getMatch();
+
+      //  InfixAtomic newAtomic = new InfixAtomic(mainRelation.getMatch(), complementRelation.getMatch(), isNegatingInfix());
+        InfixAtomic newAtomic = new InfixAtomic(mainRelation.getMatch(), compRelSym, isNegatingInfix());
         newAtomic.setChildren(newChildren);
         newAtomic.setOpenBracket(getOpenBracket().getMatch());
         newAtomic.setCloseBracket(getCloseBracket().getMatch());

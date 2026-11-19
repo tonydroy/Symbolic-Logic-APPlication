@@ -3,6 +3,7 @@ package slapp.editor.m_parse;
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.event.ActionEvent;
+import javafx.scene.Node;
 import javafx.scene.text.Text;
 import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
@@ -41,6 +42,12 @@ public class MSyntacticalFns {
 
     }
 
+    private void scrollToNode(Node node) {
+        if (mainWindow != null && mainWindow.getMainView() != null) {
+            mainWindow.getMainView().scrollToNode(node);
+        }
+    }
+
     //to be run only after setInterpBaseVarAssign on main doc
 
     public FormulaPacket setupFormulaPacket(BoxedDRTA bdrta) {
@@ -55,14 +62,14 @@ public class MSyntacticalFns {
         List<Expression> expList = mParseUtilities.parseDoc(doc, objlangName);
         if (expList.size() == 0) {
             bdrta.setVTtreeBoxHighlight();
-            mainWindow.getMainView().scrollToNode(bdrta.getRTA());
+            scrollToNode(bdrta.getRTA());
             EditorAlerts.showSimpleTxtListAlert("Parse Issue", Collections.singletonList(ParseUtilities.newRegularText("Empty field.")));
             bdrta.resetVTtreeBoxHighlight();
             return false;
         }
         if (expList.size() > 1 || expList.get(0).getType() != ExpressionType.M_INTERP_ASSIGN_FORMULA) {
             bdrta.setVTtreeBoxHighlight();
-            mainWindow.getMainView().scrollToNode(bdrta.getRTA());
+            scrollToNode(bdrta.getRTA());
             List<Text> texts = new ArrayList<>();
             texts.add(ParseUtilities.newRegularText("Parser Contents:\n"));
             for (Expression expr : expList) {
@@ -79,7 +86,7 @@ public class MSyntacticalFns {
             Formula formula = interpAssignFormula.getFormula();
             if (formula == null) {
                 bdrta.setVTtreeBoxHighlight();
-                mainWindow.getMainView().scrollToNode(bdrta.getRTA());
+                scrollToNode(bdrta.getRTA());
                 EditorAlerts.showSimpleTxtListAlert("Missing Element", Collections.singletonList(ParseUtilities.newRegularText("Missing formula")));
                 bdrta.resetVTtreeBoxHighlight();
                 return false;
@@ -88,7 +95,7 @@ public class MSyntacticalFns {
             MInterpretation interpretation = interpretations.getInterpretation(mInterpAssign.getInterpVariable());
             if (interpretation == null) {
                 bdrta.setVTtreeBoxHighlight();
-                mainWindow.getMainView().scrollToNode(bdrta.getRTA());
+                scrollToNode(bdrta.getRTA());
                 EditorAlerts.showSimpleTxtListAlert("Missing Element", Collections.singletonList(ParseUtilities.newRegularText("Interpretation does not exist.")));
                 bdrta.resetVTtreeBoxHighlight();
                 return false;
@@ -101,7 +108,7 @@ public class MSyntacticalFns {
 
             if (!sententialInterp && interpretation.getmUniverse() == null) {
                 bdrta.setVTtreeBoxHighlight();
-                mainWindow.getMainView().scrollToNode(bdrta.getRTA());
+                scrollToNode(bdrta.getRTA());
                 EditorAlerts.showSimpleTxtListAlert("Missing Universe", Collections.singletonList(ParseUtilities.newRegularText("A variable assignment exists only relative to a (stated) interpretation and non-empty universe.")));
                 bdrta.resetVTtreeBoxHighlight();
                 return false;
@@ -116,7 +123,7 @@ public class MSyntacticalFns {
                 MBasicObjTerm object = mod.getObject();
                 if (!interpretation.getmUniverse().getUniverse().contains(object)) {
                     bdrta.setVTtreeBoxHighlight();
-                    mainWindow.getMainView().scrollToNode(bdrta.getRTA());
+                    scrollToNode(bdrta.getRTA());
                     List<Text> textList = new ArrayList<>();
                     textList.add(ParseUtilities.newRegularText("The universe of interpretation "));
                     textList.addAll(mInterpAssign.getInterpVariable().toTextList());
@@ -634,11 +641,11 @@ public class MSyntacticalFns {
                         } else if (right.getType() == ExpressionType.M_UNIVERSE) {
                             MUniverse universe = (MUniverse) right;
                             textList.addAll(universe.toTextList());
-                            textList.add(ParseUtilities.newRegularText(" is a universe for some interpretation (or the interpretation of a 1-place relation symbol).\n\n For \" . . . "));
+                            textList.add(ParseUtilities.newRegularText(" is a universe for some interpretation or the interpretation of a 1-place relation symbol.\n\n For \" . . . "));
                             textList.addAll(left.toTextList());
                             textList.add(ParseUtilities.newRegularText("\" expect expression of the sort \ud835\uddb4\ud835\udda8 or \ud835\udda8[\u211b"));
                             textList.add(ParseUtilities.newSuperscriptText("1"));
-                            textList.add(ParseUtilities.newRegularText("] for some interpretation \ud835\udda8 or relation symbol of " + objlangName + "."));
+                            textList.add(ParseUtilities.newRegularText("] (superscript from same SLAPP keyboard as symbol) for some interpretation \ud835\udda8 or relation symbol of " + objlangName + "."));
                             EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
                             return false;
                         }
@@ -738,7 +745,7 @@ public class MSyntacticalFns {
                                 textList.add(ParseUtilities.newSuperscriptText("2"));
                                 textList.add(ParseUtilities.newRegularText("] or \ud835\udda8[\ud835\udcbb"));
                                 textList.add(ParseUtilities.newSuperscriptText("1"));
-                                textList.add(ParseUtilities.newRegularText("] for a relation symbol of language " + objlangName + " and some interpretation \ud835\udda8."));
+                                textList.add(ParseUtilities.newRegularText("] (superscript from same SLAPP keyboard as symbol) for a relation symbol of language " + objlangName + " and some interpretation \ud835\udda8."));
                                 EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
                                 return false;
                             } else {
@@ -747,7 +754,7 @@ public class MSyntacticalFns {
                                 textList.addAll(left.toTextList());
                                 textList.add(ParseUtilities.newRegularText("\" expect expression of the sort \ud835\udda8[\u211b"));
                                 textList.add(ParseUtilities.newSuperscriptText(Integer.toString(places)));
-                                textList.add(ParseUtilities.newRegularText("] for a relation symbol of language " + objlangName + " and some interpretation \ud835\udda8."));
+                                textList.add(ParseUtilities.newRegularText("] (superscript from same SLAPP keyboard as symbol) for a relation symbol of language " + objlangName + " and some interpretation \ud835\udda8."));
                                 EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
                                 return false;
                             }
@@ -755,11 +762,14 @@ public class MSyntacticalFns {
                         else if (right.getType() == ExpressionType.M_EMPTY_SET) {
                             MEmptySet emptySet = (MEmptySet) right;
                             textList.addAll(emptySet.toTextList());
-                            textList.add(ParseUtilities.newRegularText(" is the interpretation of relation symbol.\n\n"));
-                            textList.add(ParseUtilities.newRegularText("For \" . . . "));
+
+                            textList.add(ParseUtilities.newRegularText(" is the interpretation for a relation symbol.\n\n For \" . . . "));
                             textList.addAll(left.toTextList());
-                            textList.add(ParseUtilities.newRegularText("\" expect expression of the sort \ud835\udda8[\u211b] for some interpretation \ud835\udda8 and \ud835\udc5b-place relation symbol of language " + objlangName + "."));
+                            textList.add(ParseUtilities.newRegularText("\" expect expression of the sort \ud835\udda8[\u211b"));
+                            textList.add(ParseUtilities.newSuperscriptText("n"));
+                            textList.add(ParseUtilities.newRegularText("] (superscript from same SLAPP keyboard as symbol) for some interpretation \ud835\udda8 and relation symbol of " + objlangName + "."));
                             EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
+
                             return false;
                         }
 
@@ -779,7 +789,7 @@ public class MSyntacticalFns {
                                 textList.addAll(left.toTextList());
                                 textList.add(ParseUtilities.newRegularText("\" expect expression of the sort \ud835\udda8[\ud835\udcbb"));
                                 textList.add(ParseUtilities.newSuperscriptText(Integer.toString(places)));
-                                textList.add(ParseUtilities.newRegularText("] for some function symbol of language " + objlangName + " and interpretation \ud835\udda8."));
+                                textList.add(ParseUtilities.newRegularText("] (superscript from same SLAPP keyboard as symbol) for some function symbol of language " + objlangName + " and interpretation \ud835\udda8."));
                                 EditorAlerts.showSimpleTxtListAlert("Parse Error", textList);
                                 return false;
                             }

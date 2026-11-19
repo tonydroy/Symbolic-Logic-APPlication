@@ -2,7 +2,9 @@ package slapp.editor.derivation_explain;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
@@ -20,6 +22,7 @@ import slapp.editor.parser.symbols.VariableSym;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+
 
 public class DrvtnExpHelp {
     private DrvtnExpExercise drvtnExpExercise;
@@ -49,35 +52,84 @@ public class DrvtnExpHelp {
     private List<Expression> termList2 = new ArrayList<>();
     private boolean helpShowing;
 
+    // SCORCHED EARTH RULE 2: Kill Switch
+    private boolean isTornDown = false;
 
-
+    // SCORCHED EARTH RULE 3: Eradicate Anonymous Lambdas
+    private EventHandler<ActionEvent> helpButtonHandler;
 
     public DrvtnExpHelp(DrvtnExpExercise drvtnExpExercise) {
         this.drvtnExpExercise = drvtnExpExercise;
         this.drvtnExpView = drvtnExpExercise.getExerciseView();
-        this.drvtnExpModel= drvtnExpExercise.getExerciseModel();
+        this.drvtnExpModel = drvtnExpExercise.getExerciseModel();
         this.checker = drvtnExpExercise.getDrvtnExpCheck();
 
-
-        drvtnExpView.getHelpButton().setOnAction(e -> {
+        helpButtonHandler = e -> {
+            if (isTornDown || drvtnExpView == null) return;
             helpShowing = false;
-            for (Stage stage : helpStages) { if (stage != null && stage.isShowing()) helpShowing = true; }
+            if (helpStages != null) {
+                for (Stage stage : helpStages) {
+                    if (stage != null && stage.isShowing()) helpShowing = true;
+                }
+            }
             closeHelpWindows();
-   //        MainWindowView.activateProgressIndicator("Help: ");
 
-
-            runHelp();
-        });
-
-
+            Platform.runLater(() -> {
+                if (isTornDown || this.drvtnExpExercise == null) return;
+                runHelp();
+            });
+        };
+        if (drvtnExpView != null && drvtnExpView.getHelpButton() != null) {
+            drvtnExpView.getHelpButton().setOnAction(helpButtonHandler);
+        }
     }
 
     public void closeHelpWindows() {
+        if (helpStages == null) return;
         for (Stage stage : helpStages) {
             if (stage != null) stage.close();
         }
-
     }
+
+    // SCORCHED EARTH RULE 1: Cascading Cleanup
+    public void cleanup() {
+        isTornDown = true;
+
+        try {
+            if (drvtnExpView != null && drvtnExpView.getHelpButton() != null) {
+                if (helpButtonHandler != null) {
+                    drvtnExpView.getHelpButton().removeEventHandler(ActionEvent.ACTION, helpButtonHandler);
+                }
+                drvtnExpView.getHelpButton().setOnAction(null);
+            }
+        } catch (Exception e) {}
+
+        try { closeHelpWindows(); } catch (Exception e) {}
+        try { if (helpStages != null) helpStages.clear(); } catch (Exception e) {}
+        try { MatchUtilities.clearFormMatch(); } catch (Exception e) {}
+        try { MVariable.clear(); } catch (Exception e) {}
+
+        this.drvtnExpExercise = null;
+        this.drvtnExpView = null;
+        this.drvtnExpModel = null;
+        this.checker = null;
+        this.viewLines = null;
+        this.helpStage = null;
+        this.targetLine = null;
+        this.targetFormula = null;
+        this.objectLanguage = null;
+        this.metaLanguage = null;
+        this.accessibleFormulas = null;
+        this.eObtainableFormulas = null;
+        this.ePotentialFormulas = null;
+        this.helpStages = null;
+        this.footnotes = null;
+        this.termList = null;
+        this.formulaVars = null;
+        this.termList2 = null;
+        this.helpButtonHandler = null;
+    }
+
 
     private void runHelp() {
 
@@ -157,11 +209,12 @@ public class DrvtnExpHelp {
             else {
                 CountDownLatch latch = new CountDownLatch(2);
 
-                Timer timer = new Timer();
+                Timer timer = new Timer(true);
                 timer.schedule(new TimerTask() {
                     @Override
                     public void run() {
                         latch.countDown();
+                        timer.cancel();
                     }
                 }, 250);
 
@@ -202,11 +255,12 @@ public class DrvtnExpHelp {
             else {
                 CountDownLatch latch = new CountDownLatch(2);
 
-                Timer timer = new Timer();
+                Timer timer = new Timer(true);
                 timer.schedule(new TimerTask() {
                     @Override
                     public void run() {
                         latch.countDown();
+                        timer.cancel();
                     }
                 }, 250);
 
@@ -1844,13 +1898,6 @@ public class DrvtnExpHelp {
         }
         return screen;
     }
-
-
-
-
-
-
-
 
 
 }

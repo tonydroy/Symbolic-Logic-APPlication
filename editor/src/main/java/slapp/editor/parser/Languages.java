@@ -30,6 +30,7 @@ public class Languages {
         fixedLanguages.add(Lnt_lessthan_abv());
         fixedLanguages.add(MetaO());
         fixedLanguages.add(MetaL());
+        fixedLanguages.add(MetaSym());
     }
 
     public static List<Language> getFixedLanguages() {
@@ -62,18 +63,16 @@ public class Languages {
         return quantificationalLangNames;
     }
 
-    /*
-    public static Language getLanguage(String name) {
-        for (Language l : fixedLanguages){
-            if (l.getNameString().equals(name)) return l;
-        }
-        for (Language l : optionalLanguages){
-            if (l.getNameString().equals(name)) return l;
-        }
-        return null;
+    public static List<String> getMathLangNames() {
+        List<String> mathLangNames = new ArrayList<>();
+
+        mathLangNames.add(Lnt().getNameString());
+        mathLangNames.add(Lnt_lessthan().getNameString());
+        mathLangNames.add(Lnt_lessthan_abv().getNameString());
+        return mathLangNames;
     }
 
-     */
+
 
     public static Language getLanguage(String name) {
         switch(name){
@@ -91,9 +90,26 @@ public class Languages {
 
             case "\u2112\u0274\u1d1b": return Lnt();
 
+
+            case "Mvar\u2112\ud835\udcc6": return MvarLq();
+
+            case "Mvar\u2112\ud835\udcc6 (w/abv)": return MvarLq_abv();
+
+            case "Mvar\u2112\u0274\u1d1b<": return MvarLnt_lessthan();
+
+            case "Mvar\u2112\u0274\u1d1b< (w/abv)": return MvarLnt_lessthan_abv();
+
+            case "Mvar\u2112\u0274\u1d1b": return MvarLnt();
+
+
+
             case "LM Meta": return MetaL();
 
+            case "Meta Sym": return MetaSym();
+
             case "\u2133\u2112": return MetaO();
+
+            case"Meta Supp": return MetaSupp();
 
             default: return Lq_abv();
         }
@@ -122,7 +138,7 @@ public class Languages {
 
     private static Language Ls_abv() {
         Language lang = new Language("\u2112\ud835\udcc8 (w/abv)");
-        lang.setNameTexts("\u2112", "","\ud835\udcc8_abv");
+        lang.setNameTexts("\u2112", "","\ud835\udcc8+");
 
         lang.setOpenBracket1("("); lang.setCloseBracket1(")");
         lang.setOpenBracket2("["); lang.setCloseBracket2("]");
@@ -195,9 +211,55 @@ public class Languages {
         return lang;
     }
 
+    private static Language MvarLq() {
+        Language lang = new Language("Mvar\u2112\ud835\udcc6");
+        lang.setNameTexts("\u2112", "","\ud835\udcc6");
+        lang.setmVarLang(true);
+
+        lang.setOpenBracket1("("); lang.setCloseBracket1(")");
+        lang.setNegation("\u223c");
+        lang.setConditional("\u2192");
+        lang.setUniversalQuant("\u2200");
+        lang.setContradictionSymbol("\u22a5");
+
+        lang.setVariables(Alphabets.getCharacterRange("\ud835\udcca", "\ud835\udccf"));
+
+        lang.setVariableSubs(true);
+        lang.setConstants(Alphabets.getCharacterRange("\ud835\udc4e", "\u210e"));
+        lang.setConstantSubs(true);
+
+        lang.setSentenceLetters(Alphabets.getCharacterRange("\ud835\udc34", "\ud835\udc4d"));
+        lang.setSentenceLetterSubs(true);
+
+        lang.setXfunctionSymbols(Alphabets.getCharacterRange("\ud835\udc4e", "\ud835\udc67"));
+        lang.setXfunctionSymbolSubs(true);
+
+        lang.setXrelationSymbols(Alphabets.getCharacterRange("\ud835\udc34", "\ud835\udc4d"));
+        lang.setXrelationSymbolSubs(true);
+        lang.setXrelationSymbolsRequireSuper(true);
+
+        lang.setInfixRelations( Map.ofEntries(entry("\ue8ac", "")));
+        lang.setAllowBinaryInfixNegations(false);
+
+        lang.setUnabbForms( Map.ofEntries(
+                entry(UnabbType.NEGATION, new Document("\u223c |0|")),
+                entry(UnabbType.CONDITIONAL, new Document("(|0| \u2192 |1|)")),
+                entry(UnabbType.UNIVERSAL, new Document("\u2200\u2039v\u203a|0|")),
+                entry(UnabbType.VARIABLE, new Document("\u2039s\u203a")),
+                entry(UnabbType.CONSTANT, new Document("\u2039s\u203a")),
+                entry(UnabbType.COMPLEX_TERM, new Document("\u2039f\u203a|n|")),
+                entry(UnabbType.SENTENCE_LET, new Document("\u2039s\u203a")),
+                entry(UnabbType.RELATION_ATOMIC, new Document("\u2039r\u203a|n|"))
+
+        ));
+
+        return lang;
+    }
+
+
     private static Language Lq_abv() {
         Language lang = new Language("\u2112\ud835\udcc6 (w/abv)");
-        lang.setNameTexts("\u2112", "","\ud835\udcc6_abv");
+        lang.setNameTexts("\u2112", "","\ud835\udcc6+");
 
         lang.setOpenBracket1("("); lang.setCloseBracket1(")");
         lang.setOpenBracket2("["); lang.setCloseBracket2("]");
@@ -256,6 +318,65 @@ public class Languages {
         return lang;
     }
 
+    private static Language MvarLq_abv() {
+        Language lang = new Language("Mvar\u2112\ud835\udcc6 (w/abv)");
+        lang.setNameTexts("\u2112", "","\ud835\udcc6+");
+        lang.setmVarLang(true);
+
+        lang.setOpenBracket1("("); lang.setCloseBracket1(")");
+        lang.setOpenBracket2("["); lang.setCloseBracket2("]");
+        lang.setAllowDroppedBrackets(true);
+
+        lang.setNegation("\u223c");
+        lang.setConditional("\u2192");
+        lang.setBiconditional("\u2194");
+        lang.setConjunction("\u2227");
+        lang.setDisjunction("\u2228");
+        lang.setUniversalQuant("\u2200");
+        lang.setExistentialQuant("\u2203");
+        lang.setContradictionSymbol("\u22a5");
+
+        lang.setVariables(Alphabets.getCharacterRange("\ud835\udcca", "\ud835\udccf"));
+        lang.setVariableSubs(true);
+        lang.setConstants(Alphabets.getCharacterRange("\ud835\udc4e", "\u210e"));
+        lang.setConstantSubs(true);
+
+        lang.setSentenceLetters(Alphabets.getCharacterRange("\ud835\udc34", "\ud835\udc4d"));
+        lang.setSentenceLetterSubs(true);
+
+        lang.setXfunctionSymbols(Alphabets.getCharacterRange("\ud835\udc4e", "\ud835\udc67"));
+        lang.setXfunctionSymbolSubs(true);
+
+        lang.setXrelationSymbols(Alphabets.getCharacterRange("\ud835\udc34", "\ud835\udc4d"));
+        lang.setXrelationSymbolSubs(true);
+        lang.setXrelationSymbolsRequireSuper(false);
+
+        lang.setAllowBinaryInfixRelations(true);
+        lang.setAllowBinaryInfixNegations(false);
+        lang.setInfixRelations( Map.ofEntries(entry("\ue8ac", "")) );
+
+        lang.setAllowBoundedQuantifiers(true);
+        lang.setDividerSymbol(":");
+
+        lang.setUnabbForms( Map.ofEntries(
+                entry(UnabbType.NEGATION, new Document("\u223c |0|")),
+                entry(UnabbType.CONDITIONAL, new Document("(|0| \u2192 |1|)")),
+                entry(UnabbType.BICONDITIONAL, new Document("\u223c((|0| \u2192 |1|) \u2192 \u223c(|1| \u2192 |0|))")),
+                entry(UnabbType.CONJUNCTION, new Document("\u223c(|0| \u2192 \u223c|1|)")),
+                entry(UnabbType.DISJUNCTION, new Document("(\u223c|0| \u2192 |1|)")),
+                entry(UnabbType.UNIVERSAL, new Document("\u2200\u2039v\u203a|0|")),
+                entry(UnabbType.EXISTENTIAL, new Document("\u223c\u2200\u2039v\u203a\u223c|0|")),
+                entry(UnabbType.VARIABLE, new Document("\u2039s\u203a")),
+                entry(UnabbType.CONSTANT, new Document("\u2039s\u203a")),
+                entry(UnabbType.COMPLEX_TERM, new Document("\u2039f\u203a|n|")),
+                entry(UnabbType.SENTENCE_LET, new Document("\u2039s\u203a")),
+                entry(UnabbType.RELATION_ATOMIC, new Document("\u2039r\u203a|n|")),
+                entry(UnabbType.BOUNDED_QUANTIFIER, new Document("\u2039b\u203a|0|"))
+        ));
+        return lang;
+    }
+
+
     private static Language Lnt_lessthan() {
         Language lang = new Language("\u2112\u0274\u1d1b<");
         lang.setNameTexts("\u2112", "","NT<");
@@ -294,10 +415,50 @@ public class Languages {
         return lang;
     }
 
+    private static Language MvarLnt_lessthan() {
+        Language lang = new Language("Mvar\u2112\u0274\u1d1b<");
+        lang.setNameTexts("\u2112", "","NT<");
+        lang.setmVarLang(true);
+
+        lang.setOpenBracket1("("); lang.setCloseBracket1(")");
+        lang.setAllowDroppedBrackets(false);
+
+        lang.setNegation("\u223c");
+        lang.setConditional("\u2192");
+        lang.setUniversalQuant("\u2200");
+        lang.setContradictionSymbol("\u22a5");
+
+        lang.setVariables(Alphabets.getCharacterRange("\ud835\udcca", "\ud835\udccf"));
+        lang.setVariableSubs(true);
+        lang.setConstants(Collections.singletonList("\ue886"));
+
+        lang.setOnePlaceFunctionSymbols(Collections.singletonList("\ud835\udc46"));
+        lang.setTwoPlaceFunctionSymbols(Arrays.asList("\ue8b8", "\ue8ba"));
+        lang.setAllowBinaryInfixFunctions(false);
+
+        lang.setAllowBinaryInfixRelations(false);
+        lang.setAllowBinaryInfixNegations(false);
+        lang.setInfixRelations( Map.ofEntries(entry("\ue8ac", ""), entry("\ue8a4", "")) );
+
+        lang.setUnabbForms( Map.ofEntries(
+                entry(UnabbType.NEGATION, new Document("\u223c|0|")),
+                entry(UnabbType.CONDITIONAL, new Document("(|0| \u2192 |1|)")),
+                entry(UnabbType.UNIVERSAL, new Document("\u2200\u2039v\u203a|0|")),
+                entry(UnabbType.VARIABLE, new Document("\u2039s\u203a")),
+                entry(UnabbType.CONSTANT, new Document("\u2039s\u203a")),
+                entry(UnabbType.COMPLEX_TERM, new Document("\u2039f\u203a|n|")),
+                entry(UnabbType.RELATION_ATOMIC, new Document("\u2039r\u203a|n|"))
+
+        ));
+
+        return lang;
+    }
+
+
 
     private static Language Lnt_lessthan_abv() {
         Language lang = new Language("\u2112\u0274\u1d1b< (w/abv)");
-        lang.setNameTexts("\u2112", "","NT< (w/abv)");
+        lang.setNameTexts("\u2112", "","NT<+");
 
         lang.setOpenBracket1("("); lang.setCloseBracket1(")");
         lang.setOpenBracket2("["); lang.setCloseBracket2("]");
@@ -341,6 +502,56 @@ public class Languages {
 
         return lang;
     }
+
+    private static Language MvarLnt_lessthan_abv() {
+        Language lang = new Language("Mvar\u2112\u0274\u1d1b< (w/abv)");
+        lang.setNameTexts("\u2112", "","NT<+");
+        lang.setmVarLang(true);
+        lang.setMetalanguage(false);
+
+        lang.setOpenBracket1("("); lang.setCloseBracket1(")");
+        lang.setOpenBracket2("["); lang.setCloseBracket2("]");
+        lang.setAllowDroppedBrackets(true);
+
+        lang.setNegation("\u223c");
+        lang.setConditional("\u2192");
+        lang.setBiconditional("\u2194");
+        lang.setConjunction("\u2227");
+        lang.setDisjunction("\u2228");
+        lang.setUniversalQuant("\u2200");
+        lang.setExistentialQuant("\u2203");
+        lang.setContradictionSymbol("\u22a5");
+
+        lang.setVariables(Alphabets.getCharacterRange("\ud835\udcca", "\ud835\udccf"));
+        lang.setVariableSubs(true);
+        lang.setConstants(Collections.singletonList("\ue886"));
+
+        lang.setOnePlaceFunctionSymbols(Collections.singletonList("\ud835\udc46"));
+        lang.setTwoPlaceFunctionSymbols(Arrays.asList("\ue8b8", "\ue8ba"));
+        lang.setAllowBinaryInfixFunctions(true);
+
+        lang.setAllowBinaryInfixRelations(true);
+        lang.setAllowBinaryInfixNegations(false);
+        lang.setInfixRelations( Map.ofEntries(entry("\ue8ac", ""), entry("\ue8a4", "")) );
+
+        lang.setUnabbForms( Map.ofEntries(
+                entry(UnabbType.NEGATION, new Document("\u223c|0|")),
+                entry(UnabbType.CONDITIONAL, new Document("(|0| \u2192 |1|)")),
+                entry(UnabbType.BICONDITIONAL, new Document("\u223c((|0| \u2192 |1|) \u2192 \u223c(|1| \u2192 |0|))")),
+                entry(UnabbType.CONJUNCTION, new Document("\u223c(|0| \u2192 \u223c|1|)")),
+                entry(UnabbType.DISJUNCTION, new Document("(\u223c|0| \u2192 |1|)")),
+                entry(UnabbType.UNIVERSAL, new Document("\u2200\u2039v\u203a|0|")),
+                entry(UnabbType.EXISTENTIAL, new Document("\u223c\u2200\u2039v\u203a\u223c|0|")),
+                entry(UnabbType.VARIABLE, new Document("\u2039s\u203a")),
+                entry(UnabbType.CONSTANT, new Document("\u2039s\u203a")),
+                entry(UnabbType.COMPLEX_TERM, new Document("\u2039f\u203a|n|")),
+                entry(UnabbType.RELATION_ATOMIC, new Document("\u2039r\u203a|n|"))
+
+        ));
+
+        return lang;
+    }
+
 
     private static Language Lnt() {
         Language lang = new Language("\u2112\u0274\u1d1b");
@@ -394,6 +605,61 @@ public class Languages {
         ));
         return lang;
     }
+
+    private static Language MvarLnt() {
+        Language lang = new Language("Mvar\u2112\u0274\u1d1b");
+        lang.setNameTexts("\u2112", "","NT");
+        lang.setmVarLang(true);
+
+        lang.setOpenBracket1("("); lang.setCloseBracket1(")");
+        lang.setOpenBracket2("["); lang.setCloseBracket2("]");
+        lang.setAllowDroppedBrackets(true);
+
+        lang.setNegation("\u223c");
+        lang.setConditional("\u2192");
+        lang.setBiconditional("\u2194");
+        lang.setConjunction("\u2227");
+        lang.setDisjunction("\u2228");
+        lang.setUniversalQuant("\u2200");
+        lang.setExistentialQuant("\u2203");
+        lang.setContradictionSymbol("\u22a5");
+
+        lang.setVariables(Alphabets.getCharacterRange("\ud835\udcca", "\ud835\udccf"));
+        lang.setVariableSubs(true);
+        lang.setConstants(Collections.singletonList("\ue886"));
+
+        lang.setOnePlaceFunctionSymbols(Collections.singletonList("\ud835\udc46"));
+        lang.setTwoPlaceFunctionSymbols(Arrays.asList("\ue8b8", "\ue8ba"));
+        lang.setAllowBinaryInfixFunctions(true);
+
+        lang.setAllowBinaryInfixRelations(true);
+        lang.setAllowBinaryInfixNegations(true);
+        lang.setInfixRelations( Map.ofEntries(
+                entry("\ue8ac", "\ue8ad"),  //equal
+                entry("\ue8a4", "\ue8a5"),  //less than
+                entry("\ue8a6", "\ue8a7")   //leq
+        ));
+
+        lang.setAllowBoundedQuantifiers(true);
+        lang.setDividerSymbol(":");
+
+        lang.setUnabbForms( Map.ofEntries(
+                entry(UnabbType.NEGATION, new Document("\u223c|0|")),
+                entry(UnabbType.CONDITIONAL, new Document("(|0| \u2192 |1|)")),
+                entry(UnabbType.BICONDITIONAL, new Document("\u223c((|0| \u2192 |1|) \u2192 \u223c(|1| \u2192 |0|))")),
+                entry(UnabbType.CONJUNCTION, new Document("\u223c(|0| \u2192 \u223c|1|)")),
+                entry(UnabbType.DISJUNCTION, new Document("(\u223c|0| \u2192 |1|)")),
+                entry(UnabbType.UNIVERSAL, new Document("\u2200\u2039v\u203a|0|")),
+                entry(UnabbType.EXISTENTIAL, new Document("\u223c\u2200\u2039v\u203a\u223c|0|")),
+                entry(UnabbType.VARIABLE, new Document("\u2039s\u203a")),
+                entry(UnabbType.CONSTANT, new Document("\u2039s\u203a")),
+                entry(UnabbType.COMPLEX_TERM, new Document("\u2039f\u203a|n|")),
+                entry(UnabbType.RELATION_ATOMIC, new Document("\u2039r\u203a|n|")),
+                entry(UnabbType.BOUNDED_QUANTIFIER, new Document("\u2039b\u203a|0|"))
+        ));
+        return lang;
+    }
+
 
     private static Language MetaL() {
         Language lang = new Language("LM Meta");
@@ -456,6 +722,68 @@ public class Languages {
         return lang;
     }
 
+    private static Language MetaSym() {
+        Language lang = new Language("Meta Sym");
+        lang.setNameTexts("\u2112", "","MS");
+        lang.setMetalanguage(true);
+
+        lang.setOpenBracket1("("); lang.setCloseBracket1(")");
+
+        lang.setOpenBracket2("["); lang.setCloseBracket2("]");
+        lang.setAllowDroppedBrackets(true);
+
+        lang.setNegation("\u223c");
+        lang.setConditional("\u2192");
+        lang.setBiconditional("\u2194");
+        lang.setConjunction("\u2227");
+        lang.setDisjunction("\u2228");
+        lang.setUniversalQuant("\u2200");
+        lang.setExistentialQuant("\u2203");
+        lang.setContradictionSymbol("\u22a5");
+        lang.setNand("\u2191");
+        lang.setNor("\u2193");
+        lang.setDividerSymbol(":");
+        lang.setCommaDivider(",");
+        lang.setSlashDivider("/");
+        lang.setdSlashDivider("\u2afd");
+
+        lang.setVariables(Stream.concat(Alphabets.getCharacterRange("\ud835\udcca", "\ud835\udccf").stream(), Alphabets.getCharacterRange("\ud835\udc4e", "\ud835\udc67").stream()).collect(Collectors.toList()));
+        lang.setNoMatchVariables(Alphabets.getCharacterRange("\ud835\udc4e", "\ud835\udc67"));
+        lang.setVariableSubs(true);
+
+
+        lang.setConstants(Alphabets.getCharacterRange("\ue886", "\u212f"));
+        lang.setConstantSubs(true);
+
+        lang.setOnePlaceFunctionSymbols(Collections.singletonList("\ud835\udc46"));
+        lang.setTwoPlaceFunctionSymbols(Arrays.asList("\ue8b8", "\ue8ba"));
+        lang.setAllowBinaryInfixFunctions(true);
+        lang.setXfunctionSymbols(Arrays.asList("\ud835\udcbb", "\u210a", "\ud835\udcbd"));
+        lang.setXfunctionSymbolSubs(true);
+   //     lang.setmTermSymbols(Alphabets.getCharacterRange("\ud835\udcc2", "\ud835\udcc9"));
+
+        lang.setSentenceLetters(Stream.concat(Alphabets.getCharacterRange("\ud835\udc9c", "\ud835\udca5").stream(), Alphabets.getCharacterRange("\ud835\udcae", "\ud835\udcb5").stream()).collect(Collectors.toList()));  //script A..J, T...Z
+        lang.setSentenceLetterSubs(true);
+        lang.setXrelationSymbols(Alphabets.getCharacterRange("\ud835\udca6", "\u211b"));  //script K..R
+        lang.setXrelationSymbolSubs(true);
+        lang.setXrelationSymbolsRequireSuper(false);
+
+        lang.setAllowBinaryInfixRelations(true);
+        lang.setAllowBinaryInfixNegations(true);
+        lang.setInfixRelations( Map.ofEntries(
+                entry("\ue8ac", "\ue8ad"),  //equal
+                entry("\ue8a4", "\ue8a5"),  //less than
+                entry("\ue8a6", "\ue8a7")   //leq
+        ));
+
+        lang.setAllowBoundedQuantifiers(true);
+ //       lang.setmFormulaSymbols(Alphabets.getCharacterRange("\ud835\udc9c", "\ud835\udcac"));
+ //       lang.setArbitraryExpressionSymbols(Collections.singletonList("\ud835\udcb3"));
+
+        return lang;
+    }
+
+
     private static Language MetaO() {
         Language lang = new Language("\u2133\u2112");
         lang.setNameTexts("\u2133\u2112", "","");
@@ -512,6 +840,28 @@ public class Languages {
 
         lang.setAllowBoundedQuantifiers(true);
         lang.setpMFormulaSymbols(Alphabets.getCharacterRange("\ud835\udc9c", "\ud835\udcac"));
+
+        return lang;
+    }
+
+    private static Language MetaSupp() {
+        Language lang = new Language("Meta Supp");
+        lang.setNameTexts("Meta Supp", "","");
+
+        lang.setMetUnivSymbols(Alphabets.getCharacterRange("\ud835\ude08", "\ud835\ude21"));   //A - Z italic sans
+        lang.setObjUnivSymbols(Alphabets.getCharacterRange("\ud835\udda0", "\ud835\uddb9"));   //sans A - Z
+        lang.setMetObjVars(Alphabets.getCharacterRange("\ud835\ude22", "\ud835\ude30"));  //a - z sans Ital
+        lang.setObjObjVars(Alphabets.getCharacterRange("\ud835\uddba", "\ud835\uddd3"));  //a - z sans
+
+        List<String> alphabets = Stream.of(Alphabets.getCharacterRange("a", "z"), Alphabets.getCharacterRange("0", "9"))
+                .flatMap(Collection::stream)
+                .toList();
+
+        lang.setNameAlphabet(alphabets);
+
+
+
+
 
         return lang;
     }

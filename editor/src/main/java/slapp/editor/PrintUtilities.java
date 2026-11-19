@@ -19,12 +19,14 @@ import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableSet;
+import javafx.concurrent.Task;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.print.*;
 import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -46,10 +48,12 @@ import static slapp.editor.EditorMain.os;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
 
+import javafx.print.PageRange;
 
 /**
  * Utility items to facilitate printing
  */
+
 public class PrintUtilities {
     private static PageLayout pageLayout;
     //this is the layout visible to the rest of the program for the printable area
@@ -70,6 +74,11 @@ public class PrintUtilities {
     private static double minHorizOffset;
     private static double minVertOffset;
 
+    // Reusable off-screen Scene for CSS & layout measurement on the FX thread
+    private static final Group measureRoot = new Group();
+    private static final Scene measureScene = new Scene(measureRoot);
+
+    private static boolean printInProgress = false;
 
     /**
      * Set default print values
@@ -80,6 +89,9 @@ public class PrintUtilities {
         if (job != null) {
             PageLayout baseLayout = job.getJobSettings().getPageLayout();
             pageHeight.set(baseLayout.getPrintableHeight());
+
+            //       System.out.println("Print pg height: " + pageHeight);
+
             pageWidth.set(baseLayout.getPrintableWidth());
             printer = job.getPrinter();
             double bottomMargin = Math.max(baseLayout.getBottomMargin(), 48);
@@ -127,7 +139,9 @@ public class PrintUtilities {
 
 
     private static PrinterJob getPrinterJob() {
-        PrinterJob job = PrinterJob.createPrinterJob();
+        // --- FIX 1: Force job to use selected printer instead of blindly returning to OS default ---
+        PrinterJob job = (printer != null) ? PrinterJob.createPrinterJob(printer) : PrinterJob.createPrinterJob();
+
         if (job == null) {
             EditorAlerts.showSimpleAlert("Cannot find Printer", "I do not find an installed printer.  Please install printer and try again.");
         } else {
@@ -272,7 +286,7 @@ public class PrintUtilities {
      */
     private static boolean runExportSetup() {
         boolean isExportSetup = false;
-        if (os.startsWith("Mac")) {
+        if (os.startsWith("mac")) {
             EditorAlerts.showSimpleAlert("Use Print Option", "On Macintosh there is no independent PDF export option.  To create a PDF, select 'Print' and from the dropdown at the bottom of the print dialog, 'Save to PDF'.\n\n" +
                     "Export works by a \"PDF printer\".  Recent versions of the MAC OS exclude such printers from the printer list -- preferring to require the internal MAC option.");
         } else {
@@ -317,26 +331,18 @@ public class PrintUtilities {
         else node.getTransforms().add(new Translate(minHorizOffset, minVertOffset));
     }
 
-
     /*
-     * Send nodes from print buffer to printer.  Handles header, footer, and page breaks.
-     *
-     * @param footerInfo the footer string
-     * @param job the printer job
+     * Assemble printable page containers on the FX Application Thread.
      */
-    private static void printNodes(String footerInfo, PrinterJob job) {
-
-        MainWindowView.activateProgressIndicator("printing");
-
-
-        //  System.out.println("printer:" + printer + " layout: " + pageLayout);    //?? problem here
-
-
-        boolean success = true;
+    private static List<Parent> buildPrintPages(String footerInfo) {
+        List<Parent> pages = new ArrayList<>();
         int pageNum = 0;
         VBox pageBox = new VBox();
         double netHeight = 0;
         int i = 0;
+
+        // Reserve enough vertical space for the scaled footerBox plus bottom clip clearance
+        double footerOffset = Math.max(26.0, Math.ceil(20.0 * baseScale));
 
         if (topBox != null) {
             topBox.setMaxWidth(getPageWidth() / baseScale);
@@ -354,61 +360,148 @@ public class PrintUtilities {
             Node node = bufferItem.getNode();
             node.getTransforms().clear();
             node.getTransforms().add(new Scale(scale, scale));
-            Group nodeGroup = new Group(bufferItem.getNode());
+            Group nodeGroup = new Group(node);
 
             double newHeight = nodeHeight + netHeight;
 
-            //if the node fits on the page add to page
+            // If the node fits on the page, add to page
             if (newHeight <= pageLayout.getPrintableHeight()) {
                 pageBox.getChildren().add(nodeGroup);
                 netHeight = newHeight;
                 i++;
 
-
-                //if all the nodes have been added print page
+                // If all the nodes have been added, finalize page
                 if (i == printBuffer.size()) {
-
-                    spacer.setPrefHeight(internalPrintHeight - (netHeight + 16.0));  //24  temp fix to stop cutoff footer for vtree
-                    pageBox.getChildren().addAll(spacer, getFooterBox(++pageNum, footerInfo));
+                    Region pageSpacer = new Region();
+                    pageSpacer.setVisible(false);
+                    pageSpacer.setPrefHeight(Math.max(0.0, internalPrintHeight - (netHeight + footerOffset)));
+                    pageBox.getChildren().addAll(pageSpacer, getFooterBox(++pageNum, footerInfo));
 
                     translateNode(pageBox);
-                    success = (job.printPage(internalPageLayout, pageBox) && success);
+                    pages.add(pageBox);
                 }
-                //if the node does not fit on this page, print page and start new
+                // If the node does not fit on this page, finalize current page and start a new one
             } else if (!pageBox.getChildren().isEmpty()) {
-
-                spacer.setPrefHeight(internalPrintHeight - (netHeight + 16.0));  //16
-                pageBox.getChildren().addAll(spacer, getFooterBox(++pageNum, footerInfo));
+                Region pageSpacer = new Region();
+                pageSpacer.setVisible(false);
+                pageSpacer.setPrefHeight(Math.max(0.0, internalPrintHeight - (netHeight + footerOffset)));
+                pageBox.getChildren().addAll(pageSpacer, getFooterBox(++pageNum, footerInfo));
 
                 translateNode(pageBox);
-                success = (job.printPage(internalPageLayout, pageBox) && success);
-
+                pages.add(pageBox);
 
                 netHeight = 0;
                 pageBox = new VBox();
-                //node is too big for a page, truncate and print anyway (human check says ok)
+                // Node is too big for a single page; clip and print anyway
             } else {
-                //the pageBox is too tall with this node, so we need another approach
                 Rectangle nodeBox = new Rectangle(pageLayout.getPrintableWidth(), pageLayout.getPrintableHeight());
                 nodeGroup.setClip(nodeBox);
 
                 HBox footerBox = getFooterBox(++pageNum, footerInfo);
-                footerBox.getTransforms().add(new Scale(scale, scale));
                 StackPane pane = new StackPane(nodeGroup, footerBox);
-                pane.setAlignment(footerBox, Pos.TOP_LEFT);
-                footerBox.setTranslateY(internalPrintHeight - 16.0);  //16
+                StackPane.setAlignment(nodeGroup, Pos.TOP_LEFT);
+                StackPane.setAlignment(footerBox, Pos.TOP_LEFT);
+                footerBox.setTranslateY(internalPrintHeight - footerOffset);
                 footerBox.setTranslateX(0.0);
 
                 translateNode(pane);
-                success = (job.printPage(internalPageLayout, pane) && success);
+                pages.add(pane);
                 i++;
             }
         }
-        MainWindowView.deactivateProgressIndicator();
-        if (success) EditorAlerts.fleetingPopup("Print job complete.");
-        else EditorAlerts.fleetingRedPopup("Print job did not complete.");
+        return pages;
     }
 
+    private static boolean isPageInRange(int pageNumber, PageRange[] pageRanges) {
+        if (pageRanges == null || pageRanges.length == 0) {
+            return true;
+        }
+        for (PageRange range : pageRanges) {
+            if (pageNumber >= range.getStartPage() && pageNumber <= range.getEndPage()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /*
+     * Build page nodes on the FX thread, then spool to PrinterJob on a background thread
+     * so the ProgressIndicator continues spinning smoothly.
+     */
+    private static void printNodes(String footerInfo, PrinterJob job, boolean restoreMacFocus) {
+        MainWindowView.activateProgressIndicator("printing");
+
+        // 1. Build all page Scene-graph containers on the FX Application Thread
+        //    so pagination and footer page numbers are accurate across the document.
+        List<Parent> pages = buildPrintPages(footerInfo);
+
+        // 2. Capture any user-selected page ranges from the print dialog, then clear
+        //    the attribute on JobSettings (JDK-8150076) so we filter the pages ourselves
+        //    and Java2D does not prematurely close the job or misalign start pages.
+        PageRange[] selectedRanges = job.getJobSettings().getPageRanges();
+        if (selectedRanges != null && selectedRanges.length > 0) {
+            job.getJobSettings().setPageRanges((PageRange[]) null);
+        }
+
+        // 3. Spool only the requested pages and endJob() on a background thread
+        Task<Boolean> printTask = new Task<>() {
+            @Override
+            protected Boolean call() {
+                boolean success = true;
+                boolean printedAnyPage = false;
+
+                for (int i = 0; i < pages.size(); i++) {
+                    int pageNumber = i + 1; // 1-based page number matching Print Dialog
+                    if (isPageInRange(pageNumber, selectedRanges)) {
+                        printedAnyPage = true;
+                        if (!job.printPage(internalPageLayout, pages.get(i))) {
+                            success = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (!printedAnyPage) {
+                    job.cancelJob();
+                    return false;
+                }
+
+                if (success) {
+                    success = job.endJob();
+                } else {
+                    job.endJob();
+                }
+                return success;
+            }
+        };
+
+        printTask.setOnSucceeded(e -> {
+            setPrintInProgress(false);
+            MainWindowView.deactivateProgressIndicator();
+            if (restoreMacFocus) {
+                MainWindow.restoreMacFocus(mainStage);
+            }
+            if (Boolean.TRUE.equals(printTask.getValue())) {
+                EditorAlerts.fleetingPopup("Print job complete.");
+            } else {
+                EditorAlerts.fleetingRedPopup("Print job did not complete.");
+            }
+        });
+
+        printTask.setOnFailed(e -> {
+            job.endJob();
+            setPrintInProgress(false);
+            MainWindowView.deactivateProgressIndicator();
+            if (restoreMacFocus) {
+                MainWindow.restoreMacFocus(mainStage);
+            }
+            EditorAlerts.fleetingRedPopup("Print job did not complete.");
+        });
+
+        Thread printThread = new Thread(printTask, "SLAPP-PrintSpooler");
+        printThread.setDaemon(true);
+        printThread.start();
+    }
 
     /*
      * Construct footer from page num and info string
@@ -429,74 +522,123 @@ public class PrintUtilities {
         return footerBox;
     }
 
-
     /**
      * Show print dialog and send items from print buffer to the selected printer
      *
      * @param footerInfo the footer info string
      */
     public static void sendBufferToPrint(String footerInfo) {
-
-        PrinterJob job = PrinterJob.createPrinterJob(printer);
-        job.setPrinter(printer);
-        job.getJobSettings().setPageLayout(pageLayout);
+        PrinterJob job = (printer != null) ? PrinterJob.createPrinterJob(printer) : PrinterJob.createPrinterJob();
+        if (job != null) {
+            if (printer != null) {
+                job.setPrinter(printer);
+            }
+            job.getJobSettings().setPageLayout(pageLayout);
+        }
 
         Platform.runLater(() -> {
-
             if (job != null) {
                 if (refreshPageLayout()) {
+                    // Pause spinner while native modal print dialog waits for user input
+                    MainWindowView.deactivateProgressIndicator();
 
                     if (job.showPrintDialog(mainStage)) {
-                        printNodes(footerInfo, job);
+                        Printer selectedPrinter = job.getPrinter();
+                        PageLayout selectedLayout = job.getJobSettings().getPageLayout();
+
+                        double bottomMargin = Math.max(selectedLayout.getBottomMargin(), 48);
+                        pageLayout = selectedPrinter.createPageLayout(selectedLayout.getPaper(),
+                                selectedLayout.getPageOrientation(), selectedLayout.getLeftMargin(),
+                                selectedLayout.getRightMargin(), selectedLayout.getTopMargin(), bottomMargin);
+
+                        pageHeight.set(pageLayout.getPrintableHeight());
+                        pageWidth.set(pageLayout.getPrintableWidth());
+
+                        PageLayout minLayout = selectedPrinter.createPageLayout(selectedLayout.getPaper(),
+                                pageLayout.getPageOrientation(), Printer.MarginType.HARDWARE_MINIMUM);
+                        minHorizOffset = minLayout.getLeftMargin();
+                        minVertOffset = minLayout.getTopMargin();
+
+                        double bottom = Math.max(18.0, minLayout.getBottomMargin());
+                        double leftMargin = Math.max(0.0, pageLayout.getLeftMargin() - minHorizOffset);
+                        double rightMargin = pageLayout.getRightMargin();
+                        double topMargin = Math.max(0.0, pageLayout.getTopMargin() - minVertOffset);
+
+                        if (pageLayout.getPageOrientation() == PageOrientation.LANDSCAPE) {
+                            internalPageLayout = selectedPrinter.createPageLayout(pageLayout.getPaper(),
+                                    pageLayout.getPageOrientation(), leftMargin, rightMargin, bottom, topMargin);
+                        } else {
+                            internalPageLayout = selectedPrinter.createPageLayout(pageLayout.getPaper(),
+                                    pageLayout.getPageOrientation(), leftMargin, rightMargin, topMargin, bottom);
+                        }
+
+                        // Exact unclipped vertical space remaining after translateNode shifts down by minVertOffset
+                        internalPrintHeight = internalPageLayout.getPrintableHeight() - minVertOffset;
+
+                        printer = selectedPrinter;
+
+                        // Spools on a background Task and resets printInProgress when done
+                        printNodes(footerInfo, job, true);
+                        return;
                     }
 
                     MainWindow.restoreMacFocus(mainStage);
                 }
                 job.endJob();
+                setPrintInProgress(false);
+                MainWindowView.deactivateProgressIndicator();
+            } else {
+                setPrintInProgress(false);
                 MainWindowView.deactivateProgressIndicator();
             }
         });
     }
-
-
-
-
 
     /*
      * If pdf printer not already selected, select; then send print buffer to the selected pdf printer
      * @param footerInfo
      */
     public static void sendBufferToPDF(String footerInfo) {
-        boolean success = false;
-        if (pdfPrinter != null || runExportSetup()) {
-            PrinterJob job = PrinterJob.createPrinterJob(pdfPrinter);
-
-            if (job != null) {
-
-                PageLayout minLayout = pdfPrinter.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), Printer.MarginType.HARDWARE_MINIMUM);
-                minHorizOffset = minLayout.getLeftMargin();
-                minVertOffset = minLayout.getTopMargin();
-
-                //Landscape margins do not work as expected and seem different on Win and Mac.  This kludge seems ok?
-                double top = pageLayout.getTopMargin();
-                double bottom = 18.0;
-                double left = pageLayout.getLeftMargin();
-                double right = pageLayout.getRightMargin();
-                double leftMargin = (left > minHorizOffset) ? left - minHorizOffset : minHorizOffset;
-                double topMargin = (top > minVertOffset) ? top - minVertOffset : minVertOffset;
-
-                if (pageLayout.getPageOrientation() == PageOrientation.LANDSCAPE) {
-                    internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, right, bottom,topMargin);
-                } else {
-                    internalPageLayout = printer.createPageLayout(pageLayout.getPaper(), pageLayout.getPageOrientation(), leftMargin, right, topMargin, bottom);
-                }
-
-                printNodes(footerInfo, job);
-                success = true;
-                job.endJob();
+        if (pdfPrinter == null) {
+            // Pause spinner while user selects PDF printer in modal dialog
+            MainWindowView.deactivateProgressIndicator();
+            if (!runExportSetup()) {
+                setPrintInProgress(false);
+                EditorAlerts.showSimpleAlert("Print Problem", "Failed to create export job");
+                return;
             }
         }
-        if (!success) EditorAlerts.showSimpleAlert("Print Problem", "Failed to create export job");
+
+        PrinterJob job = PrinterJob.createPrinterJob(pdfPrinter);
+        if (job != null) {
+            PageLayout minLayout = pdfPrinter.createPageLayout(pageLayout.getPaper(),
+                    pageLayout.getPageOrientation(), Printer.MarginType.HARDWARE_MINIMUM);
+            minHorizOffset = minLayout.getLeftMargin();
+            minVertOffset = minLayout.getTopMargin();
+
+            double bottom = Math.max(18.0, minLayout.getBottomMargin());
+            double leftMargin = Math.max(0.0, pageLayout.getLeftMargin() - minHorizOffset);
+            double rightMargin = pageLayout.getRightMargin();
+            double topMargin = Math.max(0.0, pageLayout.getTopMargin() - minVertOffset);
+
+            if (pageLayout.getPageOrientation() == PageOrientation.LANDSCAPE) {
+                internalPageLayout = pdfPrinter.createPageLayout(pageLayout.getPaper(),
+                        pageLayout.getPageOrientation(), leftMargin, rightMargin, bottom, topMargin);
+            } else {
+                internalPageLayout = pdfPrinter.createPageLayout(pageLayout.getPaper(),
+                        pageLayout.getPageOrientation(), leftMargin, rightMargin, topMargin, bottom);
+            }
+
+            // Exact unclipped vertical space remaining after translateNode shifts down by minVertOffset
+            internalPrintHeight = internalPageLayout.getPrintableHeight() - minVertOffset;
+
+            // Spools on a background Task and resets printInProgress when done
+            printNodes(footerInfo, job, false);
+        } else {
+            setPrintInProgress(false);
+            MainWindowView.deactivateProgressIndicator();
+            EditorAlerts.showSimpleAlert("Print Problem", "Failed to create export job");
+        }
     }
 
 
@@ -507,18 +649,18 @@ public class PrintUtilities {
      * @return the print buffer item
      */
     private static PrintBufferItem getNodeSize(Node node) {
-        Group root = new Group();
-        Scene scene = new Scene(root);
-
-        root.getChildren().add(node);
-        root.applyCss();
-        root.layout();
+        measureRoot.getChildren().setAll(node);
+        measureRoot.applyCss();
+        measureRoot.layout();
 
         Bounds bounds = node.getLayoutBounds();
+        double height = bounds.getHeight();
+        double width = bounds.getWidth();
 
-  //      System.out.println("node: " + node + " width: " + bounds.getWidth());
+        // Detach immediately so node has no parent/Scene reference before printing
+        measureRoot.getChildren().clear();
 
-        return new PrintBufferItem(node, bounds.getHeight(), bounds.getWidth());
+        return new PrintBufferItem(node, height, width);
     }
 
 
@@ -537,15 +679,17 @@ public class PrintUtilities {
         double width = bufferItem.getWidth();
         double height = bufferItem.getHeight();
 
+        //      System.out.println(node + " : " + width + "/" + height);
+
 
 
         if (width > getPageWidth() / baseScale) {
             nodeFit = false;
             wScale = getPageWidth() / width;
         }
-        if (height > getPageHeight() / baseScale) {
+        if (height > (getPageHeight() + 15) / baseScale) {
             nodeFit = false;
-            hScale = getPageHeight() / height;
+            hScale = (getPageHeight() + 15)/ height;
         }
         double scale = Math.min(Math.min(wScale, hScale), baseScale);
         bufferItem.setScale(scale);
@@ -553,6 +697,10 @@ public class PrintUtilities {
 
 
         return nodeFit;
+    }
+
+    public static void clearPrintBuffer() {
+        printBuffer.clear();
     }
 
 
@@ -695,4 +843,12 @@ public class PrintUtilities {
      * @param box the top box
      */
     public static void setTopBox(VBox box) { topBox = box; }
+
+    public static boolean isPrintInProgress() {
+        return printInProgress;
+    }
+
+    public static void setPrintInProgress(boolean inProgress) {
+        printInProgress = inProgress;
+    }
 }

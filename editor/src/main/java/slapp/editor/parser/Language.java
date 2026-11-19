@@ -61,6 +61,7 @@ public class Language implements Serializable {
 
     //for metalanguage
     private boolean metalanguage = false;
+    private boolean mVarLang = false;
     private boolean objectMetalanguage = false;
     private List<String> noMatchVariables = new ArrayList();
 
@@ -76,6 +77,20 @@ public class Language implements Serializable {
     private String commaDivider = ",";
     private String slashDivider = "/";
     private String dSlashDivider = "\u2afd";
+
+    private String curleyOpenBracket = "{";
+    private String curleyCloseBracket = "}";
+    private String verticalBarDivider = "|";
+    private List<String> objUnivSymbols = new ArrayList<>();
+    private List<String> metUnivSymbols = new ArrayList<>();
+    private List<String> metObjVars = new ArrayList<>();
+    private List<String> objObjVars = new ArrayList<>();
+    private List<String> nameUppercase = new ArrayList<>();
+    private List<String> nameAlphabet = new ArrayList<>();
+    private List<String> nameDigits = new ArrayList<>();
+
+
+
 
 
 
@@ -242,6 +257,22 @@ public class Language implements Serializable {
         newVars.add("\ue89c");
         newVars.add("\ue89d");
         return newVars;
+    }
+
+    public List<String> getMetObjVars() {
+        return metObjVars;
+    }
+
+    public void setMetObjVars(List<String> metObjVars) {
+        this.metObjVars = metObjVars;
+    }
+
+    public List<String> getObjObjVars() {
+        return objObjVars;
+    }
+
+    public void setObjObjVars(List<String> objObjVars) {
+        this.objObjVars = objObjVars;
     }
 
     public void setVariables(List<String> variables) {
@@ -452,6 +483,34 @@ public class Language implements Serializable {
         return slashDivider;
     }
 
+    public String getCurleyCloseBracket() {
+        return curleyCloseBracket;
+    }
+
+    public String getCurleyOpenBracket() {
+        return curleyOpenBracket;
+    }
+
+    public String getVerticalBarDivider() {
+        return verticalBarDivider;
+    }
+
+    public List<String> getMetUnivSymbols() {
+        return metUnivSymbols;
+    }
+
+    public void setMetUnivSymbols(List<String> metUnivSymbols) {
+        this.metUnivSymbols = metUnivSymbols;
+    }
+
+    public List<String> getObjUnivSymbols() {
+        return objUnivSymbols;
+    }
+
+    public void setObjUnivSymbols(List<String> objUnivSymbols) {
+        this.objUnivSymbols = objUnivSymbols;
+    }
+
     public String getdSlashDivider() {
         return dSlashDivider;
     }
@@ -474,6 +533,14 @@ public class Language implements Serializable {
 
     public void setMetalanguage(boolean metalanguage) {
         this.metalanguage = metalanguage;
+    }
+
+    public boolean ismVarLang() {
+        return mVarLang;
+    }
+
+    public void setmVarLang(boolean mVarLang) {
+        this.mVarLang = mVarLang;
     }
 
     public boolean isObjectMetalanguage() {
@@ -524,5 +591,57 @@ public class Language implements Serializable {
 
     public void setNoMatchVariables(List<String> noMatchVariables) {
         this.noMatchVariables = noMatchVariables;
+    }
+
+    public void setAngleCloseBracket(String angleCloseBracket) {
+        this.angleCloseBracket = angleCloseBracket;
+    }
+
+    public void setAngleOpenBracket(String angleOpenBracket) {
+        this.angleOpenBracket = angleOpenBracket;
+    }
+
+    public void setCurleyCloseBracket(String curleyCloseBracket) {
+        this.curleyCloseBracket = curleyCloseBracket;
+    }
+
+    public void setCurleyOpenBracket(String curleyOpenBracket) {
+        this.curleyOpenBracket = curleyOpenBracket;
+    }
+
+    public List<String> getNameAlphabet() {
+        return nameAlphabet;
+    }
+
+    public void setNameAlphabet(List<String> nameAlphabet) {
+        this.nameAlphabet = nameAlphabet;
+    }
+
+    public List<String> getNameDigits() {
+        return nameDigits;
+    }
+
+    public void setNameDigits(List<String> nameDigits) {
+        this.nameDigits = nameDigits;
+    }
+
+    public void setNameString(String nameString) {
+        this.nameString = nameString;
+    }
+
+    public void setNameTextList(List<Text> nameTextList) {
+        this.nameTextList = nameTextList;
+    }
+
+    public List<String> getNameUppercase() {
+        return nameUppercase;
+    }
+
+    public void setNameUppercase(List<String> nameUppercase) {
+        this.nameUppercase = nameUppercase;
+    }
+
+    public void setVerticalBarDivider(String verticalBarDivider) {
+        this.verticalBarDivider = verticalBarDivider;
     }
 }

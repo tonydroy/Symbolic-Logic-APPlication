@@ -73,6 +73,7 @@ public class KeyboardDiagram {
     private static Scene scene;
     private static Stage stage;
 
+
     /**
      * Set up window
      */
@@ -90,9 +91,16 @@ public class KeyboardDiagram {
         stage.setScene(scene);
         stage.setTitle("Keyboard Diagrams");
 
-        stage.initOwner(EditorMain.mainStage);
+   //     stage.initOwner(EditorMain.mainStage);
         stage.initModality(Modality.NONE);
         stage.getIcons().addAll(EditorMain.icons);
+
+        stage.iconifiedProperty().addListener((ob, ov, nv) -> {
+            Stage mainStage = EditorMain.mainStage;
+            if (mainStage.isShowing() && mainStage.isIconified() != nv) {
+                mainStage.setIconified(nv);
+            }
+        });
 
     }
 
@@ -667,12 +675,20 @@ public class KeyboardDiagram {
     public void updateAndShow() {
         update();
         if (!shown) {
+            StackPane tempPane = new StackPane(boardsBox);
+            tempPane.applyCss();
+            tempPane.layout();
+            double naturalHeight = boardsBox.getHeight() + 35;
             stage.setWidth(650);
-            stage.setHeight(970);
-
             Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
+            double availableHeight = bounds.getHeight() - 20;
+            double stageHeight = Math.min(naturalHeight, availableHeight);
+
+            stage.setHeight(stageHeight);
+
+
             stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 650));
-            stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 970));
+            stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - (stageHeight + 10)));
 
             shown = true;
         }
@@ -710,6 +726,8 @@ public class KeyboardDiagram {
     public boolean isShowing() {
         return stage.isShowing();
     }
+
+    public Stage getKeyboardStage() { return stage;};
 
 }
 

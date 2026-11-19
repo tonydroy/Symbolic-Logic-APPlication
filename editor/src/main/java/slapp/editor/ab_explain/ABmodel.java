@@ -46,6 +46,9 @@ public class ABmodel implements ExerciseModel<Document>, Serializable {
     private double paginationPrefHeight = 400;
     private int pointsPossible;
     private int pointsEarned;
+    private String auxExerName;
+
+    private ABCheckSetup checkSetup;
 
 
     /**
@@ -71,6 +74,15 @@ public class ABmodel implements ExerciseModel<Document>, Serializable {
         if (pageContents.isEmpty()) pageContents.add(new PageContent(new Document(), 0.0));
         pointsPossible = 0;
         pointsEarned = -1;
+        auxExerName = "";
+    }
+
+    public ABCheckSetup getCheckSetup() {
+        return checkSetup;
+    }
+
+    public void setCheckSetup(ABCheckSetup checkSetup) {
+        this.checkSetup = checkSetup;
     }
 
     /**
@@ -146,6 +158,14 @@ public class ABmodel implements ExerciseModel<Document>, Serializable {
      * @param commentTextHeight the text height
      */
     void setCommentTextHeight(double commentTextHeight) {   this.commentTextHeight = commentTextHeight;  }
+
+    public String getAuxExerName() {
+        return auxExerName;
+    }
+
+    public void setAuxExerName(String auxExerName) {
+        this.auxExerName = auxExerName;
+    }
 
     /**
      * The exercise name (used also as file name)

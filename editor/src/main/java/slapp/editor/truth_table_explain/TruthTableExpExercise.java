@@ -17,20 +17,24 @@ package slapp.editor.truth_table_explain;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
-import javafx.geometry.Pos;
+import javafx.event.EventHandler;
+import javafx.geometry.*;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
+import javafx.scene.layout.Pane;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.transform.Scale;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -39,20 +43,17 @@ import slapp.editor.DiskUtilities;
 import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
+import slapp.editor.EditorMain;
 import slapp.editor.main_window.*;
 import slapp.editor.truth_table.ParseDocForTTable;
-import slapp.editor.truth_table.TTcheck;
-import slapp.editor.truth_table.TTcheckSetup;
 import slapp.editor.truth_table.TableHeadItem;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import static slapp.editor.EditorMain.*;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 
-/**
- * Controller for the truth table explain exercise
- */
+
 public class TruthTableExpExercise implements Exercise<TruthTableExpModel, TruthTableExpView> {
     private MainWindow mainWindow;
     private TruthTableExpModel truthTableExpModel;
@@ -66,7 +67,30 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
     private List<Integer> basicFormulaCols = new ArrayList<>();
     private List<Integer> mainFormulaCols = new ArrayList<>();
 
+    private Exercise auxExerciseA;
+    private Exercise auxExerciseB;
+    private Stage tStage;
+    private Pane thumbPane = new Pane();
+    private Scene tScene = new Scene(new Pane());
 
+    // SCORCHED EARTH RULE 1: The Asynchronous Ghost "Kill Switch"
+    private boolean isTornDown = false;
+
+    // SCORCHED EARTH RULE 3: Eradicate Anonymous Lambdas
+    private ChangeListener<String> pointsEarnedListener;
+    private ChangeListener<Boolean> statementFocusListener;
+    private ChangeListener<Number> commentFullHeightListener;
+    private ChangeListener<Boolean> commentModifiedListener;
+    private ChangeListener<Boolean> commentFocusListener;
+    private ChangeListener<Boolean> aCheckBoxListener;
+    private ChangeListener<Boolean> bCheckBoxListener;
+    private ChangeListener<Number> explainFullHeightListener;
+    private ChangeListener<Boolean> explainModifiedListener;
+    private ChangeListener<Boolean> explainFocusListener;
+    private EventHandler<ActionEvent> setupTableButtonHandler;
+    private EventHandler<MouseEvent> thumbPaneClickHandler;
+    private ChangeListener<String> charFieldListener;
+    private ChangeListener<Boolean> highlightButtonListener;
 
     /**
      * Create truth table exercise with rows!= 0
@@ -102,6 +126,7 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         tableRows = truthTableExpModel.getTableRows();
         generateEmptyTableModel();                                 //** the difference
         setTruthTableView();
+        ttCheck = new TTExpCheck(this);
     }
 
     /**
@@ -116,6 +141,18 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
      * Setup truth table explain view from model
      */
     private void setTruthTableView() {
+        if (charFieldListener == null) {
+            charFieldListener = (ob, ov, nv) -> {
+                if (isTornDown || mainView == null) return;
+                exerciseModified = true;
+            };
+        }
+        if (highlightButtonListener == null) {
+            highlightButtonListener = (ob, ov, nv) -> {
+                if (isTornDown || mainView == null) return;
+                exerciseModified = true;
+            };
+        }
 
         truthTableExpView.setExplainPrompt(truthTableExpModel.getExplainPrompt());
         truthTableExpView.setStatementPrefHeight(truthTableExpModel.getStatementPrefHeight());
@@ -125,9 +162,12 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
 
         truthTableExpView.setPointsPossible(truthTableExpModel.getPointsPossible());
         if (truthTableExpModel.getPointsEarned() >= 0) truthTableExpView.getPointsEarnedTextField().setText(Integer.toString(truthTableExpModel.getPointsEarned()));
-        truthTableExpView.getPointsEarnedTextField().textProperty().addListener((ob, ov, nv) -> {
+
+        pointsEarnedListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
             exerciseModified = true;
-        });
+        };
+        truthTableExpView.getPointsEarnedTextField().textProperty().addListener(pointsEarnedListener);
 
         //statement
         DecoratedRTA statementDRTA = new DecoratedRTA();
@@ -135,32 +175,60 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         statementEditor.getActionFactory().open(truthTableExpModel.getExerciseStatement()).execute(new ActionEvent());
 
         mainView.editorInFocus(statementDRTA, ControlType.STATEMENT);
-        statementEditor.focusedProperty().addListener((o, ov, nv) -> {
-            if (nv) {
-                mainView.editorInFocus(statementDRTA, ControlType.STATEMENT);
-                mainView.getRTATextHeight(statementEditor);
-            }
-        });
+        statementFocusListener = (o, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            try {
+                if (nv) {
+                    mainView.editorInFocus(statementDRTA, ControlType.STATEMENT);
+                    mainView.setRTATextHeight(statementEditor.getFullHeight());
+                } else {
+                    mainView.undoRTATextHeight();
+                }
+            } catch (Exception e) {}
+        };
+        statementEditor.focusedProperty().addListener(statementFocusListener);
         truthTableExpView.setExerciseStatement(statementDRTA);
-        statementEditor.setPrefHeight(statementEditor.getFullHeight() + RTA_SCREEN_BMP);
 
         //comment
         DecoratedRTA commentDRTA = new DecoratedRTA();
         RichTextArea commentEditor = commentDRTA.getEditor();
         commentEditor.getActionFactory().open(truthTableExpModel.getExerciseComment()).execute(new ActionEvent());
         commentEditor.getActionFactory().saveNow().execute(new ActionEvent());
+
+        final boolean[] commentPrimed = {false};
+        commentFullHeightListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null || truthTableExpModel == null) return;
+            try {
+                if (!commentPrimed[0]) {
+                    commentPrimed[0] = true;
+                    return;
+                }
+                double height = (double) nv;
+                mainView.setRTATextHeight(height);
+                truthTableExpModel.setCommentTextHeight(height);
+            } catch (Exception e) {}
+        };
+        commentEditor.fullHeightProperty().addListener(commentFullHeightListener);
+
+        commentModifiedListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            if (nv) exerciseModified = true;
+        };
+        commentEditor.modifiedProperty().addListener(commentModifiedListener);
+
         mainView.editorInFocus(commentDRTA, ControlType.AREA);
-        commentEditor.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            exerciseModified = true;
-            double commentTextHeight = mainView.getRTATextHeight(commentEditor);
-            truthTableExpModel.setCommentTextHeight(commentTextHeight);
-        });
-        commentEditor.focusedProperty().addListener((o, ov, nv) -> {
-            if (nv) {
-                mainView.editorInFocus(commentDRTA, ControlType.AREA);
-                truthTableExpModel.setCommentTextHeight(mainView.getRTATextHeight(commentEditor));
-            }
-        });
+        commentFocusListener = (o, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            try {
+                if (nv) {
+                    mainView.editorInFocus(commentDRTA, ControlType.AREA);
+                    mainView.setRTATextHeight(commentEditor.getFullHeight());
+                } else {
+                    mainView.undoRTATextHeight();
+                }
+            } catch (Exception e) {}
+        };
+        commentEditor.focusedProperty().addListener(commentFocusListener);
         truthTableExpView.setExerciseComment(commentDRTA);
 
         //choices
@@ -169,41 +237,69 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         CheckBox bCheckBox = truthTableExpView.getbCheckBox();
         aCheckBox.setText(truthTableExpModel.getaPrompt());
         aCheckBox.setSelected(truthTableExpModel.isaSelected());
-        aCheckBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue ob, Boolean ov, Boolean nv) {
-                if (nv == true) bCheckBox.setSelected(false);
+
+        aCheckBoxListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            try {
+                if (nv) bCheckBox.setSelected(false);
                 exerciseModified = true;
-            }
-        });
+            } catch (Exception e) {}
+        };
+        aCheckBox.selectedProperty().addListener(aCheckBoxListener);
+
         bCheckBox.setText(truthTableExpModel.getbPrompt());
         bCheckBox.setSelected(truthTableExpModel.isbSelected());
-        bCheckBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue ob, Boolean ov, Boolean nv) {
-                if (nv == true) aCheckBox.setSelected(false);
+
+        bCheckBoxListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            try {
+                if (nv) aCheckBox.setSelected(false);
                 exerciseModified = true;
-            }
-        });
+            } catch (Exception e) {}
+        };
+        bCheckBox.selectedProperty().addListener(bCheckBoxListener);
 
         //explain
         DecoratedRTA explainDRTA = truthTableExpView.getExplainDRTA();
         RichTextArea explainEditor = explainDRTA.getEditor();
         explainEditor.getActionFactory().open(truthTableExpModel.getExplainDocument()).execute(new ActionEvent());
-        explainEditor.setPromptText("Explain:");
+        explainEditor.setPromptText(truthTableExpModel.getExplainPrompt());
         explainEditor.getActionFactory().saveNow().execute(new ActionEvent());
+
+        final boolean[] explainPrimed = {false};
+        explainFullHeightListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null || truthTableExpModel == null) return;
+            try {
+                if (!explainPrimed[0]) {
+                    explainPrimed[0] = true;
+                    return;
+                }
+                double height = (double) nv;
+                mainView.setRTATextHeight(height);
+                truthTableExpModel.setExplainTextHeight(height);
+            } catch (Exception e) {}
+        };
+        explainEditor.fullHeightProperty().addListener(explainFullHeightListener);
+
+        explainModifiedListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            if (nv) exerciseModified = true;
+        };
+        explainEditor.modifiedProperty().addListener(explainModifiedListener);
+
         mainView.editorInFocus(explainDRTA, ControlType.AREA);
-        explainEditor.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            exerciseModified = true;
-            double explainTextHeight = mainView.getRTATextHeight(explainEditor);
-            truthTableExpModel.setExplainTextHeight(explainTextHeight);
-        });
-        explainEditor.focusedProperty().addListener((o, ov, nv) -> {
-            if (nv) {
-                mainView.editorInFocus(explainDRTA, ControlType.AREA);
-                truthTableExpModel.setExplainTextHeight(mainView.getRTATextHeight(explainEditor));
-            }
-        });
+        explainFocusListener = (o, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            try {
+                if (nv) {
+                    mainView.editorInFocus(explainDRTA, ControlType.AREA);
+                    mainView.setRTATextHeight(explainEditor.getFullHeight());
+                } else {
+                    mainView.undoRTATextHeight();
+                }
+            } catch (Exception e) {}
+        };
+        explainEditor.focusedProperty().addListener(explainFocusListener);
 
         //initialize basic formulas control
         List<Document> basicFormulaDocs = truthTableExpModel.getBasicFormulas();
@@ -218,26 +314,30 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         truthTableExpView.getRowsSpinner().getValueFactory().setValue(tableRows);
 
         Button setupTableButton = truthTableExpView.getSetupTableButton();
-        setupTableButton.setOnAction(e -> {
-            tableRows = (int) truthTableExpView.getRowsSpinner().getValue();
-            truthTableExpModel.setTableRows(tableRows);
-            truthTableExpView.setTableRows(tableRows);
+        setupTableButtonHandler = e -> {
+            if (isTornDown || mainView == null || truthTableExpView == null || truthTableExpModel == null) return;
+            try {
+                tableRows = (int) truthTableExpView.getRowsSpinner().getValue();
+                truthTableExpModel.setTableRows(tableRows);
+                truthTableExpView.setTableRows(tableRows);
 
-            List<BoxedDRTA> basicFormulasBoxedDRTAs = truthTableExpView.getBasicFormulasBoxedDRTAs();
-            List<Document> newBasicFormulaDocs = new ArrayList<>();
-            for (BoxedDRTA bdrta : basicFormulasBoxedDRTAs) {
-                RichTextArea rta = bdrta.getRTA();
-                rta.getActionFactory().saveNow().execute(new ActionEvent());
-                Document formulaDoc = rta.getDocument();
-                newBasicFormulaDocs.add(formulaDoc);
-            }
-            truthTableExpModel.setBasicFormulas(newBasicFormulaDocs);
-            setupHeadItemsFromModel();
-            truthTableExpModel.setEmptyTableContents(tableColumns);
-            updateViewTableItems();
-            truthTableExpView.updateTableGridFromTableItems();
-            exerciseModified = true;
-        });
+                List<BoxedDRTA> basicFormulasBoxedDRTAs = truthTableExpView.getBasicFormulasBoxedDRTAs();
+                List<Document> newBasicFormulaDocs = new ArrayList<>();
+                for (BoxedDRTA bdrta : basicFormulasBoxedDRTAs) {
+                    RichTextArea rta = bdrta.getRTA();
+                    rta.getActionFactory().saveNow().execute(new ActionEvent());
+                    Document formulaDoc = rta.getDocument();
+                    newBasicFormulaDocs.add(formulaDoc);
+                }
+                truthTableExpModel.setBasicFormulas(newBasicFormulaDocs);
+                setupHeadItemsFromModel();
+                truthTableExpModel.setEmptyTableContents(tableColumns);
+                updateViewTableItems();
+                truthTableExpView.updateTableGridFromTableItems();
+                exerciseModified = true;
+            } catch (Exception ex) {}
+        };
+        setupTableButton.setOnAction(setupTableButtonHandler);
 
         //table contents
         updateViewTableItems();
@@ -245,7 +345,121 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
 
         truthTableExpView.initializeViewDetails();
         truthTableExpView.setRightControlBox();
+
+        Platform.runLater(() -> {
+            if (isTornDown || mainView == null) return;
+            if (mainWindow != null && mainWindow.getCurrentExercise() != this) return;
+            try {
+                if (auxExerciseA != null) {
+                    thumbPane = auxImage();
+                    if (truthTableExpView != null && truthTableExpView.getControlBox() != null) {
+                        truthTableExpView.getControlBox().getChildren().add(thumbPane);
+                    }
+                }
+            } catch (Exception e) {}
+        });
     }
+
+    private Pane auxImage() {
+        Pane localThumbPane = new Pane();
+        if (auxExerciseA != null && auxExerciseA.getAuxExerNode() != null)  {
+
+            localThumbPane.setStyle("-fx-background-color: FAFAFA;");
+            Node auxExerNode = auxExerciseA.getAuxExerNode();
+            auxExerNode.setMouseTransparent(true);
+            auxExerNode.setFocusTraversable(false);
+            localThumbPane.getChildren().add(auxExerNode);
+
+            Group thumbRoot = new Group();
+            Scene scene = new Scene(thumbRoot);
+            thumbRoot.getChildren().add(localThumbPane);
+            thumbRoot.applyCss();
+            thumbRoot.layout();
+            double thumbWidth = localThumbPane.getLayoutBounds().getWidth();
+            double scale = thumbWidth > 0 ? 85.0 / thumbWidth : .16;
+
+
+            Rectangle clip = new Rectangle();
+            clip.setWidth(800);
+            clip.setHeight(400);
+            localThumbPane.setClip(clip);
+
+            localThumbPane.getTransforms().clear();
+            localThumbPane.getTransforms().add(new Scale(scale, scale));
+
+            thumbPaneClickHandler = event -> {
+                if (isTornDown || mainView == null || auxExerciseB == null) return;
+                try {
+                    if (tStage == null || !tStage.isShowing()) {
+                        Pane pane1 = new Pane(auxExerciseB.getAuxExerNode());
+                        pane1.setDisable(true);
+
+                        pane1.setId("aux-pane");
+                        String css = "#aux-pane { -fx-opacity: 0.85; } \n" +
+                                "#aux-pane * { -fx-opacity: 1.0; } \n" +
+                                "#aux-pane .caret { -fx-opacity: 0.0; }";
+                        String cssUri = "data:text/css;base64," +
+                                java.util.Base64.getEncoder().encodeToString(css.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                        pane1.getStylesheets().add(cssUri);
+
+                        Pane spacerPane = new Pane();
+                        spacerPane.prefHeightProperty().bind(pane1.heightProperty());
+                        spacerPane.prefWidthProperty().bind(pane1.widthProperty());
+                        Group group = new Group(spacerPane);
+                        AnchorPane comboPane = new AnchorPane(group, pane1);
+                        ScrollPane tPane = new ScrollPane(comboPane);
+                        tPane.setFitToHeight(false);
+                        tPane.setFitToWidth(false);
+
+                        tScene.setRoot(tPane);
+                        tPane.applyCss();
+                        tPane.layout();
+
+                        tStage = new Stage();
+                        tStage.setScene(tScene);
+                        tStage.setTitle(((ExerciseModel) auxExerciseB.getExerciseModel()).getExerciseName());
+                        tStage.initStyle(StageStyle.UTILITY);
+
+              //          tStage.initOwner(EditorMain.mainStage);
+                        tStage.initModality(Modality.NONE);
+                        Stage mainStage = EditorMain.mainStage;
+                        tStage.setX(mainStage.getX() + mainStage.getWidth()  - 500);
+                        tStage.setY(mainStage.getY() + mainStage.getHeight()  - 300);
+
+                        tStage.setWidth(pane1.getWidth() + RTA_WIDTH_BMP);
+                        tStage.setHeight(Math.min(mainStage.getHeight() - 100, pane1.getHeight() + RTA_SCREEN_BMP + 25));
+
+                        tStage.show();
+
+                        Platform.runLater(() -> {
+                            if (isTornDown || mainView == null || tStage == null) return;
+                            try {
+                                double prefX = mainStage.getX() + mainStage.getWidth() - tStage.getWidth() + 50;
+                                double prefY = mainStage.getY() + mainStage.getHeight() - tStage.getHeight()+ 50;
+                                Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
+
+                                tStage.setX(Math.min(prefX, bounds.getMaxX() - tStage.getWidth()));
+                                tStage.setY(Math.min(prefY, bounds.getMaxY() - tStage.getHeight()));
+                            } catch (Exception e) {}
+                        });
+
+                    } else {
+                        tStage.close();
+                    }
+                } catch (Exception e) {}
+            };
+            localThumbPane.setOnMouseClicked(thumbPaneClickHandler);
+        }
+        return localThumbPane;
+    }
+
+    public void clearStandingPopups() {
+        try {
+            if (truthTableExpView != null && truthTableExpView.getStaticHelpStage() != null) truthTableExpView.getStaticHelpStage().close();
+            if (tStage != null) tStage.close();
+        } catch (Exception e) {}
+    }
+
 
     /*
      * Update view items from model
@@ -269,7 +483,6 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         TextField[][] columns = new TextField[tableColumns][tableRows];
         List<TableHeadItem> tableHeadItems = truthTableExpView.getTableHeadItemsList();
 
-
         for (int i = 0; i < tableColumns; i++) {
             TableHeadItem headItem = tableHeadItems.get(i);
             if (!headItem.isBlankColumn()) {
@@ -277,15 +490,14 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
                 for (int j = 0; j < tableRows; j++) {
                     TextField charField = truthTableExpView.newSingleCharTextField(i, j);
                     charField.setText(truthTableExpModel.getTableValues()[i][j]);
-                    charField.textProperty().addListener((ob, ov, nv) -> exerciseModified = true);
+                    if (charFieldListener != null) charField.textProperty().addListener(charFieldListener);
                     column[j] = charField;
                 }
                 columns[i] = column;
                 ToggleButton highlightButton = truthTableExpView.newHighlightButton(i);
                 highlightButton.setSelected(truthTableExpModel.getColumnHighlights()[i]);
-                highlightButton.selectedProperty().addListener((ob, ov, nv) -> exerciseModified = true);
+                if (highlightButtonListener != null) highlightButton.selectedProperty().addListener(highlightButtonListener);
                 buttons[i] = highlightButton;
-
             }
         }
         truthTableExpView.setTableFields(columns);
@@ -319,7 +531,6 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         TableHeadItem dividerHead = new TableHeadItem(new TextFlow(new Text("")), new ColumnConstraints(10));
         dividerHead.setDividerColumn(true); dividerHead.setBlankColumn(true);
         headList.add(dividerHead);
-
 
         //main formula head items
         List<Document> mainFormulas = truthTableExpModel.getMainFormulas();
@@ -390,9 +601,14 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         //header node
         Label exerciseName = new Label(printModel.getExerciseName());
         exerciseName.setStyle("-fx-font-weight: bold;");
-        Region spacer = new Region();
 
-        HBox hbox = new HBox(exerciseName, spacer, printCheckNode());
+        Region spacer = new Region();
+        Label pointsLabel = new Label("");
+        if (printModel.getPointsPossible() > 0)
+            pointsLabel.setText("   " + Integer.toString(printModel.getPointsEarned()) + "/" + Integer.toString(printModel.getPointsPossible()));
+
+        HBox hbox = new HBox(exerciseName, spacer, printCheckNode(), pointsLabel);
+        hbox.setAlignment(Pos.CENTER_LEFT);
         hbox.setHgrow(spacer, Priority.ALWAYS);
         hbox.setPadding(new Insets(0,0,10,0));
         hbox.setMinWidth(nodeWidth);
@@ -467,10 +683,10 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         explanationRTA.prefHeightProperty().unbind();
         explanationRTA.minWidthProperty().unbind();
         explanationRTA.maxWidthProperty().unbind();
-        explanationRTA.setPrefHeight(Math.max(40, printModel.getCommentTextHeight() + RTA_PRINT_BMP));
+        explanationRTA.setPrefHeight(Math.max(40, printModel.getExplainTextHeight() + RTA_PRINT_BMP));
         explanationRTA.setMaxWidth(nodeWidth);
 
-        explanationRTA.getStylesheets().clear(); statementRTA.getStylesheets().add("richTextAreaPrinter.css");
+        explanationRTA.getStylesheets().clear(); explanationRTA.getStylesheets().add("richTextAreaPrinter.css");
         nodeList.add(explanationRTA);
 
         Separator contentSeparator = new Separator(Orientation.HORIZONTAL);
@@ -490,19 +706,8 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         commentRTA.setMaxWidth(nodeWidth);
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
 
-        Node commentNode;
-        if (printModel.getPointsPossible() > 0) {
-            Label pointsLabel = new Label(Integer.toString(printModel.getPointsEarned()) + "/" + Integer.toString(printModel.getPointsPossible()));
-            AnchorPane anchorPane = new AnchorPane(commentRTA, pointsLabel);
-            anchorPane.setTopAnchor(commentRTA, 0.0);
-            anchorPane.setLeftAnchor(commentRTA, 0.0);
-            anchorPane.setBottomAnchor(pointsLabel, 3.0);
-            anchorPane.setRightAnchor(pointsLabel, 3.0);
-     //      anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
-            commentNode = anchorPane;
-        }
-        else commentNode = commentRTA;
-        nodeList.add(commentNode);
+
+        nodeList.add(commentRTA);
 
         return nodeList;
     }
@@ -510,7 +715,7 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
     TextFlow printCheckNode() {
         TextFlow flow = new TextFlow();
         flow.setMaxWidth(200);
-        if (ttCheck.isCheckSuccess()) {
+        if (ttCheck != null && ttCheck.isCheckSuccess()) {
             Text bigCheck = new Text("\ue89a");
             bigCheck.setFont(Font.font("Noto Serif Combo", 14));
             Text message = new Text("  " + truthTableExpView.getCheckMessage());
@@ -538,15 +743,27 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         RichTextArea commentRTA = truthTableExpView.getExerciseComment().getEditor();
         commentRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document commentDocument = commentRTA.getDocument();
+
         int pointsEarned = -1;
-        if (!truthTableExpView.getPointsEarnedTextField().getText().equals("")) pointsEarned = Integer.parseInt(truthTableExpView.getPointsEarnedTextField().getText());
+        TextField pointsField = truthTableExpView.getPointsEarnedTextField();
+        if ((pointsField.isFocused() || truthTableExpModel.getPointsEarned() >= 0) && pointsField.getText().isEmpty()) {
+            pointsField.setText("0");
+        }
+        if (!pointsField.getText().equals("")) pointsEarned = Integer.parseInt(pointsField.getText());
+
+
         TruthTableExpModel originalModel = (TruthTableExpModel) (truthTableExpModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
+        double commentHeight = commentRTA.getFullHeight();
+        originalModel.setCommentTextHeight(commentHeight > 0 ? commentHeight : truthTableExpModel.getCommentTextHeight());
+
         originalModel.setPointsEarned(pointsEarned);
 
         TTExpCheckSetup setup = originalModel.getCheckSetup();
         if (setup == null) setup = new TTExpCheckSetup();
-        setup.setCheckTries(ttCheck.getCheckTries());
+        if (ttCheck != null) {
+            setup.setCheckTries(ttCheck.getCheckTries());
+        }
         setup.setCheckSuccess(false);
         originalModel.setCheckSetup(setup);
 
@@ -560,17 +777,26 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
      */
     @Override
     public boolean isExerciseModified() {
+        if (truthTableExpView == null) return exerciseModified;
 
-        RichTextArea commentEditor = truthTableExpView.getExerciseComment().getEditor();
-        if (commentEditor.isModified()) exerciseModified = true;
+        if (truthTableExpView.getExerciseComment() != null && truthTableExpView.getExerciseComment().getEditor() != null) {
+            RichTextArea commentEditor = truthTableExpView.getExerciseComment().getEditor();
+            if (commentEditor.isModified()) exerciseModified = true;
+        }
 
-        RichTextArea explanationEditor = truthTableExpView.getExplainDRTA().getEditor();
-        if (explanationEditor.isModified()) exerciseModified = true;
+        if (truthTableExpView.getExplainDRTA() != null && truthTableExpView.getExplainDRTA().getEditor() != null) {
+            RichTextArea explanationEditor = truthTableExpView.getExplainDRTA().getEditor();
+            if (explanationEditor.isModified()) exerciseModified = true;
+        }
 
         BoxedDRTA[] rowComments = truthTableExpView.getRowCommentsArray();
-        for (int i = 0; i < rowComments.length; i++) {
-            RichTextArea rowCommentEditor = rowComments[i].getRTA();
-            if (rowCommentEditor.isModified()) exerciseModified = true;
+        if (rowComments != null) {
+            for (int i = 0; i < rowComments.length; i++) {
+                if (rowComments[i] != null && rowComments[i].getRTA() != null) {
+                    RichTextArea rowCommentEditor = rowComments[i].getRTA();
+                    if (rowCommentEditor.isModified()) exerciseModified = true;
+                }
+            }
         }
 
         return exerciseModified;
@@ -624,18 +850,22 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         model.setCommentPrefHeight(truthTableExpView.getCommentPrefHeight());
         model.setExplainPrefHeight(truthTableExpView.getExplainPrefHeight());
         model.setStatementTextHeight(truthTableExpModel.getStatementTextHeight());
-        model.setCommentTextHeight(truthTableExpModel.getCommentTextHeight());
-        model.setExplainTextHeight(truthTableExpModel.getExplainTextHeight());
         model.setExerciseStatement(truthTableExpModel.getExerciseStatement());
         model.setGridWidth(truthTableExpView.getTableGrid().getWidth());
+        model.setAuxExerName(truthTableExpModel.getAuxExerName());
 
         RichTextArea commentRTA = truthTableExpView.getExerciseComment().getEditor();
         commentRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExerciseComment(commentRTA.getDocument());
+        double commentTextHeight = commentRTA.getFullHeight();
+        model.setCommentTextHeight(commentTextHeight > 0 ? commentTextHeight : truthTableExpModel.getCommentTextHeight());
+
 
         RichTextArea explainRTA = truthTableExpView.getExplainDRTA().getEditor();
         explainRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExplainDocument(explainRTA.getDocument());
+        double explainTextHeight = explainRTA.getFullHeight();
+        model.setExplainTextHeight(explainTextHeight > 0 ? explainTextHeight : truthTableExpModel.getExplainTextHeight());
 
         TTExpCheckSetup checkSetup = truthTableExpModel.getCheckSetup();
         if (ttCheck != null) {
@@ -707,7 +937,11 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         model.setTableRows(tableRows);
 
         model.setPointsPossible(truthTableExpModel.getPointsPossible());
-        if (!truthTableExpView.getPointsEarnedTextField().getText().equals("")) model.setPointsEarned(Integer.parseInt(truthTableExpView.getPointsEarnedTextField().getText()));
+        TextField pointsField = truthTableExpView.getPointsEarnedTextField();
+        if ((pointsField.isFocused() || truthTableExpModel.getPointsEarned() >= 0) && pointsField.getText().isEmpty()) {
+            pointsField.setText("0");
+        }
+        if (!pointsField.getText().equals("")) model.setPointsEarned(Integer.parseInt(pointsField.getText()));
         else model.setPointsEarned(-1);
 
         return model;
@@ -733,4 +967,269 @@ public class TruthTableExpExercise implements Exercise<TruthTableExpModel, Truth
         return mainWindow;
     }
 
+    // SCORCHED EARTH RULE 6: Sever Shared Nodes helper
+    private void severFromParent(Node node) {
+        try {
+            if (node != null && node.getParent() != null) {
+                if (node.getParent() instanceof javafx.scene.layout.Pane) ((javafx.scene.layout.Pane) node.getParent()).getChildren().remove(node);
+                else if (node.getParent() instanceof javafx.scene.Group) ((javafx.scene.Group) node.getParent()).getChildren().remove(node);
+            }
+        } catch (Exception e) {}
+    }
+
+    @Override
+    public void cleanup() {
+        // KILL SWITCH: Engaged! Prevent any focus listeners from doing UI operations mid-teardown
+        isTornDown = true;
+
+        // SCORCHED EARTH RULE 2: No Global Null-Poisoning (safe method only to avoid Toolbar Null-Poisoning)
+        try {
+            if (mainView != null) {
+                mainView.textFieldInFocus(); // Remove toolbars for RTAs safely
+            }
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 5: Rule of Isolation applied via dozens of tiny isolated try-catch blocks
+        try {
+            if (truthTableExpView != null && truthTableExpView.localScalePageHeightProperty() != null) {
+                truthTableExpView.localScalePageHeightProperty().unbind();
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (truthTableExpView != null && truthTableExpView.localScalePageWidthProperty() != null) {
+                truthTableExpView.localScalePageWidthProperty().unbind();
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (mainView != null && mainView.getMainScene() != null && truthTableExpView != null && truthTableExpView.getExerciseFocusListener() != null) {
+                mainView.getMainScene().focusOwnerProperty().removeListener(truthTableExpView.getExerciseFocusListener());
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (truthTableExpView != null && truthTableExpView.getPointsEarnedTextField() != null && pointsEarnedListener != null) {
+                truthTableExpView.getPointsEarnedTextField().textProperty().removeListener(pointsEarnedListener);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (truthTableExpView != null && truthTableExpView.getExerciseStatement() != null && truthTableExpView.getExerciseStatement().getEditor() != null && statementFocusListener != null) {
+                truthTableExpView.getExerciseStatement().getEditor().focusedProperty().removeListener(statementFocusListener);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (truthTableExpView != null && truthTableExpView.getExerciseComment() != null && truthTableExpView.getExerciseComment().getEditor() != null) {
+                if (commentFullHeightListener != null) truthTableExpView.getExerciseComment().getEditor().fullHeightProperty().removeListener(commentFullHeightListener);
+                if (commentModifiedListener != null) truthTableExpView.getExerciseComment().getEditor().modifiedProperty().removeListener(commentModifiedListener);
+                if (commentFocusListener != null) truthTableExpView.getExerciseComment().getEditor().focusedProperty().removeListener(commentFocusListener);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (truthTableExpView != null && truthTableExpView.getaCheckBox() != null && aCheckBoxListener != null) {
+                truthTableExpView.getaCheckBox().selectedProperty().removeListener(aCheckBoxListener);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (truthTableExpView != null && truthTableExpView.getbCheckBox() != null && bCheckBoxListener != null) {
+                truthTableExpView.getbCheckBox().selectedProperty().removeListener(bCheckBoxListener);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (truthTableExpView != null && truthTableExpView.getExplainDRTA() != null && truthTableExpView.getExplainDRTA().getEditor() != null) {
+                if (explainFullHeightListener != null) truthTableExpView.getExplainDRTA().getEditor().fullHeightProperty().removeListener(explainFullHeightListener);
+                if (explainModifiedListener != null) truthTableExpView.getExplainDRTA().getEditor().modifiedProperty().removeListener(explainModifiedListener);
+                if (explainFocusListener != null) truthTableExpView.getExplainDRTA().getEditor().focusedProperty().removeListener(explainFocusListener);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (truthTableExpView != null && truthTableExpView.getSetupTableButton() != null && setupTableButtonHandler != null) {
+                truthTableExpView.getSetupTableButton().removeEventHandler(ActionEvent.ACTION, setupTableButtonHandler);
+                truthTableExpView.getSetupTableButton().setOnAction(null);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (thumbPane != null && thumbPaneClickHandler != null) {
+                thumbPane.removeEventHandler(MouseEvent.MOUSE_CLICKED, thumbPaneClickHandler);
+                thumbPane.setOnMouseClicked(null);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (truthTableExpView != null && truthTableExpView.getTableFields() != null && charFieldListener != null) {
+                TextField[][] fields = truthTableExpView.getTableFields();
+                for (int i = 0; i < fields.length; i++) {
+                    if (fields[i] != null) {
+                        for (int j = 0; j < fields[i].length; j++) {
+                            if (fields[i][j] != null) {
+                                fields[i][j].textProperty().removeListener(charFieldListener);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (truthTableExpView != null && truthTableExpView.getHighlightButtons() != null && highlightButtonListener != null) {
+                ToggleButton[] btns = truthTableExpView.getHighlightButtons();
+                for (int i = 0; i < btns.length; i++) {
+                    if (btns[i] != null) {
+                        btns[i].selectedProperty().removeListener(highlightButtonListener);
+                    }
+                }
+            }
+        } catch (Exception e) {}
+
+        // ---> SCORCHED EARTH RULE 4: THE JAVAFX SKIN HAMMER (With Synchronous Unbinding Only) <---
+        try {
+            if (truthTableExpView != null) {
+                final RichTextArea stEditor = (truthTableExpView.getExerciseStatement() != null) ? truthTableExpView.getExerciseStatement().getEditor() : null;
+                final RichTextArea commEditor = (truthTableExpView.getExerciseComment() != null) ? truthTableExpView.getExerciseComment().getEditor() : null;
+                final RichTextArea explainEditor = (truthTableExpView.getExplainDRTA() != null) ? truthTableExpView.getExplainDRTA().getEditor() : null;
+
+                final List<RichTextArea> rtasToClear = new ArrayList<>();
+                if (stEditor != null) rtasToClear.add(stEditor);
+                if (commEditor != null) rtasToClear.add(commEditor);
+                if (explainEditor != null) rtasToClear.add(explainEditor);
+
+                if (truthTableExpView.getBasicFormulasBoxedDRTAs() != null) {
+                    for (BoxedDRTA bdrta : truthTableExpView.getBasicFormulasBoxedDRTAs()) {
+                        if (bdrta != null && bdrta.getRTA() != null) {
+                            rtasToClear.add(bdrta.getRTA());
+                        }
+                    }
+                }
+
+                if (truthTableExpView.getRowCommentsArray() != null) {
+                    for (BoxedDRTA bdrta : truthTableExpView.getRowCommentsArray()) {
+                        if (bdrta != null && bdrta.getRTA() != null) {
+                            rtasToClear.add(bdrta.getRTA());
+                        }
+                    }
+                }
+
+                if (!rtasToClear.isEmpty()) {
+                    // Synchronously unbind
+                    for (RichTextArea rta : rtasToClear) {
+                        try {
+                            if (rta.prefHeightProperty() != null) rta.prefHeightProperty().unbind();
+                            if (rta.minWidthProperty() != null) rta.minWidthProperty().unbind();
+                            if (rta.maxWidthProperty() != null) rta.maxWidthProperty().unbind();
+                        } catch (Exception ex) {}
+                    }
+                }
+            }
+        } catch (Exception e) {}
+
+        // ---> 4. DISMANTLE THE UI TREE (Rule 6 & Rule 8 compliant) <---
+        try {
+            if (truthTableExpView != null) {
+                if (truthTableExpView.getControlBox() != null) {
+                    if (truthTableExpView.getControlBox().getChildren() != null) {
+                        List<Node> childrenCopy = new ArrayList<>(truthTableExpView.getControlBox().getChildren());
+                        for (Node node : childrenCopy) {
+                            try { node.getClass().getMethod("cleanup").invoke(node); } catch(Exception e) {}
+                            severFromParent(node);
+                        }
+                    }
+                    truthTableExpView.getControlBox().getChildren().clear();
+                }
+                if (truthTableExpView.getTableGrid() != null) {
+                    if (truthTableExpView.getTableGrid().getChildren() != null) {
+                        List<Node> childrenCopy = new ArrayList<>(truthTableExpView.getTableGrid().getChildren());
+                        for (Node node : childrenCopy) {
+                            try { node.getClass().getMethod("cleanup").invoke(node); } catch(Exception e) {}
+                            severFromParent(node);
+                        }
+                    }
+                    truthTableExpView.getTableGrid().getChildren().clear();
+                }
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (thumbPane != null) {
+                thumbPane.getChildren().clear();
+                severFromParent(thumbPane);
+            }
+        } catch (Exception e) {}
+
+        // 5. Clear OS-level popups
+        try { clearStandingPopups(); } catch (Exception e) {}
+
+        // 6. Cascade cleanup to auxiliary exercises
+        try { if (auxExerciseA != null) auxExerciseA.cleanup(); } catch (Exception e) {}
+        try { if (auxExerciseB != null) auxExerciseB.cleanup(); } catch (Exception e) {}
+
+        // 7. Tell View & Check to specifically clean up
+        try { if (truthTableExpView != null) truthTableExpView.cleanup(); } catch (Exception e) {}
+        try { if (ttCheck != null) ttCheck.cleanup(); } catch (Exception e) {}
+
+        // 8. Final severed ties
+        try { this.mainWindow = null; } catch (Exception e) {}
+        try { this.truthTableExpModel = null; } catch (Exception e) {}
+        try { this.truthTableExpView = null; } catch (Exception e) {}
+        try { this.ttCheck = null; } catch (Exception e) {}
+        try { this.mainView = null; } catch (Exception e) {}
+        try { this.docParser = null; } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 10: NON-DESTRUCTIVE DATA TEARDOWN (never use .clear() on these fields)
+        try { this.basicFormulaCols = null; } catch (Exception e) {}
+        try { this.mainFormulaCols = null; } catch (Exception e) {}
+
+        try { this.auxExerciseA = null; } catch (Exception e) {}
+        try { this.auxExerciseB = null; } catch (Exception e) {}
+        try { this.tScene = null; } catch (Exception e) {}
+        try { this.tStage = null; } catch (Exception e) {}
+        try { this.thumbPane = null; } catch (Exception e) {}
+
+        try { this.pointsEarnedListener = null; } catch (Exception e) {}
+        try { this.statementFocusListener = null; } catch (Exception e) {}
+        try { this.commentFullHeightListener = null; } catch (Exception e) {}
+        try { this.commentModifiedListener = null; } catch (Exception e) {}
+        try { this.commentFocusListener = null; } catch (Exception e) {}
+        try { this.aCheckBoxListener = null; } catch (Exception e) {}
+        try { this.bCheckBoxListener = null; } catch (Exception e) {}
+        try { this.explainFullHeightListener = null; } catch (Exception e) {}
+        try { this.explainModifiedListener = null; } catch (Exception e) {}
+        try { this.explainFocusListener = null; } catch (Exception e) {}
+        try { this.setupTableButtonHandler = null; } catch (Exception e) {}
+        try { this.thumbPaneClickHandler = null; } catch (Exception e) {}
+        try { this.charFieldListener = null; } catch (Exception e) {}
+        try { this.highlightButtonListener = null; } catch (Exception e) {}
+    }
+
+    @Override
+    public Node getAuxExerNode() {
+        if (truthTableExpView == null || truthTableExpModel == null || truthTableExpView.getCenterBox() == null) return new AnchorPane();
+        try {
+            RichTextArea explainRTA = truthTableExpView.getExplainDRTA().getEditor();
+            explainRTA.prefHeightProperty().unbind();
+            explainRTA.setMinHeight(truthTableExpModel.getExplainTextHeight() + RTA_SCREEN_BMP);
+            return truthTableExpView.getCenterBox();
+        }
+        catch (Exception e) { return new AnchorPane(); }
+    }
+
+    @Override
+    public String getAuxExerName() {
+        if (truthTableExpModel == null) return "";
+        return truthTableExpModel.getAuxExerName();
+    }
+
+    @Override
+    public void setAuxExerA(Exercise exer) {
+        auxExerciseA = exer;
+    }
+
+    @Override
+    public void setAuxExerB(Exercise exer) { auxExerciseB = exer; }
 }

@@ -62,6 +62,7 @@ public class ExerciseTypePopup {
 
  //       typeList.getItems().setAll(ExerciseType.values());
         typeList.setPrefWidth(200);
+        typeList.setPrefHeight(460);
         typeList.getSelectionModel().select(lastSelectedItem);
 
         typeList.setCellFactory(cell -> new ListCell<ExerciseType>() {
@@ -156,7 +157,7 @@ public class ExerciseTypePopup {
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
         stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 400));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 200));
+        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 600));
 
         selectButton.setOnAction(e -> {
             ExerciseType selection = typeList.getSelectionModel().getSelectedItem();

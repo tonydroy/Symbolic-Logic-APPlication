@@ -16,13 +16,17 @@ import slapp.editor.AlphanumStringComparator;
 import slapp.editor.EditorAlerts;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.parser.Expression;
+import slapp.editor.parser.MatchUtilities;
 import slapp.editor.parser.ParseUtilities;
 import slapp.editor.parser.SyntacticalFns;
 import slapp.editor.parser.grammatical_parts.*;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javafx.scene.Node;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+
 
 public class TTcheck {
     private TruthTableExercise ttExercise;
@@ -47,6 +51,12 @@ public class TTcheck {
     private List<List<Expression>> mainFormulaSubLists;
     private int subformulaColCounter;
 
+    // SCORCHED EARTH RULE 1: The Asynchronous Ghost "Kill Switch"
+    private boolean isTornDown = false;
+
+    // SCORCHED EARTH RULE 3: Eradicate Anonymous Lambdas
+    private EventHandler<ActionEvent> checkButtonHandler;
+    private EventHandler<ActionEvent> staticHelpButtonHandler;
 
     TTcheck(TruthTableExercise ttExercise) {
 
@@ -79,31 +89,97 @@ public class TTcheck {
         checkTries = checkSetup.getCheckTries();
         updateCheckCounter();
 
-
         setRightControlBox();
     }
 
+    private void scrollToNode(Node node) {
+        if (isTornDown) return;
+        try {
+            if (ttExercise != null && ttExercise.getMainWindow() != null && ttExercise.getMainWindow().getMainView() != null) {
+                ttExercise.getMainWindow().getMainView().scrollToNode(node);
+            }
+        } catch (Exception e) {}
+    }
+
     private void setRightControlBox() {
-        ttView.getCheckButton().setOnAction(e -> {
-            checkTable();
-        });
+        if (ttView == null) return;
+
+        checkButtonHandler = e -> {
+            if (isTornDown || ttExercise == null || ttView == null || ttModel == null) return;
+            try {
+                checkTable();
+            } catch (Exception ex) {}
+        };
+        ttView.getCheckButton().setOnAction(checkButtonHandler);
 
         ttView.getStaticHelpButton().setDisable(!checkSetup.isStaticHelp());
 
-        ttView.getStaticHelpButton().setOnAction(e -> {
-            Stage helpStage = ttView.getStaticHelpStage();
-            if (helpStage != null && helpStage.isShowing()) helpStage.close();
-            else ttView.showStaticHelp(ttModel.getCheckSetup().getStaticHelpDoc());
-        });
+        staticHelpButtonHandler = e -> {
+            if (isTornDown || ttExercise == null || ttView == null || ttModel == null) return;
+            try {
+                Stage helpStage = ttView.getStaticHelpStage();
+                if (helpStage != null && helpStage.isShowing()) helpStage.close();
+                else if (ttModel.getCheckSetup() != null) ttView.showStaticHelp(ttModel.getCheckSetup().getStaticHelpDoc());
+            } catch (Exception ex) {}
+        };
+        ttView.getStaticHelpButton().setOnAction(staticHelpButtonHandler);
+    }
+
+    public void cleanup() {
+        // KILL SWITCH: Engaged! Prevent delayed UI events from running mid-teardown
+        isTornDown = true;
+
+        // SCORCHED EARTH RULE 5: Rule of Isolation applied via multiple try-catch blocks
+        try {
+            if (ttView != null && ttView.getCheckButton() != null && checkButtonHandler != null) {
+                ttView.getCheckButton().removeEventHandler(ActionEvent.ACTION, checkButtonHandler);
+                ttView.getCheckButton().setOnAction(null);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (ttView != null && ttView.getStaticHelpButton() != null && staticHelpButtonHandler != null) {
+                ttView.getStaticHelpButton().removeEventHandler(ActionEvent.ACTION, staticHelpButtonHandler);
+                ttView.getStaticHelpButton().setOnAction(null);
+            }
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 7: Clear Global Static Caches (Defensive Reflection used in case of import missing)
+        try {
+            MatchUtilities.clearMatching();
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 10: NON-DESTRUCTIVE Data Teardown.
+        // NEVER call .clear() on lists that are mapped directly to model data!
+        try { this.basicDocs = null; } catch (Exception e) {}
+        try { this.interpretations = null; } catch (Exception e) {}
+        try { this.mainFormulas = null; } catch (Exception e) {}
+        try { this.mainFormulaSubLists = null; } catch (Exception e) {}
+
+        // Null out arrays and object references safely
+        try { this.basicFormulas = null; } catch (Exception e) {}
+        try { this.tableKey = null; } catch (Exception e) {}
+
+        try { this.ttExercise = null; } catch (Exception e) {}
+        try { this.ttView = null; } catch (Exception e) {}
+        try { this.ttModel = null; } catch (Exception e) {}
+        try { this.checkSetup = null; } catch (Exception e) {}
+        try { this.objLangName = null; } catch (Exception e) {}
+
+        try { this.checkButtonHandler = null; } catch (Exception e) {}
+        try { this.staticHelpButtonHandler = null; } catch (Exception e) {}
     }
 
     public boolean checkTable() {
+        if (isTornDown || ttExercise == null || ttModel == null || ttView == null) return false;
+
         basicDocs = ttModel.getBasicFormulas();
         tableColumns = ttExercise.getTableColumns();
         tableRows = (int) Math.pow(2, basicDocs.size());
         checkSuccess = false;
         ttView.deactivateBigCheck();
-        if (!ttExercise.getMainWindow().isInstructorFunctions()) {
+
+        if (ttExercise.getMainWindow() != null && !ttExercise.getMainWindow().isInstructorFunctions()) {
             checkTries++;
             setChecksCounter();
         }
@@ -124,14 +200,33 @@ public class TTcheck {
         else if (!checkHighlights()) checkGood = false;
 
         if (checkGood) {
-       //     System.out.println("check good: " + checkGood);
             checkSuccess = true;
             ttView.activateBigCheck();
         }
         return checkGood;
     }
 
+    private void updateCheckCounter() {
+        if (isTornDown || ttExercise == null || ttView == null || ttExercise.getMainWindow() == null) return;
+
+        if (checkMax != -1 && checkTries >= checkMax && !ttExercise.getMainWindow().isInstructorFunctions()) {
+            if (ttView.getCheckButton() != null) ttView.getCheckButton().setDisable(true);
+            if (ttView.getCheckProgButton() != null) ttView.getCheckProgButton().setDisable(true);
+        }
+
+        String checkString;
+        if (checkMax == -1) checkString = "(unlimited)";
+        else if (checkMax == 0) checkString = "(none)";
+        else checkString = "(" + String.valueOf(checkTries) + "/" + String.valueOf(checkMax) + ")";
+
+        if (ttView.getCheckTriesLabel() != null) {
+            ttView.getCheckTriesLabel().setText(checkString);
+        }
+    }
+
     private void setChecksCounter() {
+        if (isTornDown || ttExercise == null || ttView == null || ttExercise.getMainWindow() == null) return;
+
         if (checkMax != -1 && checkTries >= checkMax && !ttExercise.getMainWindow().isInstructorFunctions()) {
             ttView.getCheckButton().setDisable(true);
         }
@@ -140,11 +235,14 @@ public class TTcheck {
         else if (checkMax == 0) checkString = "(none)";
         else checkString = "(" + String.valueOf(checkTries) + "/" + String.valueOf(checkMax) + ")";
 
-        ttView.getCheckTriesLabel().setText(checkString);
-
+        if (ttView.getCheckTriesLabel() != null) {
+            ttView.getCheckTriesLabel().setText(checkString);
+        }
     }
 
     private boolean checkHighlights() {
+        if (isTornDown || ttView == null || ttExercise == null) return false;
+
         ToggleButton[] highlightButtons = ttView.getHighlightButtons();
         boolean[] highlightValues = new boolean[tableColumns];
         for (int i = 0; i < tableColumns; i++) {
@@ -161,11 +259,12 @@ public class TTcheck {
             if (highlightValues[baseFormulaCols.get(i)]) {
                 if (highlightValues[baseCol]) {
                     for (int k = 0; k < ttExercise.getTableRows(); k++) {
-                        tableFields[baseCol][k].setStyle("-fx-background-radius: 2; -fx-background-color: mistyrose; ");  //mistyrose
+                        tableFields[baseCol][k].setStyle("-fx-background-radius: 2; -fx-control-inner-background: mistyrose; ");  //mistyrose
+                        scrollToNode(tableFields[baseCol][k]);
                     }
                     EditorAlerts.showSimpleTxtListAlert("Highlight:", Collections.singletonList(ParseUtilities.newRegularText("In completed table, highlight only columns in main table.")));
                     for (int k = 0; k < ttExercise.getTableRows(); k++) {
-                        tableFields[baseCol][k].setStyle("-fx-background-radius: 2; -fx-background-color: lightblue");
+                        tableFields[baseCol][k].setStyle("-fx-background-radius: 2; -fx-control-inner-background: lightblue");
                     }
                     return false;
                 }
@@ -173,17 +272,17 @@ public class TTcheck {
         }
 
         for (int i = 0; i < mainFormulaSubLists.size(); i++) {
-
             List<Expression> sublist = mainFormulaSubLists.get(i);
             for (int j = 0; j < sublist.size(); j++) {
                 Formula sub = (Formula) sublist.get(j);
                 if (highlightValues[sub.getTtColumn()] == true && !isMainFormula(sub)) {
                     for (int k = 0; k < ttExercise.getTableRows(); k++) {
-                        tableFields[sub.getTtColumn()][k].setStyle("-fx-background-radius: 2; -fx-background-color: mistyrose; ");  //mistyrose
+                        tableFields[sub.getTtColumn()][k].setStyle("-fx-background-radius: 2; -fx-control-inner-background: mistyrose; ");  //mistyrose
+                        scrollToNode(tableFields[sub.getTtColumn()][k]);
                     }
                     EditorAlerts.showSimpleTxtListAlert("Highlight:", Collections.singletonList(ParseUtilities.newRegularText("In completed table, highlight only column for value of the whole formula.")));
                     for (int k = 0; k < ttExercise.getTableRows(); k++) {
-                        tableFields[sub.getTtColumn()][k].setStyle("-fx-background-radius: 2; -fx-background-color: lightblue");
+                        tableFields[sub.getTtColumn()][k].setStyle("-fx-background-radius: 2; -fx-control-inner-background: lightblue");
                     }
                     return false;
                 }
@@ -197,11 +296,12 @@ public class TTcheck {
 
                 if (isMainFormula(sub) && highlightValues[sub.getTtColumn()] != true) {
                     for (int k = 0; k < ttExercise.getTableRows(); k++) {
-                        tableFields[sub.getTtColumn()][k].setStyle("-fx-background-radius: 2; -fx-background-color: mistyrose; ");  //mistyrose
+                        tableFields[sub.getTtColumn()][k].setStyle("-fx-background-radius: 2; -fx-control-inner-background: mistyrose; ");  //mistyrose
+                        scrollToNode(tableFields[sub.getTtColumn()][k]);
                     }
                     EditorAlerts.showSimpleTxtListAlert("Highlight:", Collections.singletonList(ParseUtilities.newRegularText("In completed table, highlight column for value of the whole formula.")));
                     for (int k = 0; k < ttExercise.getTableRows(); k++) {
-                        tableFields[sub.getTtColumn()][k].setStyle("-fx-background-radius: 2; -fx-Bbackground-color: white");
+                        tableFields[sub.getTtColumn()][k].setStyle("-fx-background-radius: 2; -fx-control-inner-background: white");
                     }
                     return false;
                 }
@@ -212,6 +312,8 @@ public class TTcheck {
     }
 
     private boolean checkTableValues() {
+        if (isTornDown || ttExercise == null || ttView == null || tableKey == null || interpretations == null) return false;
+
         TextField[][] tableFields = ttView.getTableFields();
 
         //check base
@@ -219,8 +321,10 @@ public class TTcheck {
         for (int j = 0; j < baseFormulaCols.size(); j++) {
             boolean goodColumn = true;
             for (int i = 0; i < interpretations.size(); i++) {
-                if (!tableKey[baseFormulaCols.get(j)][i].equalsIgnoreCase(tableFields[baseFormulaCols.get(j)][i].getText())) {
-                    tableFields[baseFormulaCols.get(j)][i].setStyle("-fx-background-radius: 2; -fx-background-color: mistyrose; ");  //mistyrose
+                TextField field = tableFields[baseFormulaCols.get(j)][i];
+                if (!tableKey[baseFormulaCols.get(j)][i].equalsIgnoreCase(field.getText())) {
+                    field.setStyle("-fx-background-radius: 2; -fx-control-inner-background: mistyrose; ");
+                    scrollToNode(field);
                     goodColumn = false;
                 }
             }
@@ -228,10 +332,10 @@ public class TTcheck {
                 EditorAlerts.showSimpleTxtListAlert("Table Values:", Collections.singletonList(ParseUtilities.newRegularText("Problem(s) in column.")));
                 for (int i = 0 ; i < interpretations.size(); i++) {
                     if (ttView.getHighlightButtons()[baseFormulaCols.get(j)].isSelected()) {
-                        tableFields[baseFormulaCols.get(j)][i].setStyle("-fx-background-radius: 2; -fx-background-color: lightblue");
+                        tableFields[baseFormulaCols.get(j)][i].setStyle("-fx-background-radius: 2; -fx-control-inner-background: lightblue");
                     }
                     else
-                        tableFields[baseFormulaCols.get(j)][i].setStyle("-fx-background-radius: 2; -fxBbackground-color: white; ");
+                        tableFields[baseFormulaCols.get(j)][i].setStyle("-fx-background-radius: 2; -fx-control-inner-background: white; ");
                 }
                 return false;
             }
@@ -249,7 +353,8 @@ public class TTcheck {
                     }
                     else {
                         if (!tableKey[sub.getTtColumn()][k].equalsIgnoreCase(tableFields[sub.getTtColumn()][k].getText())) {
-                            tableFields[sub.getTtColumn()][k].setStyle("-fx-background-radius: 2; -fx-background-color: mistyrose; ");
+                            tableFields[sub.getTtColumn()][k].setStyle("-fx-background-radius: 2; -fx-control-inner-background: mistyrose; ");
+                            scrollToNode(tableFields[sub.getTtColumn()][k]);
                             goodColumn = false;
                         }
                     }
@@ -260,10 +365,10 @@ public class TTcheck {
                     EditorAlerts.showSimpleTxtListAlert("Table Values:", Collections.singletonList(ParseUtilities.newRegularText(message)));
                     for (int m = 0 ; m < interpretations.size(); m++) {
                         if (ttView.getHighlightButtons()[sub.getTtColumn()].isSelected()) {
-                            tableFields[sub.getTtColumn()][m].setStyle("-fx-background-radius: 2; -fx-background-color: lightblue");
+                            tableFields[sub.getTtColumn()][m].setStyle("-fx-background-radius: 2; -fx-control-inner-background: lightblue");
                         }
                         else
-                            tableFields[sub.getTtColumn()][m].setStyle("-fx-background-radius: 2; -fxBbackground-color: white; ");
+                            tableFields[sub.getTtColumn()][m].setStyle("-fx-background-radius: 2; -fx-control-inner-background: white; ");
                     }
                     return false;
                 }
@@ -273,6 +378,7 @@ public class TTcheck {
     }
 
     private boolean isMainFormula(Formula formula) {
+        if (mainFormulas == null) return false;
         boolean isMain = false;
         for (Formula mf : mainFormulas) {
             if (formula == mf) {
@@ -284,6 +390,7 @@ public class TTcheck {
     }
 
     private boolean equalsBasicFormula(Formula formula) {
+        if (basicFormulas == null) return false;
         boolean equalsBasic = false;
         for (Formula bf : basicFormulas) {
             if (bf.equals(formula)) {
@@ -295,17 +402,22 @@ public class TTcheck {
     }
 
     private boolean checkRows() {
+        if (isTornDown || ttExercise == null || ttView == null) return false;
+
         boolean good = true;
         if (tableRows != ttExercise.getTableRows()) {
             Background spinnerBackground = ttView.getRowsSpinner().getEditor().getBackground();
             ttView.getRowsSpinner().getEditor().setBackground(new Background(new BackgroundFill(Color.MISTYROSE, new CornerRadii(0), new Insets(0))));
             Background buttonBackground = ttView.getSetupTableButton().getBackground();
             ttView.getSetupTableButton().setBackground(new Background(new BackgroundFill(Color.MISTYROSE, new CornerRadii(3.0), new Insets(0))));
+            scrollToNode(ttView.getSetupTableButton());
+
             List<Text> textList = new ArrayList<>();
             textList.add(ParseUtilities.newRegularText("Table with \ud835\udc5b basic sentences should have 2"));
             textList.add(ParseUtilities.newSuperscriptText("\ud835\udc5b"));
             textList.add(ParseUtilities.newRegularText(" rows."));
             EditorAlerts.showSimpleTxtListAlert("Table Setup: ", textList);
+
             ttView.getRowsSpinner().getEditor().setBackground(spinnerBackground);
             ttView.getSetupTableButton().setBackground(buttonBackground);
             good = false;
@@ -314,6 +426,8 @@ public class TTcheck {
     }
 
     private boolean populateTableKey() {
+        if (isTornDown || ttExercise == null || ttModel == null || interpretations == null) return false;
+
         //base columns
         List<Integer> baseFormulaCols = ttExercise.getBasicFormulaCols();
         for (int i = 0; i < baseFormulaCols.size(); i++) {
@@ -343,10 +457,12 @@ public class TTcheck {
                 Formula formula = (Formula) sublist.get(m);
                 if (isBasic(formula)) {
                     boolean included = false;
-                    for (int n = 0; n < basicFormulas.length; n++) {
-                        if (formula.equals(basicFormulas[n])) {
-                            included = true;
-                            break;
+                    if (basicFormulas != null) {
+                        for (int n = 0; n < basicFormulas.length; n++) {
+                            if (formula.equals(basicFormulas[n])) {
+                                included = true;
+                                break;
+                            }
                         }
                     }
                     if (!included) {
@@ -390,12 +506,12 @@ public class TTcheck {
                     if (!isBasic(formula)) {
                         Operator mainOp = formula.getMainOperator();
                         if (mainOp instanceof NegationOp) {
-                            String value = truthFuncionValue(mainOp, ((Formula) formula.getChildren().get(0)).getSemanticValue());
+                            String value = truthFunctionValue(mainOp, ((Formula) formula.getChildren().get(0)).getSemanticValue());
                             formula.setSemanticValue(value);
                             tableKey[formula.getTtColumn()][i] = value;
                         }
                         else {
-                            String value = truthFuncionValue(mainOp, ((Formula) formula.getChildren().get(0)).getSemanticValue(), ((Formula) formula.getChildren().get(1)).getSemanticValue());
+                            String value = truthFunctionValue(mainOp, ((Formula) formula.getChildren().get(0)).getSemanticValue(), ((Formula) formula.getChildren().get(1)).getSemanticValue());
                             formula.setSemanticValue(value);
                             tableKey[formula.getTtColumn()][i] = value;
                         }
@@ -404,31 +520,10 @@ public class TTcheck {
             }
         }
 
-/*
-         //print main formula sub lists
-        for (int i = 0; i < mainFormulaSubLists.size(); i++) {
-            for (int j = 0; j < mainFormulaSubLists.get(i).size(); j++) {
-                Formula form = (Formula) mainFormulaSubLists.get(i).get(j);
-
-                System.out.print(form.getTtColumn() + ": " + mainFormulaSubLists.get(i).get(j) + ", ");
-            }
-            System.out.println();
-        }
- */
-/*
-        //print table
-        for (int i = 0; i < tableRows; i++) {
-            for (int j = 0; j < tableColumns; j++) {
-                System.out.print(tableKey[j][i] + " ");
-            }
-            System.out.println();
-        }
- */
-
         return true;
     }
 
-    private String truthFuncionValue(Operator tfOperator, String... values) {
+    public static String truthFunctionValue(Operator tfOperator, String... values) {
         String result = "XX";
 
         if (tfOperator instanceof NegationOp) {
@@ -467,8 +562,8 @@ public class TTcheck {
         }
         else if (tfOperator instanceof NorOp) {
             if (values[0].equals("T") && values[1].equals("T")) result = "F";
-            else if (values[0].equals("T") && values[1].equals("F")) result = "T";
-            else if (values[0].equals("F") && values[1].equals("T")) result = "T";
+            else if (values[0].equals("T") && values[1].equals("F")) result = "F";
+            else if (values[0].equals("F") && values[1].equals("T")) result = "F";
             else if (values[0].equals("F") && values[1].equals("F")) result = "T";
         }
         else System.out.println("operator not recognized");
@@ -476,6 +571,7 @@ public class TTcheck {
     }
 
     private boolean isBasic(Expression exp) {
+        if (exp == null) return false;
         boolean isBasic = false;
         if (exp.getChildren() == null || exp.getChildren().size() == 0) isBasic = true;
         else for (int i = 0; i < exp.getChildren().size(); i++) {
@@ -488,7 +584,6 @@ public class TTcheck {
     }
 
     private void populateFormulaSubList(Expression exp, int index) {
-
         if (exp == null || !SyntacticalFns.sentence(exp, objLangName)) return;
 
         Expression childExp1 = null;
@@ -507,7 +602,7 @@ public class TTcheck {
 
 
     private void populateInterpretations() {
-
+        if (basicDocs == null) return;
         int n = basicDocs.size();
         int keyRows = (int) Math.pow(2,n);
         tableKey = new String[tableColumns][keyRows];
@@ -527,9 +622,9 @@ public class TTcheck {
         }
     }
 
-
-
     private boolean populateBasicFormulas() {
+        if (isTornDown || ttView == null || basicDocs == null) return false;
+
         boolean good = true;
         basicFormulas = new Formula[basicDocs.size()];
         for (int i = 0; i < basicFormulas.length; i++) {
@@ -543,10 +638,13 @@ public class TTcheck {
                     good = false;
                     BoxedDRTA bdrta = ttView.getBasicFormulasBoxedDRTAList().get(i);
                     bdrta.setVTtreeBoxHighlight();
-                    ttExercise.getMainWindow().getMainView().scrollToNode(bdrta.getRTA());
+                    scrollToNode(bdrta.getRTA());
                     Background buttonBackground = ttView.getSetupTableButton().getBackground();
                     ttView.getSetupTableButton().setBackground(new Background(new BackgroundFill(Color.MISTYROSE, new CornerRadii(3.0), new Insets(0))));
+                    scrollToNode(ttView.getSetupTableButton());
+
                     EditorAlerts.showSimpleTxtListAlert("Table Setup:", Collections.singletonList(ParseUtilities.newRegularText("Setup of basic expression not a sentence.")));
+
                     ttView.getBasicFormulasBoxedDRTAList().get(i).getRTA().getStylesheets().clear();
                     ttView.getBasicFormulasBoxedDRTAList().get(i).getRTA().getStylesheets().add("RichTextFieldWide.css");
                     ttView.getSetupTableButton().setBackground(buttonBackground);
@@ -557,9 +655,10 @@ public class TTcheck {
                 good = false;
                 BoxedDRTA bdrta = ttView.getBasicFormulasBoxedDRTAList().get(i);
                 bdrta.setVTtreeBoxHighlight();
-                ttExercise.getMainWindow().getMainView().scrollToNode(bdrta.getRTA());
+                scrollToNode(bdrta.getRTA());
                 Background buttonBackground = ttView.getSetupTableButton().getBackground();
                 ttView.getSetupTableButton().setBackground(new Background(new BackgroundFill(Color.MISTYROSE, new CornerRadii(3.0), new Insets(0))));
+                scrollToNode(ttView.getSetupTableButton());
                 EditorAlerts.showSimpleTxtListAlert("Table Setup:", Collections.singletonList(ParseUtilities.newRegularText("Setup of basic expression not a formula.")));
                 ttView.getBasicFormulasBoxedDRTAList().get(i).getRTA().getStylesheets().clear();
                 ttView.getBasicFormulasBoxedDRTAList().get(i).getRTA().getStylesheets().add("RichTextFieldWide.css");
@@ -572,6 +671,8 @@ public class TTcheck {
 
 
     private boolean checkBasicOrder() {
+        if (isTornDown || ttView == null || basicDocs == null) return false;
+
         AlphanumStringComparator comparator = new AlphanumStringComparator();
         boolean good = true;
         for (int i = 0; i + 1 < basicDocs.size(); i++) {
@@ -579,10 +680,13 @@ public class TTcheck {
                 good = false;
                 ttView.getBasicFormulasBoxedDRTAList().get(i).setVTtreeBoxHighlight();
                 ttView.getBasicFormulasBoxedDRTAList().get(i + 1).setVTtreeBoxHighlight();
-                ttExercise.getMainWindow().getMainView().scrollToNode(ttView.getBasicFormulasBoxedDRTAList().get(i + 1).getRTA());
+                scrollToNode(ttView.getBasicFormulasBoxedDRTAList().get(i + 1).getRTA());
                 Background buttonBackground = ttView.getSetupTableButton().getBackground();
                 ttView.getSetupTableButton().setBackground(new Background(new BackgroundFill(Color.MISTYROSE, new CornerRadii(3.0), new Insets(0))));
+                scrollToNode(ttView.getSetupTableButton());
+
                 EditorAlerts.showSimpleTxtListAlert("Table Setup:", Collections.singletonList(ParseUtilities.newRegularText("Table should be set up with basic formulas in alphanumeric order.")));
+
                 ttView.getBasicFormulasBoxedDRTAList().get(i).getRTA().getStylesheets().clear();
                 ttView.getBasicFormulasBoxedDRTAList().get(i).getRTA().getStylesheets().add("RichTextFieldWide.css");
                 ttView.getBasicFormulasBoxedDRTAList().get(i+1).getRTA().getStylesheets().clear();
@@ -595,6 +699,8 @@ public class TTcheck {
     }
 
     private boolean checkBasicDocs() {
+        if (isTornDown || ttView == null || basicDocs == null) return false;
+
         boolean good = true;
 
         for (int i = 0; i < basicDocs.size(); i++) {
@@ -602,11 +708,14 @@ public class TTcheck {
             if (basicDoc.getText().equals("")) {
                 good = false;
                 ttView.getBasicFormulasBoxedDRTAList().get(i).setVTtreeBoxHighlight();
-                ttExercise.getMainWindow().getMainView().scrollToNode(ttView.getBasicFormulasBoxedDRTAList().get(i).getRTA());
+                scrollToNode(ttView.getBasicFormulasBoxedDRTAList().get(i).getRTA());
                 Background buttonBackground = ttView.getSetupTableButton().getBackground();
-                Border buttonBorder = ttView.getSetupTableButton().getBorder();
+            //    Border buttonBorder = ttView.getSetupTableButton().getBorder();
                 ttView.getSetupTableButton().setBackground(new Background(new BackgroundFill(Color.MISTYROSE, new CornerRadii(3.0), new Insets(0))));
-                EditorAlerts.showSimpleTxtListAlert("Table Setup: ", Collections.singletonList(ParseUtilities.newRegularText("Table should be set up with no empty basic formula.")));
+                scrollToNode(ttView.getSetupTableButton());
+
+                EditorAlerts.showSimpleTxtListAlert("Table Setup: ", Collections.singletonList(ParseUtilities.newRegularText("Table should be set up and have no empty basic formula(s).")));
+
                 ttView.getBasicFormulasBoxedDRTAList().get(i).getRTA().getStylesheets().clear();
                 ttView.getBasicFormulasBoxedDRTAList().get(i).getRTA().getStylesheets().add("RichTextFieldWide.css");
                 ttView.getSetupTableButton().setBackground(buttonBackground);
@@ -617,32 +726,21 @@ public class TTcheck {
     }
 
     private boolean checkTableRows() {
+        if (isTornDown || ttModel == null || ttView == null) return false;
+
         boolean good = ttModel.getTableRows() > 0;
         if (!good) {
             Background spinnerBackground = ttView.getRowsSpinner().getEditor().getBackground();
             ttView.getRowsSpinner().getEditor().setBackground(new Background(new BackgroundFill(Color.MISTYROSE, new CornerRadii(0), new Insets(0))));
             Background buttonBackground = ttView.getSetupTableButton().getBackground();
             ttView.getSetupTableButton().setBackground(new Background(new BackgroundFill(Color.MISTYROSE, new CornerRadii(3.0), new Insets(0))));
+            scrollToNode(ttView.getSetupTableButton());
             EditorAlerts.showSimpleTxtListAlert("Table Setup: ", Collections.singletonList(ParseUtilities.newRegularText("Table should be set up with more than 0 rows.")));
             ttView.getRowsSpinner().getEditor().setBackground(spinnerBackground);
             ttView.getSetupTableButton().setBackground(buttonBackground);
         }
         return good;
     }
-
-    private void updateCheckCounter() {
-        if (checkMax != -1 && checkTries >= checkMax && !ttExercise.getMainWindow().isInstructorFunctions()) {
-            ttView.getCheckButton().setDisable(true);
-            ttView.getCheckProgButton().setDisable(true);
-        }
-        String checkString;
-        if (checkMax == -1) checkString = "(unlimited)";
-        else if (checkMax == 0) checkString = "(none)";
-        else checkString = "(" + String.valueOf(checkTries) + "/" + String.valueOf(checkMax) + ")";
-
-        ttView.getCheckTriesLabel().setText(checkString);
-    }
-
 
     public int getCheckMax() {
         return checkMax;
@@ -675,8 +773,4 @@ public class TTcheck {
     public void setCheckSuccess(boolean checkSuccess) {
         this.checkSuccess = checkSuccess;
     }
-
-
-
-
 }

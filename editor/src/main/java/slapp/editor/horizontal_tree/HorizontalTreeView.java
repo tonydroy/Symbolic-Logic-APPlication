@@ -25,6 +25,8 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -60,10 +62,18 @@ import java.util.function.UnaryOperator;
 
 import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
 import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
+import javafx.animation.PauseTransition;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+
 
 /**
  * View for the horizontal tree exercise
  */
+
+
 public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
     private HorizontalTreeView self;
     private MainWindowView mainView;
@@ -109,15 +119,7 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
     private ToggleButton rulerButton;
     private ToggleGroup buttonGroup = new ToggleGroup();
     private List<TreePane> treePanes = new ArrayList<>();
-    EventHandler formulaNodeClickFilter;
-    private EventHandler oneBranchClickFilter;
-    private EventHandler twoBranchClickFilter;
-    private EventHandler threeBranchClickFilter;
-    private EventHandler indefinateBranchClickFilter;
-    private EventHandler annotationClickFilter;
-    private EventHandler dotsClickFilter;
-    private EventHandler oneBranchTermClickFilter;
-    private EventHandler twoBranchTermClickFilter;
+
     private Ruler axisNode;
     private boolean axis = false;
     private static BranchNode clickNode = null;
@@ -140,6 +142,43 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
     private Stage staticHelpStage;
     private CheckBox permitEmptyBranchesCheck;
 
+    private final DoubleProperty localScalePageHeight = new SimpleDoubleProperty(1.0);
+    private final DoubleProperty localScalePageWidth = new SimpleDoubleProperty(1.0);
+
+    // KILL SWITCH: Prevents asynchronous listener execution during teardown
+    private boolean isTornDown = false;
+
+    // SCORCHED EARTH RULE 3: Eradicate Anonymous Lambdas
+    private ChangeListener<Node> exerciseFocusListener;
+    private UnaryOperator<TextFormatter.Change> pointsEarnedFilter;
+    private ChangeListener<Number> mainPaneHeightListener;
+    private ChangeListener<Number> mainPaneWidthListener;
+    private ChangeListener<Number> localScalePageHeightListener;
+    private ChangeListener<Number> localScalePageWidthListener;
+    private ChangeListener<Boolean> formulaNodeToggleListener;
+    private ChangeListener<Boolean> oneBranchToggleListener;
+    private ChangeListener<Boolean> twoBranchToggleListener;
+    private ChangeListener<Boolean> threeBranchToggleListener;
+    private ChangeListener<Boolean> indefinateBranchToggleListener;
+    private ChangeListener<Boolean> oneBranchTermToggleListener;
+    private ChangeListener<Boolean> twoBranchTermToggleListener;
+    private ChangeListener<Boolean> verticalDotsToggleListener;
+    private ChangeListener<Boolean> annotationToggleListener;
+    private ChangeListener<Boolean> rulerButtonToggleListener;
+    private EventHandler<ActionEvent> annotationPlusHandler;
+    private EventHandler<ActionEvent> annotationMinusHandler;
+    private EventHandler<MouseEvent> mainPaneClickHandler;
+
+    EventHandler<MouseEvent> formulaNodeClickFilter;
+    private EventHandler<MouseEvent> oneBranchClickFilter;
+    private EventHandler<MouseEvent> twoBranchClickFilter;
+    private EventHandler<MouseEvent> threeBranchClickFilter;
+    private EventHandler<MouseEvent> indefinateBranchClickFilter;
+    private EventHandler<MouseEvent> annotationClickFilter;
+    private EventHandler<MouseEvent> dotsClickFilter;
+    private EventHandler<MouseEvent> oneBranchTermClickFilter;
+    private EventHandler<MouseEvent> twoBranchTermClickFilter;
+
     /**
      * Construct the horizontal tree view
      * @param mainView the main view
@@ -147,6 +186,64 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
     HorizontalTreeView(MainWindowView mainView) {
         self = this;
         this.mainView = mainView;
+
+        localScalePageHeight.bind(mainView.scalePageHeightProperty());
+        localScalePageWidth.bind(mainView.scalePageWidthProperty());
+
+        exerciseFocusListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null ) return;
+            try {
+                RichTextArea statementRTA = exerciseStatement != null ? exerciseStatement.getEditor() : null;
+                RichTextArea commentRTA = exerciseComment != null ? exerciseComment.getEditor() : null;
+                RichTextArea explainRTA = explainDRTA != null ? explainDRTA.getEditor() : null;
+                RichTextArea interpretationEditor = interpretationDRTA != null ? interpretationDRTA.getEditor() : null;
+
+                if (statementRTA != null && inHierarchy(nv, statementRTA)) {
+                    if (currentSpinnerNode != statementRTA) {
+                        currentSpinnerNode = statementRTA;
+                        if (statementHeightSpinner != null && statementWidthSpinner != null) {
+                            this.mainView.updateSizeSpinners(statementHeightSpinner, statementWidthSpinner);
+                        }
+                    }
+                } else if (commentRTA != null && inHierarchy(nv, commentRTA)) {
+                    if (currentSpinnerNode != commentRTA) {
+                        currentSpinnerNode = commentRTA;
+                        if (commentHeightSpinner != null && commentWidthSpinner != null) {
+                            this.mainView.updateSizeSpinners(commentHeightSpinner, commentWidthSpinner);
+                        }
+                    }
+                } else if (explainRTA != null && inHierarchy(nv, explainRTA)) {
+                    if (currentSpinnerNode != explainRTA) {
+                        currentSpinnerNode = explainRTA;
+                        if (explainHeightSpinner != null && explainWidthSpinner != null) {
+                            this.mainView.updateSizeSpinners(explainHeightSpinner, explainWidthSpinner);
+                        }
+                    }
+                } else if (interpretationEditor != null && inHierarchy(nv, interpretationEditor)) {
+                    if (currentSpinnerNode != interpretationEditor) {
+                        currentSpinnerNode = interpretationEditor;
+                        if (interpretationHeightSpinner != null && interpretationWidthSpinner != null) {
+                            this.mainView.updateSizeSpinners(interpretationHeightSpinner, interpretationWidthSpinner);
+                        }
+                    }
+                } else if (mainPane != null && inHierarchy(nv, mainPane)) {
+                    if (currentSpinnerNode != mainPane) {
+                        currentSpinnerNode = mainPane;
+                        if (mainPaneHeightSpinner != null && mainPaneWidthSpinner != null) {
+                            if (mainPaneHeightSpinner.getValueFactory() != null) {
+                                mainPaneHeightSpinner.getValueFactory().setValue((double) Math.round(mainPane.getHeight() / localScalePageHeight.get() * 100.0));
+                            }
+                            if (mainPaneWidthSpinner.getValueFactory() != null) {
+                                mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round((mainPane.getWidth() - RTA_WIDTH_BMP) / localScalePageWidth.get() * 100.0));
+                            }
+                            this.mainView.updateSizeSpinners(mainPaneHeightSpinner, mainPaneWidthSpinner);
+                        }
+                    }
+                } else {
+                    currentSpinnerNode = null;
+                }
+            } catch (Exception e) {}
+        };
 
         mainPane = new AnchorPane();
         mainPane.setMinHeight(100);
@@ -156,7 +253,6 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
         centerBox = new VBox(3, mainPane, explainDRTA.getEditor());
 
 
-    //    centerBox = new VBox(3, interpretationDRTA.getEditor(), mainPane, explainDRTA.getEditor());
         mainPane.setPadding(new Insets(5));
 
         undoButton = new Button("Undo");
@@ -176,7 +272,7 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
         rectangle.setStyle("-fx-stroke: black; -fx-stroke-width: 1.5; -fx-fill: transparent;");
         Group boxToggleGraphic = new Group(rectangle);
         formulaNodeToggle.setGraphic(boxToggleGraphic);
-        formulaNodeToggle.setTooltip(new Tooltip("Add (left click) or remove (right click) box with its branches"));
+        formulaNodeToggle.setTooltip(new Tooltip("Add (left click) or remove (double click) box with its branches"));
         formulaNodeToggle.setToggleGroup(buttonGroup);
 
         oneBranchToggle = new ToggleButton();
@@ -251,6 +347,7 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
         indefiniteBranchToggle.setGraphic(indefPane);
         indefiniteBranchToggle.setTooltip(new Tooltip("Add indefinite branch to selected node"));
         indefiniteBranchToggle.setToggleGroup(buttonGroup);
+
         oneBranchTermToggle = new ToggleButton();
         oneBranchTermToggle.setPrefWidth(64);
         oneBranchTermToggle.setMinHeight(28);
@@ -319,7 +416,7 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
         HBox buttonBox = new HBox(boxesPane);
         buttonBox.setAlignment(Pos.CENTER);
         annotationToggle.setGraphic(buttonBox);
-        annotationToggle.setTooltip(new Tooltip("Add (left click) or remove (right click) annotation box"));
+        annotationToggle.setTooltip(new Tooltip("Add (left click) or remove (double click) annotation box"));
         annotationToggle.setToggleGroup(buttonGroup);
 
         annotationPlus = new Button("+");
@@ -363,9 +460,10 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
         spacer.setMinWidth(5);
         spacer.setMaxWidth(5);
         controlBox.getChildren().addAll(undoButton, redoButton, formulaNodeToggle, oneBranchToggle, twoBranchToggle, threeBranchToggle, indefiniteBranchToggle, verticalDotsToggle, oneBranchTermToggle, twoBranchTermToggle, spacer, annotationBox, rulerButton);
-        controlBox.setMargin(rulerButton, new Insets(-10, 0, 0, 0));
+    //    controlBox.setMargin(rulerButton, new Insets(-10, 0, 0, 0));
+        controlBox.setMargin(annotationBox, new Insets(-15, 0, 0, 0));
 
-        controlBox.setAlignment(Pos.BASELINE_RIGHT);
+        controlBox.setAlignment(Pos.TOP_CENTER);
         controlBox.setPadding(new Insets(20,20,0,20));
         controlBox.setMinWidth(150); controlBox.setMaxWidth(150);
         exerciseControlNode = controlBox;
@@ -374,14 +472,16 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
         pointsEarnedTextField.setPrefWidth(27);
         pointsEarnedTextField.setAlignment(Pos.CENTER_RIGHT);
         pointsEarnedTextField.setPadding(new Insets(0,5,0,3));
-        UnaryOperator<TextFormatter.Change> filter = change -> {
+
+        pointsEarnedFilter = change -> {
+            if (isTornDown || this.mainView == null || change == null) return null;
             String text = change.getText();
             if (text.matches("[0-9]*")) {
                 return change;
             }
             return null;
         };
-        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        TextFormatter<String> textFormatter = new TextFormatter<>(pointsEarnedFilter);
         pointsEarnedTextField.setTextFormatter(textFormatter);
     }
 
@@ -389,108 +489,93 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
      * Deselect all the toggle buttons
      */
     void deselectToggles() {
-        formulaNodeToggle.setSelected(false);
-        oneBranchToggle.setSelected(false);
-        twoBranchToggle.setSelected(false);
-        threeBranchToggle.setSelected(false);
-        indefiniteBranchToggle.setSelected(false);
-        verticalDotsToggle.setSelected(false);
-        oneBranchTermToggle.setSelected(false);
-        twoBranchTermToggle.setSelected(false);
-        annotationToggle.setSelected(false);
+        if (isTornDown || this.mainView == null) return;
+        if (formulaNodeToggle != null) formulaNodeToggle.setSelected(false);
+        if (oneBranchToggle != null) oneBranchToggle.setSelected(false);
+        if (twoBranchToggle != null) twoBranchToggle.setSelected(false);
+        if (threeBranchToggle != null) threeBranchToggle.setSelected(false);
+        if (indefiniteBranchToggle != null) indefiniteBranchToggle.setSelected(false);
+        if (verticalDotsToggle != null) verticalDotsToggle.setSelected(false);
+        if (oneBranchTermToggle != null) oneBranchTermToggle.setSelected(false);
+        if (twoBranchTermToggle != null) twoBranchTermToggle.setSelected(false);
+        if (annotationToggle != null) annotationToggle.setSelected(false);
     }
 
     void initalizeInterpretationRTA() {
+        if (isTornDown || this.mainView == null || interpretationRTA == null || interpretationDRTA == null) return;
+        double spinnerMin = (double) ((int) (100 * 45.0 / localScalePageHeight.get()));
 
         interpretationRTA.getStylesheets().add("slappTextArea.css");
         interpretationRTA.setPromptText("Interpretation");
-        interpretationDRTA.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.BASE_AND_SANS);
+        if (interpretationDRTA.getKeyboardSelector() != null) {
+            interpretationDRTA.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.BASE_AND_SANS);
+        }
 
-        double interpretationInitialHeight = Math.round((interpretationPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100 );
+        double interpretationInitialHeight = Math.round((interpretationPrefHeight - RTA_SCREEN_BMP) / localScalePageHeight.get() * 100 );
 
-        interpretationHeightSpinner = new Spinner<>(0.0, 999.0, interpretationInitialHeight, 1.0);
+        interpretationHeightSpinner = new Spinner<>(spinnerMin, 999.0, interpretationInitialHeight, 1.0);
         interpretationHeightSpinner.setPrefWidth(65);
         interpretationHeightSpinner.setDisable(false);
-        interpretationHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        interpretationRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(interpretationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
-        interpretationHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
-            Node increment = interpretationHeightSpinner.lookup(".increment-arrow-button");
-            if (increment != null) increment.getOnMouseReleased().handle(null);
-            Node decrement = interpretationHeightSpinner.lookup(".decrement-arrow-button");
-            if (decrement != null) decrement.getOnMouseReleased().handle(null);
-        });
+        interpretationHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        interpretationRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(interpretationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
-        interpretationRTA.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
-        interpretationRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
+        interpretationRTA.prefWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        interpretationRTA.contentAreaWidthProperty().bind(localScalePageWidth);
         interpretationWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         interpretationWidthSpinner.setPrefWidth(65);
         interpretationWidthSpinner.setDisable(true);
-        interpretationWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
+        interpretationWidthSpinner.setTooltip(new Tooltip("Window width as % of selected paper"));
 
     }
+
     /**
      * Initialize statement, comment, explain, main pane, and button click filters
      */
     void initializeViewDetails() {
+        double spinnerMin = (double) ((int) (100 * 45.0 / localScalePageHeight.get()));
+
         //statement
         RichTextArea statementRTA = exerciseStatement.getEditor();
         statementRTA.getStylesheets().add("slappTextArea.css");
         statementRTA.setEditable(false);
 
-        double statementInitialHeight = Math.round((statementPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100.0);
-        statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
+        double statementInitialHeight = Math.ceil((statementPrefHeight - RTA_SCREEN_BMP) / localScalePageHeight.get() * 100.0);
+        statementHeightSpinner = new Spinner<>(spinnerMin, 999.0, statementInitialHeight, 1.0);
         statementHeightSpinner.setPrefWidth(65);
         statementHeightSpinner.setDisable(false);
-        statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
-        statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
-            Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
-            if (increment != null) increment.getOnMouseReleased().handle(null);
-            Node decrement = statementHeightSpinner.lookup(".decrement-arrow-button");
-            if (decrement != null) decrement.getOnMouseReleased().handle(null);
-        });
+        statementHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
-        statementRTA.maxWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
-
-
+        statementRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
         statementRTA.minWidthProperty().bind(statementRTA.prefWidthProperty());
-        statementRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
-
-   //     System.out.println("pref w: " + statementRTA.getPrefWidth() + " cont w: " + statementRTA.getContentAreaWidth());
+        statementRTA.contentAreaWidthProperty().bind(localScalePageWidth);
 
         statementWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         statementWidthSpinner.setPrefWidth(65);
         statementWidthSpinner.setDisable(true);
-        statementWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
+        statementWidthSpinner.setTooltip(new Tooltip("Window width as % of selected paper"));
 
         //interpretation rta
-        RichTextArea interpretationRTA = interpretationDRTA.getEditor();
-
+        RichTextArea interpRTA = interpretationDRTA.getEditor();
 
         //comment
         RichTextArea commentRTA = exerciseComment.getEditor();
         commentRTA.getStylesheets().add("slappTextArea.css");
         commentRTA.setPromptText("Comment:");
 
-        double commentInitialHeight = Math.round((commentPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100.0);
-        commentHeightSpinner = new Spinner<>(0.0, 999.0, commentInitialHeight, 1.0);
+        double commentInitialHeight = Math.round((commentPrefHeight - RTA_SCREEN_BMP) / localScalePageHeight.get() * 100.0);
+        commentHeightSpinner = new Spinner<>(spinnerMin, 999.0, commentInitialHeight, 1.0);
         commentHeightSpinner.setPrefWidth(65);
         commentHeightSpinner.setDisable(false);
-        commentHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        commentRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
-        commentHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
-            Node increment = commentHeightSpinner.lookup(".increment-arrow-button");
-            if (increment != null) increment.getOnMouseReleased().handle(null);
-            Node decrement = commentHeightSpinner.lookup(".decrement-arrow-button");
-            if (decrement != null) decrement.getOnMouseReleased().handle(null);
-        });
+        commentHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        commentRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
-        commentRTA.maxWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
-        commentRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
+        commentRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        commentRTA.contentAreaWidthProperty().bind(localScalePageWidth);
         commentWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         commentWidthSpinner.setPrefWidth(65);
         commentWidthSpinner.setDisable(true);
-        commentWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
+        commentWidthSpinner.setTooltip(new Tooltip("Window width as % of selected paper"));
 
 
 
@@ -499,137 +584,193 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
         explainRTA.getStylesheets().add("slappTextArea.css");
         explainRTA.setPromptText(explainPrompt);
 
-        double explainInitialHeight = Math.round((explainPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100.0 );
-        explainHeightSpinner = new Spinner<>(0.0, 999.0, explainInitialHeight, 1.0);
+        double explainInitialHeight = Math.round((explainPrefHeight - RTA_SCREEN_BMP) / localScalePageHeight.get() * 100.0 );
+        explainHeightSpinner = new Spinner<>(spinnerMin, 999.0, explainInitialHeight, 1.0);
         explainHeightSpinner.setPrefWidth(65);
         explainHeightSpinner.setDisable(false);
-        explainHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        explainRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(explainHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
-        explainHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
-            Node increment = explainHeightSpinner.lookup(".increment-arrow-button");
-            if (increment != null) increment.getOnMouseReleased().handle(null);
-            Node decrement = explainHeightSpinner.lookup(".decrement-arrow-button");
-            if (decrement != null) decrement.getOnMouseReleased().handle(null);
-        });
+        explainHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        explainRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(explainHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
-        explainRTA.maxWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
-        explainRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
+        explainRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        explainRTA.contentAreaWidthProperty().bind(localScalePageWidth);
         explainWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         explainWidthSpinner.setPrefWidth(65);
         explainWidthSpinner.setDisable(true);
-        explainWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
+        explainWidthSpinner.setTooltip(new Tooltip("Window width as % of selected paper"));
 
 
 
         //main pane
         mainPane.setMinHeight(150);
-        mainPane.setMinWidth(mainView.getScalePageWidth() + RTA_WIDTH_BMP);
+        mainPane.setMinWidth(localScalePageWidth.get() + RTA_WIDTH_BMP);
         mainPane.setPadding(new Insets(0, RTA_WIDTH_BMP, 0, 0));
 
         mainPaneHeightSpinner = new Spinner<>(0.0,999.0, 0,1.0);
         mainPaneHeightSpinner.setPrefWidth(65);
         mainPaneHeightSpinner.setDisable(true);
-        mainPaneHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        mainPane.heightProperty().addListener((ob, ov, nv) -> {
-            mainPaneHeightSpinner.getValueFactory().setValue((double) Math.round(mainPane.getHeight() / mainView.getScalePageHeight() * 100));
-        });
+        mainPaneHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+
+        mainPaneHeightListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || mainPane == null || mainPaneHeightSpinner == null) return;
+            if (mainPaneHeightSpinner.getValueFactory() != null) mainPaneHeightSpinner.getValueFactory().setValue((double) Math.round(mainPane.getHeight() / localScalePageHeight.get() * 100));
+        };
+        mainPane.heightProperty().addListener(mainPaneHeightListener);
 
         mainPaneWidthSpinner = new Spinner<>(0.0,999.0, 0,1.0);
         mainPaneWidthSpinner.setPrefWidth(65);
         mainPaneWidthSpinner.setDisable(true);
-        mainPaneWidthSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        mainPane.widthProperty().addListener((ob, ov, nv) -> {
-            mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round((mainPane.getWidth() - RTA_WIDTH_BMP) /mainView.getScalePageWidth() * 100));
-            axisNode.updateRuler((double) nv);
+        mainPaneWidthSpinner.setTooltip(new Tooltip("Window width as % of selected paper"));
 
-        });
-
+        mainPaneWidthListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || mainPane == null || mainPaneWidthSpinner == null) return;
+            if (mainPaneWidthSpinner.getValueFactory() != null) mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round((mainPane.getWidth() - RTA_WIDTH_BMP) / localScalePageWidth.get() * 100));
+            if (axisNode != null) axisNode.updateRuler((double) nv);
+        };
+        mainPane.widthProperty().addListener(mainPaneWidthListener);
 
         setSizeSpinners();
 
-
         //page size listeners
-        mainView.scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeightListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || statementRTA == null || commentRTA == null || explainRTA == null || interpRTA == null) return;
+            double revSpinnerMin = (double) ((int) (100 * 45.0 / (double) nv));
 
             statementRTA.prefHeightProperty().unbind();
-            statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+            if (statementHeightSpinner != null && statementHeightSpinner.getValueFactory() != null) {
+                statementHeightSpinner.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(revSpinnerMin, 999.0, (double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()), 1.0));
+                statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+            }
 
             commentRTA.prefHeightProperty().unbind();
-            commentHeightSpinner.getValueFactory().setValue((double) Math.round(commentHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            commentRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+            if (commentHeightSpinner != null && commentHeightSpinner.getValueFactory() != null) {
+                commentHeightSpinner.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(revSpinnerMin, 999.0, (double) Math.round(commentHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()), 1.0));
+                commentRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+            }
 
             explainRTA.prefHeightProperty().unbind();
-            explainHeightSpinner.getValueFactory().setValue((double) Math.round(explainHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            explainRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(explainHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+            if (explainHeightSpinner != null && explainHeightSpinner.getValueFactory() != null) {
+                explainHeightSpinner.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(revSpinnerMin, 999.0, (double) Math.round(explainHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()), 1.0));
+                explainRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(explainHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+            }
 
-            interpretationRTA.prefHeightProperty().unbind();
-            interpretationHeightSpinner.getValueFactory().setValue((double) Math.round(interpretationHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            interpretationRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(interpretationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+            interpRTA.prefHeightProperty().unbind();
+            if (interpretationHeightSpinner != null && interpretationHeightSpinner.getValueFactory() != null) {
+                interpretationHeightSpinner.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(revSpinnerMin, 999.0, (double) Math.round(interpretationHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()), 1.0));
+                interpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(interpretationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+            }
 
+            if (mainPaneHeightSpinner != null && mainPaneHeightSpinner.getValueFactory() != null && mainPane != null) {
+                mainPaneHeightSpinner.getValueFactory().setValue((double) Math.round(mainPane.getHeight() / localScalePageHeight.get() * 100.0));
+            }
+        };
+        localScalePageHeight.addListener(localScalePageHeightListener);
 
-            mainPaneHeightSpinner.getValueFactory().setValue((double) Math.round(mainPane.getHeight() / mainView.getScalePageHeight() * 100.0));
-        });
-
-        mainView.scalePageWidthProperty().addListener((ob, ov, nv) -> {
-            mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round((mainPane.getWidth() - RTA_WIDTH_BMP) / mainView.getScalePageWidth() * 100.0));
-            mainPane.setMinWidth(mainView.getScalePageWidth() + RTA_WIDTH_BMP);
-        });
+        localScalePageWidthListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || mainPane == null || mainPaneWidthSpinner == null) return;
+            if (mainPaneWidthSpinner.getValueFactory() != null) {
+                mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round((mainPane.getWidth() - RTA_WIDTH_BMP) / localScalePageWidth.get() * 100.0));
+            }
+            mainPane.setMinWidth(localScalePageWidth.get() + RTA_WIDTH_BMP);
+        };
+        localScalePageWidth.addListener(localScalePageWidthListener);
 
         //click filters
         formulaNodeClickFilter = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                formulaNodeToggle.setSelected(false);
+                if (isTornDown || mainView == null || self == null || treePanes == null) return;
                 if (event.getButton() == MouseButton.PRIMARY) {
-                    TreePane treePane = new TreePane(self);
-                    treePanes.add(treePane);
-                    mainPane.getChildren().add(treePane);
-                    refreshTreePanes();
-                    treePane.relocateToGridPoint(new Point2D(event.getX(), event.getY()));
-                    setUndoRedoFlag(true);
-                    setUndoRedoFlag(false);
-                }
 
-                else if (event.getButton() == MouseButton.SECONDARY) {
-                    for (TreePane pane : treePanes) {
-                        BranchNode rootNode = pane.getRootBranchNode();
-                        if (inHierarchy(event.getPickResult().getIntersectedNode(), rootNode)) {
-                            treePanes.remove(pane);
-                            mainPane.getChildren().remove(pane);
-                            formulaNodeToggle.setSelected(false);
+                    if (event.getClickCount() == 1) {
+                        boolean clickedOnExistingNode = false;
+                        for (TreePane pane : treePanes) {
+                            if (pane == null) continue;
+                            BranchNode rootNode = pane.getRootBranchNode();
+                            if (inHierarchy(event.getPickResult().getIntersectedNode(), rootNode)) {
+                                clickedOnExistingNode = true;
+                                break;
+                            } else {
+                                setClickedNode(event, rootNode);
+                                if (clickNode != null && clickNode != rootNode) {
+                                    clickedOnExistingNode = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!clickedOnExistingNode) {
+                            if (formulaNodeToggle != null) formulaNodeToggle.setSelected(false);
+
+                            TreePane treePane = new TreePane(self);
+                            treePanes.add(treePane);
+                            mainPane.getChildren().add(treePane);
+                            refreshTreePanes();
+                            treePane.relocateToGridPoint(new Point2D(event.getX(), event.getY()));
                             setUndoRedoFlag(true);
                             setUndoRedoFlag(false);
-                            break;
-                        } else {
-                            setClickedNode(event, rootNode);
-                            if (clickNode != null && clickNode != rootNode) {
-                                clickNode.getContainer().getDependents().remove(clickNode);
-                                pane.refresh();
-                                formulaNodeToggle.setSelected(false);
+                            event.consume();
+                        }
+
+                    } else if (event.getClickCount() == 2) {
+                        for (TreePane pane : treePanes) {
+                            if (pane == null) continue;
+                            BranchNode rootNode = pane.getRootBranchNode();
+
+                            if (inHierarchy(event.getPickResult().getIntersectedNode(), rootNode)) {
+                                treePanes.remove(pane);
+                                // SCORCHED EARTH RULE 9: Explicit UI Deletion Cleanup (call before removing from parent)
+                                try { pane.cleanup(); } catch (Exception e) {}
+                                mainPane.getChildren().remove(pane);
+                                severFromParent(pane);
+
+                                if (formulaNodeToggle != null) formulaNodeToggle.setSelected(false);
                                 setUndoRedoFlag(true);
                                 setUndoRedoFlag(false);
+                                event.consume();
                                 break;
+                            } else {
+                                setClickedNode(event, rootNode);
+                                if (clickNode != null && clickNode != rootNode) {
+                                    if (clickNode.getContainer() != null && clickNode.getContainer().getDependents() != null) {
+                                        clickNode.getContainer().getDependents().remove(clickNode);
+                                        pane.refresh();
+                                        // SCORCHED EARTH RULE 9: Explicit UI Deletion Cleanup
+                                        try { clickNode.cleanup(); } catch(Exception e) {}
+                                    }
+
+                                    if (formulaNodeToggle != null) formulaNodeToggle.setSelected(false);
+                                    setUndoRedoFlag(true);
+                                    setUndoRedoFlag(false);
+                                    event.consume();
+                                    break;
+                                }
                             }
                         }
                     }
                 }
             }
         };
-        formulaNodeToggle.selectedProperty().addListener((ob, ov, nv) -> {
-            if (nv) mainPane.addEventFilter(MouseEvent.MOUSE_PRESSED, formulaNodeClickFilter);
-            else mainPane.removeEventFilter(MouseEvent.MOUSE_PRESSED, formulaNodeClickFilter);
-        });
+
+        formulaNodeToggleListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || mainPane == null || formulaNodeClickFilter == null) return;
+            if (nv) mainPane.addEventFilter(MouseEvent.MOUSE_CLICKED, formulaNodeClickFilter);
+            else mainPane.removeEventFilter(MouseEvent.MOUSE_CLICKED, formulaNodeClickFilter);
+        };
+        formulaNodeToggle.selectedProperty().addListener(formulaNodeToggleListener);
 
         oneBranchClickFilter = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if (event.getButton() == MouseButton.PRIMARY) {
+                if (isTornDown || mainView == null || self == null || treePanes == null) return;
+                if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 1) {
                     for (TreePane pane : treePanes) {
+                        if (pane == null) continue;
                         BranchNode rootNode = pane.getRootBranchNode();
                         setClickedNode(event, rootNode);
-                        if (clickNode != null && clickNode.isFormulaNode() && formulaDependents(clickNode.getDependents())) {
-                            clickNode.getConnectorBoxedDRTA().getRTA().getActionFactory().newDocumentNow().execute(new ActionEvent());
+                        if (clickNode != null && clickNode.isFormulaNode() && clickNode.getDependents() != null && formulaDependents(clickNode.getDependents())) {
+                            if (clickNode.getConnectorBoxedDRTA() != null && clickNode.getConnectorBoxedDRTA().getRTA() != null) {
+                                clickNode.getConnectorBoxedDRTA().getRTA().getActionFactory().newDocumentNow().execute(new ActionEvent());
+                            }
                             BranchNode branch1 = new BranchNode(clickNode, self);
                             clickNode.getDependents().add(branch1);
                             pane.refresh();
@@ -641,20 +782,26 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
             }
         };
 
-        oneBranchToggle.selectedProperty().addListener((ob, ov, nv) -> {
+        oneBranchToggleListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || mainPane == null || oneBranchClickFilter == null) return;
             if (nv) mainPane.addEventFilter(MouseEvent.MOUSE_PRESSED, oneBranchClickFilter);
             else mainPane.removeEventFilter(MouseEvent.MOUSE_PRESSED, oneBranchClickFilter);
-        });
+        };
+        oneBranchToggle.selectedProperty().addListener(oneBranchToggleListener);
 
         twoBranchClickFilter = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if (event.getButton() == MouseButton.PRIMARY) {
+                if (isTornDown || mainView == null || self == null || treePanes == null) return;
+                if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 1) {
                     for (TreePane pane : treePanes) {
+                        if (pane == null) continue;
                         BranchNode rootNode = pane.getRootBranchNode();
                         setClickedNode(event, rootNode);
-                        if (clickNode != null && clickNode.isFormulaNode() && formulaDependents(clickNode.getDependents())) {
-                            clickNode.getConnectorBoxedDRTA().getRTA().getActionFactory().newDocumentNow().execute(new ActionEvent());
+                        if (clickNode != null && clickNode.isFormulaNode() && clickNode.getDependents() != null && formulaDependents(clickNode.getDependents())) {
+                            if (clickNode.getConnectorBoxedDRTA() != null && clickNode.getConnectorBoxedDRTA().getRTA() != null) {
+                                clickNode.getConnectorBoxedDRTA().getRTA().getActionFactory().newDocumentNow().execute(new ActionEvent());
+                            }
                             BranchNode branch1 = new BranchNode(clickNode, self);
                             BranchNode branch2 = new BranchNode(clickNode, self);
                             clickNode.getDependents().addAll(Arrays.asList(branch1, branch2));
@@ -667,20 +814,26 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
             }
         };
 
-        twoBranchToggle.selectedProperty().addListener((ob, ov, nv) -> {
+        twoBranchToggleListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || mainPane == null || twoBranchClickFilter == null) return;
             if (nv) mainPane.addEventFilter(MouseEvent.MOUSE_PRESSED, twoBranchClickFilter);
             else mainPane.removeEventFilter(MouseEvent.MOUSE_PRESSED, twoBranchClickFilter);
-        });
+        };
+        twoBranchToggle.selectedProperty().addListener(twoBranchToggleListener);
 
         threeBranchClickFilter = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if (event.getButton() == MouseButton.PRIMARY) {
+                if (isTornDown || mainView == null || self == null || treePanes == null) return;
+                if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 1) {
                     for (TreePane pane : treePanes) {
+                        if (pane == null) continue;
                         BranchNode rootNode = pane.getRootBranchNode();
                         setClickedNode(event, rootNode);
-                        if (clickNode != null && clickNode.isFormulaNode() && formulaDependents(clickNode.getDependents())) {
-                            clickNode.getConnectorBoxedDRTA().getRTA().getActionFactory().newDocumentNow().execute(new ActionEvent());
+                        if (clickNode != null && clickNode.isFormulaNode() && clickNode.getDependents() != null && formulaDependents(clickNode.getDependents())) {
+                            if (clickNode.getConnectorBoxedDRTA() != null && clickNode.getConnectorBoxedDRTA().getRTA() != null) {
+                                clickNode.getConnectorBoxedDRTA().getRTA().getActionFactory().newDocumentNow().execute(new ActionEvent());
+                            }
                             BranchNode branch1 = new BranchNode(clickNode, self);
                             BranchNode branch2 = new BranchNode(clickNode, self);
                             BranchNode branch3 = new BranchNode(clickNode, self);
@@ -694,26 +847,32 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
             }
         };
 
-        threeBranchToggle.selectedProperty().addListener((ob, ov, nv) -> {
+        threeBranchToggleListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || mainPane == null || threeBranchClickFilter == null) return;
             if (nv) mainPane.addEventFilter(MouseEvent.MOUSE_PRESSED, threeBranchClickFilter);
             else mainPane.removeEventFilter(MouseEvent.MOUSE_PRESSED, threeBranchClickFilter);
-        });
+        };
+        threeBranchToggle.selectedProperty().addListener(threeBranchToggleListener);
 
         indefinateBranchClickFilter = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if (event.getButton() == MouseButton.PRIMARY) {
+                if (isTornDown || mainView == null || self == null || treePanes == null) return;
+                if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 1) {
                     for (TreePane pane : treePanes) {
+                        if (pane == null) continue;
                         BranchNode rootNode = pane.getRootBranchNode();
                         setClickedNode(event, rootNode);
-                        if (clickNode != null && clickNode.isFormulaNode() && formulaDependents(clickNode.getDependents())) {
+                        if (clickNode != null && clickNode.isFormulaNode() && clickNode.getDependents() != null && formulaDependents(clickNode.getDependents())) {
                             BranchNode branch = new BranchNode(clickNode, self);
                             branch.setIndefiniteNode(true);
                             branch.setStyle("-fx-border-width: 0 0 0 0");
-                            RichTextArea rta = branch.getFormulaBoxedDRTA().getRTA();
-                            rta.getActionFactory().open(new Document("   \u22ee")).execute(new ActionEvent());
-                            rta.prefWidthProperty().unbind();
-                            rta.setPrefWidth(24);
+                            if (branch.getFormulaBoxedDRTA() != null && branch.getFormulaBoxedDRTA().getRTA() != null) {
+                                RichTextArea rta = branch.getFormulaBoxedDRTA().getRTA();
+                                rta.getActionFactory().open(new Document("   \u22ee")).execute(new ActionEvent());
+                                rta.prefWidthProperty().unbind();
+                                rta.setPrefWidth(24);
+                            }
                             clickNode.getDependents().add(branch);
                             pane.refresh();
                             setUndoRedoFlag(true);
@@ -724,24 +883,30 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
             }
         };
 
-        indefiniteBranchToggle.selectedProperty().addListener((ob, ov, nv) -> {
+        indefinateBranchToggleListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || mainPane == null || indefinateBranchClickFilter == null) return;
             if (nv) mainPane.addEventFilter(MouseEvent.MOUSE_PRESSED, indefinateBranchClickFilter);
             else mainPane.removeEventFilter(MouseEvent.MOUSE_PRESSED, indefinateBranchClickFilter);
-        });
+        };
+        indefiniteBranchToggle.selectedProperty().addListener(indefinateBranchToggleListener);
 
         oneBranchTermClickFilter = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if (event.getButton() == MouseButton.PRIMARY) {
+                if (isTornDown || mainView == null || self == null || treePanes == null) return;
+                if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 1) {
                     for (TreePane pane : treePanes) {
+                        if (pane == null) continue;
                         BranchNode rootNode = pane.getRootBranchNode();
                         setClickedNode(event, rootNode);
-                        if (clickNode != null && termDependents(clickNode.getDependents())) {
+                        if (clickNode != null && clickNode.getDependents() != null && termDependents(clickNode.getDependents())) {
                             BranchNode branch = new BranchNode(clickNode, self);
                             branch.setFormulaNode(false);
                             branch.setStyle("-fx-border-width: 0 0 0 0");
-                            DecoratedRTA drta1 = branch.getFormulaBoxedDRTA().getDRTA();
-                            drta1.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS);
+                            if (branch.getFormulaBoxedDRTA() != null && branch.getFormulaBoxedDRTA().getDRTA() != null) {
+                                DecoratedRTA drta1 = branch.getFormulaBoxedDRTA().getDRTA();
+                                drta1.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS);
+                            }
                             clickNode.getDependents().add(branch);
                             pane.refresh();
                             setUndoRedoFlag(true);
@@ -752,29 +917,38 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
             }
         };
 
-        oneBranchTermToggle.selectedProperty().addListener((ob, ov, nv) -> {
+        oneBranchTermToggleListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || mainPane == null || oneBranchTermClickFilter == null) return;
             if (nv) mainPane.addEventFilter(MouseEvent.MOUSE_PRESSED, oneBranchTermClickFilter);
             else mainPane.removeEventFilter(MouseEvent.MOUSE_PRESSED, oneBranchTermClickFilter);
-        });
+        };
+        oneBranchTermToggle.selectedProperty().addListener(oneBranchTermToggleListener);
 
         twoBranchTermClickFilter = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if (event.getButton() == MouseButton.PRIMARY) {
+                if (isTornDown || mainView == null || self == null || treePanes == null) return;
+                if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 1) {
                     for (TreePane pane : treePanes) {
+                        if (pane == null) continue;
                         BranchNode rootNode = pane.getRootBranchNode();
                         setClickedNode(event, rootNode);
-                        if (clickNode != null && termDependents(clickNode.getDependents())) {
+                        if (clickNode != null && clickNode.getDependents() != null && termDependents(clickNode.getDependents())) {
                             BranchNode branch1 = new BranchNode(clickNode, self);
                             BranchNode branch2 = new BranchNode(clickNode, self);
                             branch1.setFormulaNode(false);
                             branch2.setFormulaNode(false);
                             branch1.setStyle("-fx-border-width: 0 0 0 0");
                             branch2.setStyle("-fx-border-width: 0 0 0 0");
-                            DecoratedRTA drta1 = branch1.getFormulaBoxedDRTA().getDRTA();
-                            DecoratedRTA drta2 = branch2.getFormulaBoxedDRTA().getDRTA();
-                            drta1.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS);
-                            drta2.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS);
+
+                            if (branch1.getFormulaBoxedDRTA() != null && branch1.getFormulaBoxedDRTA().getDRTA() != null) {
+                                DecoratedRTA drta1 = branch1.getFormulaBoxedDRTA().getDRTA();
+                                drta1.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS);
+                            }
+                            if (branch2.getFormulaBoxedDRTA() != null && branch2.getFormulaBoxedDRTA().getDRTA() != null) {
+                                DecoratedRTA drta2 = branch2.getFormulaBoxedDRTA().getDRTA();
+                                drta2.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.ITALIC_AND_SANS);
+                            }
 
                             clickNode.getDependents().addAll(Arrays.asList(branch1, branch2));
                             pane.refresh();
@@ -786,83 +960,105 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
             }
         };
 
-        twoBranchTermToggle.selectedProperty().addListener((ob, ov, nv) -> {
+        twoBranchTermToggleListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || mainPane == null || twoBranchTermClickFilter == null) return;
             if (nv) mainPane.addEventFilter(MouseEvent.MOUSE_PRESSED, twoBranchTermClickFilter);
             else mainPane.removeEventFilter(MouseEvent.MOUSE_PRESSED, twoBranchTermClickFilter);
-        });
+        };
+        twoBranchTermToggle.selectedProperty().addListener(twoBranchTermToggleListener);
 
         dotsClickFilter = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-
+                if (isTornDown || mainView == null || self == null || treePanes == null) return;
                 for (TreePane pane : treePanes) {
+                    if (pane == null) continue;
                     BranchNode rootNode = pane.getRootBranchNode();
                     setClickedNode(event, rootNode);
                     if (clickNode != null && clickNode.isFormulaNode()) {
                         if (event.getButton() == MouseButton.PRIMARY) {
-                            clickNode.setDotDivider(true);
-                            pane.refresh();
-                            setUndoRedoFlag(true);
-                            setUndoRedoFlag(false);
-                        }
-                        else {
-                            clickNode.setDotDivider(false);
-                            pane.refresh();
-                            setUndoRedoFlag(true);
-                            setUndoRedoFlag(false);
+                            if (event.getClickCount() == 1) {
+                                clickNode.setDotDivider(true);
+                                pane.refresh();
+                                setUndoRedoFlag(true);
+                                setUndoRedoFlag(false);
+                            } else {
+                                clickNode.setDotDivider(false);
+                                pane.refresh();
+                                setUndoRedoFlag(true);
+                                setUndoRedoFlag(false);
+                            }
                         }
                     }
                 }
             }
         };
 
-        verticalDotsToggle.selectedProperty().addListener((ob, ov, nv) -> {
+        verticalDotsToggleListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || mainPane == null || dotsClickFilter == null) return;
             if (nv) mainPane.addEventFilter(MouseEvent.MOUSE_PRESSED, dotsClickFilter);
             else mainPane.removeEventFilter(MouseEvent.MOUSE_PRESSED, dotsClickFilter);
-        });
-
+        };
+        verticalDotsToggle.selectedProperty().addListener(verticalDotsToggleListener);
 
         annotationClickFilter = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                for (TreePane pane : treePanes) {
-                    BranchNode rootNode = pane.getRootBranchNode();
-                    setClickedNode(event, rootNode);
-                    if (clickNode != null) {
-                        clickNode.processAnnotationRequest(event.getButton() == MouseButton.PRIMARY);
-                        pane.refresh();
-                        setUndoRedoFlag(true);
-                        setUndoRedoFlag(false);
-                        break;
+                if (isTornDown || mainView == null || self == null || treePanes == null) return;
+                if (event.getButton() == MouseButton.PRIMARY) {
+                    for (TreePane pane : treePanes) {
+                        if (pane == null) continue;
+                        BranchNode rootNode = pane.getRootBranchNode();
+                        setClickedNode(event, rootNode);
+                        if (clickNode != null) {
+                            clickNode.processAnnotationRequest(event.getClickCount() == 1);
+                            pane.refresh();
+                            setUndoRedoFlag(true);
+                            setUndoRedoFlag(false);
+                            break;
+                        }
                     }
                 }
             }
         };
-        annotationToggle.selectedProperty().addListener((ob, ov, nv) -> {
+
+        annotationToggleListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || mainPane == null || annotationClickFilter == null) return;
             if (nv)  mainPane.addEventFilter(MouseEvent.MOUSE_PRESSED, annotationClickFilter );
             else mainPane.removeEventFilter(MouseEvent.MOUSE_PRESSED, annotationClickFilter);
-        });
+        };
+        annotationToggle.selectedProperty().addListener(annotationToggleListener);
 
-        annotationPlus.setOnAction(e -> {
+        annotationPlusHandler = e -> {
+            if (isTornDown || mainView == null || treePanes == null) return;
             for (TreePane pane : treePanes) {
-                setAnnotations(pane.getRootBranchNode(), true);
-                pane.refresh();
-                setUndoRedoFlag(true);
-                setUndoRedoFlag(false);
+                if (pane != null) {
+                    setAnnotations(pane.getRootBranchNode(), true);
+                    pane.refresh();
+                    setUndoRedoFlag(true);
+                    setUndoRedoFlag(false);
+                }
             }
             deselectToggles();
-        });
-        annotationMinus.setOnAction(e -> {
+        };
+        annotationPlus.setOnAction(annotationPlusHandler);
+
+        annotationMinusHandler = e -> {
+            if (isTornDown || mainView == null || treePanes == null) return;
             for (TreePane pane : treePanes) {
-                setAnnotations(pane.getRootBranchNode(), false);
-                pane.refresh();
-                setUndoRedoFlag(true);
-                setUndoRedoFlag(false);
+                if (pane != null) {
+                    setAnnotations(pane.getRootBranchNode(), false);
+                    pane.refresh();
+                    setUndoRedoFlag(true);
+                    setUndoRedoFlag(false);
+                }
             }
             deselectToggles();
-        });
+        };
+        annotationMinus.setOnAction(annotationMinusHandler);
 
-        rulerButton.selectedProperty().addListener((ob, ov, nv) -> {
+        rulerButtonToggleListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null) return;
             if (nv) {
                 if (!axis) {
                     simpleAddAxis();
@@ -877,8 +1073,8 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
                     setUndoRedoFlag(false);
                 }
             }
-        });
-
+        };
+        rulerButton.selectedProperty().addListener(rulerButtonToggleListener);
     }
 
     public void setRightControlBox() {
@@ -901,13 +1097,9 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
 
         checkProgButton = new Button();
 
-        //     checkProgButton = new Button("Check Progress");
-        //     checkProgButton.setPrefWidth(105);
-        //     checkProgButton.setTooltip(new Tooltip("Check tree progress so far."));
         VBox checksBox = new VBox(10, checkButton, checkTriesLabel);
         checksBox.setAlignment(Pos.CENTER);
         checkTriesLabel.setAlignment(Pos.CENTER);
-//        checksBox.setMargin(checkProgButton, new Insets(0,0,10, 0));
 
         staticHelpButton = new Button("Static Help");
         staticHelpButton.setPrefWidth(105);
@@ -915,17 +1107,16 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
 
         permitEmptyBranchesCheck = new CheckBox("Empty Branches");
 
-
         VBox rightControlBox = new VBox(40, bigCheckBox, checksBox, staticHelpButton, permitEmptyBranchesCheck );
         rightControlBox.setAlignment(Pos.TOP_CENTER);
         rightControlBox.setPadding(new Insets(60,20,0,20));
         rightControlNode = rightControlBox;
 
         deactivateBigCheck();
-
     }
 
     public void activateBigCheck() {
+        if (isTornDown || bigCheck == null || checkedElements == null) return;
         bigCheck.setFill(checkColor);
         checkedElements.setText(checkMessage);
         checkedElements.setFill(checkElementsColor);
@@ -950,6 +1141,7 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
 
     //record status, and deactivate
     public void deactivateBigCheck() {
+        if (isTornDown || bigCheck == null || checkedElements == null) return;
         if (bigCheck.getOpacity() > .5) checkShowing = true;
         else checkShowing = false;
         bigCheck.setOpacity(0.0);
@@ -957,16 +1149,17 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
     }
 
     public void showStaticHelp(Document doc) {
+        if (isTornDown || mainView == null) return;
 
         if (staticHelpStage == null || !staticHelpStage.isShowing()) {
             RichTextArea hrta = new RichTextArea(EditorMain.mainStage);
             hrta.getActionFactory().open(doc).execute(new ActionEvent());
             hrta.setPadding(new Insets(20, 0, 20, 20));
             hrta.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
-            hrta.setPrefWidth(400);
+            hrta.setContentAreaWidth(400);
+            hrta.setPrefWidth(400 + RTA_WIDTH_BMP);
             hrta.setPrefHeight(300);
             hrta.setEditable(false);
-
 
             Scene scene = new Scene(hrta);
             scene.getStylesheets().add(RichTextArea.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
@@ -978,7 +1171,7 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
             staticHelpStage.getIcons().addAll(EditorMain.icons);
             staticHelpStage.initOwner(EditorMain.mainStage);
             Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-            staticHelpStage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 420));
+            staticHelpStage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - (420 + RTA_WIDTH_BMP)));
             staticHelpStage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 320));
 
             staticHelpStage.show();
@@ -987,70 +1180,51 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
 
     public Stage getStaticHelpStage() { return staticHelpStage; }
 
-
     private void setSizeSpinners() {
+        if (mainPane != null) {
+            mainPaneClickHandler = e -> {
+                if (isTornDown || this.mainView == null || mainPane == null) return;
+                if (currentSpinnerNode != mainPane) {
+                    mainPane.requestFocus();
+                    currentSpinnerNode = mainPane;
+                    if (mainPaneHeightSpinner != null && mainPaneWidthSpinner != null) {
+                        if (mainPaneHeightSpinner.getValueFactory() != null) {
+                            mainPaneHeightSpinner.getValueFactory().setValue((double) Math.round(mainPane.getHeight() / localScalePageHeight.get() * 100.0));
+                        }
+                        if (mainPaneWidthSpinner.getValueFactory() != null) {
+                            mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round((mainPane.getWidth() - RTA_WIDTH_BMP) / localScalePageWidth.get() * 100.0));
+                        }
+                        this.mainView.updateSizeSpinners(mainPaneHeightSpinner, mainPaneWidthSpinner);
+                    }
+                }
+            };
+            mainPane.addEventFilter(MouseEvent.MOUSE_CLICKED, mainPaneClickHandler);
+        }
 
-        mainPane.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-            if (currentSpinnerNode != mainPane) {
-                mainPane.requestFocus();
-            }
-        });
 
-        mainView.getMainScene().focusOwnerProperty().addListener((ob, ov, nv) -> {
-
-            RichTextArea statementRTA = exerciseStatement.getEditor();
-            if (inHierarchy(nv, statementRTA) && currentSpinnerNode != statementRTA) {
-                currentSpinnerNode = statementRTA;
-                mainView.updateSizeSpinners(statementHeightSpinner, statementWidthSpinner);
-                return;
-            }
-            RichTextArea commentRTA = exerciseComment.getEditor();
-            if (inHierarchy(nv, commentRTA) && currentSpinnerNode != commentRTA) {
-                currentSpinnerNode = commentRTA;
-                mainView.updateSizeSpinners(commentHeightSpinner, commentWidthSpinner);
-                return;
-            }
-            RichTextArea explainRTA = explainDRTA.getEditor();
-            if (inHierarchy(nv, explainRTA) && currentSpinnerNode != explainRTA) {
-                currentSpinnerNode = explainRTA;
-                mainView.updateSizeSpinners(explainHeightSpinner, explainWidthSpinner);
-                return;
-            }
-            RichTextArea interpretationRTA = interpretationDRTA.getEditor();
-            if (inHierarchy(nv, interpretationRTA) && currentSpinnerNode != interpretationRTA) {
-                currentSpinnerNode = interpretationRTA;
-                mainView.updateSizeSpinners(interpretationHeightSpinner, interpretationWidthSpinner);
-                return;
-            }
-            if (inHierarchy(nv, mainPane) && currentSpinnerNode != mainPane) {
-                currentSpinnerNode = mainPane;
-                mainPaneHeightSpinner.getValueFactory().setValue((double) Math.round(mainPane.getHeight()/ mainView.getScalePageHeight() * 100.0));
-                mainPaneWidthSpinner.getValueFactory().setValue((double) Math.round((mainPane.getWidth() - RTA_WIDTH_BMP)/ mainView.getScalePageWidth() * 100.0));
-                mainView.updateSizeSpinners(mainPaneHeightSpinner, mainPaneWidthSpinner);
-            }
-        });
+        if (mainView != null && mainView.getMainScene() != null && exerciseFocusListener != null) {
+            mainView.getMainScene().focusOwnerProperty().addListener(exerciseFocusListener);
+        }
     }
-
-
 
     /**
      * Add ruler axis to main pane
      */
     void simpleAddAxis() {
+        if (isTornDown || mainPane == null || axisNode == null) return;
         axis = true;
-        mainPane.getChildren().add(0, axisNode);
+        if (!mainPane.getChildren().contains(axisNode)) mainPane.getChildren().add(0, axisNode);
         axisNode.setLayoutX(5.0);
-
     }
 
     /**
      * Remove ruler axis from main pane
      */
     public void simpleRemoveAxis() {
+        if (isTornDown || mainPane == null || axisNode == null) return;
         axis = false;
         mainPane.getChildren().remove(axisNode);
     }
-
 
     /**
      * There are formula dependents if (dependent list is empty or) all immediate children are formula nodes
@@ -1058,6 +1232,7 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
      * @return true if there are formula dependents and otherwise false
      */
     boolean formulaDependents(ArrayList<BranchNode> dependentList) {
+        if (dependentList == null) return true;
         boolean formulaDependents = true;
         for (BranchNode node : dependentList) {
             if (!node.isFormulaNode()) {
@@ -1068,14 +1243,13 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
         return formulaDependents;
     }
 
-
     /**
      * There are term dependents if (dependent list is empty or) all immediate children are term nodes
      * @param dependentList the list of dependents
      * @return true if there are term dependents and otherwise false
      */
-    //dependents empty or all termNodes
     boolean termDependents(ArrayList<BranchNode> dependentList) {
+        if (dependentList == null) return true;
         boolean termDependents = true;
         for (BranchNode node : dependentList) {
             if (node.isFormulaNode()) {
@@ -1092,9 +1266,12 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
      * @param add true if add, and otherwise (if remove) false
      */
     void setAnnotations(BranchNode node, boolean add) {
+        if (node == null) return;
         node.processAnnotationRequest(add);
-        for (BranchNode child : node.getDependents()) {
-            setAnnotations(child, add);
+        if (node.getDependents() != null) {
+            for (BranchNode child : node.getDependents()) {
+                setAnnotations(child, add);
+            }
         }
     }
 
@@ -1123,7 +1300,7 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
      * @param node the parent node
      */
     void setClickedNode(MouseEvent event, BranchNode node) {
-        clickNode = null;
+        HorizontalTreeView.clickNode = null;
         findClickNodeInTree(event, node);
     }
 
@@ -1133,13 +1310,16 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
      * @param node the parent node
      */
     void findClickNodeInTree(MouseEvent event, BranchNode node) {
+        if (node == null || event == null || event.getPickResult() == null || event.getPickResult().getIntersectedNode() == null) return;
         if ((inHierarchy(event.getPickResult().getIntersectedNode(), node))) {
-            clickNode = node;
+            HorizontalTreeView.clickNode = node;
         }
         else {
-            for (int i = 0; i < node.getDependents().size(); i++) {
-                BranchNode newNode = node.getDependents().get(i);
-                findClickNodeInTree(event, newNode);
+            if (node.getDependents() != null) {
+                for (int i = 0; i < node.getDependents().size(); i++) {
+                    BranchNode newNode = node.getDependents().get(i);
+                    findClickNodeInTree(event, newNode);
+                }
             }
         }
     }
@@ -1148,189 +1328,333 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
      * Refresh the main pane by refreshing tree panes and ruler axis
      */
     void refreshTreePanes() {
-        mainPane.getChildren().clear();
+        if (isTornDown || mainPane == null || treePanes == null) return;
+
+        // SCORCHED EARTH RULE 8: Safely disconnect existing TreePanes to prevent concurrent issues
+        if (mainPane.getChildren() != null && !mainPane.getChildren().isEmpty()) {
+            List<Node> childrenCopy = new ArrayList<>(mainPane.getChildren());
+            for (Node node : childrenCopy) {
+                if (node instanceof TreePane) {
+                    severFromParent(node);
+                }
+            }
+        }
 
         for (TreePane pane : treePanes) {
-            pane.refresh();
-            mainPane.getChildren().add(pane);
+            if (pane != null) {
+                pane.refresh();
+                mainPane.getChildren().add(pane);
+            }
         }
 
         if (axis) {
             simpleAddAxis();
-            rulerButton.setSelected(true);
+            if (rulerButton != null) rulerButton.setSelected(true);
         }
         else {
-            rulerButton.setSelected(false);
+            if (rulerButton != null) rulerButton.setSelected(false);
         }
     }
 
-    /**
-     * Button to undo last main action
-     * @return the button
-     */
+    // SCORCHED EARTH RULE 6: Sever Shared Nodes helper
+    private void severFromParent(Node node) {
+        try {
+            if (node != null && node.getParent() != null) {
+                if (node.getParent() instanceof javafx.scene.layout.Pane) {
+                    ((javafx.scene.layout.Pane) node.getParent()).getChildren().remove(node);
+                } else if (node.getParent() instanceof javafx.scene.Group) {
+                    ((javafx.scene.Group) node.getParent()).getChildren().remove(node);
+                }
+            }
+        } catch (Exception e) {}
+    }
+
+
+    // SCORCHED EARTH RULE 5: Rule of Isolation
+
+    public void cleanup() {
+        isTornDown = true;
+        try { if (localScalePageHeight != null) { if (localScalePageHeightListener != null) localScalePageHeight.removeListener(localScalePageHeightListener); localScalePageHeight.unbind(); } } catch(Exception e){}
+        try { if (localScalePageWidth != null) { if (localScalePageWidthListener != null) localScalePageWidth.removeListener(localScalePageWidthListener); localScalePageWidth.unbind(); } } catch(Exception e){}
+        try { if (undoRedoFlag != null) undoRedoFlag.unbind(); } catch(Exception e){}
+
+        try { if (formulaNodeToggle != null && formulaNodeToggleListener != null) formulaNodeToggle.selectedProperty().removeListener(formulaNodeToggleListener); } catch (Exception e){}
+        try { if (oneBranchToggle != null && oneBranchToggleListener != null) oneBranchToggle.selectedProperty().removeListener(oneBranchToggleListener); } catch (Exception e){}
+        try { if (twoBranchToggle != null && twoBranchToggleListener != null) twoBranchToggle.selectedProperty().removeListener(twoBranchToggleListener); } catch (Exception e){}
+        try { if (threeBranchToggle != null && threeBranchToggleListener != null) threeBranchToggle.selectedProperty().removeListener(threeBranchToggleListener); } catch (Exception e){}
+        try { if (indefiniteBranchToggle != null && indefinateBranchToggleListener != null) indefiniteBranchToggle.selectedProperty().removeListener(indefinateBranchToggleListener); } catch (Exception e){}
+        try { if (oneBranchTermToggle != null && oneBranchTermToggleListener != null) oneBranchTermToggle.selectedProperty().removeListener(oneBranchTermToggleListener); } catch (Exception e){}
+        try { if (twoBranchTermToggle != null && twoBranchTermToggleListener != null) twoBranchTermToggle.selectedProperty().removeListener(twoBranchTermToggleListener); } catch (Exception e){}
+        try { if (verticalDotsToggle != null && verticalDotsToggleListener != null) verticalDotsToggle.selectedProperty().removeListener(verticalDotsToggleListener); } catch (Exception e){}
+        try { if (annotationToggle != null && annotationToggleListener != null) annotationToggle.selectedProperty().removeListener(annotationToggleListener); } catch (Exception e){}
+        try { if (rulerButton != null && rulerButtonToggleListener != null) rulerButton.selectedProperty().removeListener(rulerButtonToggleListener); } catch (Exception e){}
+
+        try {
+            if (mainView != null && mainView.getMainScene() != null && exerciseFocusListener != null) {
+                mainView.getMainScene().focusOwnerProperty().removeListener(exerciseFocusListener);
+            }
+        } catch (Exception e){}
+
+        try { if (pointsEarnedTextField != null) pointsEarnedTextField.setTextFormatter(null); } catch (Exception e){}
+        try { if (staticHelpStage != null) staticHelpStage.close(); } catch (Exception e){}
+
+        // ---> 3. SCORCHED EARTH RULE 4: THE JAVAFX SKIN HAMMER (Async Separation) <---
+        try {
+            final RichTextArea stEditor = (exerciseStatement != null) ? exerciseStatement.getEditor() : null;
+            final RichTextArea commEditor = (exerciseComment != null) ? exerciseComment.getEditor() : null;
+            final RichTextArea expEditor = (explainDRTA != null) ? explainDRTA.getEditor() : null;
+            final RichTextArea interpDRTARichText = (interpretationDRTA != null) ? interpretationDRTA.getEditor() : null;
+            final RichTextArea interpRTA = interpretationRTA;
+
+            // Unbind size properties
+            try { if (stEditor != null) { stEditor.prefHeightProperty().unbind(); stEditor.prefWidthProperty().unbind(); stEditor.maxWidthProperty().unbind(); stEditor.minWidthProperty().unbind(); stEditor.contentAreaWidthProperty().unbind(); } } catch (Exception e){}
+            try { if (commEditor != null) { commEditor.prefHeightProperty().unbind(); commEditor.prefWidthProperty().unbind(); commEditor.maxWidthProperty().unbind(); commEditor.minWidthProperty().unbind(); commEditor.contentAreaWidthProperty().unbind(); } } catch (Exception e){}
+            try { if (expEditor != null) { expEditor.prefHeightProperty().unbind(); expEditor.prefWidthProperty().unbind(); expEditor.maxWidthProperty().unbind(); expEditor.minWidthProperty().unbind(); expEditor.contentAreaWidthProperty().unbind(); } } catch (Exception e){}
+            try { if (interpDRTARichText != null) { interpDRTARichText.prefHeightProperty().unbind(); interpDRTARichText.prefWidthProperty().unbind(); interpDRTARichText.maxWidthProperty().unbind(); interpDRTARichText.minWidthProperty().unbind(); interpDRTARichText.contentAreaWidthProperty().unbind(); } } catch (Exception e){}
+            try { if (interpRTA != null) { interpRTA.prefHeightProperty().unbind(); interpRTA.prefWidthProperty().unbind(); interpRTA.maxWidthProperty().unbind(); interpRTA.minWidthProperty().unbind(); interpRTA.contentAreaWidthProperty().unbind(); } } catch (Exception e){}
+
+            // STAGE 1: Execute async document injection IMMEDIATELY and synchronously clear prompt texts to disarm the NPE listener
+            try { if (stEditor != null) { stEditor.setPromptText(""); stEditor.setFocusTraversable(false); if (stEditor.getDocument() == null || stEditor.getDocument().getText().isEmpty()) stEditor.getActionFactory().open(new Document(" ")).execute(new ActionEvent()); } } catch (Exception ex) {}
+            try { if (commEditor != null) { commEditor.setPromptText(""); commEditor.setFocusTraversable(false); if (commEditor.getDocument() == null || commEditor.getDocument().getText().isEmpty()) commEditor.getActionFactory().open(new Document(" ")).execute(new ActionEvent()); } } catch (Exception ex) {}
+            try { if (expEditor != null) { expEditor.setPromptText(""); expEditor.setFocusTraversable(false); if (expEditor.getDocument() == null || expEditor.getDocument().getText().isEmpty()) expEditor.getActionFactory().open(new Document(" ")).execute(new ActionEvent()); } } catch (Exception ex) {}
+            try { if (interpDRTARichText != null) { interpDRTARichText.setPromptText(""); interpDRTARichText.setFocusTraversable(false); if (interpDRTARichText.getDocument() == null || interpDRTARichText.getDocument().getText().isEmpty()) interpDRTARichText.getActionFactory().open(new Document(" ")).execute(new ActionEvent()); } } catch (Exception ex) {}
+            try { if (interpRTA != null) { interpRTA.setPromptText(""); interpRTA.setFocusTraversable(false); if (interpRTA != interpDRTARichText && (interpRTA.getDocument() == null || interpRTA.getDocument().getText().isEmpty())) interpRTA.getActionFactory().open(new Document(" ")).execute(new ActionEvent()); } } catch (Exception ex) {}
+
+            // STAGE 2: Wait 1.5s for ALL background tasks and internal Gluon listeners to complete BEFORE safely nulling the skin.
+            if (stEditor != null || commEditor != null || expEditor != null || interpDRTARichText != null || interpRTA != null) {
+                PauseTransition pt = new PauseTransition(Duration.millis(1500));
+                pt.setOnFinished(ev -> {
+                    try { if (stEditor != null) stEditor.setSkin(null); } catch (Exception ex) {}
+                    try { if (commEditor != null) commEditor.setSkin(null); } catch (Exception ex) {}
+                    try { if (expEditor != null) expEditor.setSkin(null); } catch (Exception ex) {}
+                    try { if (interpDRTARichText != null) interpDRTARichText.setSkin(null); } catch (Exception ex) {}
+                    try { if (interpRTA != null && interpRTA != interpDRTARichText) interpRTA.setSkin(null); } catch (Exception ex) {}
+                });
+                pt.play();
+            }
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 8: Dismantle layout and listeners safely
+        try {
+            if (mainPane != null) {
+                if (mainPaneHeightListener != null) mainPane.heightProperty().removeListener(mainPaneHeightListener);
+                if (mainPaneWidthListener != null) mainPane.widthProperty().removeListener(mainPaneWidthListener);
+                if (mainPaneClickHandler != null) mainPane.removeEventFilter(MouseEvent.MOUSE_CLICKED, mainPaneClickHandler);
+
+                if (formulaNodeClickFilter != null) mainPane.removeEventFilter(MouseEvent.MOUSE_CLICKED, formulaNodeClickFilter);
+                if (oneBranchClickFilter != null) mainPane.removeEventFilter(MouseEvent.MOUSE_PRESSED, oneBranchClickFilter);
+                if (twoBranchClickFilter != null) mainPane.removeEventFilter(MouseEvent.MOUSE_PRESSED, twoBranchClickFilter);
+                if (threeBranchClickFilter != null) mainPane.removeEventFilter(MouseEvent.MOUSE_PRESSED, threeBranchClickFilter);
+                if (indefinateBranchClickFilter != null) mainPane.removeEventFilter(MouseEvent.MOUSE_PRESSED, indefinateBranchClickFilter);
+                if (oneBranchTermClickFilter != null) mainPane.removeEventFilter(MouseEvent.MOUSE_PRESSED, oneBranchTermClickFilter);
+                if (twoBranchTermClickFilter != null) mainPane.removeEventFilter(MouseEvent.MOUSE_PRESSED, twoBranchTermClickFilter);
+                if (dotsClickFilter != null) mainPane.removeEventFilter(MouseEvent.MOUSE_PRESSED, dotsClickFilter);
+                if (annotationClickFilter != null) mainPane.removeEventFilter(MouseEvent.MOUSE_PRESSED, annotationClickFilter);
+
+                if (mainPane.getChildren() != null) {
+                    List<Node> childrenCopy = new ArrayList<>(mainPane.getChildren());
+                    for (Node n : childrenCopy) {
+                        if (n instanceof TreePane) {
+                            try { ((TreePane) n).cleanup(); } catch (Exception e) {}
+                        }
+                        severFromParent(n);
+                    }
+                    mainPane.getChildren().clear();
+                }
+
+
+                mainPane.minWidthProperty().unbind();
+                mainPane.prefHeightProperty().unbind();
+                mainPane.prefWidthProperty().unbind();
+                severFromParent(mainPane);
+            }
+        } catch (Exception e){}
+
+        try {
+            if (controlBox != null) {
+                if (controlBox.getChildren() != null) {
+                    List<Node> cbChildren = new ArrayList<>(controlBox.getChildren());
+                    for(Node n : cbChildren) {
+                        severFromParent(n);
+                    }
+                    controlBox.getChildren().clear();
+                }
+                severFromParent(controlBox);
+            }
+        } catch (Exception e){}
+
+        try {
+            if (centerBox != null) {
+                if (centerBox.getChildren() != null) {
+                    List<Node> cntrChildren = new ArrayList<>(centerBox.getChildren());
+                    for (Node n : cntrChildren) {
+                        severFromParent(n);
+                    }
+                    centerBox.getChildren().clear();
+                }
+                severFromParent(centerBox);
+            }
+        } catch (Exception e){}
+
+        try { if (exerciseControlNode != null) severFromParent(exerciseControlNode); } catch (Exception e){}
+        try { if (rightControlNode != null) severFromParent(rightControlNode); } catch (Exception e){}
+        try { if (treePanes != null) treePanes.clear(); } catch (Exception e){}
+
+        // 5. Null everything
+        try { this.self = null; } catch(Exception e){}
+        try { this.mainView = null; } catch(Exception e){}
+        try { this.exerciseComment = null; } catch(Exception e){}
+        try { this.exerciseStatement = null; } catch(Exception e){}
+        try { this.explainDRTA = null; } catch(Exception e){}
+        try { this.interpretationDRTA = null; } catch(Exception e){}
+        try { this.interpretationRTA = null; } catch(Exception e){}
+        try { this.exerciseControlNode = null; } catch(Exception e){}
+        try { this.controlBox = null; } catch(Exception e){}
+        try { this.statementHeightSpinner = null; } catch(Exception e){}
+        try { this.statementWidthSpinner = null; } catch(Exception e){}
+        try { this.commentHeightSpinner = null; } catch(Exception e){}
+        try { this.commentWidthSpinner = null; } catch(Exception e){}
+        try { this.explainHeightSpinner = null; } catch(Exception e){}
+        try { this.explainWidthSpinner = null; } catch(Exception e){}
+        try { this.interpretationHeightSpinner = null; } catch(Exception e){}
+        try { this.interpretationWidthSpinner = null; } catch(Exception e){}
+        try { this.mainPaneHeightSpinner = null; } catch(Exception e){}
+        try { this.mainPaneWidthSpinner = null; } catch(Exception e){}
+        try { this.currentSpinnerNode = null; } catch(Exception e){}
+        try { this.mainPane = null; } catch(Exception e){}
+        try { this.centerBox = null; } catch(Exception e){}
+        try { if (this.undoButton != null) this.undoButton.setOnAction(null); this.undoButton = null; } catch(Exception e){}
+        try { if (this.redoButton != null) this.redoButton.setOnAction(null); this.redoButton = null; } catch(Exception e){}
+        try { this.undoRedoFlag = null; } catch(Exception e){}
+        try { this.formulaNodeToggle = null; } catch(Exception e){}
+        try { this.oneBranchToggle = null; } catch(Exception e){}
+        try { this.twoBranchToggle = null; } catch(Exception e){}
+        try { this.threeBranchToggle = null; } catch(Exception e){}
+        try { this.indefiniteBranchToggle = null; } catch(Exception e){}
+        try { this.verticalDotsToggle = null; } catch(Exception e){}
+        try { this.oneBranchTermToggle = null; } catch(Exception e){}
+        try { this.twoBranchTermToggle = null; } catch(Exception e){}
+        try { this.annotationToggle = null; } catch(Exception e){}
+        try { if (this.annotationPlus != null) { if (annotationPlusHandler != null) this.annotationPlus.removeEventHandler(ActionEvent.ACTION, annotationPlusHandler); this.annotationPlus.setOnAction(null); } this.annotationPlus = null; } catch(Exception e){}
+        try { if (this.annotationMinus != null) { if (annotationMinusHandler != null) this.annotationMinus.removeEventHandler(ActionEvent.ACTION, annotationMinusHandler); this.annotationMinus.setOnAction(null); } this.annotationMinus = null; } catch(Exception e){}
+        try { this.rulerButton = null; } catch(Exception e){}
+        try { this.buttonGroup = null; } catch(Exception e){}
+        try { this.treePanes = null; } catch(Exception e){}
+        try { this.formulaNodeClickFilter = null; } catch(Exception e){}
+        try { this.oneBranchClickFilter = null; } catch(Exception e){}
+        try { this.twoBranchClickFilter = null; } catch(Exception e){}
+        try { this.threeBranchClickFilter = null; } catch(Exception e){}
+        try { this.indefinateBranchClickFilter = null; } catch(Exception e){}
+        try { this.annotationClickFilter = null; } catch(Exception e){}
+        try { this.dotsClickFilter = null; } catch(Exception e){}
+        try { this.oneBranchTermClickFilter = null; } catch(Exception e){}
+        try { this.twoBranchTermClickFilter = null; } catch(Exception e){}
+        try { this.axisNode = null; } catch(Exception e){}
+        try { HorizontalTreeView.clickNode = null; } catch(Exception e){}
+        try { this.pointsEarnedTextField = null; } catch(Exception e){}
+        try { this.rightControlNode = null; } catch(Exception e){}
+        try { if (this.checkButton != null) this.checkButton.setOnAction(null); this.checkButton = null; } catch(Exception e){}
+        try { if (this.checkProgButton != null) this.checkProgButton.setOnAction(null); this.checkProgButton = null; } catch(Exception e){}
+        try { this.bigCheck = null; } catch(Exception e){}
+        try { this.checkMessage = null; } catch(Exception e){}
+        try { this.checkedElements = null; } catch(Exception e){}
+        try { this.checkTriesLabel = null; } catch(Exception e){}
+        try { this.checkColor = null; } catch(Exception e){}
+        try { this.checkElementsColor = null; } catch(Exception e){}
+        try { if (this.staticHelpButton != null) this.staticHelpButton.setOnAction(null); this.staticHelpButton = null; } catch(Exception e){}
+        try { this.staticHelpStage = null; } catch(Exception e){}
+        try { this.permitEmptyBranchesCheck = null; } catch(Exception e){}
+        try { this.exerciseFocusListener = null; } catch(Exception e){}
+        try { this.mainPaneHeightListener = null; } catch(Exception e){}
+        try { this.mainPaneWidthListener = null; } catch(Exception e){}
+        try { this.localScalePageHeightListener = null; } catch(Exception e){}
+        try { this.localScalePageWidthListener = null; } catch(Exception e){}
+        try { this.formulaNodeToggleListener = null; } catch(Exception e){}
+        try { this.oneBranchToggleListener = null; } catch(Exception e){}
+        try { this.twoBranchToggleListener = null; } catch(Exception e){}
+        try { this.threeBranchToggleListener = null; } catch(Exception e){}
+        try { this.indefinateBranchToggleListener = null; } catch(Exception e){}
+        try { this.oneBranchTermToggleListener = null; } catch(Exception e){}
+        try { this.twoBranchTermToggleListener = null; } catch(Exception e){}
+        try { this.verticalDotsToggleListener = null; } catch(Exception e){}
+        try { this.annotationToggleListener = null; } catch(Exception e){}
+        try { this.rulerButtonToggleListener = null; } catch(Exception e){}
+        try { this.mainPaneClickHandler = null; } catch(Exception e){}
+        try { this.annotationPlusHandler = null; } catch(Exception e){}
+        try { this.annotationMinusHandler = null; } catch(Exception e){}
+        try { this.pointsEarnedFilter = null; } catch(Exception e){}
+    }
+
     Button getUndoButton() {    return undoButton;  }
-
-    /**
-     * Button to redo last main action
-     * @return the button
-     */
     Button getRedoButton() {  return redoButton;  }
-
-    /**
-     * Boolean property which initiates an undo/redo push when it flips to true
-     * @return the boolean property
-     */
     BooleanProperty undoRedoFlagProperty() {    return undoRedoFlag;    }
-
-    /**
-     * Boolean propertyh which initiates an undo/redo push when it flips to true
-     * @param undoRedoFlag the boolean value
-     */
-    void setUndoRedoFlag(boolean undoRedoFlag) {  this.undoRedoFlag.set(undoRedoFlag);  }
-
-    /**
-     * Button to add or remove ruler from main pane
-     * @return the button
-     */
+    void setUndoRedoFlag(boolean undoRedoFlag) {  if (this.undoRedoFlag != null) this.undoRedoFlag.set(undoRedoFlag);  }
     ToggleButton getRulerButton() {    return rulerButton;  }
-
-    /**
-     * The MainWindowView
-     * @return the view
-     */
     MainWindowView getMainView() { return mainView; }
-
-    /**
-     * The DecoratedRTA for the explain field
-     * @return the DRTA
-     */
     DecoratedRTA getExplainDRTA() { return explainDRTA; }
-
-    /**
-     * The prompt for the explain field
-     * @param explainPrompt the String prompt
-     */
     void setExplainPrompt(String explainPrompt) {  this.explainPrompt = explainPrompt; }
-
-    /**
-     * The main (drawing) pain containing tree and ruler panes
-     * @return the pane
-     */
     public AnchorPane getMainPane() { return mainPane;}
-
-    /**
-     * True if ruler axis is showing and otherwise false
-     * @return the boolean value
-     */
     boolean isAxis() {   return axis; }
-
-    /**
-     * List of TreePanes to show on the main pane
-     * @return the list
-     */
     public List<TreePane> getTreePanes() { return treePanes;   }
 
-    /**
-     * The preferred height of the comment field
-     * @return the height value
-     */
-    double getCommentPrefHeight() { return exerciseComment.getEditor().getPrefHeight();   }
+    double getCommentPrefHeight() {
+        if (exerciseComment == null || exerciseComment.getEditor() == null) return 0;
+        return exerciseComment.getEditor().getPrefHeight();
+    }
 
-    /**
-     * The preferred height of the comment field
-     * @param commentPrefHeight the height value
-     */
     void setCommentPrefHeight(double commentPrefHeight) {   this.commentPrefHeight = commentPrefHeight;  }
 
-    /**
-     * The preferred height of the explanation field
-     * @return the height value
-     */
-    double getExplainPrefHeight() { return explainDRTA.getEditor().getPrefHeight();    }
+    double getExplainPrefHeight() {
+        if (explainDRTA == null || explainDRTA.getEditor() == null) return 0;
+        return explainDRTA.getEditor().getPrefHeight();
+    }
 
-    /**
-     * The preferred height of the explanation field
-     * @param explainPrefHeight the height value
-     */
     void setExplainPrefHeight(double explainPrefHeight) {   this.explainPrefHeight = explainPrefHeight;  }
 
-    Spinner getMainPaneHeightSpinner() {return mainPaneHeightSpinner;}
+    Spinner<Double> getMainPaneHeightSpinner() {return mainPaneHeightSpinner;}
+    Spinner<Double> getMainPaneWidthSpinner() {return mainPaneWidthSpinner;}
 
-    Spinner getMainPaneWidthSpinner() {return mainPaneWidthSpinner;}
-
-    /**
-     * The comment decoratedRTA
-     * @return comment DecoratedRTA
-     */
     @Override
     public DecoratedRTA getExerciseComment() { return exerciseComment;  }
 
-    /**
-     * The comment decoratedRTA
-     * @param exerciseComment DecoratedRTA
-     */
     @Override
     public void setExerciseComment(DecoratedRTA exerciseComment) { this.exerciseComment = exerciseComment;  }
 
-    /**
-     * The exercise prompt
-     * @return the statement decorated RTA (T)
-     */
     @Override
     public DecoratedRTA getExerciseStatement() { return exerciseStatement; }
 
-    /**
-     * The exercise prompt
-     * @param exerciseStatement the statement decorated RTA (T)
-     */
     @Override
     public void setExerciseStatement(DecoratedRTA exerciseStatement) { this.exerciseStatement = exerciseStatement;  }
 
-    /**
-     * The exercise prompt node (RTA)
-     * @return the statement node
-     */
     @Override
-    public Node getExerciseStatementNode() { return exerciseStatement.getEditor();  }
+    public Node getExerciseStatementNode() {
+        if (exerciseStatement == null) return new AnchorPane();
+        return exerciseStatement.getEditor();
+    }
 
-    /**
-     * The preferred height of the statement window
-     * @param height the preferred height
-     */
     @Override
     public void setStatementPrefHeight(double height) {
+        if (exerciseStatement == null || exerciseStatement.getEditor() == null) return;
         statementPrefHeight = height;
         exerciseStatement.getEditor().setPrefHeight(height);
     }
 
-    /**
-     * The node which includes content of this exercise
-     * @return the content node
-     */
     @Override
-    public Node getExerciseContentNode() { return new VBox(2, mainPane, explainDRTA.getEditor());}
- //    public Node getExerciseContentNode() { return new VBox(2, interpretationDRTA.getEditor(), mainPane, explainDRTA.getEditor());}
- //   public Node getExerciseContentNode() { return centerBox; }
+    public Node getExerciseContentNode() {
+        if (mainPane == null || explainDRTA == null || explainDRTA.getEditor() == null) return new VBox();
+        return new VBox(2, mainPane, explainDRTA.getEditor());
+    }
 
-    /**
-     * The left control node for this exercise
-     * @return the control node
-     */
     @Override
     public Node getExerciseControl() { return exerciseControlNode;  }
 
-    /**
-     * The (null) right control node for this exercise
-     * @return the control node
-     */
     @Override
-    public Node getRightControl() {return null;}
-//    public Node getRightControl() { return rightControlNode; }
+    public Node getRightControl() {return rightControlNode;}
 
     @Override
     public Node getPointsNode() {
         if (pointsPossible > 0) {
-            if (!mainView.isInstructorFunctions()) pointsEarnedTextField.setDisable(true);
+            if (mainView != null && !mainView.isInstructorFunctions() && pointsEarnedTextField != null) pointsEarnedTextField.setDisable(true);
             return pointsEarnedTextField;
         }
         return null;
@@ -1380,6 +1704,7 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
     }
 
     public double getInterpretationPrefHeight() {
+        if (interpretationRTA == null) return 0;
         return interpretationRTA.getPrefHeight();
     }
 
@@ -1403,5 +1728,15 @@ public class HorizontalTreeView implements ExerciseView<DecoratedRTA> {
         return formulaNodeToggle;
     }
 
+    public DoubleProperty localScalePageHeightProperty() {
+        return localScalePageHeight;
+    }
 
+    public DoubleProperty localScalePageWidthProperty() {
+        return localScalePageWidth;
+    }
+
+    public ChangeListener<Node> getExerciseFocusListener() {
+        return exerciseFocusListener;
+    }
 }

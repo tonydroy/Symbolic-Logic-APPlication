@@ -11,7 +11,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
-public class FunctionSymbol implements Expression {
+public class FunctionSymbol extends LanguageElement implements Expression {
+    private static final long serialVersionUID = 100L;
 
     private ExpressionType type = ExpressionType.FUNCTION_SYMBOL;
     private String baseStr;
@@ -28,6 +29,7 @@ public class FunctionSymbol implements Expression {
         this.permitInfix = permitInfix;
     }
 
+    @Override
     public int getPlaces() {
         return places;
     }
@@ -40,10 +42,12 @@ public class FunctionSymbol implements Expression {
         this.permitInfix = permitInfix;
     }
 
+    @Override
     public String getBaseStr() {
         return baseStr;
     }
 
+    @Override
     public String getSubscriptStr() {
         return subscriptStr;
     }

@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.LinkedList;
 
 public class LimitedQueue<E> extends LinkedList<E> implements Serializable {
+    private static final long serialVersionUID = 100L;
 
     private int limit;
 

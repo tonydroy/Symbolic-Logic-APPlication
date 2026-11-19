@@ -1,26 +1,48 @@
-
+/* 1. Main Container */
 .rich-text-area {
     -fx-padding: 5 0 5 5;
-    -fx-background-color: WHITE;
+    -fx-background-color: white;
     -fx-border-width: 2;
     -fx-border-color: LIGHTGREY;
+    -fx-control-inner-background: white;
 }
 
-
-
 .rich-text-area:focused {
-    -fx-border-width: 2;
     -fx-border-color: LIGHTBLUE;
 }
 
+.rich-text-area .list-view .scroll-bar:horizontal {
+    -fx-max-height: 0;
+    -fx-padding: 0;
+    -fx-opacity: 0;
+}
+
+/* 2. Paragraph Rows */
 .rich-text-area .paragraph-tile {
     -fx-background-color: white;
-    -fx-padding: 0 0 0 2;
+    -fx-padding: 0 0 0 2; /* Text indent */
+
+    /* CSS Attempt to fix scrolling (Java fix ensures this is respected) */
+    -fx-fixed-cell-size: -1;
+    -fx-pref-height: -1;
 }
 
+/* 3. Force Text Wrapping */
+.rich-text-area .paragraph-tile .text-flow {
+    -fx-wrap-text: true;
+}
 
+/* 4. Internal ListView (Layout) */
 .rich-text-area > .paragraph-list-view {
-    -fx-padding: 5 0 5 5;
     -fx-background-color: white;
-    /*    -fx-border-color: black;      /* - taking this out removes the border on the RTA itself*/
+    -fx-padding: 5 0 5 5; /* Container padding */
 }
+
+/* 5. Explicit Color Patch (Visual Fix) */
+.rich-text-area .virtual-flow,
+.rich-text-area .virtual-flow .viewport,
+.rich-text-area .list-cell,
+.rich-text-area .list-cell:empty {
+    -fx-background-color: white;
+}
+

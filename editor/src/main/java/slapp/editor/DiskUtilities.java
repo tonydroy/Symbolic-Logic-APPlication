@@ -19,370 +19,298 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
-import slapp.editor.main_window.assignment.Assignment;
 import slapp.editor.main_window.ExerciseModel;
+import slapp.editor.main_window.assignment.Assignment;
 
 import java.io.*;
 import java.util.Collections;
 
-/**
- * Utility methods for disk operations
- */
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.Collections;
+
 public class DiskUtilities {
 
     private static File exerciseDirectory = null;
     private static File assignmentDirectory = null;
     private static LimitedQueue<File> recentExerciseFiles = new LimitedQueue<>(5);
     private static LimitedQueue<File> recentAssignmentFiles = new LimitedQueue<>(5);
-    private static File userHomeFile = new File(System.getProperty("user.home"));
-    private static String slappProgDataFile = "SLAPPprog.dta";
-    private static String slappUsrDataFile = "SLAPPusr.dta";
+    private static final File userHomeFile = new File(System.getProperty("user.home"));
+    private static final String slappProgDataFile = "SLAPPprog.dta";
+    private static final String slappUsrDataFile = "SLAPPusr.dta";
+
+    /**
+     * Ensures the initial directory passed to FileChooser/DirectoryChooser still exists on disk;
+     * falls back to user.home to prevent JavaFX IllegalArgumentException if a folder was moved/deleted.
+     */
+    private static File getValidDirectory(File preferredDir) {
+        return (preferredDir != null && preferredDir.exists() && preferredDir.isDirectory())
+                ? preferredDir
+                : userHomeFile;
+    }
 
     public static boolean saveUsrDataFile(SlappUsrData data) {
-        boolean success = false;
-        try {
-            File dataFile = new File(userHomeFile, slappUsrDataFile);
-            FileOutputStream fileOutputStream = new FileOutputStream(dataFile);
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-            objectOutputStream.writeObject(data);
-            objectOutputStream.close();
-            success = true;
-        }
-        catch (IOException e) {
-            //     e.printStackTrace();
+        File dataFile = new File(userHomeFile, slappUsrDataFile);
+
+        // FIXED: Using try-with-resources and BufferedOutputStream
+        try (FileOutputStream fos = new FileOutputStream(dataFile);
+             BufferedOutputStream bos = new BufferedOutputStream(fos);
+             ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+
+            oos.writeObject(data);
+            return true;
+        } catch (IOException e) {
             EditorAlerts.showSimpleAlert("Error saving usr file", e.getClass().getCanonicalName());
-            return success;
+            return false;
         }
-        return success;
     }
 
     public static SlappUsrData openUsrDataFile() {
+        File dataFile = new File(userHomeFile, slappUsrDataFile);
+        if (!dataFile.exists()) return null;
 
-        try {
-            File dataFile = new File(userHomeFile, slappUsrDataFile);
-            if (dataFile.exists()) {
-                FileInputStream fileInputStream = new FileInputStream(dataFile);
-                ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-                SlappUsrData data = (SlappUsrData) objectInputStream.readObject();
-                objectInputStream.close();
-                return data;
-            }
-            else return null;
-        }
-        catch (Exception e) {
-            //     e.printStackTrace();
+        // FIXED: Using try-with-resources and BufferedInputStream
+        try (FileInputStream fis = new FileInputStream(dataFile);
+             BufferedInputStream bis = new BufferedInputStream(fis);
+             ObjectInputStream ois = new ObjectInputStream(bis)) {
+
+            return (SlappUsrData) ois.readObject();
+        } catch (Exception e) {
             EditorAlerts.showSimpleAlert("Error opening user data file", e.getClass().getCanonicalName());
             return null;
         }
     }
 
-
-
     public static boolean saveProgDataFile(SlappProgData data) {
-        boolean success = false;
-        try {
-            File dataFile = new File(userHomeFile, slappProgDataFile);
-            FileOutputStream fileOutputStream = new FileOutputStream(dataFile);
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-            objectOutputStream.writeObject(data);
-            objectOutputStream.close();
-            success = true;
-        }
-        catch (IOException e) {
-       //     e.printStackTrace();
+        File dataFile = new File(userHomeFile, slappProgDataFile);
+
+        // FIXED: Using try-with-resources and BufferedOutputStream
+        try (FileOutputStream fos = new FileOutputStream(dataFile);
+             BufferedOutputStream bos = new BufferedOutputStream(fos);
+             ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+
+            oos.writeObject(data);
+            return true;
+        } catch (IOException e) {
             EditorAlerts.showSimpleAlert("Error saving program data file", e.getClass().getCanonicalName());
-            return success;
+            return false;
         }
-        return success;
     }
 
     public static SlappProgData openProgDataFile() {
+        File dataFile = new File(userHomeFile, slappProgDataFile);
+        if (!dataFile.exists()) return null;
 
-        try {
-            File dataFile = new File(userHomeFile, slappProgDataFile);
-            if (dataFile.exists()) {
-                FileInputStream fileInputStream = new FileInputStream(dataFile);
-                ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-                SlappProgData data = (SlappProgData) objectInputStream.readObject();
-                objectInputStream.close();
-                return data;
-            }
-            else return null;
-        }
-        catch (Exception e) {
-       //     e.printStackTrace();
+        // FIXED: Using try-with-resources and BufferedInputStream
+        try (FileInputStream fis = new FileInputStream(dataFile);
+             BufferedInputStream bis = new BufferedInputStream(fis);
+             ObjectInputStream ois = new ObjectInputStream(bis)) {
+
+            return (SlappProgData) ois.readObject();
+        } catch (Exception e) {
             EditorAlerts.showSimpleAlert("Error opening program data file", e.getClass().getCanonicalName());
             return null;
         }
     }
 
-    /**
-     * Save exercise
-     *
-     * @param saveAs if true or exercise directrory is null save as, otherwise save to current exercise directory
-     * @param exerciseModel the model to be saved
-     * @return true if successful and otherwise false
-     */
     public static boolean saveExercise(boolean saveAs, ExerciseModel exerciseModel) {
-        boolean success = false;
         File fileToSave;
         if (saveAs || exerciseDirectory == null) {
             FileChooser fileChooser = new FileChooser();
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("SLAPP exercise (*.sle)", "*.sle"));
-            if (exerciseDirectory != null)
-                fileChooser.setInitialDirectory(exerciseDirectory);
-            else
-                fileChooser.setInitialDirectory(userHomeFile);
 
+            fileChooser.setInitialDirectory(getValidDirectory(exerciseDirectory));
             fileChooser.setInitialFileName(exerciseModel.getExerciseName());
-        //    fileChooser.setInitialFileName(exerciseModel.getExerciseName() + ".sle");
 
-            fileToSave = fileChooser.showSaveDialog(EditorMain.mainStage);
-            if (fileToSave == null)
-                return success;
+            fileToSave = fileChooser.showSaveDialog(EditorAlerts.getActiveStage());
+            if (fileToSave == null) return false;
+        } else {
+            fileToSave = new File(exerciseDirectory, exerciseModel.getExerciseName() + ".sle");
         }
-        else fileToSave = new File(exerciseDirectory, exerciseModel.getExerciseName() + ".sle");
 
-        try {
-            fileToSave.createNewFile();
-        }
-        catch (IOException e) {
-            EditorAlerts.showSimpleAlert("Cannot Save", "No access to save " + fileToSave.getPath());
-            return success;
-        }
-        //legit fileToSave
         exerciseDirectory = fileToSave.getParentFile();
 
-        try (FileOutputStream fs = new FileOutputStream(fileToSave, false); ObjectOutputStream os = new ObjectOutputStream(fs);) {
+        // FIXED: Removed redundant createNewFile() and added BufferedOutputStream
+        try (FileOutputStream fs = new FileOutputStream(fileToSave, false);
+             BufferedOutputStream bs = new BufferedOutputStream(fs);
+             ObjectOutputStream os = new ObjectOutputStream(bs)) {
+
             os.writeObject(exerciseModel);
 
-            String locationString = ".";
-            if (fileToSave.getParent() != null) locationString = "\n\nin " + fileToSave.getParent() +".";
+            String locationString = fileToSave.getParent() != null ? "\n\nin " + fileToSave.getParent() + "." : ".";
             EditorAlerts.fleetingPopup(fileToSave.getName() + " saved" + locationString);
-            success = true;
-        }
-        catch (IOException e) {
-//            e.printStackTrace();
+            return true;
+        } catch (IOException e) {
             EditorAlerts.showSimpleAlert("Error Saving", e.getClass().getCanonicalName());
-            return success;
+            return false;
         }
-        return success;
     }
 
-    /**
-     * Save assignment
-     *
-     * @param saveAs if true or assignment directory is null save as, otherwise save in current assignment directory
-     * @param assignment the assignment to save
-     * @return true if successful and otherwise false
-     */
     public static boolean saveAssignment(boolean saveAs, Assignment assignment) {
-        boolean success = false;
         File fileToSave;
         if (saveAs || assignmentDirectory == null) {
             FileChooser fileChooser = new FileChooser();
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("SLAPP assignment (*.sla)", "*.sla"));
-            if (assignmentDirectory != null)
-                fileChooser.setInitialDirectory(assignmentDirectory);
-            else
-                fileChooser.setInitialDirectory(userHomeFile);
 
+            fileChooser.setInitialDirectory(getValidDirectory(assignmentDirectory));
             fileChooser.setInitialFileName(assignment.getHeader().getAssignmentName());
-         //   fileChooser.setInitialFileName(assignment.getHeader().getAssignmentName() + ".sla");
 
+            fileToSave = fileChooser.showSaveDialog(EditorAlerts.getActiveStage());
+            if (fileToSave == null) return false;
+        } else {
+            fileToSave = new File(assignmentDirectory, assignment.getHeader().getAssignmentName() + ".sla");
+        }
 
-            fileToSave = fileChooser.showSaveDialog(EditorMain.mainStage);
-            if (fileToSave == null)
-                return success;
-        }
-        else fileToSave = new File(assignmentDirectory, assignment.getHeader().getAssignmentName() + ".sla");
-
-        try {
-            fileToSave.createNewFile();
-        }
-        catch (IOException e) {
-            EditorAlerts.showSimpleAlert("Cannot Save", "No access to save " + fileToSave.getPath());
-            return success;
-        }
-        //legit fileToSave
         assignmentDirectory = fileToSave.getParentFile();
 
-        try (FileOutputStream fs = new FileOutputStream(fileToSave, false); ObjectOutputStream os = new ObjectOutputStream(fs);) {
+        // FIXED: Removed redundant createNewFile() and added BufferedOutputStream
+        try (FileOutputStream fs = new FileOutputStream(fileToSave, false);
+             BufferedOutputStream bs = new BufferedOutputStream(fs);
+             ObjectOutputStream os = new ObjectOutputStream(bs)) {
+
             os.writeObject(assignment);
 
-            String locationString = ".";
-            if (fileToSave.getParent() != null) locationString = "in\n\n" + fileToSave.getParent() +".";
+            String locationString = fileToSave.getParent() != null ? "\n\nin " + fileToSave.getParent() + "." : ".";
             EditorAlerts.fleetingPopup(fileToSave.getName() + " saved" + locationString);
-            success = true;
-        }
-        catch (IOException e) {
-            e.printStackTrace();
+            return true;
+        } catch (IOException e) {
             EditorAlerts.showSimpleAlert("Error Saving", e.getClass().getCanonicalName());
-            return success;
+            return false;
         }
-        return success;
     }
 
-    /**
-     * Choose and open exercise model (as object) from disk
-     *
-     * @return the exercise model object
-     */
     public static Object openExerciseModelObject() {
-
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("SLAPP exercise (*.sle)", "*.sle"));
-        if (exerciseDirectory != null)
-            fileChooser.setInitialDirectory(exerciseDirectory);
-        else
-            fileChooser.setInitialDirectory(userHomeFile);
-        File fileToOpen = fileChooser.showOpenDialog(EditorMain.mainStage);
+        fileChooser.setInitialDirectory(getValidDirectory(exerciseDirectory));
+        File fileToOpen = fileChooser.showOpenDialog(EditorAlerts.getActiveStage());
 
         return openExerciseObjectFromFile(fileToOpen);
     }
 
     public static Object openExerciseObjectFromFile(File fileToOpen) {
-        Object exerciseModelObject = null;
-
         if (fileToOpen != null) {
             if (fileToOpen.exists() && !fileToOpen.isDirectory()) {
                 exerciseDirectory = fileToOpen.getParentFile();
-                try (FileInputStream fi = new FileInputStream(fileToOpen); ObjectInputStream oi = new ObjectInputStream(fi);) {
-                    exerciseModelObject = oi.readObject();
-                    if (recentExerciseFiles.size() == 0 || !recentExerciseFiles.get(recentExerciseFiles.size() - 1).getPath().equals(fileToOpen.getPath())) recentExerciseFiles.add(fileToOpen);
 
+                // FIXED: Added BufferedInputStream
+                try (FileInputStream fi = new FileInputStream(fileToOpen);
+                     BufferedInputStream bi = new BufferedInputStream(fi);
+                     ObjectInputStream oi = new ObjectInputStream(bi)) {
+
+                    Object exerciseModelObject = oi.readObject();
+
+                    if (recentExerciseFiles.size() == 0 || !recentExerciseFiles.get(recentExerciseFiles.size() - 1).getPath().equals(fileToOpen.getPath())) {
+                        recentExerciseFiles.add(fileToOpen);
+                    }
+                    return exerciseModelObject;
                 } catch (IOException | ClassNotFoundException e) {
-                   // e.printStackTrace();
-                    EditorAlerts.showSimpleAlert("Error opening file", fileToOpen.getPath() + " is not compatible with this version of SLAPP.\nCannot open.");
+                    EditorAlerts.showSimpleAlert("Error opening file", "Error opening " + fileToOpen.getPath() + ".");
                 }
+            } else {
+                EditorAlerts.fleetingRedPopup("Cannot find " + fileToOpen.getPath() + ".");
             }
-            else EditorAlerts.fleetingRedPopup("Cannot find " + fileToOpen.getPath() + ".");
         }
-
-        return exerciseModelObject;
+        return null;
     }
 
-    /**
-     * Choose and open assignment from disk
-     *
-     * @return the assignment
-     */
     public static Assignment openAssignment() {
- //       Assignment assignment = null;
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("SLAPP assignment (*.sla)", "*.sla"));
-        if (assignmentDirectory != null)
-            fileChooser.setInitialDirectory(assignmentDirectory);
-        else
-            fileChooser.setInitialDirectory(userHomeFile);
-        File fileToOpen = fileChooser.showOpenDialog(EditorMain.mainStage);
+        fileChooser.setInitialDirectory(getValidDirectory(assignmentDirectory));
+        File fileToOpen = fileChooser.showOpenDialog(EditorAlerts.getActiveStage());
 
         return openAssignmentFromFile(fileToOpen);
     }
 
     public static Assignment openAssignmentFromFile(File fileToOpen) {
-        Assignment assignment = null;
-
         if (fileToOpen != null) {
             if (fileToOpen.exists() && !fileToOpen.isDirectory()) {
                 assignmentDirectory = fileToOpen.getParentFile();
-                try (FileInputStream fi = new FileInputStream(fileToOpen); ObjectInputStream oi = new ObjectInputStream(fi);) {
-                    assignment = (Assignment) oi.readObject();
-                    if (recentAssignmentFiles.size() == 0 || !recentAssignmentFiles.get(recentAssignmentFiles.size() - 1).getPath().equals(fileToOpen.getPath())) recentAssignmentFiles.add(fileToOpen);
-                } catch (IOException | ClassNotFoundException e) {
-//                e.printStackTrace();
-                    EditorAlerts.showSimpleAlert("Error opening file", fileToOpen.getPath() + " is not compatible with this version of SLAPP.\nCannot open.");
-                }
-            }
-            else EditorAlerts.fleetingRedPopup("Cannot find " + fileToOpen.getPath() + ".");
-        }
 
-        return assignment;
+                // FIXED: Added BufferedInputStream
+                try (FileInputStream fi = new FileInputStream(fileToOpen);
+                     BufferedInputStream bi = new BufferedInputStream(fi);
+                     ObjectInputStream oi = new ObjectInputStream(bi)) {
+
+                    Assignment assignment = (Assignment) oi.readObject();
+
+                    if (recentAssignmentFiles.size() == 0 || !recentAssignmentFiles.get(recentAssignmentFiles.size() - 1).getPath().equals(fileToOpen.getPath())) {
+                        recentAssignmentFiles.add(fileToOpen);
+                    }
+                    return assignment;
+                } catch (IOException | ClassNotFoundException e) {
+                    EditorAlerts.showSimpleAlert("Error opening file", "Error opening " + fileToOpen.getPath() + ".");
+                }
+            } else {
+                EditorAlerts.fleetingRedPopup("Cannot find " + fileToOpen.getPath() + ".");
+            }
+        }
+        return null;
     }
 
-    /**
-     * Get exercise model from disk file
-     *
-     * @param fileToOpen the file
-     * @return the exercise model
-     */
     public static ExerciseModel getExerciseModelFromFile(File fileToOpen) {
-        ExerciseModel exerciseModel = null;
         if (fileToOpen != null) {
-            try (FileInputStream fi = new FileInputStream(fileToOpen); ObjectInputStream oi = new ObjectInputStream(fi);) {
-                exerciseModel = (ExerciseModel) oi.readObject();
+            // FIXED: Added BufferedInputStream
+            try (FileInputStream fi = new FileInputStream(fileToOpen);
+                 BufferedInputStream bi = new BufferedInputStream(fi);
+                 ObjectInputStream oi = new ObjectInputStream(bi)) {
+
+                return (ExerciseModel) oi.readObject();
             } catch (IOException | ClassNotFoundException e) {
- //               e.printStackTrace();
                 EditorAlerts.showSimpleAlert("Error opening file", e.getClass().getCanonicalName() + ", " + fileToOpen.getName());
             }
         }
-        return exerciseModel;
+        return null;
     }
 
-    /**
-     * Get a directory from disk
-     *
-     * @param type the type EXERCISE/ASSIGNMENT of directory to open
-     * @return the directory
-     */
     public static File getDirectory(DirType type) {
         File startingDir = userHomeFile;
         if (type == DirType.EXERCISE && exerciseDirectory != null) startingDir = exerciseDirectory;
         if (type == DirType.ASSIGNMENT && assignmentDirectory != null) startingDir = assignmentDirectory;
+
         DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setInitialDirectory(startingDir);
-        File directory = directoryChooser.showDialog(EditorMain.mainStage);
-        if (directory != null && type == DirType.EXERCISE) exerciseDirectory = directory;
-        if (directory != null && type == DirType.ASSIGNMENT) assignmentDirectory = directory;
+        directoryChooser.setInitialDirectory(getValidDirectory(startingDir));
+        File directory = directoryChooser.showDialog(EditorAlerts.getActiveStage());
+
+        if (directory != null) {
+            if (type == DirType.EXERCISE) exerciseDirectory = directory;
+            if (type == DirType.ASSIGNMENT) assignmentDirectory = directory;
+        }
         return directory;
     }
 
-
-    /**
-     * Get sorted list of files (of some type) from directory
-     *
-     * @param directory the directory File
-     * @param extension the type extgension
-     * @return the File list
-     */
+    // FIXED: Safely typed to prevent unchecked casting warnings, and safely checks for null directory arrays
     public static ObservableList<File> getFileListFromDir(File directory, String extension) {
-        ObservableList list = null;
-        FilenameFilter filenameFilter = new FilenameFilter() {
-            public boolean accept(File dir, String name) {
-                return name.toLowerCase().endsWith(extension);
-            }
-        };
-        File[] files = directory.listFiles(filenameFilter);
-        list = FXCollections.observableArrayList(files);
+        if (directory == null || !directory.exists() || !directory.isDirectory()) return FXCollections.observableArrayList();
 
+        File[] files = directory.listFiles((dir, name) -> name.toLowerCase().endsWith(extension));
+        if (files == null) return FXCollections.observableArrayList();
+
+        ObservableList<File> list = FXCollections.observableArrayList(files);
         Collections.sort(list, new AlphanumFileComparator());
 
         return list;
     }
 
-
-    /**
-     * Enum to differentiate exercise/assignment directory types
-     */
     public enum DirType {
         EXERCISE,
         ASSIGNMENT;
-
     }
 
-    public static LimitedQueue<File> getRecentExerciseFiles() {
-        return recentExerciseFiles;
-    }
-
-    public static LimitedQueue<File> getRecentAssignmentFiles() {
-        return recentAssignmentFiles;
-    }
-
-    public static void setRecentExerciseFiles(LimitedQueue<File> recentExerciseFiles) {
-        DiskUtilities.recentExerciseFiles = recentExerciseFiles;
-    }
-
-    public static void setRecentAssignmentFiles(LimitedQueue<File> recentAssignmentFiles) {
-        DiskUtilities.recentAssignmentFiles = recentAssignmentFiles;
-    }
+    public static LimitedQueue<File> getRecentExerciseFiles() { return recentExerciseFiles; }
+    public static LimitedQueue<File> getRecentAssignmentFiles() { return recentAssignmentFiles; }
+    public static void setRecentExerciseFiles(LimitedQueue<File> recentExerciseFiles) { DiskUtilities.recentExerciseFiles = recentExerciseFiles; }
+    public static void setRecentAssignmentFiles(LimitedQueue<File> recentAssignmentFiles) { DiskUtilities.recentAssignmentFiles = recentAssignmentFiles; }
 }

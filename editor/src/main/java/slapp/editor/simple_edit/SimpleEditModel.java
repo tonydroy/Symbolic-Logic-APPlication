@@ -27,6 +27,8 @@ import java.util.List;
 /**
  * Model for the SimpleEdit exercise
  */
+
+
 public class SimpleEditModel implements ExerciseModel <Document>, Serializable {
     private static final long serialVersionUID = 100L;
     private String exerciseName = new String("");
@@ -45,6 +47,8 @@ public class SimpleEditModel implements ExerciseModel <Document>, Serializable {
     private String responsePrompt = "";
     private int pointsPossible;
     private int pointsEarned;
+    private String auxExerName;
+    private SECheckSetup checkSetup;
 
 
     /**
@@ -57,6 +61,19 @@ public class SimpleEditModel implements ExerciseModel <Document>, Serializable {
         responsePrompt = prompt;
         this.pointsPossible = 0;
         this.pointsEarned = -1;
+        this.auxExerName = "";
+    }
+
+    public void setExerciseType(ExerciseType exerciseType) {
+        this.exerciseType = exerciseType;
+    }
+
+    public SECheckSetup getCheckSetup() {
+        return checkSetup;
+    }
+
+    public void setCheckSetup(SECheckSetup checkSetup) {
+        this.checkSetup = checkSetup;
     }
 
     /**
@@ -153,7 +170,15 @@ public class SimpleEditModel implements ExerciseModel <Document>, Serializable {
      * The exerrcise name (used also as file name)
      * @param exerciseName the name string
      */
-    void setExerciseName(String exerciseName) {    this.exerciseName = exerciseName;   }
+    public void setExerciseName(String exerciseName) {    this.exerciseName = exerciseName;   }
+
+    public String getAuxExerName() {
+        return auxExerName;
+    }
+
+    public void setAuxExerName(String auxExerName) {
+        this.auxExerName = auxExerName;
+    }
 
     /**
      * The exercise name (used also as file name)

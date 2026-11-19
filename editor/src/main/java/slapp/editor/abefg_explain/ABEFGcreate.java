@@ -19,6 +19,8 @@ package slapp.editor.abefg_explain;
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.model.Document;
+import com.teamdev.jxbrowser.browser.Browser;
+import com.teamdev.jxbrowser.view.javafx.BrowserView;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
@@ -26,7 +28,9 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
@@ -34,20 +38,23 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.transform.Scale;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
+
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import slapp.editor.DiskUtilities;
 import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
 import slapp.editor.PrintUtilities;
+import slapp.editor.ab_explain.ABCheckSetup;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.decorated_rta.KeyboardDiagram;
 import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
+import slapp.editor.main_window.TextHelpPopup;
 import slapp.editor.page_editor.PageContent;
 
 import java.util.ArrayList;
@@ -85,6 +92,7 @@ public class ABEFGcreate {
     private ChangeListener fieldListenerF;
     private ChangeListener fieldListenerG;
     private ChangeListener explainPromptListener;
+    private ChangeListener auxExerListener;
     private double scale =1.0;
     private Scene scene;
     private Stage stage;
@@ -96,13 +104,31 @@ public class ABEFGcreate {
     private ToolBar sizeToolBar;
     private DecoratedRTA dummyDRTA = new DecoratedRTA();
     private MenuBar menuBar;
-    private HBox gridBox;
+    private VBox gridBox;
     private BorderPane borderPane;
 
     private Pane spacerPane;
     private Spinner<Double> statementHeightSpinner;
 
     private TextField pointsPossibleTextField;
+    private TextField auxExerNameField;
+
+    private CheckBox staticHelpCheck;
+    private Spinner<Double> staticHelpHeightSpinner;
+    private RichTextArea staticHelpRTA;
+    private DecoratedRTA staticHelpDRTA;
+
+    private Spinner checkMaxSpinner;
+    private ABEFGCheckSetup checkSetup;
+
+    CheckBox choiceABox;
+    CheckBox choiceBBox;
+    CheckBox choiceEBox;
+    CheckBox choiceFBox;
+    CheckBox choiceGBox;
+
+    private final DoubleProperty localScalePageHeight = new SimpleDoubleProperty(1.0);
+    private final DoubleProperty localScalePageWidth = new SimpleDoubleProperty(1.0);
 
     /**
      * Construct AB/EFG edit create window from scratch
@@ -110,6 +136,8 @@ public class ABEFGcreate {
      */
     public ABEFGcreate(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
+        localScalePageHeight.bind(mainWindow.getMainView().scalePageHeightProperty());
+        localScalePageWidth.bind(mainWindow.getMainView().scalePageWidthProperty());
         setupWindow();
     }
 
@@ -136,6 +164,25 @@ public class ABEFGcreate {
         promptFieldF.setText(fields.getPromptF());
         promptFieldG.setText(fields.getPromptG());
         nameField.textProperty().addListener(nameListener);
+        auxExerNameField.setText(originalModel.getAuxExerName());
+        auxExerNameField.textProperty().addListener(auxExerListener);
+
+        checkSetup = originalModel.getCheckSetup();
+        if (checkSetup == null) checkSetup = new ABEFGCheckSetup();
+
+        staticHelpCheck.setSelected(checkSetup.isStaticHelp());
+        staticHelpRTA.getActionFactory().open(checkSetup.getStaticHelpDoc()).execute(new ActionEvent());
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
+        checkMaxSpinner.getValueFactory().setValue(checkSetup.getCheckMax());
+        choiceABox.setSelected(checkSetup.isChoiceA());
+        choiceBBox.setSelected(checkSetup.isChoiceB());
+        choiceEBox.setSelected(checkSetup.isChoiceE());
+        choiceFBox.setSelected(checkSetup.isChoiceF());
+        choiceGBox.setSelected(checkSetup.isChoiceG());
+
+
+
         explainPromptField.textProperty().addListener(explainPromptListener);
         leaderABfield.textProperty().addListener(leaderListenerAB);
         promptFieldA.textProperty().addListener(fieldListenerA);
@@ -162,48 +209,184 @@ public class ABEFGcreate {
         statementRTA.getStylesheets().add("slappTextArea.css");
         statementRTA.setPromptText("Exercise Statement:");
 
-        statementRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
+        statementRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.minWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.contentAreaWidthProperty().bind(localScalePageWidth);
 
         statementRTA.setMinHeight(100);
 
-        double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
-        statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
+        double statementInitialHeight = Math.round(100 / localScalePageHeight.get() * 100.0);
+        statementHeightSpinner = new Spinner<>(statementInitialHeight, 999.0, statementInitialHeight, 1.0);
         statementHeightSpinner.setPrefWidth(60);
         statementHeightSpinner.setDisable(false);
-        statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
-        statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
-            Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
-            if (increment != null) increment.getOnMouseReleased().handle(null);
-            Node decrement = statementHeightSpinner.lookup(".decrement-arrow-button");
-            if (decrement != null) decrement.getOnMouseReleased().handle(null);
-        });
+        statementHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
-        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeight.addListener((ob, ov, nv) -> {
             statementRTA.prefHeightProperty().unbind();
             statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
             statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
-
-        statementRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            fieldsModified = true;
-            statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
+        final boolean[] statementPrimed = {false};
+        statementRTA.fullHeightProperty().addListener((ob, ov, nv) -> {
+            if (!statementPrimed[0]) {
+                statementPrimed[0] = true;
+                return;
+            }
+            double height = (double) nv;
+            statementTextHeight = height;
         });
 
         statementRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(statementDRTA, ControlType.AREA);
-                mainWindow.getMainView().getRTATextHeight(statementRTA);
+            }
+        });
+        statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
+        //-------------
+
+        staticHelpDRTA = new DecoratedRTA();
+        staticHelpDRTA.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.BASE_AND_SANS);
+        staticHelpRTA = staticHelpDRTA.getEditor();
+        staticHelpRTA.setPromptText("Static Help (complete if static help selected)");
+        staticHelpRTA.getStylesheets().add("slappTextArea.css");
+        staticHelpRTA.setMinWidth(400 + RTA_WIDTH_BMP);
+        staticHelpRTA.setMaxWidth(400 + RTA_WIDTH_BMP);
+        staticHelpRTA.setContentAreaWidth(400);
+        staticHelpRTA.setMinHeight(100);
+
+        double staticHelpInitialHeight = Math.round(100 / localScalePageHeight.get() * 100 );
+        staticHelpHeightSpinner = new Spinner<>(staticHelpInitialHeight, 999.0, staticHelpInitialHeight, 1.0);
+        staticHelpHeightSpinner.setPrefWidth(60);
+        staticHelpHeightSpinner.setDisable(false);
+        staticHelpHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        localScalePageHeight.addListener((ob, ov, nv) -> {
+            staticHelpRTA.prefHeightProperty().unbind();
+            staticHelpHeightSpinner.getValueFactory().setValue((double) Math.round(staticHelpHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
+            staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        });
+        staticHelpRTA.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) {
+                editorInFocus(staticHelpDRTA, ControlType.AREA);
+            }
+        });
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
+        staticHelpCheck = new CheckBox();
+        staticHelpCheck.setSelected(false);
+        ChangeListener staticHelpCheckListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                fieldsModified = true;
+            }
+        };
+        staticHelpCheck.selectedProperty().addListener(staticHelpCheckListener);
+        Label staticHelpCheckLabel = new Label("Static Help: ");
+        staticHelpCheckLabel.setPrefWidth(85);
+        staticHelpCheckLabel.setAlignment(Pos.CENTER_RIGHT);
+        HBox staticHelpBox = new HBox(10, staticHelpCheckLabel, staticHelpCheck);
+        staticHelpBox.setAlignment(Pos.CENTER_LEFT);
+
+        checkMaxSpinner = new Spinner<>(-1, 99, 0);
+        checkMaxSpinner.setPrefWidth(60);
+        Label checkMaxLabel = new Label("       Check Max:             ");
+        HBox checkMaxBox = new HBox(10, checkMaxLabel, checkMaxSpinner);
+        checkMaxBox.setAlignment(Pos.CENTER_LEFT);
+
+        Label choiceALabel = new Label("    Correct     \u21d2     A choice:");
+        choiceABox = new CheckBox();
+        choiceABox.setSelected(false);
+        choiceABox.selectedProperty().addListener((ob, ov, nv) -> {
+            fieldsModified = true;
+            boolean selected = (boolean) nv;
+            if (selected) {
+                choiceBBox.setSelected(false);
             }
         });
 
-        //TODO there is an awful lot of duplicated code in here!
+        HBox choiceAHBox = new HBox(10, choiceALabel, choiceABox);
+        choiceAHBox.setAlignment(Pos.CENTER_LEFT);
+
+        Label choiceBLabel = new Label("B choice:");
+        choiceBBox = new CheckBox();
+        choiceBBox.setSelected(false);
+        choiceBBox.selectedProperty().addListener((ob, ov, nv) -> {
+            fieldsModified = true;
+            boolean selected = (boolean) nv;
+            if (selected) {
+                choiceABox.setSelected(false);
+            }
+        });
+        HBox choiceBHBox = new HBox(10, choiceBLabel, choiceBBox);
+        choiceBHBox.setAlignment(Pos.CENTER_LEFT);
+
+        //
+        Label choiceELabel = new Label("E choice:");
+        choiceEBox = new CheckBox();
+        choiceEBox.setSelected(false);
+        choiceEBox.selectedProperty().addListener((ob, ov, nv) -> {
+            fieldsModified = true;
+            boolean selected = (boolean) nv;
+            if (selected) {
+                choiceFBox.setSelected(false);
+                choiceGBox.setSelected(false);
+            }
+        });
+        HBox choiceEHBox = new HBox(10, choiceELabel, choiceEBox);
+        choiceEHBox.setAlignment(Pos.CENTER_LEFT);
+
+        Label choiceFLabel = new Label("F choice:");
+        choiceFBox = new CheckBox();
+        choiceFBox.setSelected(false);
+        choiceFBox.selectedProperty().addListener((ob, ov, nv) -> {
+            fieldsModified = true;
+            boolean selected = (boolean) nv;
+            if (selected) {
+                choiceEBox.setSelected(false);
+                choiceGBox.setSelected(false);
+            }
+        });
+        HBox choiceFHBox = new HBox(10, choiceFLabel, choiceFBox);
+        choiceFHBox.setAlignment(Pos.CENTER_LEFT);
+
+
+        Label choiceGLabel = new Label("G choice:");
+        choiceGBox = new CheckBox();
+        choiceGBox.setSelected(false);
+        choiceGBox.selectedProperty().addListener((ob, ov, nv) -> {
+            fieldsModified = true;
+            boolean selected = (boolean) nv;
+            if (selected) {
+                choiceEBox.setSelected(false);
+                choiceFBox.setSelected(false);
+            }
+        });
+        HBox choiceGHBox = new HBox(10, choiceGLabel, choiceGBox);
+        choiceGHBox.setAlignment(Pos.CENTER_LEFT);
+
+
+
+
+
+
+
+        HBox choicesBox = new HBox(20, checkMaxBox, choiceAHBox, choiceBHBox, new Separator(Orientation.VERTICAL), choiceEHBox, choiceFHBox, choiceGHBox);
+
+
+        HBox textBoxes = new HBox(10, statementRTA, staticHelpRTA);
+
+
+
+
 
         Label nameLabel = new Label("Exercise Name: ");
+        nameLabel.setPrefWidth(100);
         nameField  = new TextField();
         nameField.setPromptText("(plain text)");
         nameListener = new ChangeListener() {
@@ -216,6 +399,23 @@ public class ABEFGcreate {
         nameField.textProperty().addListener(nameListener);
 
         nameField.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) textFieldInFocus();
+        });
+
+        Label auxExerLabel = new Label("Aux Exer Name: ");
+        auxExerLabel.setPrefWidth(100);
+        auxExerNameField = new TextField();
+        auxExerNameField.setPadding(new Insets(5));
+        auxExerNameField.setPromptText("(plain text)");
+        auxExerNameField.setPrefWidth(200);
+        auxExerListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                fieldsModified = true;
+            }
+        };
+        auxExerNameField.textProperty().addListener(auxExerListener);
+        auxExerNameField.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) textFieldInFocus();
         });
 
@@ -350,29 +550,49 @@ public class ABEFGcreate {
 
         Label pointsPossibleLabel = new Label("Points Possible: ");
         pointsPossibleLabel.setPrefWidth(100);
+
+
         pointsPossibleTextField = new TextField();
-        pointsPossibleTextField.setMaxWidth(35);
+        pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setAlignment(Pos.CENTER_RIGHT);
         pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
-        UnaryOperator<TextFormatter.Change> filter = change -> {
-            String text = change.getText();
-            if (text.matches("[0-9]*")) {
-                return change;
-            }
-            return null;
-        };
-        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
-        pointsPossibleTextField.setTextFormatter(textFormatter);
+
         pointsPossibleTextField.setText("0");
         pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { fieldsModified = true; });
-        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
+
+        UnaryOperator<TextFormatter.Change> pointsPossibleFilter = change -> {
+            if (change == null) return null;
+            String text = change.getText();
+            if (text.matches("[0-9]*")) return change;
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(pointsPossibleFilter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
 
 
+        pointsPossibleTextField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+            if (isNowFocused) {
+                Platform.runLater(() -> pointsPossibleTextField.selectAll());
+                textFieldInFocus();
+            } else if (pointsPossibleTextField.getText().isEmpty()) {
+                pointsPossibleTextField.setText("0");
+            }
+        });
+
+        pointsPossibleTextField.setOnMouseClicked(event -> {
+            if (pointsPossibleTextField.getSelectedText().isEmpty()) {
+                pointsPossibleTextField.selectAll();
+            }
+        });
+
+        HBox pointHelpBox = new HBox(20, pointsPossibleTextField, staticHelpBox);
+        pointHelpBox.setAlignment(Pos.CENTER_LEFT);
 
         Region spacer = new Region();
         spacer.setMinWidth(50);
         GridPane checkboxPane = new GridPane();
-        checkboxPane.addColumn(0, nameLabel, leaderLabelAB, promptLabelA, promptLabelB, pointsPossibleLabel);
-        checkboxPane.addColumn(1, nameField, leaderABfield, promptFieldA, promptFieldB, pointsPossibleTextField);
+        checkboxPane.addColumn(0, nameLabel, leaderLabelAB, promptLabelA, promptLabelB, auxExerLabel, pointsPossibleLabel);
+        checkboxPane.addColumn(1, nameField, leaderABfield, promptFieldA, promptFieldB, auxExerNameField, pointHelpBox);
         checkboxPane.addColumn(3, spacer);
         checkboxPane.addColumn(5, explainPromptLabel, leaderLabelEFG, promptLabelE, promptLabelF, promptLabelG);
         checkboxPane.addColumn(6, explainPromptField, leaderEFGfield, promptFieldE, promptFieldF, promptFieldG);
@@ -380,23 +600,40 @@ public class ABEFGcreate {
         checkboxPane.setHgap(10);
         checkboxPane.setVgap(10);
 
-        gridBox = new HBox(checkboxPane);
+        gridBox = new VBox(checkboxPane, new HBox(20, checkMaxBox, choicesBox));
 
-        String helpText =  "<body style=\"margin-left:10; margin-right: 20\">" +
+
+        String header = TextHelpPopup.getHeader14();
+        String footer = TextHelpPopup.getFooter();
+        String helpText = header +
                 "<p>AB/EFG Explain is appropriate for exercises that require choices from among two groups of mutually exclusive items: first, between some A and B, then between E, F and G, together with an explanation or justification.</p>" +
                 "<ul>" +
                 "<li><p>For the AB/EFG Explain exercise you supply the exercise name and, if desired, a prompt to appear in the explanation field.</p></li>" +
                 "<li><p>Then each set of options has a Lead that appears prior to the check boxes, and labels to appear with the check boxes.</p></li>" +
-                "<li><p>If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
-                "<li><p>And, finally, add the exercise statement.</p></li>" +
-                "</ul>";
-        WebView helpArea = new WebView();
-        WebEngine webEngine = helpArea.getEngine();
-        webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
-        webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(250);
+                "<li><p>In the context of an assignment containing a previous exercise relevant to the one being worked, it is possible to add its name in order to include a thumbnail that will pop up its work area. </p></li>" +
+                "<li><p>If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).  " +
+                "The Static Help check activates the Static Help button which pops up a message which you may state in the right-hand text area below.</p></li>" +
+                "<li><p>If Check Max is 0, checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.  Selecting A/B and E/F/G choices automatically enables choice check for instructors.  For students choice check is enabled only if in addition Check Max is other than 0 (in which case the check essentially gives the answers).  </p></li>" +
+                "<li><p>And, finally, add the exercise statement and, if desired, static help.</p></li>" +
+                "</ul>" +
+                footer;
 
-        centerBox = new VBox(10, gridBox, statementRTA, helpArea);
+        scene = new Scene(borderPane);
+
+        Browser browser = mainWindow.getCreateHlpBrowser();
+        if (browser != null) {
+            BrowserView view = BrowserView.newInstance(browser);
+            view.setMouseTransparent(true);
+            Platform.runLater(() -> TextHelpPopup.loadHtmlSmoothly(browser, view, helpText));
+            view.setPrefHeight(390);
+            view.prefWidthProperty().bind(textBoxes.widthProperty());
+            centerBox = new VBox(10, gridBox, textBoxes, view);
+            centerBox.setFillWidth(true);
+        }
+        else {
+            centerBox = new VBox(10, gridBox, textBoxes, new Label("JxBrowser not started.  Please try again."));
+        }
+
         centerBox.setPadding(new Insets(10,0,10,20));
 
         spacerPane = new Pane();
@@ -435,17 +672,19 @@ public class ABEFGcreate {
             saveAsButton.setDisable(true);
         }
 
-        scene = new Scene(borderPane);
+
         scene.getStylesheets().add(DecoratedRTA.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
 
         Label zoomLabel = new Label(" Zoom ");
-        Spinner<Integer> zoomSpinner = new Spinner(25, 500, 100, 5);
+        Spinner<Integer> zoomSpinner = new Spinner(25, 500, 100, 1);
         zoomSpinner.setPrefSize(65,25);
         zoomSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            /*
             Node increment = zoomSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = zoomSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
+             */
 
             scale = (double) nv/100;
             updateZoom();
@@ -456,18 +695,27 @@ public class ABEFGcreate {
         sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     V Sz:"), statementHeightSpinner);
 
         stage = new Stage();
-        stage.initOwner(EditorMain.mainStage);
+    //    stage.initOwner(EditorMain.mainStage);
         stage.setScene(scene);
         stage.setTitle("Create AB/EFG Explain Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
-        stage.setWidth(890);
-        stage.setHeight(850);
+        stage.setWidth(1040);
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 890));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 850));
+        double stageHeight = Math.min(960, bounds.getHeight() - 20);
+        stage.setHeight(stageHeight);
+        double mainWinY = EditorMain.mainStage.getY();
+        if (mainWinY + stageHeight + 20 < bounds.getMaxY()) {
+            stage.setY(mainWinY + 10);
+        }
+        else {
+            stage.setY(bounds.getMaxY() - (stageHeight + 10));
+        }
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1040));
 
-        stage.initModality(Modality.WINDOW_MODAL);
+
+    //    stage.initModality(Modality.WINDOW_MODAL);
+        EditorAlerts.makeIndependentBlockingStage(stage);
         stage.setOnCloseRequest(e-> {
             e.consume();
             closeWindow();
@@ -477,7 +725,7 @@ public class ABEFGcreate {
         statementRTA.getActionFactory().save().execute(new ActionEvent());
         centerBox.layout();
 
-        Platform.runLater(() -> nameField.requestFocus());
+        Platform.runLater(() -> Platform.runLater(() -> nameField.requestFocus()));
     }
 
     /*
@@ -502,6 +750,8 @@ public class ABEFGcreate {
      */
     private void closeWindow() {
         if (checkContinue("Confirm Close", "This exercise appears to have unsaved changes.\nContinue to close window?")) {
+            localScalePageHeight.unbind();
+            localScalePageWidth.unbind();
             mainWindow.closeExercise();
             stage.close();
         }
@@ -513,9 +763,17 @@ public class ABEFGcreate {
     private void clearExercise() {
         if (checkContinue("Confirm Clear", "This exercise appears to have unsaved changes.\nContinue to clear exercise?")) {
             statementRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
- //           statementRTA.getActionFactory().open(new Document()).execute(new ActionEvent());
+            staticHelpRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
+
             nameField.clear();
             nameField.textProperty().addListener(nameListener);
+            choiceABox.setSelected(false);
+            choiceBBox.setSelected(false);
+            choiceEBox.setSelected(false);
+            choiceFBox.setSelected(false);
+            choiceGBox.setSelected(false);
+
+            auxExerNameField.clear();
             viewExercise();
             fieldsModified = false;
         }
@@ -529,7 +787,7 @@ public class ABEFGcreate {
      */
     private boolean checkContinue(String title, String content) {
         boolean okcontinue = true;
-        if (fieldsModified || statementRTA.isModified()) {
+        if (fieldsModified || statementRTA.isModified() || staticHelpRTA.isModified()) {
             Alert confirm = EditorAlerts.confirmationAlert(title, content);
             Optional<ButtonType> result = confirm.showAndWait();
             if (result.get() != OK) okcontinue = false;
@@ -546,7 +804,6 @@ public class ABEFGcreate {
         RichTextArea rta = exercise.getExerciseView().getExerciseStatement().getEditor();
         rta.prefHeightProperty().unbind();
         rta.setEditable(false);
-        RichTextAreaSkin rtaSkin = ((RichTextAreaSkin) rta.getSkin());
         exercise.getExerciseView().setStatementPrefHeight(Math.min(PrintUtilities.getPageHeight(), model.getStatementPrefHeight()));
         mainWindow.setUpExercise(exercise);
     }
@@ -561,12 +818,10 @@ public class ABEFGcreate {
         nameField.textProperty().addListener(nameListener);
 
         ABEFGmodel model = extractModelFromWindow();
-        ABEFGexercise exercise = new ABEFGexercise(model, mainWindow);
-        RichTextArea rta = exercise.getExerciseView().getExerciseStatement().getEditor();
-        rta.setEditable(false);
-        rta.prefHeightProperty().unbind();
-        exercise.getExerciseView().setStatementPrefHeight(Math.min(PrintUtilities.getPageHeight(), model.getStatementPrefHeight()));
-        exercise.saveExercise(saveAs);
+        boolean success = DiskUtilities.saveExercise(saveAs, model);
+        if (success) {
+            fieldsModified = false;
+        }
 
         saveButton.setDisable(false);
         saveAsButton.setDisable(false);
@@ -593,15 +848,37 @@ public class ABEFGcreate {
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document statementDocument = statementRTA.getDocument();
         Document commentDoc = new Document();
+
+        statementTextHeight = statementRTA.getFullHeight();
         double statementPrefHeight = Math.max(40, statementTextHeight + RTA_SCREEN_BMP);
 
         ABEFGmodel model = new ABEFGmodel(name, fields,  false, prompt, statementPrefHeight, statementDocument, commentDoc, new ArrayList<PageContent>());
         model.setStatementTextHeight(statementTextHeight);
+
+        ABEFGCheckSetup checkSetup = model.getCheckSetup();
+        if (checkSetup == null) checkSetup = new ABEFGCheckSetup();
+
+        if (staticHelpRTA.isModified()) fieldsModified = true;
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+        checkSetup.setStaticHelpDoc(staticHelpRTA.getDocument());
+        checkSetup.setStaticHelp(staticHelpCheck.isSelected());
+        int checkMax = (Integer) checkMaxSpinner.getValue();
+        checkSetup.setCheckMax(checkMax);
+        checkSetup.setChoiceA(choiceABox.isSelected());
+        checkSetup.setChoiceB(choiceBBox.isSelected());
+        checkSetup.setChoiceE(choiceEBox.isSelected());
+        checkSetup.setChoiceF(choiceFBox.isSelected());
+        checkSetup.setChoiceG(choiceGBox.isSelected());
+
+        model.setCheckSetup(checkSetup);
+
+
         if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
         else {
             model.setPointsPossible(0);
             pointsPossibleTextField.setText("0");
         }
+        model.setAuxExerName(auxExerNameField.getText());
         return model;
     }
 

@@ -28,7 +28,7 @@ public class CharModMaps {
         return Map.ofEntries(
 
                 //base map
-                entry(" ", "\ue06f"),
+                entry(" ", "\u1680"),
                 entry("a", "\ue050"),
                 entry("b", "\ue051"),
                 entry("c", "\ue052"),
@@ -183,7 +183,7 @@ public class CharModMaps {
                 //script map
                 entry("\ud835\udcb6", "\ue0d2"),       //a
                 entry("\ud835\udcb7", "\ue0d3"),       //b
-                entry("\ud835\udcb8", "\ue08c"),       //c
+                entry("\ud835\udcb8", "\ue0d4"),       //c
                 entry("\ud835\udcb9", "\ue0d5"),       //d
                 entry("\u212f", "\ue0e9"),             //e
                 entry("\ud835\udcbb", "\ue0d6"),       //f
@@ -273,7 +273,7 @@ public class CharModMaps {
                 entry("\u0399", "\ue108"),      //Iota
                 entry("\u039a", "\ue109"),      //Kappa
                 entry("\u039b", "\ue10a"),      //Lambda
-                entry("\u039c", "\ue14c"),      //Mu
+                entry("\u039c", "\ue10b"),      //Mu
                 entry("\u039d", "\ue10c"),      //Nu
                 entry("\u039e", "\ue10d"),      //Xi
                 entry("\u039f", "\ue10e"),      //Omicron
@@ -381,7 +381,7 @@ public class CharModMaps {
                 entry("\ud835\udd37", "\ue1be"),      //z
                 entry("\ud835\udd04", "\ue190"),      //A
                 entry("\ud835\udd05", "\ue191"),      //B
-                entry("\u212d", "\ue1fd"),            //C
+                entry("\u212d", "\ue1bf"),            //C
                 entry("\ud835\udd07", "\ue192"),      //D
                 entry("\ud835\udd08", "\ue193"),      //E
                 entry("\ud835\udd09", "\ue194"),      //F
@@ -470,6 +470,12 @@ public class CharModMaps {
                 entry("\uf892", "\ue1e2"),      //Y
                 entry("\uf8b3", "\ue203"),      //Z
 
+                entry("\u2115", "\ue211"),      //bb N
+                entry("\u2124", "\ue212"),      //bb Z
+                entry("\u2119", "\ue213"),      //bb P
+                entry("\u211a", "\ue214"),      //bb Q
+                entry("\u211d", "\ue215"),      //bb R
+
                 //Special
                 entry("\u00ac", "\ue220"),      //hammer
                 entry("\u25b3", "\ue221"),      //meta caret
@@ -490,7 +496,7 @@ public class CharModMaps {
                 entry("\u2200", "\ue232"),      //universal
                 entry("\u2203", "\ue233"),      //existential
                 entry("\ue8a5", "\ue8af"),      //big not less than
-                entry("\ue8a7", "\ue8b0"),      //big not less than or equal
+                entry("\ue8a7", "\ue8b1"),      //big not less than or equal
                 entry("\ue886", "\ue899"),      //zero with slash
                 entry("\ue8ad", "\ue8b7"),      //big not equals
                 entry("\ue8ac", "\ue8b6"),      //big equals
@@ -974,7 +980,7 @@ public class CharModMaps {
                 entry("\uf8b3", "\ue473"),      //Z
 
                 //Special
-                entry("\u00d8", "\ue894"),      //zero with slash
+                entry("\ue886", "\ue894"),      //zero with slash
                 entry("\u2135", "\ue4b6"),      //aleph
                 entry("\u2136", "\ue4b7"),      //beth
                 entry("\u00a0", "\u00a0")            //unbreakable space
@@ -1397,10 +1403,10 @@ public class CharModMaps {
                 entry("\uf890", "\ue647"),      //W
                 entry("\uf891", "\ue648"),      //X
                 entry("\uf892", "\ue649"),      //Y
-                entry("\uf8b3", "\ue679"),      //Z
+                entry("\uf8b3", "\ue66a"),      //Z
 
                 //Special
-                entry("\u00d8", "\ue895"),      //zero with slash
+                entry("\ue886", "\ue895"),      //zero with slash
                 entry("\u2135", "\ue67d"),      //aleph
                 entry("\u2136", "\ue67e"),      //beth
                 entry("\u00a0", "\u00a0")            //unbreakable space
@@ -1827,7 +1833,7 @@ public class CharModMaps {
                 entry("\uf8b3", "\ue81a"),      //Z
 
                 //Special
-                entry("\u00d8", "\ue897"),      //zero with slash
+                entry("\ue886", "\ue897"),      //zero with slash
                 entry("\u2135", "\ue82d"),      //aleph
                 entry("\u2136", "\ue82e"),      //beth
                 entry("\u00a0", "\u00a0")            //unbreakable space

@@ -50,7 +50,11 @@ class ActionCmdInsertText implements ActionCmd {
                 text = content;
             }
             if (!text.isEmpty()) {
-                viewModel.getCommandManager().execute(new InsertCmd(text));
+                if (viewModel.getSelection().isDefined()) {
+                    viewModel.getCommandManager().execute(new ReplaceCmd(text));
+                } else {
+                    viewModel.getCommandManager().execute(new InsertCmd(text));
+                }
             }
         }
     }

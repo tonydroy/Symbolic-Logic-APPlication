@@ -18,6 +18,10 @@ package slapp.editor.map_abexplain;
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.model.Document;
+import com.teamdev.jxbrowser.browser.Browser;
+import com.teamdev.jxbrowser.view.javafx.BrowserView;
+import javafx.animation.PauseTransition;
+import javafx.animation.SequentialTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
@@ -26,6 +30,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -35,13 +40,14 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.transform.Scale;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
+
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import javafx.util.Duration;
 import slapp.editor.DiskUtilities;
 import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
@@ -52,6 +58,7 @@ import slapp.editor.decorated_rta.KeyboardDiagram;
 import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
+import slapp.editor.main_window.TextHelpPopup;
 import slapp.editor.parser.*;
 import slapp.editor.vertical_tree.VTCheckType;
 import slapp.editor.vertical_tree.drag_drop.DragIconType;
@@ -81,6 +88,7 @@ public class MapABExpCreate {
     private TextField aPromptField;
     private TextField bPromptField;
     private ChangeListener nameListener;
+    private ChangeListener auxExerListener;
     ChangeListener choiceLeadListener;
     ChangeListener aPromptListener;
     ChangeListener bPromptListener;
@@ -142,10 +150,18 @@ public class MapABExpCreate {
     BoxedDRTA metaFormulaBoxedDRTA;
     BoxedDRTA objectFormulaBoxedDRTA;
 
+    private TextField auxExerNameField;
+
+    private final DoubleProperty localScalePageHeight = new SimpleDoubleProperty(1.0);
+    private final DoubleProperty localScalePageWidth = new SimpleDoubleProperty(1.0);
+    boolean clearing = false;
 
 
     public MapABExpCreate(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
+        localScalePageHeight.bind(mainWindow.getMainView().scalePageHeightProperty());
+        localScalePageWidth.bind(mainWindow.getMainView().scalePageWidthProperty());
+
         setupWindow();
         modified = false;
     }
@@ -157,6 +173,7 @@ public class MapABExpCreate {
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         statementTextHeight = originalModel.getStatementTextHeight();
         nameField.setText(originalModel.getExerciseName());
+        auxExerNameField.setText(originalModel.getAuxExerName());
         treeBoxKeyboardSelector = originalModel.getDefaultKeyboardType();
 
         choiceLeadField.setText(originalModel.getChoiceLead());
@@ -194,8 +211,8 @@ public class MapABExpCreate {
         staticHelpCheck.setSelected(checkSetup.isStaticHelp());
         staticHelpRTA.getActionFactory().open(checkSetup.getStaticHelpDoc()).execute(new ActionEvent());
         staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
-        checkMaxSpinner.getValueFactory().setValue(checkSetup.getCheckMax());
 
+        checkMaxSpinner.getValueFactory().setValue(checkSetup.getCheckMax());
         checkChoicesBox.setSelected(checkSetup.isCheckChoices());
         choiceABox.setSelected(checkSetup.isChoiceA());
         choiceBBox.setSelected(checkSetup.isChoiceB());
@@ -223,43 +240,52 @@ public class MapABExpCreate {
         statementRTA = statementDRTA.getEditor();
         statementRTA.getStylesheets().add("slappTextArea.css");
         statementRTA.setPromptText("Exercise Statement:");
-        statementRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
+        statementRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.minWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.contentAreaWidthProperty().bind(localScalePageWidth);
 
         statementRTA.setMinHeight(100);
 
-        double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
-        statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
+        double statementInitialHeight = Math.round(100 / localScalePageHeight.get() * 100.0);
+        statementHeightSpinner = new Spinner<>(statementInitialHeight, 999.0, statementInitialHeight, 1.0);
         statementHeightSpinner.setPrefWidth(60);
         statementHeightSpinner.setDisable(false);
-        statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+        statementHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        /*
         statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = statementHeightSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+         */
 
-        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeight.addListener((ob, ov, nv) -> {
             statementRTA.prefHeightProperty().unbind();
             statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+            statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
-
-        statementRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            modified = true;
-            statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
+        final boolean[] statementPrimed = {false};
+        statementRTA.fullHeightProperty().addListener((ob, ov, nv) -> {
+            if (!statementPrimed[0]) {
+                statementPrimed[0] = true;
+                return;
+            }
+            double height = (double) nv;
+            statementTextHeight = height;
         });
+
         statementRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(statementDRTA, ControlType.AREA);
-                statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
             }
         });
+        statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
 
         //static help editor
         staticHelpDRTA = new DecoratedRTA();
@@ -272,35 +298,37 @@ public class MapABExpCreate {
         staticHelpRTA.setContentAreaWidth(400);
         staticHelpRTA.setMinHeight(100);
 
-        double staticHelpInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
+        double staticHelpInitialHeight = Math.round(100 / localScalePageHeight.get() * 100 );
 
-        staticHelpHeightSpinner = new Spinner<>(0.0, 999.0, staticHelpInitialHeight, 1.0);
+        staticHelpHeightSpinner = new Spinner<>(staticHelpInitialHeight, 999.0, staticHelpInitialHeight, 1.0);
         staticHelpHeightSpinner.setPrefWidth(60);
         staticHelpHeightSpinner.setDisable(false);
-        staticHelpHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+        staticHelpHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        /*
         staticHelpHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = staticHelpHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = staticHelpHeightSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+         */
 
-        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeight.addListener((ob, ov, nv) -> {
             staticHelpRTA.prefHeightProperty().unbind();
             staticHelpHeightSpinner.getValueFactory().setValue((double) Math.round(staticHelpHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
             staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
-        staticHelpRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            modified = true;
-        });
         staticHelpRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(staticHelpDRTA, ControlType.AREA);
             }
         });
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
 
         HBox textBoxes = new HBox(10, statementRTA, staticHelpRTA);
 
@@ -324,31 +352,11 @@ public class MapABExpCreate {
         HBox nameBox = new HBox(nameLabel, nameField);
         nameBox.setAlignment(Pos.BASELINE_LEFT);
 
-        //points
-        Label pointsPossibleLabel = new Label("Points Possible: ");
-        pointsPossibleLabel.setPrefWidth(100);
-        pointsPossibleTextField = new TextField();
-        pointsPossibleTextField.setPrefWidth(35);
-        pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
-        UnaryOperator<TextFormatter.Change> filter = change -> {
-            String text = change.getText();
-            if (text.matches("[0-9]*")) {
-                return change;
-            }
-            return null;
-        };
-        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
-        pointsPossibleTextField.setTextFormatter(textFormatter);
-        pointsPossibleTextField.setText("0");
-        pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { modified = true; });
-        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
-        HBox pointsBox = new HBox(pointsPossibleLabel, pointsPossibleTextField);
-        pointsBox.setAlignment(Pos.BASELINE_LEFT);
-
         //explain prompt
         Label promptLabel = new Label("Explain Prompt: ");
         promptLabel.setPrefWidth(100);
         explainPromptField = new TextField();
+        explainPromptField.setPrefWidth(200);
         explainPromptField.setPromptText("(plain text)");
         explainPromptListener = new ChangeListener() {
             @Override
@@ -361,9 +369,75 @@ public class MapABExpCreate {
         explainPromptField.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) textFieldInFocus();
         });
-
         HBox promptBox = new HBox(promptLabel, explainPromptField);
         promptBox.setAlignment(Pos.BASELINE_LEFT);
+
+        HBox nameAndPromptBox = new HBox(30, nameBox, promptBox);
+
+
+        Label auxExerLabel = new Label("Aux Exer Name: ");
+        auxExerLabel.setPrefWidth(100);
+        auxExerNameField = new TextField();
+        auxExerNameField.setPadding(new Insets(5));
+        auxExerNameField.setPromptText("(plain text)");
+        auxExerNameField.setPrefWidth(200);
+        auxExerListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                modified = true;
+            }
+        };
+        auxExerNameField.textProperty().addListener(auxExerListener);
+        auxExerNameField.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) textFieldInFocus();
+        });
+        HBox auxExerNameBox = new HBox(auxExerLabel, auxExerNameField);
+        auxExerNameBox.setAlignment(Pos.BASELINE_LEFT);
+
+
+        //points
+        Label pointsPossibleLabel = new Label("Points Possible: ");
+        pointsPossibleLabel.setPrefWidth(100);
+
+        pointsPossibleTextField = new TextField();
+        pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setAlignment(Pos.CENTER_RIGHT);
+        pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
+
+        pointsPossibleTextField.setText("0");
+        pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { modified = true; });
+
+        UnaryOperator<TextFormatter.Change> pointsPossibleFilter = change -> {
+            if (change == null) return null;
+            String text = change.getText();
+            if (text.matches("[0-9]*")) return change;
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(pointsPossibleFilter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+
+
+        pointsPossibleTextField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+            if (isNowFocused) {
+                Platform.runLater(() -> pointsPossibleTextField.selectAll());
+                textFieldInFocus();
+            } else if (pointsPossibleTextField.getText().isEmpty()) {
+                pointsPossibleTextField.setText("0");
+            }
+        });
+
+        pointsPossibleTextField.setOnMouseClicked(event -> {
+            if (pointsPossibleTextField.getSelectedText().isEmpty()) {
+                pointsPossibleTextField.selectAll();
+            }
+        });
+
+
+        HBox pointsBox = new HBox(pointsPossibleLabel, pointsPossibleTextField);
+        pointsBox.setAlignment(Pos.BASELINE_LEFT);
+
+        HBox auxAndPointsBox = new HBox(20, auxExerNameBox, pointsBox);
+
 
         //choice fields
         Label choiceLeadLabel = new Label("Checkbox lead: ");
@@ -425,6 +499,7 @@ public class MapABExpCreate {
         metaFormulaBoxedDRTA = new BoxedDRTA();
         metaFormulaBoxedDRTA.getDRTA().getKeyboardSelector().valueProperty().setValue(SCRIPT_AND_ITALIC);
         RichTextArea metaFormulaRTA = metaFormulaBoxedDRTA.getRTA();
+        metaFormulaRTA.getActionFactory().saveNow().execute(new ActionEvent());
 
         metaFormulaRTA.setMaxHeight(27);
         metaFormulaRTA.setMinHeight(27);
@@ -446,6 +521,7 @@ public class MapABExpCreate {
         objectFormulaBoxedDRTA = new BoxedDRTA();
         objectFormulaBoxedDRTA.getDRTA().getKeyboardSelector().valueProperty().setValue(ITALIC_AND_SANS);
         RichTextArea objectFormulaRTA = objectFormulaBoxedDRTA.getRTA();
+        objectFormulaRTA.getActionFactory().saveNow().execute(new ActionEvent());
 
         objectFormulaRTA.setMaxHeight(27);
         objectFormulaRTA.setMinHeight(27);
@@ -464,7 +540,7 @@ public class MapABExpCreate {
         HBox objectBox = new HBox(10, objectFormulaLabel, objectFormulaBoxedDRTA.getBoxedRTA());
         metaBox.setAlignment(Pos.CENTER_LEFT);
 
-        VBox topFieldsBox = new VBox(10, nameBox, pointsBox, promptBox, choicesBox, metaBox, objectBox);
+        VBox topFieldsBox = new VBox(10, nameAndPromptBox, auxAndPointsBox, choicesBox, metaBox, objectBox);
 
 
 
@@ -637,7 +713,7 @@ public class MapABExpCreate {
             langMap.put(language.getNameString(), booleanProperty);
         }
         ListView<String> languageListView = new ListView<>();
-        languageListView.setPrefSize(120, 95);
+        languageListView.setPrefSize(150, 95);
 
         languageListView.getItems().addAll(langMap.keySet());
         Callback<String, ObservableValue<Boolean>> langToBoolean = (String item) -> langMap.get(item);
@@ -780,25 +856,48 @@ public class MapABExpCreate {
         checksBox.setPadding(new Insets(10,0,0,20));
 
 
+        String header = TextHelpPopup.getHeader14();
+        String footer = TextHelpPopup.getFooter();
+        String helpText = header +
+                "<p>The Map A/B explain exercise is appropriate for any exercise that requires a \"map\" from a metalinguistic form to an object expression, together with a choice and explanation of some sort.  It includes checking for maps of the sort encountered in chapter 2 of <i>Symbolic Logic</i> and possible checking of the choice.</p>" +
+                "<ul>" +
+                "<li><p>Start with the exercise name and prompt to appear in the explain field.</p></li>" +
+                "<li><p>In the context of an assignment containing a previous exercise relevant to the one being worked, it is possible to add its name in order to include a thumbnail that will pop up its work area.  If Points Possible is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
+                "<li><p>The checkbox lead appears before the choice boxes, the A prompt with the first box, and the B prompt with the second.</p></li>" +
+                "<li><p>The exercise opens with fields for the meta expression and the object expression in the work area.  You can fill in the expressions to appear in these fields.  Maps will be cleaner if you introduce extra spaces into these expressions -- as \u2200&nbsp\ud835\udc65&nbsp(&nbsp\ud835\udc34&nbsp\ud835\udc65&nbsp&nbsp\u2192&nbsp&nbsp\ud835\udc35&nbsp\ud835\udc65&nbsp). </p></li>" +
+                "<li><p>The \"key\" for the metalanguage in these exercises is as follows:</p></li>" +
+                "<ul>" +
+                "<li><p>(, ), [, ], \u223c, \u2192, \u2227, \u2228, \u2194, \u2200, \u2203, \u2191, \u2193, \u22a5 all map to themselves.</p></li>" +
+                "<li><p>Then with or without positive integer subscripts,</p></li>" +
+                "<ul>" +
+                "<li><p>\ud835\udcb3 maps to any arbitrary expression in the vocabulary of the object language.</p></li>" +
+                "<li><p>\ud835\udc9c, \u212c, \ud835\udc9e, \ud835\udc9f, \u2130, \ud835\udcaa, \ud835\udcab, \ud835\udcac map to formulas.</p></li>" +
+                "<li><p>\ud835\udcae maps to a sentence letter.  </p></li>" +
+                "<li><p>\ud835\udcc2, \ud835\udcc3, \u2134, \ud835\udcc5, \ud835\udcc6, \ud835\udcc7, \ud835\udcc8, \ud835\udcc9 map to terms.</p></li>" +
+                "<li><p>\ud835\udcca, \ud835\udccb, \ud835\udccc, \ud835\udccd, \ud835\udcce, \ud835\udccf map to variables.      </p></li>" +
+                "<li><p>\ud835\udcb6, \ud835\udcb7, \ud835\udcb8, \ud835\udcb9, \u212f map to constants.  </p></li>" +
+                "<li><p>\u211b<sup>\ud835\udc5b</sup> for positive integer \ud835\udc5b maps to an \ud835\udc5b-place relation symbol.  </p></li>" +
+                "<li><p>\ud835\udcbb<sup>\ud835\udc5b</sup>, \u210a<sup>\ud835\udc5b</sup>, \ud835\udcbd<sup>\ud835\udc5b</sup> for positive integer \ud835\udc5b map to an \ud835\udc5b-place function symbol.   </p></li>" +
+                "</ul></ul>" +
+                "<li><p>The Static Help check activates the Static Help button which pops up a message which you may state in the right-hand text area below.  </p></li>" +
+                "<li><p>For map checking set Check Max and select the object language.  If Check Max is 0, checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.  </p></li>" +
+                "<li><p>Selecting an A/B choice by itself enables choice check for instructors.  For students choice check is enabled only if, in addition, Check Choices is selected (in which case the check essentially gives the answer).  </p></li>" +
+                "<li><p>Finally provide the exercise statement and, if desired the static help message.  </p></li>" +
+                "</ul>" +
+                footer;
 
-        //center
-        /*
-        This is a kludge.  The help areas are usually HTML documents displayed in WebView.  But the JavaFX WebView
-        doesn't display Unicode supplemental characters properly.  So we use an RTA document.  To edit this document
-        see Derivation Exercise (search for 'kludge').
-         */
+        Browser browser = mainWindow.getCreateHlpBrowser();
+        if (browser != null) {
+            BrowserView view = BrowserView.newInstance(browser);
+            view.setMouseTransparent(true);
+            Platform.runLater(() -> TextHelpPopup.loadHtmlSmoothly(browser, view, helpText));
+            view.setPrefHeight(845);
+            centerBox = new VBox(10, fieldsBox, checksBox, textBoxes, view);
+        }
+        else {
+            centerBox = new VBox(10, fieldsBox, checksBox, textBoxes, new Label("JxBrowser not started.  Please try again"));
+        }
 
-
-        RichTextArea helpRTA = new RichTextArea(EditorMain.mainStage);
-        Document helpDoc = mainWindow.getSlappProgData().getMapCreateHelp();
-        helpRTA.getActionFactory().open(helpDoc).execute(new ActionEvent());
-        helpRTA.setEditable(false);
-        helpRTA.getStylesheets().add("slappTextArea.css");
-
-        helpRTA.setPrefHeight(300);
-        helpRTA.setMaxWidth(1020);
-
-        centerBox = new VBox(10, fieldsBox, checksBox, textBoxes, helpRTA);
         centerBox.setPadding(new Insets(10,0,10,20));
 
         spacerPane = new Pane();
@@ -840,13 +939,16 @@ public class MapABExpCreate {
 
         //finish up with top
         Label zoomLabel = new Label(" Zoom ");
-        Spinner<Integer> zoomSpinner = new Spinner(25, 500, 100, 5);
+        Spinner<Integer> zoomSpinner = new Spinner(25, 500, 100, 1);
         zoomSpinner.setPrefSize(65,25);
         zoomSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            /*
             Node increment = zoomSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = zoomSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
+
+             */
 
             scale = (double) nv/100;
             updateZoom();
@@ -864,18 +966,27 @@ public class MapABExpCreate {
 
         setSizeSpinners();
         stage = new Stage();
-        stage.initOwner(EditorMain.mainStage);
+    //    stage.initOwner(EditorMain.mainStage);
         stage.setScene(scene);
         stage.setTitle("Create Map AB Explain Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
 
         stage.setWidth(1040);
-        stage.setHeight(1025);
-        Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1040));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 1025));
 
-        stage.initModality(Modality.WINDOW_MODAL);
+        Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
+        double stageHeight = Math.min(1025, bounds.getHeight() - 20);
+        stage.setHeight(stageHeight);
+        double mainWinY = EditorMain.mainStage.getY();
+        if (mainWinY + stageHeight + 20 < bounds.getMaxY()) {
+            stage.setY(mainWinY + 10);
+        }
+        else {
+            stage.setY(bounds.getMaxY() - (stageHeight + 10));
+        }
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1040));
+
+    //    stage.initModality(Modality.WINDOW_MODAL);
+        EditorAlerts.makeIndependentBlockingStage(stage);
         stage.setOnCloseRequest(e-> {
             e.consume();
             closeWindow();
@@ -883,11 +994,12 @@ public class MapABExpCreate {
 
         stage.show();
         statementRTA.getActionFactory().save().execute(new ActionEvent());
+
         targetBoxedDRTA.getRTA().getActionFactory().save().execute(new ActionEvent());
         staticHelpRTA.getActionFactory().save().execute(new ActionEvent());
         centerBox.layout();
 
-        Platform.runLater(() -> nameField.requestFocus());
+        Platform.runLater(() -> Platform.runLater(() -> nameField.requestFocus()));
 
     }
 
@@ -958,7 +1070,9 @@ public class MapABExpCreate {
 
     private boolean checkContinue(String title, String content) {
         boolean okcontinue = true;
-        if (modified || statementRTA.isModified() || staticHelpRTA.isModified() || targetBoxedDRTA.getRTA().isModified()) {
+        if (modified || statementRTA.isModified() || staticHelpRTA.isModified() || objectFormulaBoxedDRTA.getRTA().isModified() || metaFormulaBoxedDRTA.getRTA().isModified()) {
+            //System.out.println("mod: " + modified + " statement: " + statementRTA.isModified() +
+                //    " static: " + staticHelpRTA.isModified() + " objF: " + objectFormulaBoxedDRTA.getRTA().isModified() + " meta: " + metaFormulaBoxedDRTA.getRTA().isModified());
             Alert confirm = EditorAlerts.confirmationAlert(title, content);
             Optional<ButtonType> result = confirm.showAndWait();
             if (result.get() != OK) okcontinue = false;
@@ -968,6 +1082,8 @@ public class MapABExpCreate {
 
     private void closeWindow() {
         if (checkContinue("Confirm Close", "This exercise appears to have unsaved changes.\nContinue to close window?")) {
+            localScalePageHeight.unbind();
+            localScalePageWidth.unbind();
             mainWindow.closeExercise();
             stage.close();
         }
@@ -976,9 +1092,11 @@ public class MapABExpCreate {
 
     private void clearExercise() {
         if (checkContinue("Confirm Clear", "This exercise appears to have unsaved changes.\nContinue to clear exercise?")) {
+            clearing = true;
             nameField.clear();
             nameField.textProperty().addListener(nameListener);
-            targetBoxedDRTA.getRTA().getActionFactory().newDocumentNow().execute(new ActionEvent());
+            auxExerNameField.clear();
+            objectFormulaBoxedDRTA.getRTA().getActionFactory().newDocumentNow().execute(new ActionEvent());
             statementRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
             staticHelpRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
             auxNameField.clear();
@@ -990,6 +1108,7 @@ public class MapABExpCreate {
             bPromptField.textProperty().addListener(bPromptListener);
 
             viewExercise();
+            clearing = false;
             modified = false;
         }
     }
@@ -1028,7 +1147,7 @@ public class MapABExpCreate {
     private MapABExpModel extractModelFromWindow() {
         MapABExpModel model = new MapABExpModel();
         model.setExerciseName(nameField.getText());
-
+        model.setAuxExerName(auxExerNameField.getText());
         model.setChoiceLead(choiceLeadField.getText());
         model.setaPrompt(aPromptField.getText());
         model.setbPrompt(bPromptField.getText());
@@ -1091,6 +1210,8 @@ public class MapABExpCreate {
         if (statementRTA.isModified()) modified = true;
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExerciseStatement(statementRTA.getDocument());
+
+        statementTextHeight = statementRTA.getFullHeight();
         model.setStatementTextHeight(statementTextHeight);
         model.setStatementPrefHeight(Math.max(40, statementTextHeight + RTA_SCREEN_BMP));
 
@@ -1137,7 +1258,7 @@ public class MapABExpCreate {
 
 
 
-        if (checkChoicesBox.isSelected() && !(choiceABox.isSelected() || choiceBBox.isSelected()))  {
+        if ((!clearing && checkChoicesBox.isSelected()) && !(choiceABox.isSelected() || choiceBBox.isSelected()))  {
             checkChoicesBox.setSelected(false);
             checkSetup.setCheckChoices(false);
             EditorAlerts.fleetingRedPopup("There is no choice to check.  Check Choices disabled.");

@@ -18,7 +18,7 @@ public class OriginalElement implements Expression {
     int position;
 
 
-    OriginalElement(String elementStr, TextDecoration decoration, int position) {
+    public OriginalElement(String elementStr, TextDecoration decoration, int position) {
         this.elementStr = elementStr;
         this.decoration = decoration;
         this.position = position;

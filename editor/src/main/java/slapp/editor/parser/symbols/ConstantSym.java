@@ -8,7 +8,8 @@ import slapp.editor.parser.ParseUtilities;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ConstantSym implements Expression {
+public class ConstantSym extends LanguageElement implements Expression {
+    private static final long serialVersionUID = 100L;
 
     private ExpressionType type = ExpressionType.CONSTANT_SYM;
     private String baseStr;
@@ -20,10 +21,12 @@ public class ConstantSym implements Expression {
         this.subscriptStr = subscriptSymbol;
     }
 
+    @Override
     public String getBaseStr() {
         return baseStr;
     }
 
+    @Override
     public String getSubscriptStr() {
         return subscriptStr;
     }

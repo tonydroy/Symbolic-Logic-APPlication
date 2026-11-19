@@ -18,12 +18,10 @@ package slapp.editor.front_page;
 import javafx.animation.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.CheckBox;
+import javafx.scene.Node;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Glow;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.*;
@@ -35,21 +33,22 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
-import slapp.editor.main_window.MainWindowView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class FrontPageAnimation {
 
     ParallelTransition p;
-
     VBox root;
 
-
+    // SCORCHED EARTH RULE 2: Kill Switch for asynchronous event interception during teardown
+    private boolean isTornDown = false;
 
     public VBox getFrontPageBox() {
 
         AnchorPane treePane = new AnchorPane();
         treePane.setPrefHeight(370);
-
 
         Circle dot1 = new Circle(150,50,25, Paint.valueOf("2cf4e0"));
         Circle dot2 = new Circle(300, 50, 25, Paint.valueOf("50d0c3"));
@@ -80,7 +79,6 @@ public class FrontPageAnimation {
         line5.setStrokeWidth(3.0);
         line6.setStrokeWidth(3.0);
 
-
         treePane.getChildren().addAll(line1, line2, line3, line4, line5, line6, dot1, dot2, dot3, dot4, dot5, dot6, dot7);
 
         DropShadow shadow = new DropShadow();
@@ -89,17 +87,13 @@ public class FrontPageAnimation {
         treePane.setEffect(shadow);
 
         Pane pane1 = new Pane(treePane);
-
         pane1.setStyle("-fx-background-color: transparent");
-//        pane1.setStyle("-fx-background-color: #AFEEEE");
+
         Pane pane2 = new Pane(pane1);
         pane2.setStyle("-fx-background-color: transparent");
-//        pane2.setStyle("-fx-background-color: #AFEEEE");
+
         Pane pane3 = new Pane(pane2);
         pane3.setStyle("-fx-background-color: transparent");
-//        pane3.setStyle("-fx-background-color: #AFEEEE");
-
-
 
         Text title0 = new Text("SLAPP");
         title0.setFont(Font.font("Noto Serif Combo", FontWeight.BOLD, FontPosture.ITALIC, 48));
@@ -114,16 +108,12 @@ public class FrontPageAnimation {
         Text title1 = new Text("Symbolic Logic APPlication");
         title1.setFont(Font.font("Noto Serif Combo", FontWeight.BOLD, 36));
 
-        Text title2 = new Text("Version 3.2.1");
+        Text title2 = new Text("Version 4.0");
         title2.setFont(Font.font("Noto Serif Combo",20));
-
-
 
         VBox titleBox = new VBox(title0, title1, title2);
         titleBox.setPadding(new Insets(10, 20, 10, 20));
         titleBox.setAlignment(Pos.CENTER);
-
-
 
         RotateTransition rt = new RotateTransition(Duration.seconds(5), treePane);
         rt.setFromAngle(0.0);
@@ -161,35 +151,63 @@ public class FrontPageAnimation {
         fd.setToValue(1.0);
         fd.setInterpolator(Interpolator.EASE_IN);
 
-
         p = new ParallelTransition(rt, rt1, rt2, sc, fd);
 
-
         root = new VBox(30, pane3, titleBox);
-//        root.setStyle("-fx-background-color: white");
-//        root.setStyle("-fx-background-color: #AFEEEE");
-
-
-
 
         root.setStyle("-fx-background-color: linear-gradient(to bottom right, #afeef0, #3bd6da); -fx-background-radius: 10 10 10 10") ;
 
-
         root.setPrefWidth(600);
         root.setPrefHeight(600);
-
         root.setOpacity(0);
 
-
-
         return root;
-
     }
 
     public void playFrontAnimation() {
-        root.setOpacity(1);
-        p.play();
+        if (isTornDown) return;
+        if (root != null) root.setOpacity(1);
+        if (p != null) p.play();
     }
 
+    // SCORCHED EARTH RULE 6: Sever Shared Nodes helper
+    private void severFromParent(Node node) {
+        try {
+            if (node != null && node.getParent() != null) {
+                if (node.getParent() instanceof javafx.scene.layout.Pane) ((javafx.scene.layout.Pane) node.getParent()).getChildren().remove(node);
+                else if (node.getParent() instanceof javafx.scene.Group) ((javafx.scene.Group) node.getParent()).getChildren().remove(node);
+            }
+        } catch (Exception e) {}
+    }
 
+    // SCORCHED EARTH RULE 1 & 5: Cleanup cascading and isolation
+    public void cleanup() {
+        // SCORCHED EARTH RULE 2: Engage Kill Switch
+        isTornDown = true;
+
+        try {
+            if (p != null) {
+                p.stop(); // Stop ongoing animations to free memory
+                p.getChildren().clear();
+            }
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 6 & 8: Sever Nodes & Prevent CME
+        try {
+            if (root != null) {
+                if (root.getChildren() != null) {
+                    List<Node> childrenCopy = new ArrayList<>(root.getChildren());
+                    for (Node node : childrenCopy) {
+                        severFromParent(node);
+                    }
+                }
+                root.getChildren().clear();
+                severFromParent(root);
+            }
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 1: Final Nullification
+        try { this.p = null; } catch (Exception e) {}
+        try { this.root = null; } catch (Exception e) {}
+    }
 }

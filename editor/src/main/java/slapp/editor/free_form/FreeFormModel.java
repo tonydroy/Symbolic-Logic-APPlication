@@ -43,6 +43,8 @@ public class FreeFormModel implements ExerciseModel<Document>, Serializable {
     private List<ElementTypes> elementTypes = new ArrayList<>();
     private int pointsPossible;
     private int pointsEarned;
+    private String auxExerName;
+    private FFCheckSetup checkSetup;
 
     /**
      * Construct free form model
@@ -54,6 +56,15 @@ public class FreeFormModel implements ExerciseModel<Document>, Serializable {
         elementTypes = types;
         this.pointsPossible = 0;
         this.pointsEarned = -1;
+        this.auxExerName = "";
+    }
+
+    public FFCheckSetup getCheckSetup() {
+        return checkSetup;
+    }
+
+    public void setCheckSetup(FFCheckSetup checkSetup) {
+        this.checkSetup = checkSetup;
     }
 
     /**
@@ -121,6 +132,14 @@ public class FreeFormModel implements ExerciseModel<Document>, Serializable {
      * @return the list of element types
      */
     List<ElementTypes> getElementTypes() {     return elementTypes;  }
+
+    public String getAuxExerName() {
+        return auxExerName;
+    }
+
+    public void setAuxExerName(String auxExerName) {
+        this.auxExerName = auxExerName;
+    }
 
     /**
      * The exercise name (used also as file name)

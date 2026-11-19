@@ -56,6 +56,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Control;
 import javafx.scene.control.SkinBase;
 import javafx.scene.input.DataFormat;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
 import java.util.function.BiFunction;
@@ -96,6 +97,16 @@ public class RichTextArea extends Control {
     public RichTextArea(Stage stage) {
         this.mainStage = stage;
         getStyleClass().add(STYLE_CLASS);
+
+        this.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+            // Intercept double-clicks (and triple-clicks)
+            if (event.getClickCount() >= 2) {
+
+                // Consume the event before the Skin can process the broken math
+                event.consume();
+
+            }
+        });
     }
 
     // Properties

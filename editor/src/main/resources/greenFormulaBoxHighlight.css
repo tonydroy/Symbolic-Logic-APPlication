@@ -1,30 +1,42 @@
-
-
-.rich-text-area:focused .paragraph-tile {
-    -fx-background-color: mistyrose ;
-    -fx-padding: 3 0 0 2;
-
-}
-
-
-
-.rich-text-area .paragraph-tile {
-    -fx-background-color: mistyrose;
-    -fx-padding: 3 0 0 2;
-}
-
-
-
+/* 1. Base error state: Mistyrose background and matching border */
 .rich-text-area {
-    -fx-border-color: mistyrose;
+    -fx-background-color: mistyrose;
+    -fx-border-color: rosybrown;
     -fx-border-width: 1 2 1 1;
     -fx-padding: 0 0 0 0;
-
 }
 
-
+/* 2. Focused error state: Keep mistyrose background, pop the border to frame it */
 .rich-text-area:focused {
-    -fx-border-width: 0;
-    -fx-border-color: aliceblue;
+    -fx-background-color: mistyrose;
+    -fx-border-color: rosybrown;
     -fx-border-width: 1 2 1 1;
+}
+
+/* 3. Make paragraph tiles transparent so the root mistyrose shines through */
+/* (Because it's transparent, we no longer need a separate :focused block for the tile!) */
+.rich-text-area .paragraph-tile {
+    -fx-background-color: transparent;
+    -fx-padding: 3 0 0 2;
+}
+
+/* --- White Line, Scrollbar & Gap Patch --- */
+/* Target all internal layers to be completely transparent */
+.rich-text-area .virtual-flow,
+.rich-text-area .virtual-flow .viewport,
+.rich-text-area .list-view {
+    -fx-background-color: transparent !important;
+}
+
+/* Target all list cells, not just empty ones */
+.rich-text-area .list-cell {
+    -fx-background-color: transparent !important;
+}
+
+/* Ensure invisible scrollbar tracks don't paint white over the mistyrose on the right edge */
+.rich-text-area .scroll-bar:vertical,
+.rich-text-area .scroll-bar:vertical .track,
+.rich-text-area .scroll-bar:vertical .track-background,
+.rich-text-area .corner {
+    -fx-background-color: transparent;
 }

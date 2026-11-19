@@ -22,6 +22,7 @@ import slapp.editor.ab_explain.ABmodel;
 import slapp.editor.abefg_explain.ABEFGcreate;
 import slapp.editor.abefg_explain.ABEFGexercise;
 import slapp.editor.abefg_explain.ABEFGmodel;
+import slapp.editor.basic_trans.BasicTransModel;
 import slapp.editor.derivation.DerivationCreate;
 import slapp.editor.derivation.DerivationExercise;
 import slapp.editor.derivation.DerivationModel;
@@ -46,9 +47,14 @@ import slapp.editor.page_editor.PageEditModel;
 import slapp.editor.simple_edit.SimpleEditCreate;
 import slapp.editor.simple_edit.SimpleEditExercise;
 import slapp.editor.simple_edit.SimpleEditModel;
-import slapp.editor.simple_trans.SimpleTransCreate;
-import slapp.editor.simple_trans.SimpleTransExercise;
-import slapp.editor.simple_trans.SimpleTransModel;
+import slapp.editor.basic_trans.BasicTransCreate;
+import slapp.editor.basic_trans.BasicTransExercise;
+import slapp.editor.trans_tree.TransTreeCreate;
+import slapp.editor.trans_tree.TransTreeExercise;
+import slapp.editor.trans_tree.TransTreeModel;
+import slapp.editor.trans_uline.TransULCreate;
+import slapp.editor.trans_uline.TransULExercise;
+import slapp.editor.trans_uline.TransULModel;
 import slapp.editor.truth_table.TruthTableCreate;
 import slapp.editor.truth_table.TruthTableExercise;
 import slapp.editor.truth_table.TruthTableModel;
@@ -102,9 +108,17 @@ public class TypeSelectorFactories {
                 SimpleEditModel editModel = (SimpleEditModel) objectModel;
                 return new SimpleEditExercise(editModel, mainWindow);
             }
-            case "SimpleTransModel": {
-                SimpleTransModel transModel = (SimpleTransModel) objectModel;
-                return new SimpleTransExercise(transModel, mainWindow);
+            case "BasicTransModel": {
+                BasicTransModel transModel = (BasicTransModel) objectModel;
+                return new BasicTransExercise(transModel, mainWindow);
+            }
+            case "TransULModel": {
+                TransULModel transULModel = (TransULModel) objectModel;
+                return new TransULExercise(transULModel, mainWindow);
+            }
+            case "TransTreeModel": {
+                TransTreeModel transTreeModel = (TransTreeModel) objectModel;
+                return new TransTreeExercise(transTreeModel, mainWindow);
             }
             case "PageEditModel": {
                 PageEditModel editModel = (PageEditModel) objectModel;
@@ -196,13 +210,31 @@ public class TypeSelectorFactories {
                 SimpleEditCreate simpleEditCreate = new SimpleEditCreate(mainWindow, editModel);
                 break;
             }
-            case "SimpleTransModel": {
-                SimpleTransModel transModel = (SimpleTransModel) objectModel;
+            case "BasicTransModel": {
+                BasicTransModel transModel = (BasicTransModel) objectModel;
                 if (transModel.isStarted()) {
                     EditorAlerts.showSimpleAlert("Cannot Open", "This exercise appears to have the content area modified.  Cannot open in create window.");
                     break;
                 }
-                SimpleTransCreate simpleTransCreate = new SimpleTransCreate(mainWindow, transModel);
+                BasicTransCreate basicTransCreate = new BasicTransCreate(mainWindow, transModel);
+                break;
+            }
+            case "TransULModel": {
+                TransULModel transULModel = (TransULModel) objectModel;
+                if (transULModel.isStarted()) {
+                    EditorAlerts.showSimpleAlert("Cannot Open", "This exercise appears to have the content area modified.  Cannot open in create window.");
+                    break;
+                }
+                TransULCreate transULCreate = new TransULCreate(mainWindow, transULModel);
+                break;
+            }
+            case "TransTreeModel": {
+                TransTreeModel transTreeModel = (TransTreeModel) objectModel;
+                if (transTreeModel.isStarted()) {
+                    EditorAlerts.showSimpleAlert("Cannot Open", "This exercise appears to have the content area modified.  Cannot open in create window.");
+                    break;
+                }
+                TransTreeCreate transTreeCreate = new TransTreeCreate(mainWindow, transTreeModel);
                 break;
             }
             case "PageEditModel": {
@@ -398,8 +430,16 @@ public class TypeSelectorFactories {
                 SimpleEditCreate simpleEditCreate = new SimpleEditCreate(mainWindow);
                 break;
             }
-            case SIMPLE_TRANS: {
-                SimpleTransCreate simpleTransCreate = new SimpleTransCreate(mainWindow);
+            case BASIC_TRANS: {
+                BasicTransCreate basicTransCreate = new BasicTransCreate(mainWindow);
+                break;
+            }
+            case TRANS_ULINE: {
+                TransULCreate transULCreate = new TransULCreate(mainWindow);
+                break;
+            }
+            case TRANS_TREES: {
+                TransTreeCreate transTreeCreate = new TransTreeCreate(mainWindow);
                 break;
             }
             case TRUTH_TABLE: {

@@ -44,7 +44,7 @@ public class MVariable extends VariableSym {
             matchVar = match; }
         else if (!matchVar.equals(match)) {
             List<Text> messageTxts = new ArrayList<>();
-            messageTxts.add(new Text("Meta variable symbol"));
+            messageTxts.add(new Text("Meta variable symbol "));
             messageTxts.addAll(this.toTextList());
             messageTxts.add(new Text(" cannot match to both "));
             messageTxts.addAll(matchVar.toTextList());

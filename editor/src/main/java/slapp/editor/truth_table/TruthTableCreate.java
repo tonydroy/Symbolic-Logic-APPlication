@@ -18,6 +18,10 @@ package slapp.editor.truth_table;
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.model.Document;
+import com.teamdev.jxbrowser.browser.Browser;
+import com.teamdev.jxbrowser.view.javafx.BrowserView;
+import javafx.animation.PauseTransition;
+import javafx.animation.SequentialTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
@@ -26,6 +30,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -36,17 +41,18 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 import javafx.scene.transform.Scale;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
+
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import javafx.util.Duration;
 import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
 import slapp.editor.PrintUtilities;
@@ -56,6 +62,7 @@ import slapp.editor.decorated_rta.KeyboardDiagram;
 import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
+import slapp.editor.main_window.TextHelpPopup;
 import slapp.editor.parser.*;
 import slapp.editor.parser.grammatical_parts.Formula;
 
@@ -96,6 +103,7 @@ public class TruthTableCreate {
     private MenuBar menuBar;
     private VBox upperFieldsBox;
     private ChangeListener nameListener;
+    private ChangeListener auxExerListener;
     private double formulaBoxHeight = 27;
     private Button lowerSaveButton;
     private Button saveAsButton;
@@ -116,8 +124,10 @@ public class TruthTableCreate {
     private String defaultLangName = "\u2112\ud835\udcc8 (w/abv)";  //Ls (w/abv)
     Spinner<Double> staticHelpHeightSpinner;
     private RichTextArea currentSpinnerNode;
+    private TextField auxExerNameField;
 
-
+    private final DoubleProperty localScalePageHeight = new SimpleDoubleProperty(1.0);
+    private final DoubleProperty localScalePageWidth = new SimpleDoubleProperty(1.0);
 
 
     /**
@@ -126,6 +136,9 @@ public class TruthTableCreate {
      */
     public TruthTableCreate(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
+
+        localScalePageHeight.bind(mainWindow.getMainView().scalePageHeightProperty());
+        localScalePageWidth.bind(mainWindow.getMainView().scalePageWidthProperty());
         setupWindow();
     }
 
@@ -137,12 +150,15 @@ public class TruthTableCreate {
     public TruthTableCreate(MainWindow mainWindow, TruthTableModel originalModel) {
         this(mainWindow);
 
+
         nameField.setText(originalModel.getExerciseName());
         statementRTA.getActionFactory().open(originalModel.getExerciseStatement()).execute(new ActionEvent());
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         statementTextHeight = originalModel.getStatementTextHeight();
         conclusionDividerCheck.setSelected(originalModel.isConclusionDivider());
         pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
+        auxExerNameField.setText(originalModel.getAuxExerName());
+        auxExerNameField.textProperty().addListener(auxExerListener);
         updateOperatorFieldsFromModel(originalModel);
         updateUnaryOperatorGridFromFields();
         updateBinaryOperatorGridFromFields();
@@ -182,42 +198,51 @@ public class TruthTableCreate {
         statementRTA = statementDRTA.getEditor();
         statementRTA.setPromptText("Exercise Statement:");
         statementRTA.getStylesheets().add("slappTextArea.css");
-        statementRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
+        statementRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.minWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.contentAreaWidthProperty().bind(localScalePageWidth);
 
         statementRTA.setMinHeight(100);
 
-        double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
-        statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
+        double statementInitialHeight = Math.round(100 / localScalePageHeight.get() * 100.0);
+        statementHeightSpinner = new Spinner<>(statementInitialHeight, 999.0, statementInitialHeight, 1.0);
         statementHeightSpinner.setPrefWidth(60);
         statementHeightSpinner.setDisable(false);
-        statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+        statementHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        /*
         statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = statementHeightSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+         */
 
-        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeight.addListener((ob, ov, nv) -> {
             statementRTA.prefHeightProperty().unbind();
             statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
             statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
-        statementRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            fieldModified = true;
-            statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
+        final boolean[] statementPrimed = {false};
+        statementRTA.fullHeightProperty().addListener((ob, ov, nv) -> {
+            if (!statementPrimed[0]) {
+                statementPrimed[0] = true;
+                return;
+            }
+            double height = (double) nv;
+            statementTextHeight = height;
         });
+
         statementRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(statementDRTA, ControlType.AREA);
-                statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
             }
         });
+        statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
 
         //static help editor
         staticHelpDRTA = new DecoratedRTA();
@@ -231,39 +256,37 @@ public class TruthTableCreate {
         staticHelpRTA.setContentAreaWidth(400);
         staticHelpRTA.setMinHeight(100);
 
+        double staticHelpInitialHeight = Math.round(100 / localScalePageHeight.get() * 100 );
 
-        double staticHelpInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
 
-
-        staticHelpHeightSpinner = new Spinner<>(0.0, 999.0, staticHelpInitialHeight, 1.0);
+        staticHelpHeightSpinner = new Spinner<>(staticHelpInitialHeight, 999.0, staticHelpInitialHeight, 1.0);
         staticHelpHeightSpinner.setPrefWidth(60);
         staticHelpHeightSpinner.setDisable(false);
-        staticHelpHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+        staticHelpHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        /*
         staticHelpHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = staticHelpHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = staticHelpHeightSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+         */
 
-        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeight.addListener((ob, ov, nv) -> {
             staticHelpRTA.prefHeightProperty().unbind();
             staticHelpHeightSpinner.getValueFactory().setValue((double) Math.round(staticHelpHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
             staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
-
-        staticHelpRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            fieldModified = true;
-        });
         staticHelpRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(staticHelpDRTA, ControlType.AREA);
-       //         staticHelpTextHeight = mainWindow.getMainView().getRTATextHeight(staticHelpRTA);
             }
         });
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
 
         HBox textBoxes = new HBox(10, statementRTA, staticHelpRTA);
 
@@ -285,28 +308,65 @@ public class TruthTableCreate {
             if (nv) textFieldInFocus();
         });
 
+        Label auxExerLabel = new Label("Aux Exer Name: ");
+        auxExerLabel.setPrefWidth(95);
+        auxExerNameField = new TextField();
+        auxExerNameField.setPadding(new Insets(5));
+        auxExerNameField.setPromptText("(plain text)");
+        auxExerNameField.setPrefWidth(200);
+        auxExerListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                fieldModified = true;
+            }
+        };
+        auxExerNameField.textProperty().addListener(auxExerListener);
+        auxExerNameField.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) textFieldInFocus();
+        });
+
         //points possible
         Label pointsPossibleLabel = new Label("Points Possible: ");
         pointsPossibleLabel.setPrefWidth(100);
+
         pointsPossibleTextField = new TextField();
         pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setAlignment(Pos.CENTER_RIGHT);
         pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
-        UnaryOperator<TextFormatter.Change> filter = change -> {
-            String text = change.getText();
-            if (text.matches("[0-9]*")) {
-                return change;
-            }
-            return null;
-        };
-        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
-        pointsPossibleTextField.setTextFormatter(textFormatter);
+
         pointsPossibleTextField.setText("0");
         pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { fieldModified = true; });
-        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
 
-        HBox nameBox = new HBox(10, nameLabel, nameField, pointsPossibleLabel, pointsPossibleTextField);
+        UnaryOperator<TextFormatter.Change> pointsPossibleFilter = change -> {
+            if (change == null) return null;
+            String text = change.getText();
+            if (text.matches("[0-9]*")) return change;
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(pointsPossibleFilter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+
+
+        pointsPossibleTextField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+            if (isNowFocused) {
+                Platform.runLater(() -> pointsPossibleTextField.selectAll());
+                textFieldInFocus();
+            } else if (pointsPossibleTextField.getText().isEmpty()) {
+                pointsPossibleTextField.setText("0");
+            }
+        });
+
+        pointsPossibleTextField.setOnMouseClicked(event -> {
+            if (pointsPossibleTextField.getSelectedText().isEmpty()) {
+                pointsPossibleTextField.selectAll();
+            }
+        });
+
+
+        HBox nameBox = new HBox(10, nameLabel, nameField, pointsPossibleLabel, pointsPossibleTextField, auxExerLabel, auxExerNameField);
         nameBox.setAlignment(Pos.CENTER_LEFT);
         nameBox.setMargin(pointsPossibleLabel, new Insets(0, 0, 0, 30));
+        nameBox.setMargin(auxExerLabel, new Insets(0,0,0,30));
 
         //language presets
         Label operatorPresetLabel = new Label("Preset operators: ");
@@ -432,7 +492,7 @@ public class TruthTableCreate {
         mainFormulaList.add(mainFormulaBoxedDRTA);
         updateMainFormulaGridFromFields();
 
-        Label mainFormulaLabel = new Label("Main Fmulas: ");
+        Label mainFormulaLabel = new Label("Main Formulas: ");
         mainFormulaLabel.setPrefWidth(95);
         Button addMainFormulaButton = new Button("+");
         Button removeMainFormulaButton = new Button("-");
@@ -492,25 +552,6 @@ public class TruthTableCreate {
         upperFieldsBox = new VBox(10, nameBox, languagePresetsBox, unaryOperatorBox, binaryOperatorBox, mainFormulasTop, mainFormulasPane);
         upperFieldsBox.setPadding(new Insets(20, 0, 20, 0));
 
-        //center area
-        String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
-                "<p>The Truth Table Exercise is appropriate for any exercise that requires a truth table as response.</p>" +
-                "<ul>" +
-                "<li><p>Start with the the exercise name and point fields.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
-                "<li><p>The preset operator buttons set operators according to the official and abbreviating sentential languages from <em>Symbolic Logic</em>; alternatively, you may edit sentential operator symbols individually, using the plus and minus buttons to add and remove fields.</p></li> " +
-                "<li><p>Then supply formulas to appear across the top of the truth table (not including the base column), again using the plus and minus buttons to add and remove fields.  The \"conclusion divider\" merely inserts an extra space and slash ('/') prior to the last formula.</p></li>" +
-
-                "<li><p>The static help check activates the Static Help button which pops up a message which you may state in the right hand text area below.</p></li>" +
-                "<li><p>For checking: If Check Max is 0, checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.  The Basic Sentences box says whether check requires that basic sentence values be repeated for basic proper subformulas in the main part of the table.  And you may need to select the object language.  </li></li>" +
-
-                "<li><p>Finally supply the exercise statement, and if desired the static help message.</p></li>" +
-                "</ul>";
-        WebView helpArea = new WebView();
-        WebEngine webEngine = helpArea.getEngine();
-        webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
-        webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(270);
-
         //check items
         Label helpCheckLabel = new Label("Help/Check: ");
         helpCheckLabel.setPrefWidth(80);
@@ -535,7 +576,7 @@ public class TruthTableCreate {
         checkMaxBox.setAlignment(Pos.CENTER_LEFT);
 
         skipBasicSentences = new CheckBox();
-        skipBasicSentences.setSelected(false);
+        skipBasicSentences.setSelected(true);
         ChangeListener justificationCheckListener = new ChangeListener() {
             @Override
             public void changed(ObservableValue ob, Object ov, Object nv) {
@@ -558,7 +599,7 @@ public class TruthTableCreate {
             langMap.put(language.getNameString(), booleanProperty);
         }
         ListView<String> languageListView = new ListView<>();
-        languageListView.setPrefSize(120, 95);
+        languageListView.setPrefSize(150, 100);
 
         languageListView.getItems().addAll(langMap.keySet());
         Callback<String, ObservableValue<Boolean>> langToBoolean = (String item) -> langMap.get(item);
@@ -568,7 +609,39 @@ public class TruthTableCreate {
         checkLine1.setAlignment(Pos.CENTER_LEFT);
 
 
-        centerBox = new VBox(10, upperFieldsBox, checkLine1, textBoxes, helpArea);
+        //center area
+        String header = TextHelpPopup.getHeader14();
+        String footer = TextHelpPopup.getFooter();
+        String helpText = header +
+                "<p>The Truth Table Exercise is appropriate for any exercise that requires a truth table as response.</p>" +
+                "<ul>" +
+                "<li><p>Start with the the exercise name and point fields.  If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).  In the context of an assignment containing a previous exercise relevant to the one being worked, it is possible to add its name in order to include a thumbnail that will pop up its work area.</p></li>" +
+                "<li><p>The preset operator buttons set operators according to the official and abbreviating sentential languages from <em>Symbolic Logic</em>; alternatively, you may edit sentential operator symbols individually, using the plus and minus buttons to add and remove fields.</p></li> " +
+                "<li><p>Then supply formulas to appear across the top of the truth table (not including the base column), again using the plus and minus buttons to add and remove fields.  The \"conclusion divider\" merely inserts an extra space and slash ('/') prior to the last formula.</p></li>" +
+
+                "<li><p>The static help check activates the Static Help button which pops up a message which you may state in the right hand text area below.</p></li>" +
+                "<li><p>For checking: If Check Max is 0, checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.  The Skip Basic Sentences box says whether check requires that basic sentence values be repeated for basic proper subformulas in the main part of the table.  And you may need to select the object language.  </li></li>" +
+
+                "<li><p>Finally supply the exercise statement, and if desired the static help message.</p></li>" +
+                "</ul>" +
+                footer;
+
+        scene = new Scene(borderPane);
+
+        Browser browser = mainWindow.getCreateHlpBrowser();
+        if (browser != null) {
+            BrowserView view = BrowserView.newInstance(browser);
+            view.setMouseTransparent(true);
+            Platform.runLater(() -> TextHelpPopup.loadHtmlSmoothly(browser, view, helpText));
+            view.setPrefHeight(400);
+            view.prefWidthProperty().bind(textBoxes.widthProperty());
+            centerBox = new VBox(10, upperFieldsBox, checkLine1, textBoxes, view);
+            centerBox.setFillWidth(true);
+        }
+        else {
+            centerBox = new VBox(10, upperFieldsBox, checkLine1, textBoxes, new Label("JxBrowser not started.  Please try again."));
+        }
+
         centerBox.setPadding(new Insets(10,0,10,20));
 
         spacerPane = new Pane();
@@ -610,13 +683,16 @@ public class TruthTableCreate {
 
         //editor decoration misc
         zoomLabel = new Label(" Zoom ");
-        zoomSpinner = new Spinner(25, 500, 100, 5);
+        zoomSpinner = new Spinner(25, 500, 100, 1);
         zoomSpinner.setPrefSize(65,25);
         zoomSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            /*
             Node increment = zoomSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = zoomSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
+
+             */
 
             scale = (double) nv/100;
             updateZoom();
@@ -628,24 +704,33 @@ public class TruthTableCreate {
         sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     V Sz:"), statementHeightSpinner);
 
         //setup  window
-        scene = new Scene(borderPane);
+
         scene.getStylesheets().add(DecoratedRTA.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
 
         stage = new Stage();
-        stage.initOwner(EditorMain.mainStage);
+ //      stage.initOwner(EditorMain.mainStage);
         stage.setScene(scene);
 
         stage.setTitle("Create Truth Table Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
         stage.setWidth(930);
         stage.setMinWidth(1040);
-        stage.setHeight(1000);
+
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
+        double stageHeight = Math.min(1000, bounds.getHeight() - 20);
+        stage.setHeight(stageHeight);
+        double mainWinY = EditorMain.mainStage.getY();
+        if (mainWinY + stageHeight + 20 < bounds.getMaxY()) {
+            stage.setY(mainWinY + 10);
+        }
+        else {
+            stage.setY(bounds.getMaxY() - (stageHeight + 10));
+        }
         stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1040));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 1000));
 
 
-        stage.initModality(Modality.WINDOW_MODAL);
+  //      stage.initModality(Modality.WINDOW_MODAL);
+        EditorAlerts.makeIndependentBlockingStage(stage);
         stage.setOnCloseRequest(e-> {
             e.consume();
             closeWindow();
@@ -655,7 +740,7 @@ public class TruthTableCreate {
         statementRTA.getActionFactory().save().execute(new ActionEvent());
         centerBox.layout();
 
-        Platform.runLater(() -> nameField.requestFocus());
+        Platform.runLater(() -> Platform.runLater(() -> nameField.requestFocus()));
 
     }
 
@@ -798,6 +883,8 @@ public class TruthTableCreate {
      */
     private void closeWindow() {
         if (checkContinue("Confirm Close", "This exercise appears to have unsaved changes.\nContinue to close window?")) {
+            localScalePageHeight.unbind();
+            localScalePageWidth.unbind();
             mainWindow.closeExercise();
             stage.close();
         }
@@ -824,14 +911,17 @@ public class TruthTableCreate {
         if (checkContinue("Confirm Clear", "This exercise appears to have unsaved changes.\nContinue to clear exercise?")) {
             nameField.clear();
             nameField.textProperty().addListener(nameListener);
+            auxExerNameField.clear();
+            statementRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
+            staticHelpRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
+
+            viewExercise();
 
             mainFormulaList.clear();
             BoxedDRTA mainFormulaBoxedDRTA = newMainFormulaBoxedDRTA();
             mainFormulaList.add(mainFormulaBoxedDRTA);
             updateMainFormulaGridFromFields();
-            statementRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
 
-            viewExercise();
             fieldModified = false;
         }
     }
@@ -966,6 +1056,8 @@ public class TruthTableCreate {
         if (statementRTA.isModified()) fieldModified = true;
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExerciseStatement(statementRTA.getDocument());
+
+        statementTextHeight = statementRTA.getFullHeight();
         model.setStatementTextHeight(statementTextHeight);
         model.setStatementPrefHeight(Math.max(40, statementTextHeight + RTA_SCREEN_BMP));
 
@@ -991,6 +1083,7 @@ public class TruthTableCreate {
 
 
         TTcheckSetup checkSetup = model.getCheckSetup();
+        if (checkSetup == null) checkSetup = new TTcheckSetup();
         String langName = null;
         for (String key : langMap.keySet()) {
             ObservableValue<Boolean> value = langMap.get(key);
@@ -1017,7 +1110,7 @@ public class TruthTableCreate {
             List<Expression> expressions = ParseUtilities.parseDoc(doc, langName);
             if (expressions.size() != 0 && (expressions.size() != 1 || !(expressions.get(0) instanceof Formula) || !SyntacticalFns.sentence(expressions.get(0), langName))) {
                 bdrta.setVTtreeBoxHighlight();
-                mainWindow.getMainView().scrollToNode(bdrta.getRTA());
+     //           mainWindow.getMainView().scrollToNode(bdrta.getRTA());
                 List<Text> texts = new ArrayList<>();
                 texts.add(ParseUtilities.newRegularText("Expression is not a sentence of "));
                 texts.addAll(Languages.getLanguage(langName).getNameTextList());
@@ -1029,6 +1122,7 @@ public class TruthTableCreate {
             }
             mainFormulaDocs.add(doc);
         }
+        if (mainFormulaDocs.isEmpty()) mainFormulaDocs.add(new Document());
         model.setMainFormulas(mainFormulaDocs);
 
         model.setConclusionDivider(conclusionDividerCheck.isSelected());
@@ -1038,6 +1132,7 @@ public class TruthTableCreate {
             model.setPointsPossible(0);
             pointsPossibleTextField.setText("0");
         }
+        model.setAuxExerName(auxExerNameField.getText());
 
 
         if (staticHelpRTA.isModified()) fieldModified = true;
@@ -1067,33 +1162,6 @@ public class TruthTableCreate {
             keyboardDiagram.updateAndShow();
         }
 
-        /*
-        ToolBar editToolbar = decoratedRTA.getKbdSelectorToolbar();
-        ToolBar fontsToolbar = decoratedRTA.getEditToolbar();
-        ToolBar paragraphToolbar = decoratedRTA.getParagraphToolbar();
-        ToolBar kbdDiaToolBar = decoratedRTA.getKbdDiaToolbar();
-        kbdDiaToolBar.setPrefHeight(38);
-
-        switch (control) {
-            case NONE: {
-                kbdDiaToolBar.setDisable(true);
-            }
-            case STATEMENT: {
-                editToolbar.setDisable(true);
-                fontsToolbar.setDisable(true);
-            }
-            case FIELD: {
-                paragraphToolbar.setDisable(true);
-            }
-            case AREA: { }
-        }
-        sizeToolBar.setDisable(kbdDiaToolBar.isDisable());
-
-        HBox editAndKbdBox = new HBox(editToolbar, sizeToolBar, kbdDiaToolBar);
-        editAndKbdBox.setHgrow(kbdDiaToolBar, Priority.ALWAYS);
-        editAndKbdBox.layout();
-
-         */
 
         ToolBar paragraphToolbar = decoratedRTA.getParagraphToolbar();
         paragraphToolbar.setMinWidth(870);

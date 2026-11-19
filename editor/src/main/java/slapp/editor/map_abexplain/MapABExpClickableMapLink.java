@@ -74,8 +74,8 @@ public class MapABExpClickableMapLink extends Pane {
 
 
 
-        node_link1.setOnMouseClicked(e -> {
-            if (e.getButton() == MouseButton.SECONDARY) {
+        node_link1.setOnMousePressed(e -> {
+            if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() != 1) {
                 AnchorPane parent = (AnchorPane) this.getParent();
                 parent.getChildren().remove(this);
                 for (Node node : parent.getChildren()) {

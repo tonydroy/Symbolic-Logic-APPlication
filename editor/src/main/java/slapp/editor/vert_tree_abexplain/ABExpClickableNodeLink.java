@@ -62,7 +62,7 @@ public class ABExpClickableNodeLink extends Pane {
         node_link1.setOnMouseEntered(e -> setCursor(Cursor.HAND));
         node_link1.setOnMouseExited(e -> setCursor(Cursor.DEFAULT));
         node_link1.setOnMouseClicked(e -> {
-            if (e.getButton() == MouseButton.SECONDARY) {
+            if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 2) {
                 AnchorPane parent = (AnchorPane) this.getParent();
                 parent.getChildren().remove(this);
                 verticalTreeView.setUndoRedoFlag(true);

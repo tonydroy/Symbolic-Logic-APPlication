@@ -15,10 +15,14 @@ You should have received a copy of the GNU General Public License along with SLA
 
 package slapp.editor.main_window;
 
+import com.gluonhq.richtextarea.RichTextArea;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.scene.Node;
 import slapp.editor.decorated_rta.DecoratedRTA;
+
+import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Interface for the exercise view

@@ -19,14 +19,17 @@ package slapp.editor.decorated_rta;
 import com.gluonhq.emoji.Emoji;
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
+import com.gluonhq.richtextarea.Selection;
 import com.gluonhq.richtextarea.action.Action;
 import com.gluonhq.richtextarea.action.DecorateAction;
 import com.gluonhq.richtextarea.action.ParagraphDecorateAction;
 import com.gluonhq.richtextarea.action.TextDecorateAction;
 import com.gluonhq.richtextarea.model.*;
+import com.gluonhq.richtextarea.viewmodel.RichTextAreaViewModel;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -37,6 +40,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.skin.ComboBoxListViewSkin;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
@@ -51,6 +56,7 @@ import slapp.editor.EditorMain;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -65,21 +71,41 @@ import static javafx.scene.text.FontPosture.REGULAR;
 import static javafx.scene.text.FontWeight.BOLD;
 import static javafx.scene.text.FontWeight.NORMAL;
 
+import java.util.logging.Filter;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+
 /**
  * Rich Text area outfitted with toolbar controls (based on the Gluon "Full Featured Demo")
  */
+
 public class DecoratedRTA {
 
-
     static {
-        try (InputStream resourceAsStream = DecoratedRTA.class.getResourceAsStream("/logging.properties")) {
-            if (resourceAsStream != null) {
-                LogManager.getLogManager().readConfiguration(resourceAsStream);
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(DecoratedRTA.class.getName()).log(Level.SEVERE, "Error opening logging.properties file", ex);
+        // 1. Grab the absolute Root Logger (the boss of all Java console output)
+        Logger rootLogger = Logger.getLogger("");
+
+        // 2. Loop through all output handlers (usually just the ConsoleHandler)
+        for (Handler handler : rootLogger.getHandlers()) {
+
+            // Keep a reference to any existing filter so we don't accidentally break other rules
+            Filter existingFilter = handler.getFilter();
+
+            // 3. Attach our custom interceptor directly to the output handler
+            handler.setFilter(record -> {
+                // If the message contains our annoying string, SILENCE IT (return false)
+                if (record.getMessage() != null && record.getMessage().contains("index exceeds maxCellCount")) {
+                    return false;
+                }
+
+                // Otherwise, let it pass through normally
+                return existingFilter == null || existingFilter.isLoggable(record);
+            });
         }
     }
+
+
 
 
 
@@ -107,6 +133,13 @@ public class DecoratedRTA {
 
     private ComboBox<Double> fontSize;
 
+    private ChangeListener<RichTextAreaSkin.KeyMapValue> kbdSelectorListener;
+    private ChangeListener<Object> skinModificationListener;
+
+    private RichTextAreaSkin boundSkin;
+
+    private ChangeListener<Skin<?>> skinNullListener;
+
     /**
      * Create the decoratedRTA with RTA editor as component.
      */
@@ -115,6 +148,18 @@ public class DecoratedRTA {
         this.mainStage = EditorMain.mainStage;
         this.editor = new RichTextArea(mainStage);
         setup();
+    }
+
+    public void setBoxHighlight() {
+        RichTextArea rta = this.getEditor();
+        rta.getStylesheets().clear();
+        rta.getStylesheets().add("slappHighlightTextArea.css");
+    }
+
+    public void resetBoxHighlight() {
+        RichTextArea rta = this.getEditor();
+        rta.getStylesheets().clear();
+        rta.getStylesheets().add("slappTextArea.css");
     }
 
     /*
@@ -167,7 +212,7 @@ public class DecoratedRTA {
         fontSize.setEditable(true);
         fontSize.setPrefWidth(60);
         fontSize.setTooltip(new Tooltip("Font Size"));
-        fontSize.getItems().addAll(IntStream.range(1, 100)
+        fontSize.getItems().addAll(IntStream.range(1, 41)
                 .filter(i -> i % 2 == 0 || i < 18)
                 .asDoubleStream().boxed().collect(Collectors.toList()));
         new TextDecorateAction<>(editor, fontSize.valueProperty(), TextDecoration::getFontSize, (builder, a) -> builder.fontSize(a).build());
@@ -236,6 +281,9 @@ public class DecoratedRTA {
                 keyboardDiagram.initialize(this);
                 keyboardDiagram.updateAndShow();
             }
+            else {
+                keyboardDiagram.hide();
+            }
         });
 
 
@@ -255,9 +303,19 @@ public class DecoratedRTA {
 
         //keyboard selector
         keyboardSelector = new ChoiceBox<>();
-        keyboardSelector.getItems().setAll(RichTextAreaSkin.KeyMapValue.values());
+        //      keyboardSelector.getItems().setAll(RichTextAreaSkin.KeyMapValue.values());
+
+        RichTextAreaSkin.KeyMapValue excluded = RichTextAreaSkin.KeyMapValue.BASE_AND_SANS_ITALIC;
+
+        keyboardSelector.getItems().addAll(
+                Arrays.stream(RichTextAreaSkin.KeyMapValue.values())
+                        .filter(value -> value != excluded)
+                        .collect(Collectors.toList())
+        );
+
+
         keyboardSelector.setValue(RichTextAreaSkin.KeyMapValue.BASE);
-        keyboardSelector.setTooltip(new Tooltip("Select Keyboard (F1 - F8, same order as dropdown)"));
+        keyboardSelector.setTooltip(new Tooltip("Select Keyboard (F1, F2, F3, F4, shift-F4, F5, F6, F7, F8, same order as dropdown)"));
         keyboardSelector.setPrefWidth(120);
         keyboardSelector.setFocusTraversable(false);
 
@@ -290,11 +348,11 @@ public class DecoratedRTA {
 
                 wideSeparator(.5),
 
-                createToggleButton("\uf0cb", "Numbered List", property -> new ParagraphDecorateAction<>(editor, property, d -> d.getGraphicType() == NUMBERED_LIST, (builder, a) -> builder.graphicType(a ? NUMBERED_LIST : NONE).build())),
-                createToggleButton("\uf0ca", "Unordered List/Outline", property -> new ParagraphDecorateAction<>(editor, property, d -> d.getGraphicType() == BULLETED_LIST, (builder, a) -> builder.graphicType(a ? BULLETED_LIST : NONE).build())),
-                actionImage("\uf03e", "Insert Image"),
+                createToggleButton("\uf0cb", "Simple Numbered List", property -> new ParagraphDecorateAction<>(editor, property, d -> d.getGraphicType() == NUMBERED_LIST, (builder, a) -> builder.graphicType(a ? NUMBERED_LIST : NONE).build())),
+                createToggleButton("\uf0ca", "Bulleted List (shapes set by indent level)", property -> new ParagraphDecorateAction<>(editor, property, d -> d.getGraphicType() == BULLETED_LIST, (builder, a) -> builder.graphicType(a ? BULLETED_LIST : NONE).build())),
+          //      actionImage("\uf03e", "Insert Image"), //taken out because pictures upset RTA scrolling
                 actionEmoji("Insert Emoji"),
-                actionHyperlink("\uf0c1", "Insert Hyperlink on selected text"),
+                actionHyperlink("\uf0c1", "Insert Hyperlink"),
                 actionTable("\uf0ce", "Insert Table", td -> editor.getActionFactory().insertTable(td))
         );
 
@@ -304,14 +362,14 @@ public class DecoratedRTA {
                 textForeground,
                 textBackground,
 
-                wideSeparator(2),
+                wideSeparator(0),
 
                 createToggleButton("\uf12b", "Superscript (PgUp)", property -> new TextDecorateAction<>(editor, property, TextDecoration::isSuperscript, (builder, a) -> builder.superscript(a).subscript(false).transSuperscript(false).transSubscript(false).build())),
                 createColoredToggleButton("\uf12b", "Shifted superscript (Shift-PgUp)", property -> new TextDecorateAction<>(editor, property, TextDecoration::isTransSuperscript, (builder, a) -> builder.transSuperscript(a).transSubscript(false).subscript(false).superscript(false).build())),
                 createToggleButton("\uf12c", "Subscript (PgDn)", property -> new TextDecorateAction<>(editor, property, TextDecoration::isSubscript, (builder, a) -> builder.subscript(a).superscript(false).transSuperscript(false).transSubscript(false).build())),
                 createColoredToggleButton("\uf12c", "Shifted Subscript (Shift-PgDn)", property -> new TextDecorateAction<>(editor, property, TextDecoration::isTransSubscript, (builder, a) -> builder.transSubscript(a).transSuperscript(false).superscript(false).subscript(false).build())),
 
-                wideSeparator(2),
+                wideSeparator(0),
 
                 createToggleButton("\uf032", "Bold - not for symbol fonts (Ctrl/Cmd-B)", property -> new TextDecorateAction<>(editor, property, d -> d.getFontWeight() == BOLD, (builder, a) -> builder.fontWeight(a ? BOLD : NORMAL).build())),
                 createToggleButton("\uf033", "Italic - not for symbol fonts (Ctrl/Cmd-I)", property -> new TextDecorateAction<>(editor, property, d -> d.getFontPosture() == ITALIC, (builder, a) -> builder.fontPosture(a ? ITALIC : REGULAR).build())),
@@ -329,7 +387,7 @@ public class DecoratedRTA {
         editToolbar.getItems().setAll(
                 overlineButton,
 
-                wideSeparator(2),
+                wideSeparator(0),
 
                 cutButton,
                 copyButton,
@@ -348,7 +406,7 @@ public class DecoratedRTA {
                 keyboardSelector,
                 unicodeField,
 
-               wideSeparator(1)
+                wideSeparator(1)
         );
 
         kbdDiaToolbar = new ToolBar();
@@ -381,27 +439,41 @@ public class DecoratedRTA {
         Scene tempScene = new Scene(tempPane);
         editor.applyCss();
         editor.layout();
-        overlineButton.selectedProperty().bindBidirectional(((RichTextAreaSkin) editor.getSkin()).overlineOnProperty());
-//        overlineButton.selectedProperty().addListener((v, ov, nv) -> editor.requestFocus());
+        boundSkin = (RichTextAreaSkin) editor.getSkin();
+        if (boundSkin == null) return;
 
-        keyboardSelector.valueProperty().bindBidirectional(((RichTextAreaSkin) editor.getSkin()).keyMapStateProperty());
-        keyboardSelector.getSelectionModel().selectedItemProperty().addListener((v, ov, nv) -> {
+        overlineButton.selectedProperty().bindBidirectional(boundSkin.overlineOnProperty());
+
+        keyboardSelector.valueProperty().bindBidirectional(boundSkin.keyMapStateProperty());
+        kbdSelectorListener = (v, ov, nv) -> {
+            if (editor.getSkin() == null) return;
             ((RichTextAreaSkin) editor.getSkin()).setMaps(nv);
             KeyboardDiagram keyboardDiagram = KeyboardDiagram.getInstance();
             if (keyboardDiagram.isShowing()) {
                 keyboardDiagram.initialize(this);
                 keyboardDiagram.update();
             }
-            editor.requestFocus();   //have not been able to find way to stop keyboard window from stealing focus see https://stackoverflow.com/questions/33151460/javafx-stop-new-window-stealing-focus
-        });
+            editor.requestFocus();
+        };
+        keyboardSelector.getSelectionModel().selectedItemProperty().addListener(kbdSelectorListener);
 
-        ((RichTextAreaSkin) editor.getSkin()).modificationProperty().addListener((v, ov, nv) -> {
+        skinModificationListener = (v, ov, nv) -> {
+            if (editor.getSkin() == null) return;
             KeyboardDiagram keyboardDiagram = KeyboardDiagram.getInstance();
             if (keyboardDiagram.isShowing()) {
                 keyboardDiagram.initialize(this);
                 keyboardDiagram.update();
             }
-        });
+        };
+        boundSkin.modificationProperty().addListener(skinModificationListener);
+
+        // Auto-clean whenever the Skin Hammer sets editor.setSkin(null) anywhere in SLAPP
+        skinNullListener = (obs, oldSkin, newSkin) -> {
+            if (newSkin == null) {
+                cleanup();
+            }
+        };
+        editor.skinProperty().addListener(skinNullListener);
     }
 
     /*
@@ -478,12 +550,14 @@ public class DecoratedRTA {
         //switching headers on focus.  It doesn't happen to a spinner by itself, but only in combination with some application.
         //this "fix" prevents mouse down spinning, but that will be ok for me. I absolutly do not understand how this happens!
         //see https://stackoverflow.com/questions/55933513/javafx-spinner-keeps-going-after-removed-from-scene
+        /*
         spinner.valueProperty().addListener((obs, ov, nv) -> {
            Node increment = spinner.lookup(".increment-arrow-button");
            if (increment != null) increment.getOnMouseReleased().handle(null);
            Node decrement = spinner.lookup(".decrement-arrow-button");
            if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+         */
         //
         spinner.setTooltip(new Tooltip(tooltip));
         SpinnerValueFactory.IntegerSpinnerValueFactory valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 20);
@@ -510,12 +584,15 @@ public class DecoratedRTA {
         //this is a kludge because the spinners do not stop on mouse release.  This behavior only appeared after I started
         //switching headers on focus.  It doesn't happen to a spinner by itself, but only in combination with RTA logic.
         //this "fix" prevents mouse down spinning, but that will be ok for me. I absolutly do not understand how this happens!
+
+        /*
         spinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = spinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = spinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+         */
         //
         spinner.setTooltip(new Tooltip(tooltip));
         SpinnerValueFactory.IntegerSpinnerValueFactory valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 20,0,2);
@@ -535,12 +612,15 @@ public class DecoratedRTA {
         //this is a kludge because the spinners do not stop on mouse release.  This behavior only appeared after I started
         //switching headers on focus.  It doesn't happen to a spinner by itself, but only in combination with RTA logic.
         //this "fix" prevents mouse down spinning, but that will be ok for me. I absolutly do not understand how this happens!
+        /*
         spinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = spinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = spinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+
+         */
         //
         spinner.setTooltip(new Tooltip(tooltip));
         SpinnerValueFactory.IntegerSpinnerValueFactory valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 20,2,2);
@@ -560,6 +640,7 @@ public class DecoratedRTA {
      * @param tooltip
      * @return the button
      */
+
     private Button actionImage(String ikon, String tooltip) {
         Button button = new Button(ikon);
         button.getStyleClass().add("lasolid-icon");
@@ -570,14 +651,97 @@ public class DecoratedRTA {
             File homeDir = new File(System.getProperty("user.home"));
             fileChooser.setInitialDirectory(homeDir);
 
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image", "*.png", ".jpeg", ".gif"));
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("Image", "*.png", "*.jpg", "*.jpeg", "*.gif"));
             File file = fileChooser.showOpenDialog(button.getScene().getWindow());
             if (file != null) {
                 String url = file.toURI().toString();
-                editor.getActionFactory().decorate(new ImageDecoration(url)).execute(e);
+                Image image = new Image(url);
+                if (!image.isError() && image.getWidth() > 0) {
+                    Dialog<ImageDecoration> imageDialog = createImageDialog(url, image);
+                    Optional<ImageDecoration> result = imageDialog.showAndWait();
+                    result.ifPresent(imageDecoration -> {
+                        RichTextAreaViewModel viewModel = ((RichTextAreaSkin) editor.getSkin()).getViewModel();
+                        if (viewModel.getCaretPosition() < 0) {
+                            viewModel.setCaretPosition(viewModel.getTextLength());
+                        }
+                        editor.getActionFactory().decorate(imageDecoration).execute(e);
+                    });
+                }
             }
         });
         return button;
+    }
+
+
+    private Dialog<ImageDecoration> createImageDialog(String url, Image image) {
+        Dialog<ImageDecoration> dialog = new Dialog<>();
+        dialog.setTitle("Insert Image");
+
+        ButtonType insertButtonType = new ButtonType("Insert", ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(insertButtonType, ButtonType.CANCEL);
+
+        double origWidth = Math.max(1.0, image.getWidth());
+        double origHeight = Math.max(1.0, image.getHeight());
+
+        // If the image is larger than 350px, start at a sensible initial scale; otherwise 100%
+        double maxDim = Math.max(origWidth, origHeight);
+        double initialPercent = maxDim > 350.0
+                ? Math.max(5.0, Math.round((350.0 / maxDim) * 100.0))
+                : 100.0;
+
+        ImageView previewView = new ImageView(image);
+        previewView.setPreserveRatio(true);
+        previewView.setSmooth(true);
+
+        StackPane imageHolder = new StackPane(previewView);
+        imageHolder.setPadding(new Insets(10));
+
+        ScrollPane scrollPane = new ScrollPane(imageHolder);
+        scrollPane.setPrefViewportWidth(450);
+        scrollPane.setPrefViewportHeight(300);
+        scrollPane.setFitToWidth( true );
+        scrollPane.setFitToHeight( true );
+
+        Slider scaleSlider = new Slider(5, 150, initialPercent);
+        scaleSlider.setShowTickMarks(true);
+        scaleSlider.setShowTickLabels(true);
+        scaleSlider.setMajorTickUnit(25);
+        scaleSlider.setPrefWidth(320);
+
+        Label sizeLabel = new Label();
+
+        Runnable updatePreview = () -> {
+            double scale = scaleSlider.getValue() / 100.0;
+            int w = Math.max(1, (int) Math.round(origWidth * scale));
+            int h = Math.max(1, (int) Math.round(origHeight * scale));
+            previewView.setFitWidth(w);
+            previewView.setFitHeight(h);
+            sizeLabel.setText(String.format("Scale: %d%%  (%d × %d px)",
+                    (int) Math.round(scaleSlider.getValue()), w, h));
+        };
+
+        scaleSlider.valueProperty().addListener((obs, ov, nv) -> updatePreview.run());
+        updatePreview.run();
+
+        VBox content = new VBox(10, scrollPane, sizeLabel, scaleSlider);
+        content.setPadding(new Insets(15));
+        dialog.getDialogPane().setContent(content);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == insertButtonType) {
+                double scale = scaleSlider.getValue() / 100.0;
+                int w = Math.max(1, (int) Math.round(origWidth * scale));
+                int h = Math.max(1, (int) Math.round(origHeight * scale));
+                return new ImageDecoration(url, w, h);
+            }
+            return null;
+        });
+
+        dialog.setX(mainStage.getX() + mainStage.getWidth() / 4);
+        dialog.setY(mainStage.getY() + mainStage.getHeight() / 4);
+
+        return dialog;
     }
 
     /*
@@ -615,10 +779,49 @@ public class DecoratedRTA {
         button.getStyleClass().add("lasolid-icon");
         button.setTooltip(new Tooltip(tooltip));
         button.setOnAction(e -> {
-            final Dialog<String> hyperlinkDialog = createHyperlinkDialog();
-            Optional<String> result = hyperlinkDialog.showAndWait();
-            result.ifPresent(textURL -> {
-                editor.getActionFactory().decorate(TextDecoration.builder().url(textURL).build()).execute(e);
+            RichTextAreaViewModel viewModel = ((RichTextAreaSkin) editor.getSkin()).getViewModel();
+            Selection selection = viewModel.getSelection();
+
+            final String selectedText;
+            if (selection.isDefined()) {
+                int start = Math.min(selection.getStart(), selection.getEnd());
+                int end = Math.max(selection.getStart(), selection.getEnd());
+                selectedText = viewModel.getTextBuffer().getText(start, end).replace("\ufeff", "");
+            } else {
+                selectedText = "";
+            }
+
+            Decoration dec = viewModel.getDecorationAtCaret();
+            final String existingUrl = (dec instanceof TextDecoration && ((TextDecoration) dec).getURL() != null)
+                    ? ((TextDecoration) dec).getURL()
+                    : "";
+
+            final Dialog< javafx.util.Pair<String, String> > hyperlinkDialog = createHyperlinkDialog(selectedText, existingUrl);
+            Optional< javafx.util.Pair<String, String> > result = hyperlinkDialog.showAndWait();
+
+            result.ifPresent(pair -> {
+                String linkText = pair.getKey();
+                String textURL = pair.getValue();
+                TextDecoration linkDecoration = TextDecoration.builder().url(textURL).build();
+
+                if (!selection.isDefined() || !linkText.equals(selectedText)) {
+                    if (!selection.isDefined() && viewModel.getCaretPosition() < 0) {
+                        viewModel.setCaretPosition(viewModel.getTextLength());
+                    }
+                    int start = selection.isDefined()
+                            ? Math.min(selection.getStart(), selection.getEnd())
+                            : viewModel.getCaretPosition();
+
+                    editor.getActionFactory().insertText(linkText).execute(e);
+
+                    int end = start + linkText.length();
+                    if (end > start) {
+                        editor.getActionFactory().selectAndDecorate(new Selection(start, end), linkDecoration).execute(e);
+                    }
+                } else {
+                    // Selection existed and display text was unchanged: decorate existing selection
+                    editor.getActionFactory().decorate(linkDecoration).execute(e);
+                }
             });
         });
         return button;
@@ -628,46 +831,67 @@ public class DecoratedRTA {
      * Create the insert hyperlink dialog
      * @return the dialog
      */
-    private Dialog<String> createHyperlinkDialog() {
-        Dialog<String> dialog = new Dialog<>();
+
+    private Dialog< javafx.util.Pair<String, String> > createHyperlinkDialog(String initialText, String initialUrl) {
+        Dialog< javafx.util.Pair<String, String> > dialog = new Dialog<>();
         dialog.setTitle("Hyperlink");
 
-        // Set the button types
-        ButtonType textButtonType = new ButtonType("Create", ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().add(textButtonType);
+        // Set the button types (Create + Cancel)
+        ButtonType createButtonType = new ButtonType("Create", ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(createButtonType, ButtonType.CANCEL);
 
-        // Create the text and url labels and fields.
+        // Create the text and url labels and fields
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(20, 20, 10, 10));
 
-        TextField url = new TextField();
+        TextField displayText = new TextField(initialText != null ? initialText : "");
+        displayText.setPrefWidth(300);
+        displayText.setPromptText("Text to display");
+
+        TextField url = new TextField(initialUrl != null ? initialUrl : "");
+        url.setPrefWidth(300);
         url.setPromptText("URL");
 
+        grid.add(new Label("Text:"), 0, 0);
+        grid.add(displayText, 1, 0);
         grid.add(new Label("URL:"), 0, 1);
         grid.add(url, 1, 1);
 
-        Node loginButton = dialog.getDialogPane().lookupButton(textButtonType);
-        loginButton.setDisable(true);
-        loginButton.disableProperty().bind(url.textProperty().isEmpty());
+        Node createButton = dialog.getDialogPane().lookupButton(createButtonType);
+        createButton.setDisable(true);
+        createButton.disableProperty().bind(url.textProperty().isEmpty());
 
         dialog.getDialogPane().setContent(grid);
         dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == textButtonType) {
-                return url.getText();
+            if (dialogButton == createButtonType) {
+                String urlStr = url.getText().trim();
+                String textStr = displayText.getText();
+                if (textStr == null || textStr.isEmpty()) {
+                    textStr = urlStr; // Fallback to URL if display text was left blank
+                }
+                return new javafx.util.Pair<>(textStr, urlStr);
             }
             return null;
         });
 
-        dialog.setX(mainStage.getX() + mainStage.getWidth()/3);
-        dialog.setY(mainStage.getY() + mainStage.getHeight()/3);
+        dialog.setX(mainStage.getX() + mainStage.getWidth() / 3);
+        dialog.setY(mainStage.getY() + mainStage.getHeight() / 3);
 
-        // Request focus on the username field by default.
-        dialog.setOnShown(e -> Platform.runLater(url::requestFocus));
+        // Focus URL if text was already selected; otherwise focus Text field first
+        dialog.setOnShown(e -> Platform.runLater(() -> {
+            if (initialText != null && !initialText.isEmpty()) {
+                url.requestFocus();
+            } else {
+                displayText.requestFocus();
+            }
+        }));
 
         return dialog;
     }
+
+
 
     /*
      * Button to insert table
@@ -793,6 +1017,51 @@ public class DecoratedRTA {
             return textAlignment;
         }
     }
+
+    public void cleanup() {
+        try {
+            if (skinNullListener != null) {
+                editor.skinProperty().removeListener(skinNullListener);
+                skinNullListener = null;
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (boundSkin != null) {
+                if (overlineButton != null) {
+                    overlineButton.selectedProperty().unbindBidirectional(boundSkin.overlineOnProperty());
+                }
+                if (keyboardSelector != null) {
+                    keyboardSelector.valueProperty().unbindBidirectional(boundSkin.keyMapStateProperty());
+                }
+                if (skinModificationListener != null) {
+                    boundSkin.modificationProperty().removeListener(skinModificationListener);
+                }
+                boundSkin = null;
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (keyboardSelector != null && kbdSelectorListener != null) {
+                keyboardSelector.getSelectionModel().selectedItemProperty().removeListener(kbdSelectorListener);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (cutButton != null) { cutButton.disableProperty().unbind(); cutButton.setOnAction(null); }
+            if (copyButton != null) { copyButton.disableProperty().unbind(); copyButton.setOnAction(null); }
+            if (pasteButton != null) { pasteButton.disableProperty().unbind(); pasteButton.setOnAction(null); }
+            if (undoButton != null) { undoButton.disableProperty().unbind(); undoButton.setOnAction(null); }
+            if (redoButton != null) { redoButton.disableProperty().unbind(); redoButton.setOnAction(null); }
+            if (keyboardDiagramButton != null) keyboardDiagramButton.setOnAction(null);
+            if (unicodeField != null) unicodeField.setOnAction(null);
+            if (fontSize != null) { fontSize.setOnShowing(null); fontSize.setOnAction(null); }
+        } catch (Exception e) {}
+
+        kbdSelectorListener = null;
+        skinModificationListener = null;
+    }
+
 
     /**
      * The RichTextArea editor

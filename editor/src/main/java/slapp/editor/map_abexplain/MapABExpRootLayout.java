@@ -107,7 +107,7 @@ public class MapABExpRootLayout extends AnchorPane {
         HBox boxToggleGraphic = new HBox(rectangle);
         boxToggleGraphic.setAlignment(Pos.CENTER);
         boxToggle.setGraphic(boxToggleGraphic);
-        boxToggle.setTooltip(new Tooltip("Add (left click) or remove (right click) box"));
+        boxToggle.setTooltip(new Tooltip("Add (left click) or remove (double click) box"));
 
 
         starToggle = new ToggleButton("\uf005");  //LineAwsomeSolid.STAR
@@ -115,7 +115,7 @@ public class MapABExpRootLayout extends AnchorPane {
         starToggle.setPrefWidth(64);
         starToggle.setPrefHeight(28);
         starToggle.setStyle("-fx-font-size: 20");
-        starToggle.setTooltip(new Tooltip("Add (left click) or remove (right click) star"));
+        starToggle.setTooltip(new Tooltip("Add (left click) or remove (double click) star"));
 
         annotationToggle = new ToggleButton();
         annotationToggle.setPrefWidth(44);
@@ -135,7 +135,7 @@ public class MapABExpRootLayout extends AnchorPane {
         HBox buttonBox = new HBox(boxesPane);
         buttonBox.setAlignment(Pos.CENTER);
         annotationToggle.setGraphic(buttonBox);
-        annotationToggle.setTooltip(new Tooltip("Add (left click) or remove (right click) annotation box"));
+        annotationToggle.setTooltip(new Tooltip("Add (left click) or remove (double click) annotation box"));
 
         annotationPlus = new Button("+");
         annotationPlus.setFont(new Font(10));
@@ -162,13 +162,13 @@ public class MapABExpRootLayout extends AnchorPane {
         circlePane.getChildren().add(circleIcon);
         circlePane.setAlignment(Pos.CENTER);
         circleToggle.setGraphic(circlePane);
-        circleToggle.setTooltip(new Tooltip("Add (left click) or remove (right click) circle"));
+        circleToggle.setTooltip(new Tooltip("Add (left click) or remove (double click) circle"));
 
         underlineToggle = new ToggleButton("\uf7a4");  //LineAwesomeSolid.GRIP_LINES
         underlineToggle.getStyleClass().add("lasolid-icon");
         underlineToggle.setPrefWidth(64);
         underlineToggle.setPrefHeight(28);
-        underlineToggle.setTooltip(new Tooltip("Add (left click) or remove (right click) underline"));
+        underlineToggle.setTooltip(new Tooltip("Add (left click) or remove (double click) underline"));
 
         mappingToggle = new ToggleButton();
         mappingToggle.setGraphic(new Text("\u21a7"));
@@ -178,7 +178,7 @@ public class MapABExpRootLayout extends AnchorPane {
         mappingToggle.setPrefHeight(28);
         mappingToggle.setMinHeight(28);
         mappingToggle.setMaxHeight(28);
-        mappingToggle.setTooltip(new Tooltip("Add (left click) or remove (right click) map lines"));
+        mappingToggle.setTooltip(new Tooltip("Add (left click) or remove (double click) map lines"));
 
 
 
@@ -209,16 +209,18 @@ public class MapABExpRootLayout extends AnchorPane {
         boxClickFilter = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                ObservableList<Node> nodesList = main_pane.getChildren();
-                for (Node node : nodesList) {
-                    if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
-                        if (node instanceof MapABExpTreeFormulaBox) {
-                            ((MapABExpTreeFormulaBox) node).processBoxRequest(event.getButton() == MouseButton.PRIMARY);
-                            break;
+                if (event.getButton() == MouseButton.PRIMARY) {
+                    ObservableList<Node> nodesList = main_pane.getChildren();
+                    for (Node node : nodesList) {
+                        if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
+                            if (node instanceof MapABExpTreeFormulaBox) {
+                                ((MapABExpTreeFormulaBox) node).processBoxRequest(event.getClickCount() == 1);
+                                break;
+                            }
                         }
                     }
+                    //               event.consume();
                 }
- //               event.consume();
             }
         };
         boxToggle.selectedProperty().addListener((ob, ov, nv) -> {
@@ -229,16 +231,18 @@ public class MapABExpRootLayout extends AnchorPane {
         starClickFilter = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                ObservableList<Node> nodesList = main_pane.getChildren();
-                for (Node node : nodesList) {
-                    if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
-                        if (node instanceof MapABExpTreeFormulaBox) {
-                            ((MapABExpTreeFormulaBox) node).processStarRequest(event.getButton() == MouseButton.PRIMARY);
-                            break;
+                if (event.getButton() == MouseButton.PRIMARY) {
+                    ObservableList<Node> nodesList = main_pane.getChildren();
+                    for (Node node : nodesList) {
+                        if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
+                            if (node instanceof MapABExpTreeFormulaBox) {
+                                ((MapABExpTreeFormulaBox) node).processStarRequest(event.getClickCount() == 1);
+                                break;
+                            }
                         }
                     }
+                    //               event.consume();
                 }
- //               event.consume();
             }
         };
         starToggle.selectedProperty().addListener((ob, ov, nv) -> {
@@ -249,16 +253,18 @@ public class MapABExpRootLayout extends AnchorPane {
         annotationClickFilter = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                ObservableList<Node> nodesList = main_pane.getChildren();
-                for (Node node : nodesList) {
-                    if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
-                        if (node instanceof MapABExpTreeFormulaBox) {
-                            ((MapABExpTreeFormulaBox) node).processAnnotationRequest(event.getButton() == MouseButton.PRIMARY);
-                            break;
+                if (event.getButton() == MouseButton.PRIMARY) {
+                    ObservableList<Node> nodesList = main_pane.getChildren();
+                    for (Node node : nodesList) {
+                        if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
+                            if (node instanceof MapABExpTreeFormulaBox) {
+                                ((MapABExpTreeFormulaBox) node).processAnnotationRequest(event.getClickCount() == 1);
+                                break;
+                            }
                         }
                     }
+                    //              event.consume();
                 }
-  //              event.consume();
             }
         };
         annotationToggle.selectedProperty().addListener((ob, ov, nv) -> {
@@ -289,16 +295,18 @@ public class MapABExpRootLayout extends AnchorPane {
         circleClickFilter = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                ObservableList<Node> nodesList = main_pane.getChildren();
-                for (Node node : nodesList) {
-                    if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
-                        if (node instanceof MapABExpTreeFormulaBox) {
-                            ((MapABExpTreeFormulaBox) node).processCircleRequest(event.getButton() == MouseButton.PRIMARY);
-                            break;
+                if (event.getButton() == MouseButton.PRIMARY) {
+                    ObservableList<Node> nodesList = main_pane.getChildren();
+                    for (Node node : nodesList) {
+                        if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
+                            if (node instanceof MapABExpTreeFormulaBox) {
+                                ((MapABExpTreeFormulaBox) node).processCircleRequest(event.getClickCount() == 1);
+                                break;
+                            }
                         }
                     }
+                    //               event.consume();
                 }
- //               event.consume();
             }
         };
         circleToggle.selectedProperty().addListener((ob, ov, nv) -> {
@@ -317,16 +325,18 @@ public class MapABExpRootLayout extends AnchorPane {
         underlineClickFilter = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                ObservableList<Node> nodesList = main_pane.getChildren();
-                for (Node node : nodesList) {
-                    if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
-                        if (node instanceof MapABExpTreeFormulaBox) {
-                            ((MapABExpTreeFormulaBox) node).processUnderlineRequest(event.getButton() == MouseButton.PRIMARY);
-                            break;
+                if (event.getButton() == MouseButton.PRIMARY) {
+                    ObservableList<Node> nodesList = main_pane.getChildren();
+                    for (Node node : nodesList) {
+                        if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
+                            if (node instanceof MapABExpTreeFormulaBox) {
+                                ((MapABExpTreeFormulaBox) node).processUnderlineRequest(event.getClickCount() == 1);
+                                break;
+                            }
                         }
                     }
-                }
 //               event.consume();
+                }
             }
         };
         underlineToggle.selectedProperty().addListener((ob, ov, nv) -> {
@@ -345,16 +355,18 @@ public class MapABExpRootLayout extends AnchorPane {
         mappingClickFilter = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                ObservableList<Node> nodesList = main_pane.getChildren();
-                for (Node node : nodesList) {
-                    if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
-                        if (node instanceof MapABExpFormulaBox) {
-                            ((MapABExpFormulaBox) node).processMappingRequest(event.getButton() == MouseButton.PRIMARY);
-                            break;
+                if (event.getButton() == MouseButton.PRIMARY) {
+                    ObservableList<Node> nodesList = main_pane.getChildren();
+                    for (Node node : nodesList) {
+                        if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
+                            if (node instanceof MapABExpFormulaBox) {
+                                ((MapABExpFormulaBox) node).processMappingRequest(event.getClickCount() == 1);
+                                break;
+                            }
                         }
                     }
+                    //               event.consume();
                 }
- //               event.consume();
             }
         };
         mappingKeyFilter = new EventHandler<KeyEvent>() {

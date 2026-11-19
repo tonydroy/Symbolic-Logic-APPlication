@@ -61,6 +61,7 @@ public class TruthTableExpModel implements ExerciseModel<Document>, Serializable
     private int tableRows = 0;
     private int pointsPossible;
     private int pointsEarned;
+    private String auxExerName;
 
     private TTExpCheckSetup checkSetup;
 
@@ -72,6 +73,7 @@ public class TruthTableExpModel implements ExerciseModel<Document>, Serializable
         pointsPossible = 0;
         pointsEarned = -1;
         checkSetup = new TTExpCheckSetup();
+        this.auxExerName = "";
     }
 
     public TTExpCheckSetup getCheckSetup() {
@@ -414,6 +416,14 @@ public class TruthTableExpModel implements ExerciseModel<Document>, Serializable
      * @param gridWidth the width value
      */
     void setGridWidth(double gridWidth) {     this.gridWidth = gridWidth;  }
+
+    public String getAuxExerName() {
+        return auxExerName;
+    }
+
+    public void setAuxExerName(String auxExerName) {
+        this.auxExerName = auxExerName;
+    }
 
     /**
      * The exercise name (used also as file name)

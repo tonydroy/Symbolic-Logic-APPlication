@@ -22,6 +22,7 @@ import slapp.editor.main_window.ExerciseModel;
 import slapp.editor.main_window.MainWindow;
 import java.util.List;
 
+
 /**
  * Dummy exercise to fill the empty opening screen.
  */
@@ -29,6 +30,9 @@ public class FrontPageExercise implements Exercise<FrontPageModel, FrontPageView
     private FrontPageView view;
     private FrontPageModel model;
     private MainWindow mainWindow;
+
+    // SCORCHED EARTH RULE 2: Kill Switch for asynchronous event interception during teardown
+    private boolean isTornDown = false;
 
     public FrontPageExercise(MainWindow mainWindow) {
         this.view = new FrontPageView(mainWindow.getMainView());
@@ -63,5 +67,18 @@ public class FrontPageExercise implements Exercise<FrontPageModel, FrontPageView
     @Override
     public ExerciseModel<FrontPageModel> getExerciseModelFromView() { return (ExerciseModel) new FrontPageModel(); }
 
+    // SCORCHED EARTH RULE 1 & 5: Cleanup cascading and isolation
+    @Override
+    public void cleanup() {
+        // SCORCHED EARTH RULE 2: Engage Kill Switch
+        isTornDown = true;
 
+        // SCORCHED EARTH RULE 1: Cascade cleanup to view
+        try { if (view != null) view.cleanup(); } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 1: Final Nullification
+        try { this.view = null; } catch (Exception e) {}
+        try { this.model = null; } catch (Exception e) {}
+        try { this.mainWindow = null; } catch (Exception e) {}
+    }
 }

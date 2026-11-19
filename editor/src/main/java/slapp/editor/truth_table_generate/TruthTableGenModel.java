@@ -15,7 +15,13 @@ You should have received a copy of the GNU General Public License along with SLA
 
 package slapp.editor.truth_table_generate;
 
+import com.gluonhq.richtextarea.RichTextArea;
+import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.model.Document;
+import javafx.event.ActionEvent;
+import slapp.editor.decorated_rta.BoxedDRTA;
+import slapp.editor.decorated_rta.DecoratedRTA;
+import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.ExerciseModel;
 import slapp.editor.main_window.ExerciseType;
 
@@ -30,7 +36,8 @@ public class TruthTableGenModel implements ExerciseModel<Document>, Serializable
     private static final long serialVersionUID = 100L;
     private String exerciseName = new String("");
     private String interpretationPrompt = "";
-    private ExerciseType exerciseType = ExerciseType.TRUTH_TABLE_ABEXP;
+    private String explainPrompt = "";
+    private ExerciseType exerciseType = ExerciseType.TRUTH_TABLE_GENERATE;
     private ExerciseModel<Document> originalModel = null;
     private boolean started = false;
     private Document exerciseStatement = new Document();
@@ -39,19 +46,18 @@ public class TruthTableGenModel implements ExerciseModel<Document>, Serializable
     private Document exerciseComment = new Document();
     private double commentPrefHeight = 60;
     private double commentTextHeight = 0;
-    private Document exerciseInterpretation = new Document();
-    private double interpretationPrefHeight = 125;
-    private double interpretationTextHeight = 0;
+    private Document interpFnDoc = new Document();
+    private double interpFnPrefHeight = 80;
+    private double interpFnTextHeight = 0;
+    private boolean interpFnIncluded;
     private Document explainDocument = new Document();
     private double explainPrefHeight = 60;
     private double explainTextHeight = 0;
-    private List<String> unaryOperators = new ArrayList<>();
-    private List<String> binaryOperators = new ArrayList<>();
     private List<Document> mainFormulas = new ArrayList<>();
     private List<Document> basicFormulas = new ArrayList<>();
     private String[][]  tableValues;   //[w][h]
     private double gridWidth;
-    private Document[] rowComments; //[h]
+    private Document[] rowComments = new Document[0]; //[h]
     private Double[] commentPrintWidths;
 
     private boolean[] columnHighlights; //[w]
@@ -61,10 +67,19 @@ public class TruthTableGenModel implements ExerciseModel<Document>, Serializable
     private boolean aSelected = false;
     private String bPrompt = new String("");
     private boolean bSelected = false;
-    private String explainPrompt = "";
+
     private int tableRows = 0;
     private int pointsPossible;
     private int pointsEarned;
+    private String auxExerName;
+
+    private List<String> unaryOperatorList = new ArrayList<>();
+    private List<String> binaryOperatorList = new ArrayList<>();
+
+    private TTGCheckSetup checkSetup;
+    private boolean setupExer = false;
+
+    private boolean checkTrans;
 
 
     /**
@@ -73,6 +88,9 @@ public class TruthTableGenModel implements ExerciseModel<Document>, Serializable
     public TruthTableGenModel(){
         pointsPossible = 0;
         pointsEarned = -1;
+        auxExerName = "";
+
+
     }
 
     /**
@@ -103,6 +121,16 @@ public class TruthTableGenModel implements ExerciseModel<Document>, Serializable
         rowComments = cmts;
     }
 
+
+
+    public boolean isInterpFnIncluded() {
+        return interpFnIncluded;
+    }
+
+    public void setInterpFnIncluded(boolean interpFnIncluded) {
+        this.interpFnIncluded = interpFnIncluded;
+    }
+
     /**
      * The exercise name (doubles as file name)
      * @param exerciseName the string name
@@ -119,21 +147,6 @@ public class TruthTableGenModel implements ExerciseModel<Document>, Serializable
         this.exerciseStatement = exerciseStatement;
     }
 
-    /**
-     * The list of unary operators for this sentential language
-     * @param unaryOperators the list of Strings
-     */
-    public void setUnaryOperators(List<String> unaryOperators) {
-        this.unaryOperators = unaryOperators;
-    }
-
-    /**
-     * The list of binary operators for this sentential language
-     * @param binaryOperators the list of strings
-     */
-    public void setBinaryOperators(List<String> binaryOperators) {
-        this.binaryOperators = binaryOperators;
-    }
 
     /**
      * The list of formulas to be evaluated in the main part of this table
@@ -278,18 +291,6 @@ public class TruthTableGenModel implements ExerciseModel<Document>, Serializable
     List<Document> getMainFormulas() { return mainFormulas; }
 
     /**
-     * The list of unary operators for this sentential language
-     * @return the list of Strings
-     */
-    List<String> getUnaryOperators() { return unaryOperators; }
-
-    /**
-     * The list of binary operators for this sentential language
-     * @return the list of strings
-     */
-    List<String> getBinaryOperators() { return binaryOperators; }
-
-    /**
      * The list of basic formula Documents
      * @param basicFormulas the list
      */
@@ -311,13 +312,13 @@ public class TruthTableGenModel implements ExerciseModel<Document>, Serializable
      * The document for the interpretation field
      * @return the document
      */
-    Document getExerciseInterpretation() { return exerciseInterpretation; }
+    Document getInterpFnDoc() { return interpFnDoc; }
 
     /**
      * The document for the interpretation field
      * @param exerInterp the document
      */
-    void setExerciseInterpretation(Document exerInterp) { this.exerciseInterpretation = exerInterp; }
+    void setInterpFnDoc(Document exerInterp) { this.interpFnDoc = exerInterp; }
 
     /**
      * The lead for the choice boxes
@@ -377,13 +378,13 @@ public class TruthTableGenModel implements ExerciseModel<Document>, Serializable
      * The preferred height of the interpretation window
      * @return the height value
      */
-    double getInterpretationPrefHeight() {  return interpretationPrefHeight;  }
+    double getInterpFnPrefHeight() {  return interpFnPrefHeight;  }
 
     /**
      * The preferred height of the interpretation window
-     * @param interpretationPrefHeight the height value
+     * @param interpFnPrefHeight the height value
      */
-    void setInterpretationPrefHeight(double interpretationPrefHeight) { this.interpretationPrefHeight = interpretationPrefHeight;   }
+    void setInterpFnPrefHeight(double interpFnPrefHeight) { this.interpFnPrefHeight = interpFnPrefHeight;   }
 
     /**
      * The preferred height of the explain window
@@ -425,13 +426,13 @@ public class TruthTableGenModel implements ExerciseModel<Document>, Serializable
      * The height of text in the interpretation window
      * @return the height value
      */
-    double getInterpretationTextHeight() {  return interpretationTextHeight;  }
+    double getInterpFnTextHeight() {  return interpFnTextHeight;  }
 
     /**
      * The height of text in the interpretation window
-     * @param interpretationTextHeight the height value
+     * @param interpFnTextHeight the height value
      */
-    void setInterpretationTextHeight(double interpretationTextHeight) {  this.interpretationTextHeight = interpretationTextHeight;   }
+    void setInterpFnTextHeight(double interpFnTextHeight) {  this.interpFnTextHeight = interpFnTextHeight;   }
 
     /**
      * The height of text in the explain window
@@ -456,6 +457,22 @@ public class TruthTableGenModel implements ExerciseModel<Document>, Serializable
      * @param gridWidth the width value
      */
     void setGridWidth(double gridWidth) {    this.gridWidth = gridWidth; }
+
+    public String getAuxExerName() {
+        return auxExerName;
+    }
+
+    public void setAuxExerName(String auxExerName) {
+        this.auxExerName = auxExerName;
+    }
+
+    public TTGCheckSetup getCheckSetup() {
+        return checkSetup;
+    }
+
+    public void setCheckSetup(TTGCheckSetup checkSetup) {
+        this.checkSetup = checkSetup;
+    }
 
     /**
      * The exercise name (used also as file name)
@@ -567,5 +584,37 @@ public class TruthTableGenModel implements ExerciseModel<Document>, Serializable
 
     public void setCommentPrintWidths(Double[] commentPrintWidths) {
         this.commentPrintWidths = commentPrintWidths;
+    }
+
+    public List<String> getBinaryOperatorList() {
+        return binaryOperatorList;
+    }
+
+    public void setBinaryOperatorList(List<String> binaryOperatorList) {
+        this.binaryOperatorList = binaryOperatorList;
+    }
+
+    public List<String> getUnaryOperatorList() {
+        return unaryOperatorList;
+    }
+
+    public void setUnaryOperatorList(List<String> unaryOperatorList) {
+        this.unaryOperatorList = unaryOperatorList;
+    }
+
+    public boolean isSetupExer() {
+        return setupExer;
+    }
+
+    public void setSetupExer(boolean setupExer) {
+        this.setupExer = setupExer;
+    }
+
+    public boolean isCheckTrans() {
+        return checkTrans;
+    }
+
+    public void setCheckTrans(boolean checkTrans) {
+        this.checkTrans = checkTrans;
     }
 }

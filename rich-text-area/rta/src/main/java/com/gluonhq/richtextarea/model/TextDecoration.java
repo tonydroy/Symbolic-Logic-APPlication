@@ -40,6 +40,7 @@ import static com.gluonhq.richtextarea.Tools.getFirstLetter;
  * TextDecoration is a {@link Decoration} that can be applied to a fragment of text in order to generate
  * rich text, that is, styled text with different text attributes like color of font.
  */
+
 public class TextDecoration implements Decoration {
 
     private String foreground;

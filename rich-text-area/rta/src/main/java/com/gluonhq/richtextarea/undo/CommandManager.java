@@ -37,6 +37,9 @@ public class CommandManager<T> {
 
     public static final Logger LOGGER = Logger.getLogger(CommandManager.class.getName());
 
+    // [PERFORMANCE FIX] Default limit to prevent memory exhaustion
+    private int capacity = 100;
+
     final Deque<AbstractCommand<T>> undoStack = new ArrayDeque<>();
     final Deque<AbstractCommand<T>> redoStack = new ArrayDeque<>();
     final T context;
@@ -51,12 +54,29 @@ public class CommandManager<T> {
         this.runnable = runnable;
     }
 
+    // [NEW] Allow configuration if needed
+    public void setCapacity(int capacity) {
+        this.capacity = capacity;
+        trim();
+    }
+
     public void execute(AbstractCommand<T> cmd) {
         Objects.requireNonNull(cmd).execute(context);
         undoStack.push(cmd);
         redoStack.clear();
+
+        // [CRITICAL] Enforce the limit
+        trim();
+
         end();
-        LOGGER.log(Level.FINE, "Execute: " + this);
+        LOGGER.log(Level.FINE, () -> "Execute: " + this);
+    }
+
+    // [HELPER] Drops oldest history to free memory
+    private void trim() {
+        while (undoStack.size() > capacity) {
+            undoStack.removeLast();
+        }
     }
 
     public void undo() {
@@ -65,7 +85,7 @@ public class CommandManager<T> {
             cmd.undo(context);
             redoStack.push(cmd);
             end();
-            LOGGER.log(Level.FINE, "Undo: " + this);
+            LOGGER.log(Level.FINE, ()-> "Undo: " + this);
         }
     }
 

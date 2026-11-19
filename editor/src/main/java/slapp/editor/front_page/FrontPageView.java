@@ -18,11 +18,8 @@ package slapp.editor.front_page;
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.Node;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
@@ -32,10 +29,11 @@ import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.ExerciseView;
 import slapp.editor.main_window.MainWindowView;
 
+
+
 /**
  * The view has dummy statement and comment areas, with an animation for its main content
  */
-
 public class FrontPageView implements ExerciseView<Label> {
     private Label exerciseStatement;
     private DecoratedRTA exerciseComment;
@@ -46,6 +44,8 @@ public class FrontPageView implements ExerciseView<Label> {
     private boolean played = false;
     private ChangeListener contentFocusListener;
 
+    // SCORCHED EARTH RULE 2: Kill Switch for asynchronous event interception during teardown
+    private boolean isTornDown = false;
 
 
 
@@ -61,24 +61,11 @@ public class FrontPageView implements ExerciseView<Label> {
 
         exerciseContent = frontAnimation.getFrontPageBox();
 
-        /*
-        Pane spacerPane = new Pane();
         double centeringWidth = (mainView.getMinStageWidth() - exerciseContent.getPrefWidth()) / 2.0;
-        spacerPane.setMinWidth(centeringWidth);
-        exerciseControl = spacerPane;
+        AnchorPane controlPane = new AnchorPane();
+        controlPane.setMinWidth(centeringWidth - 10);
 
-         */
-
-  //      CheckBox checkBox = mainView.getInstructorCheck();
-        AnchorPane controlPane = new AnchorPane();    //(checkBox)
-  //      AnchorPane.setBottomAnchor(checkBox, 10.0);
-  //      AnchorPane.setRightAnchor(checkBox, 5.0);
-
-        double centeringWidth = (mainView.getMinStageWidth() - exerciseContent.getPrefWidth()) / 2.0;
-        controlPane.setMinWidth(centeringWidth);
         exerciseControl = controlPane;
-
-
 
         RichTextArea commentRTA = exerciseComment.getEditor();
         commentRTA.getActionFactory().open(new Document("Logo Here")).execute(new ActionEvent());
@@ -95,16 +82,87 @@ public class FrontPageView implements ExerciseView<Label> {
         exerciseComment.getParagraphToolbar().setMouseTransparent(true);
         exerciseComment.getKbdSelectorToolbar().setFocusTraversable(false);
         exerciseComment.getKbdSelectorToolbar().setMouseTransparent(true);
+
         mainView.editorInFocus(exerciseComment, ControlType.STATEMENT);
 
-        contentFocusListener = new ChangeListener() {
-            @Override
-            public void changed(ObservableValue ob, Object ov, Object nv) {
-                exerciseContent.focusedProperty().removeListener(contentFocusListener);
-                frontAnimation.playFrontAnimation();
+        frontAnimation.playFrontAnimation();
+    }
+
+    // SCORCHED EARTH RULE 6: Sever Shared Nodes helper
+    private void severFromParent(Node node) {
+        try {
+            if (node != null && node.getParent() != null) {
+                if (node.getParent() instanceof javafx.scene.layout.Pane) ((javafx.scene.layout.Pane) node.getParent()).getChildren().remove(node);
+                else if (node.getParent() instanceof javafx.scene.Group) ((javafx.scene.Group) node.getParent()).getChildren().remove(node);
             }
-        };
-        exerciseContent.focusedProperty().addListener(contentFocusListener);
+        } catch (Exception e) {}
+    }
+
+    // SCORCHED EARTH RULE 1 & 5: Cleanup cascading and isolation
+    public void cleanup() {
+        // SCORCHED EARTH RULE 2: Engage Kill Switch
+        isTornDown = true;
+
+        // SCORCHED EARTH RULE 7: Safe Global State & Null-Poisoning Prevention
+        try {
+            if (mainView != null) {
+                mainView.textFieldInFocus(); // Safely clear toolbars
+            }
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 4: The Isolated JavaFX Skin Hammer
+        try {
+            final RichTextArea commEditor = (exerciseComment != null) ? exerciseComment.getEditor() : null;
+            if (commEditor != null) {
+                javafx.animation.PauseTransition pt = new javafx.animation.PauseTransition(javafx.util.Duration.millis(1500));
+                pt.setOnFinished(ev -> {
+                    try {
+                        if (commEditor.getDocument() == null || commEditor.getDocument().getText().isEmpty()) {
+                            commEditor.getActionFactory().open(new Document(" ")).execute(new ActionEvent());
+                        }
+                        commEditor.setSkin(null);
+                    } catch (Exception ex) {}
+                });
+                pt.play();
+            }
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 6: Disconnect UI Controls
+        try {
+            if (exerciseStatement != null) {
+                severFromParent(exerciseStatement);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (exerciseControl != null) {
+                severFromParent(exerciseControl);
+                if (exerciseControl instanceof Pane) ((Pane) exerciseControl).getChildren().clear();
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (exerciseContent != null) {
+                severFromParent(exerciseContent);
+                exerciseContent.getChildren().clear();
+            }
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 1: Cascade cleanup to Animation (via reflection)
+        try {
+            if (frontAnimation != null) {
+                frontAnimation.getClass().getMethod("cleanup").invoke(frontAnimation);
+            }
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 1: Final Nullification
+        try { this.mainView = null; } catch (Exception e) {}
+        try { this.exerciseStatement = null; } catch (Exception e) {}
+        try { this.exerciseComment = null; } catch (Exception e) {}
+        try { this.exerciseControl = null; } catch (Exception e) {}
+        try { this.frontAnimation = null; } catch (Exception e) {}
+        try { this.exerciseContent = null; } catch (Exception e) {}
+        try { this.contentFocusListener = null; } catch (Exception e) {}
     }
 
     @Override
@@ -127,10 +185,8 @@ public class FrontPageView implements ExerciseView<Label> {
     public Node getRightControl() { return null; }
 
     @Override
-    public Node getPointsNode() {
-        return null;
-    }
+    public Node getPointsNode() { return null; }
 
     @Override
-    public int getPointsPossible() { return 0;  }
+    public int getPointsPossible() { return 0; }
 }

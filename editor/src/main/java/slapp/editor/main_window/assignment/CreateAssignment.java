@@ -46,9 +46,16 @@ import java.util.Random;
 
 import static javafx.scene.control.ButtonType.OK;
 
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
+
+
+
 /**
  * Window to create or revise an assignment
  */
+
+
 public class CreateAssignment {
 
     private MainWindow mainWindow;
@@ -75,6 +82,7 @@ public class CreateAssignment {
     private Label creationIDNum;
     private List<TextField> labelFields = new ArrayList<>();
     private List<TextField> valueFields = new ArrayList<>();
+
 
     /**
      * Create assignment window
@@ -267,7 +275,7 @@ public class CreateAssignment {
             File exerciseFile = (File) exerciseSelectionModel.getSelectedItem();
             if (exerciseFile != null) {
                 ExerciseModel exerciseModel = DiskUtilities.getExerciseModelFromFile(exerciseFile);
-                if (exerciseModel !=null) {
+                if (exerciseModel != null) {
                     if (!exerciseModel.isStarted()) {
                         int newIndex = assignmentSelectionModel.getSelectedIndex() + 1;
                         assignmentList.getItems().add(newIndex, exerciseModel);
@@ -277,6 +285,7 @@ public class CreateAssignment {
                             public void run() {
                                 assignmentSelectionModel.select(newIndex);
                                 assignmentList.getFocusModel().focus(newIndex);
+                                ensureVisible(assignmentList, newIndex);
                             }
                         });
 
@@ -303,6 +312,7 @@ public class CreateAssignment {
                         public void run() {
                             assignmentSelectionModel.select(newIndex);
                             assignmentList.getFocusModel().focus(newIndex);
+                            ensureVisible(assignmentList, newIndex);
                         }
                     });
 
@@ -315,16 +325,61 @@ public class CreateAssignment {
             }
         });
 
+
         assignmentSelectionModel.selectedItemProperty().addListener(new ChangeListener<ExerciseModel>() {
             @Override
             public void changed(ObservableValue ob, ExerciseModel ov, ExerciseModel nv) {
                 if (nv != null) {
-                    TypeSelectorFactories factory = new TypeSelectorFactories(mainWindow);
-                    Exercise exercise = factory.getExerciseFromModelObject(nv);
-                    mainWindow.setUpExercise(exercise);
+                    Platform.runLater(() -> {
+                        TypeSelectorFactories factory = new TypeSelectorFactories(mainWindow);
+                        Exercise exercise = factory.getExerciseFromModelObject(nv);
+                        mainWindow.setUpExercise(exercise);
+                    });
                 }
             }
         });
+
+
+/*
+        final javafx.animation.PauseTransition previewDelay = new javafx.animation.PauseTransition(javafx.util.Duration.millis(150));
+        final java.util.concurrent.atomic.AtomicReference<java.lang.ref.WeakReference<Exercise>> leakTestRef =
+                new java.util.concurrent.atomic.AtomicReference<>(null);
+
+        assignmentSelectionModel.selectedItemProperty().addListener((ob, ov, nv) -> {
+            if (nv != null) {
+                previewDelay.setOnFinished(event -> {
+
+                    Exercise aboutToDiscard = mainWindow.getCurrentExercise();
+                    if (aboutToDiscard != null) {
+                        leakTestRef.set(new java.lang.ref.WeakReference<>(aboutToDiscard));
+                    }
+
+                    TypeSelectorFactories factory = new TypeSelectorFactories(mainWindow);
+                    Exercise exercise = factory.getExerciseFromModelObject(nv);
+                    mainWindow.setUpExercise(exercise);
+
+                    aboutToDiscard = null; // Clear local strong reference
+
+                    // Wait 250ms for JavaFX to detach the UI from the Scene graph before testing!
+                    javafx.animation.PauseTransition gcDelay = new javafx.animation.PauseTransition(javafx.util.Duration.millis(2000));
+                    gcDelay.setOnFinished(gcEvent -> {
+                        System.gc();
+                        if (leakTestRef.get() != null && leakTestRef.get().get() != null) {
+                            System.out.println("MEMORY LEAK: " + leakTestRef.get().get().getClass().getSimpleName() + " " + leakTestRef.get().get() + " is still in memory!");
+                        } else {
+                            System.out.println("SUCCESS: Previous Exercise was safely destroyed.");
+                        }
+                    });
+                    gcDelay.play();
+
+                });
+
+                previewDelay.playFromStart();
+            }
+        });
+ */
+
+
 
         removeButton.setOnAction(e -> {
             if (assignmentSelectionModel.getSelectedIndex() >= 0) {
@@ -361,12 +416,13 @@ public class CreateAssignment {
 
         helpArea = new TextArea(helpText);
         helpArea.setWrapText(true);
-        helpArea.setPrefHeight(110);
+        helpArea.setPrefHeight(135);
         helpArea.setEditable(false);
         helpArea.setFocusTraversable(false);
         helpArea.setMouseTransparent(true);
         helpArea.setPadding(new Insets(5,5,5,5));
-        helpArea.setStyle("-fx-text-fill: mediumslateblue");
+        helpArea.setFont(Font.font("Noto Serif Combo", 12));
+        //helpArea.setStyle("-fx-text-fill: mediumslateblue");
 
         borderPane.setBottom(helpArea);
 
@@ -382,7 +438,8 @@ public class CreateAssignment {
 
         //test for mac menu bar
  //       stage.initOwner(EditorMain.mainStage);
-        stage.initModality(Modality.APPLICATION_MODAL);
+  //      stage.initModality(Modality.APPLICATION_MODAL);
+        EditorAlerts.makeIndependentBlockingStage(stage);
 
         stage.setWidth(605);
    //     stage.setMinHeight(200);
@@ -396,6 +453,66 @@ public class CreateAssignment {
         });
         stage.show();
         setCenterVgrow();
+    }
+
+    private void ensureVisible(ListView<?> listView, int index) {
+        // 1. Force ListViewSkin to flush rowCountDirty and update VirtualFlow cell count
+        listView.requestLayout();
+        listView.layout();
+
+        javafx.scene.control.skin.VirtualFlow<?> flow =
+                (javafx.scene.control.skin.VirtualFlow<?>) listView.lookup(".virtual-flow");
+        if (flow == null) {
+            listView.scrollTo(index);
+            return;
+        }
+
+        // 2. Get the usable viewport height (clipped-container excludes any horizontal scrollbar)
+        javafx.scene.Node clipView = flow.lookup(".clipped-container");
+        double viewportHeight = (clipView != null)
+                ? clipView.getLayoutBounds().getHeight()
+                : flow.getHeight();
+
+        javafx.scene.control.IndexedCell<?> cell = flow.getVisibleCell(index);
+        if (cell != null) {
+            // Cell is at least partially in the viewport; check if top or bottom is clipped
+            double cellTop = cell.getLayoutY();
+            double cellBottom = cellTop + cell.getHeight();
+
+            if (cellTop < 0) {
+                flow.scrollPixels(cellTop);
+            } else if (cellBottom > viewportHeight) {
+                flow.scrollPixels(cellBottom - viewportHeight);
+            }
+            return;
+        }
+
+        // 3. Cell is completely outside the viewport
+        javafx.scene.control.IndexedCell<?> firstCell = flow.getFirstVisibleCell();
+        javafx.scene.control.IndexedCell<?> lastCell = flow.getLastVisibleCell();
+
+        if (firstCell != null && index < firstCell.getIndex()) {
+            flow.scrollToTop(index);
+        } else if (lastCell != null && index > lastCell.getIndex()) {
+            // Scroll down by the exact pixel distance needed to bring index to the bottom edge
+            double delta = (lastCell.getLayoutY() + lastCell.getHeight() - viewportHeight)
+                    + (index - lastCell.getIndex()) * lastCell.getHeight();
+            flow.scrollPixels(delta);
+
+            // Final check in case cell heights varied or index was far below the viewport
+            flow.layout();
+            javafx.scene.control.IndexedCell<?> target = flow.getVisibleCell(index);
+            if (target != null) {
+                double bottom = target.getLayoutY() + target.getHeight();
+                if (bottom > viewportHeight) {
+                    flow.scrollPixels(bottom - viewportHeight);
+                }
+            } else {
+                flow.scrollToTop(index);
+            }
+        } else {
+            flow.scrollTo(index);
+        }
     }
 
     /*

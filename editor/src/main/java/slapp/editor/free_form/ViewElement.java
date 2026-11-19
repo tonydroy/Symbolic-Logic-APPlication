@@ -60,4 +60,26 @@ public class ViewElement {
      */
     public void setIndentLevel(int indentLevel) {     this.indentLevel = indentLevel;   }
 
+    // SCORCHED EARTH RULE 6: Sever Shared Nodes helper
+    private void severFromParent(Node node) {
+        try {
+            if (node != null && node.getParent() != null) {
+                if (node.getParent() instanceof javafx.scene.layout.Pane) ((javafx.scene.layout.Pane) node.getParent()).getChildren().remove(node);
+                else if (node.getParent() instanceof javafx.scene.Group) ((javafx.scene.Group) node.getParent()).getChildren().remove(node);
+            }
+        } catch (Exception e) {}
+    }
+
+    public void cleanup() {
+        // SCORCHED EARTH RULE 5 & 6: Break UI ties and sever node
+        try {
+            if (node != null) {
+                severFromParent(node);
+            }
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 1: Final nullification
+        try { this.node = null; } catch (Exception e) {}
+    }
+
 }

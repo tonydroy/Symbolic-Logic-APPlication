@@ -19,19 +19,25 @@ import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+import javafx.scene.transform.Scale;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import slapp.editor.EditorMain;
 import javafx.scene.text.Font;
 import slapp.editor.DiskUtilities;
 import slapp.editor.EditorAlerts;
@@ -43,14 +49,35 @@ import slapp.editor.page_editor.PageContent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import static slapp.editor.EditorMain.*;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.animation.PauseTransition;
+import javafx.event.EventHandler;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Separator;
+import javafx.scene.control.Spinner;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.util.Duration;
+import java.util.IdentityHashMap;
+import java.util.Map;
 
-import static javafx.scene.control.ButtonType.OK;
-import static slapp.editor.EditorMain.RTA_PRINT_BMP;
-import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
 
 /**
- * AB/EFG exercise has binary and tertiary choices and explain field
+ * AB/EFG exercise has binary choice (A/B), triple choice (E/F/G), and explain field
  */
+
+
 public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
     private MainWindow mainWindow;
     private ABEFGmodel abefgModel;
@@ -59,7 +86,36 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
     private boolean exerciseModified = false;
     private int lastPageNum = -1;
     private Font labelFont = new Font("Noto Serif Combo", 11);
+    private Exercise auxExerciseA;
+    private Exercise auxExerciseB;
+    Stage tStage;
+    Pane thumbPane = new Pane();
+    Scene tScene = new Scene(new Pane());
 
+    private ABEFGCheck abefgCheck;
+
+    // SCORCHED EARTH RULE 1: The Asynchronous Ghost "Kill Switch"
+    private boolean isTornDown = false;
+
+    // SCORCHED EARTH RULE 3: Eradicate Anonymous Lambdas
+    private ChangeListener<String> pointsEarnedListener;
+    private ChangeListener<Boolean> checkBoxAListener;
+    private ChangeListener<Boolean> checkBoxBListener;
+    private ChangeListener<Boolean> checkBoxEListener;
+    private ChangeListener<Boolean> checkBoxFListener;
+    private ChangeListener<Boolean> checkBoxGListener;
+    private ChangeListener<Boolean> statementFocusListener;
+    private ChangeListener<Number> commentFullHeightListener;
+    private ChangeListener<Boolean> commentModifiedListener;
+    private ChangeListener<Boolean> commentFocusListener;
+    private EventHandler<ActionEvent> addPageHandler;
+    private EventHandler<ActionEvent> removePageHandler;
+    private EventHandler<MouseEvent> thumbPaneClickHandler;
+
+    // Pagination Listeners Identity Maps (prevents index-shifting CME/memory leaks when removing pages)
+    private Map<Object, ChangeListener<Number>> pageHeightListenerMap = new IdentityHashMap<>();
+    private Map<Object, ChangeListener<Boolean>> pageModifiedListenerMap = new IdentityHashMap<>();
+    private Map<Object, ChangeListener<Boolean>> pageFocusListenerMap = new IdentityHashMap<>();
 
     /**
      * Construct AB/EFG edit exercise
@@ -80,7 +136,6 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
      * Set up choices, statement, comment, and pagination view elements
      */
     private void setEditView() {
-
         abefgView.setContentPrompt(abefgModel.getContentPrompt());
         abefgView.setStatementPrefHeight(abefgModel.getStatementPrefHeight());
         abefgView.setCommentPrefHeight(abefgModel.getCommentPrefHeight());
@@ -88,15 +143,18 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
 
         abefgView.setPointsPossible(abefgModel.getPointsPossible());
         if (abefgModel.getPointsEarned() >= 0) abefgView.getPointsEarnedTextField().setText(Integer.toString(abefgModel.getPointsEarned()));
-        abefgView.getPointsEarnedTextField().textProperty().addListener((ob, ov, nv) -> {
-            exerciseModified = true;
-        });
 
+        pointsEarnedListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            exerciseModified = true;
+        };
+        abefgView.getPointsEarnedTextField().textProperty().addListener(pointsEarnedListener);
 
         //choices
         ABEFGmodelExtra modelFields = abefgModel.getModelFields();
         abefgView.getLeaderLabelAB().setText(modelFields.getLeaderAB());
         abefgView.getLeaderLabelEFG().setText(modelFields.getLeaderEFG());
+
         CheckBox checkBoxA = abefgView.getCheckBoxA();
         CheckBox checkBoxB = abefgView.getCheckBoxB();
         CheckBox checkBoxE = abefgView.getCheckBoxE();
@@ -105,62 +163,57 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
 
         checkBoxA.setText(modelFields.getPromptA());
         checkBoxA.setSelected(modelFields.getValueA());
-        checkBoxA.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue ob, Boolean ov, Boolean nv) {
-                if (nv == true) checkBoxB.setSelected(false);
-                exerciseModified = true;
-            }
-        });
+        checkBoxAListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            if (Boolean.TRUE.equals(nv)) if (checkBoxB != null) checkBoxB.setSelected(false);
+            exerciseModified = true;
+        };
+        checkBoxA.selectedProperty().addListener(checkBoxAListener);
 
         checkBoxB.setText(modelFields.getPromptB());
         checkBoxB.setSelected(modelFields.getValueB());
-        checkBoxB.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue ob, Boolean ov, Boolean nv) {
-                if (nv == true) checkBoxA.setSelected(false);
-                exerciseModified = true;
-            }
-        });
+        checkBoxBListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            if (Boolean.TRUE.equals(nv)) if (checkBoxA != null) checkBoxA.setSelected(false);
+            exerciseModified = true;
+        };
+        checkBoxB.selectedProperty().addListener(checkBoxBListener);
 
         checkBoxE.setText(modelFields.getPromptE());
         checkBoxE.setSelected(modelFields.getValueE());
-        checkBoxE.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue ob, Boolean ov, Boolean nv) {
-                if (nv == true) {
-                    checkBoxF.setSelected(false);
-                    checkBoxG.setSelected(false);
-                    exerciseModified = true;
-                }
+        checkBoxEListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            if (Boolean.TRUE.equals(nv)) {
+                if (checkBoxF != null) checkBoxF.setSelected(false);
+                if (checkBoxG != null) checkBoxG.setSelected(false);
             }
-        });
+            exerciseModified = true;
+        };
+        checkBoxE.selectedProperty().addListener(checkBoxEListener);
 
         checkBoxF.setText(modelFields.getPromptF());
         checkBoxF.setSelected(modelFields.getValueF());
-        checkBoxF.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue ob, Boolean ov, Boolean nv) {
-                if (nv == true) {
-                    checkBoxE.setSelected(false);
-                    checkBoxG.setSelected(false);
-                    exerciseModified = true;
-                }
+        checkBoxFListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            if (Boolean.TRUE.equals(nv)) {
+                if (checkBoxE != null) checkBoxE.setSelected(false);
+                if (checkBoxG != null) checkBoxG.setSelected(false);
             }
-        });
+            exerciseModified = true;
+        };
+        checkBoxF.selectedProperty().addListener(checkBoxFListener);
 
         checkBoxG.setText(modelFields.getPromptG());
         checkBoxG.setSelected(modelFields.getValueG());
-        checkBoxG.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue ob, Boolean ov, Boolean nv) {
-                if (nv == true) {
-                    checkBoxE.setSelected(false);
-                    checkBoxF.setSelected(false);
-                    exerciseModified = true;
-                }
+        checkBoxGListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            if (Boolean.TRUE.equals(nv)) {
+                if (checkBoxE != null) checkBoxE.setSelected(false);
+                if (checkBoxF != null) checkBoxF.setSelected(false);
             }
-        });
+            exerciseModified = true;
+        };
+        checkBoxG.selectedProperty().addListener(checkBoxGListener);
 
         //statement
         DecoratedRTA statementDRTA = new DecoratedRTA();
@@ -168,33 +221,57 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
         statementEditor.getActionFactory().open(abefgModel.getExerciseStatement()).execute(new ActionEvent());
 
         mainView.editorInFocus(statementDRTA, ControlType.STATEMENT);
-        statementEditor.focusedProperty().addListener((o, ov, nv) -> {
-            if (nv) {
-                mainView.editorInFocus(statementDRTA, ControlType.STATEMENT);
-                mainView.getRTATextHeight(statementEditor);
-            }
-        });
+
+        statementFocusListener = (o, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            try {
+                if (nv) {
+                    mainView.editorInFocus(statementDRTA, ControlType.STATEMENT);
+                    mainView.setRTATextHeight(statementEditor.getFullHeight());
+                } else mainView.undoRTATextHeight();
+            } catch (Exception e) {}
+        };
+        statementEditor.focusedProperty().addListener(statementFocusListener);
         abefgView.setExerciseStatement(statementDRTA);
-        statementEditor.setPrefHeight(statementEditor.getFullHeight() + RTA_SCREEN_BMP);
 
         //comment
         DecoratedRTA commentDRTA = new DecoratedRTA();
         RichTextArea commentEditor = commentDRTA.getEditor();
-
-        commentEditor.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            exerciseModified = true;
-            double commentTextHeight = mainView.getRTATextHeight(commentEditor);
-            abefgModel.setCommentTextHeight(commentTextHeight);
-        });
         commentEditor.getActionFactory().open(abefgModel.getExerciseComment()).execute(new ActionEvent());
+        commentEditor.getActionFactory().saveNow().execute(new ActionEvent());
+
+        final boolean[] commentPrimed = {false};
+
+        commentFullHeightListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null || abefgModel == null) return;
+            if (!commentPrimed[0]) {
+                commentPrimed[0] = true;
+                return;
+            }
+            double height = (double) nv;
+            mainView.setRTATextHeight(height);
+            abefgModel.setCommentTextHeight(height);
+        };
+        commentEditor.fullHeightProperty().addListener(commentFullHeightListener);
+
+        commentModifiedListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            if (nv) exerciseModified = true;
+        };
+        commentEditor.modifiedProperty().addListener(commentModifiedListener);
 
         mainView.editorInFocus(commentDRTA, ControlType.AREA);
-        commentEditor.focusedProperty().addListener((o, ov, nv) -> {
-            if (nv) {
-                mainView.editorInFocus(commentDRTA, ControlType.AREA);
-                abefgModel.setCommentTextHeight(mainWindow.getMainView().getRTATextHeight(commentEditor));
-            }
-        });
+
+        commentFocusListener = (o, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            try {
+                if (nv) {
+                    mainView.editorInFocus(commentDRTA, ControlType.AREA);
+                    mainView.setRTATextHeight(commentEditor.getFullHeight());
+                } else mainView.undoRTATextHeight();
+            } catch (Exception e) {}
+        };
+        commentEditor.focusedProperty().addListener(commentFocusListener);
         abefgView.setExerciseComment(commentDRTA);
 
         //pagination
@@ -207,125 +284,314 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
             DecoratedRTA drta = new DecoratedRTA();
             RichTextArea pageEditor = drta.getEditor();
 
-            pageEditor.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-                exerciseModified = true;
-                double pageTextHeight = mainView.getRTATextHeight(pageEditor);
-                pageContent.setTextHeight(pageTextHeight);
-            });
-
             pageEditor.getActionFactory().open(doc).execute(new ActionEvent());
             pageEditor.getActionFactory().saveNow().execute(new ActionEvent());
-            mainView.editorInFocus(drta, ControlType.AREA);
-            pageEditor.focusedProperty().addListener((o, ov, nv) -> {
-                if (nv) {
-                    mainView.editorInFocus(drta, ControlType.AREA);
-                    mainView.getRTATextHeight(pageEditor);
+
+
+            final boolean[] pagePrimed = {false};
+
+            ChangeListener<Number> pHeightListener = (ob, ov, nv) -> {
+                if (isTornDown || mainView == null || abefgModel == null) return;
+                if (!pagePrimed[0]) {
+                    pagePrimed[0] = true;
+                    if (!pageEditor.isFocused()) return;
                 }
-            });
+                double height = (double) nv;
+                if (pageEditor.isFocused()) mainView.setRTATextHeight(height);
+                pageContent.setTextHeight(height);
+            };
+
+            pageHeightListenerMap.put(pageEditor, pHeightListener);
+            pageEditor.fullHeightProperty().addListener(pHeightListener);
+
+            ChangeListener<Boolean> pModListener = (ob, ov, nv) -> {
+                if (isTornDown || mainView == null) return;
+                if (nv) exerciseModified = true;
+            };
+            pageModifiedListenerMap.put(pageEditor, pModListener);
+            pageEditor.modifiedProperty().addListener(pModListener);
+
+            mainView.editorInFocus(drta, ControlType.AREA);
+
+            ChangeListener<Boolean> pFocusListener = (o, ov, nv) -> {
+                if (isTornDown || mainView == null) return;
+                try {
+                    if (nv) {
+                        mainView.editorInFocus(drta, ControlType.AREA);
+                        double height = pageEditor.getFullHeight();
+                        mainView.setRTATextHeight(height);
+                    } else mainView.undoRTATextHeight();
+                } catch (Exception e) {}
+            };
+            pageFocusListenerMap.put(pageEditor, pFocusListener);
+            pageEditor.focusedProperty().addListener(pFocusListener);
+
             contentList.add(drta);
         }
         abefgView.setContentPageList(contentList);
 
         //cleanup
         abefgView.initializeViewDetails();
-        abefgView.getAddPageButton().setOnAction(e -> addPageAction());
-        abefgView.getRemovePageButton().setOnAction(e -> removePageAction());
+        abefgView.setRightControlBox();
+        abefgCheck = new ABEFGCheck(this);
+
+        addPageHandler = e -> {
+            if (isTornDown || mainView == null) return;
+            addPageAction();
+        };
+        abefgView.getAddPageButton().setOnAction(addPageHandler);
+
+        removePageHandler = e -> {
+            if (isTornDown || mainView == null) return;
+            removePageAction();
+        };
+        abefgView.getRemovePageButton().setOnAction(removePageHandler);
+
+        Platform.runLater(() -> {
+            if (isTornDown || mainView == null) return;
+            if (mainWindow != null && mainWindow.getCurrentExercise() != this) return;
+            if (auxExerciseA != null) {
+                thumbPane = auxImage();
+                if (abefgView != null && abefgView.getControlBox() != null) {
+                    abefgView.getControlBox().getChildren().add(thumbPane);
+                }
+            }
+        });
+    }
+
+    private Pane auxImage() {
+        Pane thumbPane = new Pane();
+        if (auxExerciseA != null && auxExerciseA.getAuxExerNode() != null)  {
+            thumbPane.setStyle("-fx-background-color: FAFAFA;");
+            Node auxExerNode = auxExerciseA.getAuxExerNode();
+            auxExerNode.setMouseTransparent(true);
+            auxExerNode.setFocusTraversable(false);
+            thumbPane.getChildren().add(auxExerNode);
+
+            Group thumbRoot = new Group();
+            Scene scene = new Scene(thumbRoot);
+            thumbRoot.getChildren().add(thumbPane);
+            thumbRoot.applyCss();
+            thumbRoot.layout();
+
+            double thumbWidth = thumbPane.getLayoutBounds().getWidth();
+            double scale = thumbWidth > 0 ? 85.0 / thumbWidth : .16;
+
+            Rectangle clip = new Rectangle();
+            clip.setWidth(800);
+            clip.setHeight(400);
+            thumbPane.setClip(clip);
+
+            thumbPane.getTransforms().clear();
+            thumbPane.getTransforms().add(new Scale(scale, scale));
+
+            thumbPaneClickHandler = event -> {
+                if (isTornDown || mainView == null || auxExerciseB == null) return;
+                if (tStage == null || !tStage.isShowing()) {
+                    Pane pane1 = new Pane(auxExerciseB.getAuxExerNode());
+                    pane1.setDisable(true);
+
+
+                    pane1.setId("aux-pane");
+                    String css = "#aux-pane { -fx-opacity: 0.85; } \n" +
+                            "#aux-pane * { -fx-opacity: 1.0; } \n" +
+                            "#aux-pane .caret { -fx-opacity: 0.0; }";
+                    String cssUri = "data:text/css;base64," +
+                            java.util.Base64.getEncoder().encodeToString(css.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    pane1.getStylesheets().add(cssUri);
+
+
+                    Pane spacerPane = new Pane();
+                    spacerPane.prefHeightProperty().bind(pane1.heightProperty());
+                    spacerPane.prefWidthProperty().bind(pane1.widthProperty());
+                    Group group = new Group(spacerPane);
+                    AnchorPane comboPane = new AnchorPane(group, pane1);
+                    ScrollPane tPane = new ScrollPane(comboPane);
+                    tPane.setFitToHeight(false);
+                    tPane.setFitToWidth(false);
+
+                    tScene.setRoot(tPane);
+                    tPane.applyCss();
+                    tPane.layout();
+
+                    tStage = new Stage();
+                    tStage.setScene(tScene);
+                    tStage.setTitle(((ExerciseModel) auxExerciseB.getExerciseModel()).getExerciseName());
+                    tStage.initStyle(StageStyle.UTILITY);
+
+             //       tStage.initOwner(EditorMain.mainStage);
+                    tStage.initModality(Modality.NONE);
+                    Stage mainStage = EditorMain.mainStage;
+                    tStage.setX(mainStage.getX() + mainStage.getWidth()  - 500);
+                    tStage.setY(mainStage.getY() + mainStage.getHeight()  - 300);
+
+                    tStage.setWidth(pane1.getWidth() + RTA_WIDTH_BMP);
+                    tStage.setHeight(Math.min(mainStage.getHeight() - 100, pane1.getHeight() + RTA_SCREEN_BMP + 25));
+
+                    tStage.show();
+
+                    Platform.runLater(() -> {
+                        if (isTornDown || mainView == null || tStage == null) return;
+                        double prefX = mainStage.getX() + mainStage.getWidth() - tStage.getWidth() + 50;
+                        double prefY = mainStage.getY() + mainStage.getHeight() - tStage.getHeight()+ 50;
+                        Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
+
+                        tStage.setX(Math.min(prefX, bounds.getMaxX() - tStage.getWidth()));
+                        tStage.setY(Math.min(prefY, bounds.getMaxY() - tStage.getHeight()));
+
+                    });
+                } else {
+                    tStage.close();
+                }
+            };
+            thumbPane.setOnMouseClicked(thumbPaneClickHandler);
+        }
+        return thumbPane;
+    }
+
+    public void clearStandingPopups() {
+        if (tStage != null) tStage.close();
     }
 
     /*
      * Add page after the current page
      */
     private void addPageAction() {
+        if (isTornDown || mainView == null || abefgModel == null || abefgView == null) return;
+
         int newPageIndex = abefgView.getContentPageIndex() + 1;
-        abefgModel.addBlankContentPage(newPageIndex);
 
         DecoratedRTA drta = new DecoratedRTA();
         RichTextArea editor = drta.getEditor();
         editor.getActionFactory().saveNow().execute(new ActionEvent());
 
-        editor.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            exerciseModified = true;
-            double textHeight = mainView.getRTATextHeight(editor);
-            abefgModel.getPageContents().get(newPageIndex).setTextHeight(textHeight);
-        });
+        abefgView.addBlankContentPage(newPageIndex, drta);
+        abefgModel.addBlankContentPage(newPageIndex);
+        PageContent newPageContent = abefgModel.getPageContents().get(newPageIndex);
+
+        ChangeListener<Number> pHeightListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null || abefgModel == null) return;
+            double height = (double) nv;
+            mainView.setRTATextHeight(height);
+            newPageContent.setTextHeight(height);
+        };
+
+
+        pageHeightListenerMap.put(editor, pHeightListener);
+        editor.fullHeightProperty().addListener(pHeightListener);
+
+        ChangeListener<Boolean> pModListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            if (nv) exerciseModified = true;
+        };
+        pageModifiedListenerMap.put(editor, pModListener);
+        editor.modifiedProperty().addListener(pModListener);
 
         mainView.editorInFocus(drta, ControlType.AREA);
-        editor.focusedProperty().addListener((o, ov, nv) -> {
-            if (nv) {
-                mainView.editorInFocus(drta, ControlType.AREA);
-                abefgModel.getPageContents().get(newPageIndex).setTextHeight(mainView.getRTATextHeight(editor));
-            }
-        });
-        abefgView.addBlankContentPage(newPageIndex, drta);
+
+        ChangeListener<Boolean> pFocusListener = (o, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            try {
+                if (nv) {
+                    mainView.editorInFocus(drta, ControlType.AREA);
+                    mainView.setRTATextHeight(editor.getFullHeight());
+                } else mainView.undoRTATextHeight();
+            } catch (Exception e) {}
+        };
+        pageFocusListenerMap.put(editor, pFocusListener);
+        editor.focusedProperty().addListener(pFocusListener);
+
+
     }
 
     /*
      * Remove the current page
      */
     private void removePageAction() {
+        if (isTornDown || mainView == null || abefgModel == null || abefgView == null) return;
+        int currentPageIndex = abefgView.getContentPageIndex();
+
         if (abefgModel.getPageContents().size() <= 1) {
             EditorAlerts.showSimpleAlert("Cannot Remove", "Your response must include at least one page.");
         }
         else {
-            int currentPageIndex = abefgView.getContentPageIndex();
-            boolean okContinue = true;
-            if (abefgView.getContentPageList().get(currentPageIndex).getEditor().isModified()) {
-                Alert confirm = EditorAlerts.confirmationAlert("Confirm Remove", "This page appears to have unsaved changes.  Continue to remove?");
-                Optional<ButtonType> result = confirm.showAndWait();
-                if (result.get() != OK) okContinue = false;
+            if (currentPageIndex == 0) {
+                EditorAlerts.showSimpleAlert("Cannot Remove", "Cannot remove top page with selection boxes.");
             }
-            if (okContinue) {
-                abefgModel.getPageContents().remove(currentPageIndex);
-                abefgView.removeContentPage(currentPageIndex);
-                exerciseModified = true;
+            else {
+                boolean okContinue = true;
+                if (abefgView.getContentPageList().get(currentPageIndex).getEditor().isModified()) {
+                    Alert confirm = EditorAlerts.confirmationAlert("Confirm Remove", "This page appears to have unsaved changes.  Continue to remove?");
+                    Optional<ButtonType> result = confirm.showAndWait();
+                    if (result.get() != ButtonType.OK) okContinue = false;
+                }
+                if (okContinue) {
+                    // SCORCHED EARTH RULE 9: The UI Deletion Fix (Clean up dynamic listeners on removed node)
+                    try {
+                        DecoratedRTA deletedDRTA = abefgView.getContentPageList().get(currentPageIndex);
+                        if (deletedDRTA != null && deletedDRTA.getEditor() != null) {
+                            final RichTextArea rta = deletedDRTA.getEditor();
+                            try { rta.fullHeightProperty().removeListener(pageHeightListenerMap.remove(rta)); } catch (Exception e) {}
+                            try { rta.modifiedProperty().removeListener(pageModifiedListenerMap.remove(rta)); } catch (Exception e) {}
+                            try { rta.focusedProperty().removeListener(pageFocusListenerMap.remove(rta)); } catch (Exception e) {}
+                            try { rta.prefWidthProperty().unbind(); } catch (Exception e) {}
+                            try { rta.contentAreaWidthProperty().unbind(); } catch (Exception e) {}
+                            try {
+                                rta.setPromptText("");
+                                rta.setFocusTraversable(false);
+                                if (rta.getDocument() == null || rta.getDocument().getText().isEmpty()) {
+                                    rta.getActionFactory().open(new Document(" ")).execute(new ActionEvent());
+                                }
+                                javafx.animation.PauseTransition pt = new javafx.animation.PauseTransition(Duration.millis(1500));
+                                pt.setOnFinished(ev -> {
+                                    try { rta.setSkin(null); } catch (Exception ex) {}
+                                });
+                                pt.play();
+                            } catch (Exception e) {}
+                            severFromParent(rta);
+                        }
+                    } catch (Exception e) {}
+
+                    abefgView.removeContentPage(currentPageIndex);
+                    abefgModel.getPageContents().remove(currentPageIndex);
+                    exerciseModified = true;
+                }
             }
         }
     }
 
-    /**
-     * Model for this AB/EFG edit exercise
-     * @return the model
-     */
     @Override
-    public ABEFGmodel getExerciseModel() {
-        return abefgModel;
-    }
+    public ABEFGmodel getExerciseModel() { return abefgModel; }
 
-    /**
-     * View for this AB/EFG edit exercise
-     * @return the view
-     */
     @Override
-    public ABEFGview getExerciseView() {
-        return abefgView;
-    }
+    public ABEFGview getExerciseView() { return abefgView; }
 
-    /**
-     * Save exercise to disk
-     * @param saveAs true if "save as" should be invoked, and otherwise false
-     */
     @Override
     public void saveExercise(boolean saveAs) {
         boolean success = DiskUtilities.saveExercise(saveAs, getABEFGmodelFromView());
         if (success) exerciseModified = false;
     }
 
-    /**
-     * List of nodes to be sent to printer for this exercise
-     * @return the node list
-     */
     @Override
     public List<Node> getPrintNodes(ExerciseModel originalModel) {
         List<Node> nodeList = new ArrayList<>();
-        ABEFGmodel printModel = abefgModel;
+        ABEFGmodel printModel = (ABEFGmodel) originalModel;
         ABEFGexercise printExercise = this;
         double nodeWidth = PrintUtilities.getPageWidth() / mainWindow.getBaseScale();
 
-        //header node
-        Label exerciseName = new Label(abefgModel.getExerciseName());
+        Label exerciseName = new Label(printModel.getExerciseName());
         exerciseName.setStyle("-fx-font-weight: bold;");
-        HBox hbox = new HBox(exerciseName);
+
+        Region spacer = new Region();
+        Label pointsLabel = new Label("");
+        if (printModel.getPointsPossible() > 0)
+            pointsLabel.setText("   " + Integer.toString(printModel.getPointsEarned()) + "/" + Integer.toString(printModel.getPointsPossible()));
+
+        HBox hbox = new HBox(exerciseName, spacer, printCheckNode(), pointsLabel);
+        hbox.setAlignment(Pos.CENTER_LEFT);
+        hbox.setHgrow(spacer, Priority.ALWAYS);
         hbox.setPadding(new Insets(0,0,10,0));
+        hbox.setMinWidth(nodeWidth);
 
         Group headerRoot = new Group();
         Scene headerScene = new Scene(headerRoot);
@@ -340,9 +606,6 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
         headerSeparator.setPrefWidth(nodeWidth);
         nodeList.add(headerSeparator);
 
-
-
-        //statement node
         RichTextArea statementRTA = printExercise.getExerciseView().getExerciseStatement().getEditor();
         statementRTA.prefHeightProperty().unbind();
         statementRTA.prefWidthProperty().unbind();
@@ -358,9 +621,7 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
         statementSepBox.setAlignment(Pos.CENTER);
         nodeList.add(statementSepBox);
 
-
-        //content nodes
-        ABEFGmodelExtra fields = abefgModel.getModelFields();
+        ABEFGmodelExtra fields = printModel.getModelFields();
         Label leaderLabelAB = new Label(fields.getLeaderAB());
         CheckBox boxA = new CheckBox(fields.getPromptA());
         boxA.setSelected(fields.getValueA());
@@ -383,7 +644,6 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
 
         VBox checksBox = new VBox(10, abBox, efgBox);
         checksBox.setPadding(new Insets(10,0,20,0));
-
         nodeList.add(checksBox);
 
         List<DecoratedRTA> pageList = printExercise.getExerciseView().getContentPageList();
@@ -391,15 +651,12 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
         for (int i = 0; i < pageList.size(); i++) {
             DecoratedRTA drta = pageList.get(i);
             RichTextArea pageRTA = drta.getEditor();
-
-            pageRTA.prefWidthProperty().bind(mainView.scalePageWidthProperty());
-            pageRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
-
+            pageRTA.prefWidthProperty().bind(abefgView.localScalePageWidthProperty());
+            pageRTA.contentAreaWidthProperty().bind(abefgView.localScalePageWidthProperty());
             pageRTA.getStylesheets().clear(); pageRTA.getStylesheets().add("richTextAreaPrinter.css");
             double responseHeight = Math.max(40, pageContents.get(i).getTextHeight() + RTA_PRINT_BMP);
             pageRTA.setMinHeight(responseHeight);
             pageRTA.setMaxHeight(responseHeight);
-
             nodeList.add(pageRTA);
         }
 
@@ -411,7 +668,6 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
         contentSepBox.setAlignment(Pos.CENTER);
         nodeList.add(contentSepBox);
 
-        //comment node
         RichTextArea commentRTA = printExercise.getExerciseView().getExerciseComment().getEditor();
         commentRTA.prefHeightProperty().unbind();
         commentRTA.minWidthProperty().unbind();
@@ -419,102 +675,95 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
         commentRTA.setMaxWidth(nodeWidth);
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
 
-        Node commentNode;
-        if (printModel.getPointsPossible() > 0) {
-            Label pointsLabel = new Label(Integer.toString(printModel.getPointsEarned()) + "/" + Integer.toString(printModel.getPointsPossible()));
-            AnchorPane anchorPane = new AnchorPane(commentRTA, pointsLabel);
-            anchorPane.setTopAnchor(commentRTA, 0.0);
-            anchorPane.setLeftAnchor(commentRTA, 0.0);
-            anchorPane.setBottomAnchor(pointsLabel, 3.0);
-            anchorPane.setRightAnchor(pointsLabel, 3.0);
-       //     anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 15);
-            commentNode = anchorPane;
-        }
-        else commentNode = commentRTA;
-        nodeList.add(commentNode);
+
+        nodeList.add(commentRTA);
 
         return nodeList;
     }
 
-    /**
-     * Return to the initial (unworked) version of the exercise, retaining the comment only.
-     * @return the initial exercise
-     */
+    TextFlow printCheckNode() {
+        TextFlow flow = new TextFlow();
+        flow.setMaxWidth(200);
+        if (abefgCheck != null && abefgCheck.isCheckSuccess()) {
+            Text bigCheck = new Text("\ue89a");
+            bigCheck.setFont(Font.font("Noto Serif Combo", 14));
+            Text message = new Text("  " + abefgView.getCheckMessage());
+            message.setFont(Font.font("Noto Serif Combo", 11));
+            bigCheck.setFill(Color.ORCHID);
+            message.setFill(Color.PURPLE);
+            flow.getChildren().addAll(bigCheck, message);
+        }
+        return flow;
+    }
+
     @Override
     public ABEFGexercise resetExercise() {
         RichTextArea commentRTA = abefgView.getExerciseComment().getEditor();
         commentRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document commentDocument = commentRTA.getDocument();
+
+
         int pointsEarned = -1;
-        if (!abefgView.getPointsEarnedTextField().getText().equals("")) pointsEarned = Integer.parseInt(abefgView.getPointsEarnedTextField().getText());
+        TextField pointsField = abefgView.getPointsEarnedTextField();
+        if ((pointsField.isFocused() || abefgModel.getPointsEarned() >= 0) && pointsField.getText().isEmpty()) {
+            pointsField.setText("0");
+        }
+        if (!pointsField.getText().equals("")) pointsEarned = Integer.parseInt(pointsField.getText());
+
 
         ABEFGmodel originalModel = (ABEFGmodel) (abefgModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
+
+        double commentHeight = commentRTA.getFullHeight();
+        originalModel.setCommentTextHeight(commentHeight > 0 ? commentHeight : abefgModel.getCommentTextHeight());
+
         originalModel.setPointsEarned(pointsEarned);
+
+        ABEFGCheckSetup setup = originalModel.getCheckSetup();
+        if (abefgCheck != null) setup.setCheckTries(abefgCheck.getCheckTries());
+        setup.setCheckSuccess(false);
+        originalModel.setCheckSetup(setup);
+
         ABEFGexercise clearExercise = new ABEFGexercise(originalModel, mainWindow);
         return clearExercise;
     }
 
-    /**
-     * Exercise is modified if it is changed relative to last save
-     * @return true if exercise is modified, and otherwise false
-     */
     @Override
     public boolean isExerciseModified() {
-        RichTextArea commentEditor = abefgView.getExerciseComment().getEditor();
-        if (commentEditor.isModified()) exerciseModified = true;
+        if (abefgView == null) return false;
+        if (abefgView.getExerciseComment() != null) {
+            RichTextArea commentEditor = abefgView.getExerciseComment().getEditor();
+            if (commentEditor != null && commentEditor.isModified()) exerciseModified = true;
+        }
 
         List<DecoratedRTA> exerciseContent = abefgView.getContentPageList();
-        for (DecoratedRTA drta : exerciseContent) {
-            RichTextArea editor = drta.getEditor();
-            if (editor.isModified()) {
-                exerciseModified = true;
+        if (exerciseContent != null) {
+            for (DecoratedRTA drta : exerciseContent) {
+                if (drta != null && drta.getEditor() != null) {
+                    RichTextArea editor = drta.getEditor();
+                    if (editor.isModified()) exerciseModified = true;
+                }
             }
         }
         return exerciseModified;
     }
 
-    /**
-     * Exercise is modified if it is changed relative to last save
-     * @param modified true if exercise is modified, and otherwise false
-     */
     @Override
-    public void setExerciseModified(boolean modified) {
-        this.exerciseModified = modified;
-    }
-
-    /**
-     * No FF view node for the AB/EFG page edit exercise
-     * @return null
-     */
+    public void setExerciseModified(boolean modified) { this.exerciseModified = modified; }
     @Override
     public Node getFFViewNode() {return null;}
-
-    /**
-     * No FF print node for the AB/EFG page edit exercise
-     * @return null
-     */
     @Override
     public Node getFFPrintNode(ExerciseModel originalModel) {return null;}
-
     @Override
     public Spinner getFFHeightSpinner() {return null;}
     @Override
     public Spinner getFFWidthSpinner() {return null;}
 
-    /**
-     * Extract an {@link slapp.editor.main_window.ExerciseModel} from view of the exercise
-     * @return the exercise model
-     */
     @Override
     public ExerciseModel getExerciseModelFromView() {
         return (ExerciseModel) getABEFGmodelFromView();
     }
 
-    /*
-     * Extract AB/EFG edit model from view
-     * @return the page edit model
-     */
     private ABEFGmodel getABEFGmodelFromView() {
         RichTextArea commentRTA = abefgView.getExerciseComment().getEditor();
         commentRTA.getActionFactory().saveNow().execute(new ActionEvent());
@@ -530,10 +779,14 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
             if (editor.isModified()) exerciseModified = true;
             editor.getActionFactory().saveNow().execute(new ActionEvent());
             Document doc = editor.getDocument();
-            double textHeight = currentContents.get(i).getTextHeight();
+
+            double liveHeight = editor.getFullHeight();
+            double textHeight = liveHeight > 0 ? liveHeight : currentContents.get(i).getTextHeight();
+
             PageContent pageContent = new PageContent(doc, textHeight);
             contentList.add(pageContent);
         }
+
         String name = abefgModel.getExerciseName();
         String prompt = abefgModel.getContentPrompt();
 
@@ -552,11 +805,18 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
         String promptG = fields.getPromptG();
         boolean valueG = abefgView.getCheckBoxG().isSelected();
 
-
         ABEFGmodelExtra extra = new ABEFGmodelExtra(leaderAB, promptA, valueA, promptB, valueB, leaderEFG, promptE, valueE, promptF, valueF, promptG, valueG);
 
         boolean started = (abefgModel.isStarted() || exerciseModified);
         abefgModel.setStarted(started);
+
+        ABEFGCheckSetup checkSetup = abefgModel.getCheckSetup();
+        if (abefgCheck != null) {
+            checkSetup.setCheckTries(abefgCheck.getCheckTries());
+            checkSetup.setCheckSuccess(abefgCheck.isCheckSuccess());
+            checkSetup.setCheckMessage(abefgView.getCheckMessage());
+        }
+        abefgModel.setCheckSetup(checkSetup);
 
         Document statementDocument = abefgModel.getExerciseStatement();
         double statementHeight = abefgView.getExerciseStatement().getEditor().getPrefHeight();
@@ -565,14 +825,223 @@ public class ABEFGexercise implements Exercise<ABEFGmodel, ABEFGview> {
         newModel.setOriginalModel(abefgModel.getOriginalModel());
         newModel.setCommentPrefHeight(abefgView.getCommentPrefHeight());
         newModel.setPaginationPrefHeight(abefgView.getPaginationPrefHeight());
-        newModel.setCommentTextHeight(abefgModel.getCommentTextHeight());
+
+        double commentTextHeight = commentRTA.getFullHeight();
+        newModel.setCommentTextHeight(commentTextHeight > 0 ? commentTextHeight : abefgModel.getCommentTextHeight());
+
         newModel.setStatementTextHeight(abefgModel.getStatementTextHeight());
         newModel.setPointsPossible(abefgModel.getPointsPossible());
-        if (!abefgView.getPointsEarnedTextField().getText().equals("")) newModel.setPointsEarned(Integer.parseInt(abefgView.getPointsEarnedTextField().getText()));
+        newModel.setAuxExerName(abefgModel.getAuxExerName());
+
+        newModel.setCheckSetup(checkSetup);
+
+        TextField pointsField = abefgView.getPointsEarnedTextField();
+        if ((pointsField.isFocused() || abefgModel.getPointsEarned() >= 0) && pointsField.getText().isEmpty()) {
+            pointsField.setText("0");
+        }
+        if (!pointsField.getText().equals("")) newModel.setPointsEarned(Integer.parseInt(pointsField.getText()));
         else newModel.setPointsEarned(-1);
 
         return newModel;
     }
 
-}
+    @Override
+    public Node getAuxExerNode() {
+        if (abefgModel == null || abefgView == null) return new Pane();
+        List<PageContent> modelContents = abefgModel.getPageContents();
+        VBox auxBox = new VBox(5);
+        try { auxBox.getChildren().add(abefgView.getChecksBox()); } catch(Exception e){}
+        List<DecoratedRTA> contentPageList = abefgView.getContentPageList();
+        for (int i = 0; i < contentPageList.size(); i++) {
+            DecoratedRTA drta = contentPageList.get(i);
+            RichTextArea rta = drta.getEditor();
 
+            rta.setMaxHeight(Math.max(100, modelContents.get(i).getTextHeight() + RTA_SCREEN_BMP));
+            rta.setMinHeight(Math.max(100, modelContents.get(i).getTextHeight() + RTA_SCREEN_BMP));
+
+            rta.setMinWidth(PrintUtilities.getPageWidth() / mainWindow.getBaseScale() + RTA_WIDTH_BMP);
+            rta.setMaxWidth(PrintUtilities.getPageWidth() / mainWindow.getBaseScale() + RTA_WIDTH_BMP);
+            rta.setPadding(new Insets(10));
+            auxBox.getChildren().add(rta);
+        }
+        return auxBox;
+    }
+
+    // SCORCHED EARTH RULE 6: Sever Shared Nodes helper
+    private void severFromParent(Node node) {
+        try {
+            if (node != null && node.getParent() != null) {
+                if (node.getParent() instanceof javafx.scene.layout.Pane) ((javafx.scene.layout.Pane) node.getParent()).getChildren().remove(node);
+                else if (node.getParent() instanceof javafx.scene.Group) ((javafx.scene.Group) node.getParent()).getChildren().remove(node);
+            }
+        } catch (Exception e) {}
+    }
+
+    // SCORCHED EARTH RULE 5: Rule of Isolation applied via dozens of try-catch blocks
+    @Override
+    public void cleanup() {
+        // KILL SWITCH: Engaged! Prevent any focus listeners from doing UI operations mid-teardown
+        isTornDown = true;
+
+        // SCORCHED EARTH RULE 2: No Global Null-Poisoning
+        try {
+            if (mainView != null) {
+                mainView.textFieldInFocus(); // Replaces top toolbars safely
+            }
+        } catch (Exception e) {}
+
+        // 1. Unbind global scaling properties & static listeners defensively
+        try { if (abefgView != null && abefgView.localScalePageHeightProperty() != null) abefgView.localScalePageHeightProperty().unbind(); } catch(Exception e){}
+        try { if (abefgView != null && abefgView.localScalePageWidthProperty() != null) abefgView.localScalePageWidthProperty().unbind(); } catch(Exception e){}
+        try {
+            if (mainView != null && mainView.getMainScene() != null && abefgView != null && abefgView.getExerciseFocusListener() != null) {
+                mainView.getMainScene().focusOwnerProperty().removeListener(abefgView.getExerciseFocusListener());
+            }
+        } catch (Exception e) {}
+
+        // Remove Single Listeners
+        try { if (abefgView != null && abefgView.getPointsEarnedTextField() != null && pointsEarnedListener != null) abefgView.getPointsEarnedTextField().textProperty().removeListener(pointsEarnedListener); } catch(Exception e){}
+        try { if (abefgView != null && abefgView.getCheckBoxA() != null && checkBoxAListener != null) abefgView.getCheckBoxA().selectedProperty().removeListener(checkBoxAListener); } catch(Exception e){}
+        try { if (abefgView != null && abefgView.getCheckBoxB() != null && checkBoxBListener != null) abefgView.getCheckBoxB().selectedProperty().removeListener(checkBoxBListener); } catch(Exception e){}
+        try { if (abefgView != null && abefgView.getCheckBoxE() != null && checkBoxEListener != null) abefgView.getCheckBoxE().selectedProperty().removeListener(checkBoxEListener); } catch(Exception e){}
+        try { if (abefgView != null && abefgView.getCheckBoxF() != null && checkBoxFListener != null) abefgView.getCheckBoxF().selectedProperty().removeListener(checkBoxFListener); } catch(Exception e){}
+        try { if (abefgView != null && abefgView.getCheckBoxG() != null && checkBoxGListener != null) abefgView.getCheckBoxG().selectedProperty().removeListener(checkBoxGListener); } catch(Exception e){}
+        try { if (abefgView != null && abefgView.getExerciseStatement() != null && abefgView.getExerciseStatement().getEditor() != null && statementFocusListener != null) abefgView.getExerciseStatement().getEditor().focusedProperty().removeListener(statementFocusListener); } catch(Exception e){}
+
+        try {
+            if (abefgView != null && abefgView.getExerciseComment() != null && abefgView.getExerciseComment().getEditor() != null) {
+                if (commentFullHeightListener != null) abefgView.getExerciseComment().getEditor().fullHeightProperty().removeListener(commentFullHeightListener);
+                if (commentModifiedListener != null) abefgView.getExerciseComment().getEditor().modifiedProperty().removeListener(commentModifiedListener);
+                if (commentFocusListener != null) abefgView.getExerciseComment().getEditor().focusedProperty().removeListener(commentFocusListener);
+            }
+        } catch(Exception e){}
+
+        // Remove dynamic pagination listeners safely via tracking maps
+        try {
+            if (pageHeightListenerMap != null) {
+                for (Map.Entry<Object, ChangeListener<Number>> entry : pageHeightListenerMap.entrySet()) {
+                    try { ((RichTextArea) entry.getKey()).fullHeightProperty().removeListener(entry.getValue()); } catch(Exception e){}
+                }
+            }
+        } catch(Exception e){}
+
+        try {
+            if (pageModifiedListenerMap != null) {
+                for (Map.Entry<Object, ChangeListener<Boolean>> entry : pageModifiedListenerMap.entrySet()) {
+                    try { ((RichTextArea) entry.getKey()).modifiedProperty().removeListener(entry.getValue()); } catch(Exception e){}
+                }
+            }
+        } catch(Exception e){}
+
+        try {
+            if (pageFocusListenerMap != null) {
+                for (Map.Entry<Object, ChangeListener<Boolean>> entry : pageFocusListenerMap.entrySet()) {
+                    try { ((RichTextArea) entry.getKey()).focusedProperty().removeListener(entry.getValue()); } catch(Exception e){}
+                }
+            }
+        } catch(Exception e){}
+
+        // ---> SCORCHED EARTH RULE 4: THE JAVAFX SKIN HAMMER (DEFERRED TO VIEW) <---
+        try {
+            if (abefgView != null) {
+                final javafx.scene.control.Pagination pag = (abefgView.getExerciseContentNode() instanceof javafx.scene.control.Pagination)
+                        ? (javafx.scene.control.Pagination) abefgView.getExerciseContentNode() : null;
+                if (pag != null) {
+                    pag.setPageFactory(null); // Stop generation immediately
+                }
+            }
+        } catch (Exception e) {}
+
+        // ---> 4. DISMANTLE THE UI TREE <---
+        try {
+            if (abefgView != null) {
+                if (abefgView.getChecksBox() != null) {
+                    severFromParent(abefgView.getChecksBox());
+                    abefgView.getChecksBox().getChildren().clear();
+                    abefgView.getChecksBox().setOnMouseClicked(null);
+                }
+                if (abefgView.getControlBox() != null) {
+                    severFromParent(abefgView.getControlBox());
+                    abefgView.getControlBox().getChildren().clear();
+                }
+
+                if (abefgView.getAddPageButton() != null) {
+                    if (addPageHandler != null) abefgView.getAddPageButton().removeEventHandler(ActionEvent.ACTION, addPageHandler);
+                    abefgView.getAddPageButton().setOnAction(null);
+                }
+                if (abefgView.getRemovePageButton() != null) {
+                    if (removePageHandler != null) abefgView.getRemovePageButton().removeEventHandler(ActionEvent.ACTION, removePageHandler);
+                    abefgView.getRemovePageButton().setOnAction(null);
+                }
+                if (abefgView.getCheckButton() != null) abefgView.getCheckButton().setOnAction(null);
+                if (abefgView.getStaticHelpButton() != null) abefgView.getStaticHelpButton().setOnAction(null);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (thumbPane != null) {
+                if (thumbPaneClickHandler != null) thumbPane.removeEventHandler(MouseEvent.MOUSE_CLICKED, thumbPaneClickHandler);
+                thumbPane.setOnMouseClicked(null);
+                thumbPane.getChildren().clear();
+                severFromParent(thumbPane);
+            }
+        } catch (Exception e) {}
+
+        try { clearStandingPopups(); } catch (Exception e) {}
+
+        try { if (abefgCheck != null) abefgCheck.cleanup(); } catch (Exception e) {}
+        try { if (auxExerciseA != null) auxExerciseA.cleanup(); } catch (Exception e) {}
+        try { if (auxExerciseB != null) auxExerciseB.cleanup(); } catch (Exception e) {}
+        try { if (abefgView != null) abefgView.cleanup(); } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 10: NON-DESTRUCTIVE Data Teardown
+        try { if (pageHeightListenerMap != null) pageHeightListenerMap.clear(); } catch(Exception e){}
+        try { if (pageModifiedListenerMap != null) pageModifiedListenerMap.clear(); } catch(Exception e){}
+        try { if (pageFocusListenerMap != null) pageFocusListenerMap.clear(); } catch(Exception e){}
+        try { this.pageHeightListenerMap = null; } catch(Exception e){}
+        try { this.pageModifiedListenerMap = null; } catch(Exception e){}
+        try { this.pageFocusListenerMap = null; } catch(Exception e){}
+
+        // Final severed ties
+        try { this.abefgModel = null; } catch(Exception e){}
+        try { this.mainWindow = null; } catch(Exception e){}
+        try { this.mainView = null; } catch(Exception e){}
+        try { this.abefgCheck = null; } catch(Exception e){}
+        try { this.auxExerciseA = null; } catch(Exception e){}
+        try { this.auxExerciseB = null; } catch(Exception e){}
+        try { this.abefgView = null; } catch(Exception e){}
+        try { this.tScene = null; } catch(Exception e){}
+        try { this.tStage = null; } catch(Exception e){}
+        try { this.thumbPane = null; } catch(Exception e){}
+        try { this.labelFont = null; } catch(Exception e){}
+
+        try { this.pointsEarnedListener = null; } catch(Exception e){}
+        try { this.checkBoxAListener = null; } catch(Exception e){}
+        try { this.checkBoxBListener = null; } catch(Exception e){}
+        try { this.checkBoxEListener = null; } catch(Exception e){}
+        try { this.checkBoxFListener = null; } catch(Exception e){}
+        try { this.checkBoxGListener = null; } catch(Exception e){}
+        try { this.statementFocusListener = null; } catch(Exception e){}
+        try { this.commentFullHeightListener = null; } catch(Exception e){}
+        try { this.commentModifiedListener = null; } catch(Exception e){}
+        try { this.commentFocusListener = null; } catch(Exception e){}
+        try { this.addPageHandler = null; } catch(Exception e){}
+        try { this.removePageHandler = null; } catch(Exception e){}
+        try { this.thumbPaneClickHandler = null; } catch(Exception e){}
+    }
+
+
+
+    public MainWindow getMainWindow() { return mainWindow; }
+
+    @Override
+    public String getAuxExerName() {
+        if (abefgModel == null) return "";
+        return abefgModel.getAuxExerName();
+    }
+
+    @Override
+    public void setAuxExerA(Exercise exer) { auxExerciseA = exer; }
+    @Override
+    public void setAuxExerB(Exercise exer) { auxExerciseB = exer; }
+}

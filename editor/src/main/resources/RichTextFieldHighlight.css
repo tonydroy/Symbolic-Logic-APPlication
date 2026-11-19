@@ -1,0 +1,71 @@
+/* ------------------------------------------------------- */
+/* RichTextFieldHighlight.css                              */
+/* Exact structural match to RichTextField.css             */
+/* ------------------------------------------------------- */
+
+/* 1. Base error state: Mistyrose background and matching border */
+.rich-text-area {
+    -fx-background-color: mistyrose;
+
+    /* CRITICAL: These strictly match RichTextField.css dimensions */
+    -fx-background-radius: 5;
+    -fx-border-color: rosybrown;            /* Highlight/Error border */
+    -fx-border-width: 1 1 1 1;
+    -fx-border-radius: 5;
+    -fx-padding: 1 0 0 0;
+
+    /* --- Override JavaFX's Master Selection Colors --- */
+    -fx-accent: lightsteelblue;
+    -fx-highlight-fill: lightsteelblue;
+    -fx-selection-fill: lightsteelblue;
+    -fx-highlight-text-fill: black;
+
+    /* Hide the underlying list row selection */
+    -fx-selection-bar: transparent;
+    -fx-selection-bar-non-focused: transparent;
+}
+
+/* 2. Focused error state */
+.rich-text-area:focused {
+    -fx-border-color: rosybrown;            /* Keep the error border when focused */
+    /* (Background, width, padding, and radii inherit cleanly from base state) */
+}
+
+/* 3. Force Gluon's custom selection paths to match */
+.rich-text-area .selection,
+.rich-text-area .selection-highlight {
+    -fx-fill: lightsteelblue !important;
+}
+
+/* 4. Text Nodes (Make transparent so root background shines through) */
+.rich-text-area .paragraph-tile {
+    -fx-background-color: transparent !important;
+
+    /* CRITICAL: Strictly matches RichTextField.css dimensions */
+    -fx-padding: 0 0 0 2;
+}
+
+/* 5. Kill native List Row Selection just in case */
+.rich-text-area .list-cell:selected,
+.rich-text-area .list-cell:focused,
+.rich-text-area .list-cell:selected:focused {
+    -fx-background: transparent !important;
+    -fx-background-color: transparent !important;
+    -fx-text-fill: black !important;
+}
+
+/* --- White Line, Scrollbar & Gap Patch --- */
+.rich-text-area .virtual-flow,
+.rich-text-area .virtual-flow .viewport,
+.rich-text-area .list-view,
+.rich-text-area .list-cell {
+    -fx-background-color: transparent !important;
+}
+
+.rich-text-area .scroll-bar:vertical,
+.rich-text-area .scroll-bar:vertical .track,
+.rich-text-area .scroll-bar:vertical .track-background,
+.rich-text-area .corner {
+    -fx-background-color: transparent;
+}
+/* ------------------------------------------------------- */

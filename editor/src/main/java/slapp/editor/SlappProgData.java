@@ -8,14 +8,14 @@ import java.io.Serializable;
 public class SlappProgData implements Serializable {
     private static final long serialVersionUID = 100L;
 
-    private Document metalanguageHelp = new Document("meta language help doc");
-    private Document mapCreateHelp = new Document("mapping create help doc");
+//    private Document metalanguageHelp = new Document("meta language help doc");
+//    private Document mapCreateHelp = new Document("mapping create help doc");
 
     private SecretKey jxsecretKey;
     private byte[] jxdata;
     private byte[] jxcipher;
 
-
+/*
     public Document getMetalanguageHelp() {
         return metalanguageHelp;
     }
@@ -24,6 +24,8 @@ public class SlappProgData implements Serializable {
         this.metalanguageHelp = metalanguageHelp;
     }
 
+
+
     public Document getMapCreateHelp() {
         return mapCreateHelp;
     }
@@ -31,6 +33,8 @@ public class SlappProgData implements Serializable {
     public void setMapCreateHelp(Document mapCreateHelp) {
         this.mapCreateHelp = mapCreateHelp;
     }
+
+ */
 
     public byte[] getJxcipher() {
         return jxcipher;

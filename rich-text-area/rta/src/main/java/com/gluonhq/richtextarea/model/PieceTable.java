@@ -54,7 +54,7 @@ import static com.gluonhq.richtextarea.model.TextBuffer.ZERO_WIDTH_TEXT;
 public final class PieceTable extends AbstractTextBuffer {
 
     final UnitBuffer originalText;
-    UnitBuffer additionBuffer = new UnitBuffer();
+    final AppendOnlyUnitBuffer additionBuffer = new AppendOnlyUnitBuffer();
 
     final List<Piece> pieces = new ArrayList<>();
     private final CommandManager<PieceTable> commander = new CommandManager<>(this);
@@ -303,6 +303,20 @@ public final class PieceTable extends AbstractTextBuffer {
 
     @Override
     public void decorate(int start, int end, Decoration decoration) {
+        // SURROGATE-AWARE BOUNDARY SNAPPING
+        if (getTextLength() > 0) {
+            if (start > 0 && start < getTextLength()) {
+                if (Character.isLowSurrogate(charAt(start)) && Character.isHighSurrogate(charAt(start - 1))) {
+                    start -= 1;
+                }
+            }
+            if (end > 0 && end < getTextLength()) {
+                if (Character.isLowSurrogate(charAt(end)) && Character.isHighSurrogate(charAt(end - 1))) {
+                    end += 1;
+                }
+            }
+        }
+
         if (decoration instanceof TextDecoration) {
             commander.execute(new TextDecorateCmd(start, end, decoration));
         } else if (decoration instanceof ImageDecoration) {
@@ -313,6 +327,23 @@ public final class PieceTable extends AbstractTextBuffer {
             throw new IllegalArgumentException("Decoration type not supported: " + decoration);
         }
     }
+
+
+    /*
+    @Override
+    public void decorate(int start, int end, Decoration decoration) {
+        if (decoration instanceof TextDecoration) {
+            commander.execute(new TextDecorateCmd(start, end, decoration));
+        } else if (decoration instanceof ImageDecoration) {
+            commander.execute(new ImageDecorateCmd((ImageDecoration) decoration, start));
+        } else if (decoration instanceof ParagraphDecoration) {
+            commander.execute(new ParagraphDecorateCmd(start, end, (ParagraphDecoration) decoration));
+        } else {
+            throw new IllegalArgumentException("Decoration type not supported: " + decoration);
+        }
+    }
+
+     */
 
     /**
      * Walks through unit fragments. Each fragment is represented by related text and decoration
@@ -374,16 +405,36 @@ public final class PieceTable extends AbstractTextBuffer {
         this.decorationAtCaret = decoration;
     }
 
+
     /**
      * Inserts text at insertPosition
      * @param text to insert
      * @param insertPosition to insert text at
      * @throws IllegalArgumentException if insertPosition is not valid
      */
+
+    @Override
+    public void insert(final String text, final int insertPosition) {
+        int pos = insertPosition;
+
+        // SURROGATE-AWARE BOUNDARY SNAPPING
+        // If an insertion attempts to split a surrogate pair, snap to the end of the character
+        if (getTextLength() > 0 && pos > 0 && pos < getTextLength()) {
+            if (Character.isLowSurrogate(charAt(pos)) && Character.isHighSurrogate(charAt(pos - 1))) {
+                pos += 1;
+            }
+        }
+        commander.execute(new InsertCmd(text, pos));
+    }
+
+    /*
     @Override
     public void insert(final String text, final int insertPosition) {
         commander.execute(new InsertCmd(text, insertPosition));
     }
+     */
+
+
 
     /**
      * Deletes text with 'length' starting at 'deletePosition'
@@ -391,10 +442,46 @@ public final class PieceTable extends AbstractTextBuffer {
      * @param length length of text to delete
      * @throws IllegalArgumentException if deletePosition is not valid
      */
+
+    @Override
+    public void delete(final int deletePosition, int length) {
+        int start = deletePosition;
+        int end = deletePosition + length;
+
+        // SURROGATE-AWARE BOUNDARY SNAPPING
+        if (getTextLength() > 0 && length > 0) {
+            // If the start of the deletion lands on a low surrogate (e.g. Backspace),
+            // snap backward to swallow the high surrogate too.
+            if (start > 0 && start < getTextLength()) {
+                if (Character.isLowSurrogate(charAt(start)) && Character.isHighSurrogate(charAt(start - 1))) {
+                    start -= 1;
+                }
+            }
+
+            // If the end of the deletion lands on a low surrogate (e.g. Delete key),
+            // snap forward to swallow the low surrogate too.
+            if (end > 0 && end < getTextLength()) {
+                if (Character.isLowSurrogate(charAt(end)) && Character.isHighSurrogate(charAt(end - 1))) {
+                    end += 1;
+                }
+            }
+        }
+
+        int finalPos = start;
+        int finalLen = end - start;
+
+        if (finalLen > 0) {
+            commander.execute(new DeleteCmd(finalPos, finalLen));
+        }
+    }
+
+
+    /*
     @Override
     public void delete(final int deletePosition, int length) {
         commander.execute(new DeleteCmd(deletePosition, length));
     }
+     */
 
     /**
      * Undo latest text modification
@@ -697,12 +784,15 @@ class InsertCmd extends AbstractCommand<PieceTable> {
             return; // no need to insert empty text
         }
 
+
         if (insertPosition < 0 || insertPosition > pt.getTextLength()) {
-            String message = "IllegalArgumentException (PieceTable 01).  Copy/Paste failure.  Please save your work and restart SLAPP.  You should not have lost any of your work.";
-            Alerts.showSimpleAlert("RTA Error", message, RichTextArea.mainStage);
- //           System.out.println("insert pos: " + insertPosition + " pt.getTextLength " + pt.getTextLength());
- //           throw new IllegalArgumentException("Position is outside text bounds");
+        //    String message = "IllegalArgumentException (PieceTable 01).  Copy/Paste failure.  Please save your work and restart SLAPP.  You should not have lost any of your work.";
+        //    Alerts.showSimpleAlert("RTA Error", message, RichTextArea.mainStage);
+        //    System.out.println("insert pos: " + insertPosition + " pt.getTextLength " + pt.getTextLength());
+        //    throw new IllegalArgumentException("Position is outside text bounds");
+           return;
         }
+
 
         if (insertPosition == pt.getTextLength()) {
             pt.append(unitBuffer.getInternalText());
@@ -775,7 +865,8 @@ class DeleteCmd extends AbstractCommand<PieceTable> {
     @Override
     protected void doRedo(PieceTable pt) {
         if (deletePosition < 0 || deletePosition > pt.getTextLength()) {
-            throw new IllegalArgumentException("Position " + deletePosition + " is outside of text bounds [0," + pt.getTextLength() +"]");
+       //     throw new IllegalArgumentException("Position " + deletePosition + " is outside of text bounds [0," + pt.getTextLength() +"]");
+            return;
         }
 
         //  Accept length larger than actual and adjust it to actual
@@ -955,7 +1046,8 @@ class TextDecorateCmd extends AbstractCommand<PieceTable> {
     @Override
     protected void doRedo(PieceTable pt) {
         if (!PieceTable.inRange(start, 0, pt.getTextLength())) {
-            throw new IllegalArgumentException("Position " + start + " is outside of text bounds [0, " + pt.getTextLength() + ")");
+      //      throw new IllegalArgumentException("Position " + start + " is outside of text bounds [0, " + pt.getTextLength() + ")");
+            return;
         }
 
         //  Accept length larger than actual and adjust it to actual

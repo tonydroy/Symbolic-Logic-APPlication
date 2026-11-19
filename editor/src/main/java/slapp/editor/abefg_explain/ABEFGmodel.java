@@ -46,6 +46,8 @@ public class ABEFGmodel implements ExerciseModel<Document>, Serializable {
     private double paginationPrefHeight = 400;
     private int pointsPossible;
     private int pointsEarned;
+    private String auxExerName;
+    private ABEFGCheckSetup checkSetup;
 
     /**
      * Set up the AB/EFG page edit model
@@ -70,6 +72,15 @@ public class ABEFGmodel implements ExerciseModel<Document>, Serializable {
         if (pageContents.isEmpty()) pageContents.add(new PageContent(new Document(), 0.0));
         this.pointsPossible = 0;
         this.pointsEarned = -1;
+        this.auxExerName = "";
+    }
+
+    public ABEFGCheckSetup getCheckSetup() {
+        return checkSetup;
+    }
+
+    public void setCheckSetup(ABEFGCheckSetup checkSetup) {
+        this.checkSetup = checkSetup;
     }
 
     /**
@@ -145,6 +156,17 @@ public class ABEFGmodel implements ExerciseModel<Document>, Serializable {
      * @param commentTextHeight the text height
      */
     void setCommentTextHeight(double commentTextHeight) {     this.commentTextHeight = commentTextHeight;   }
+
+    public String getAuxExerName() {
+        return auxExerName;
+    }
+
+    public void setAuxExerName(String auxExerName) {
+        this.auxExerName = auxExerName;
+    }
+
+
+
 
     /**
      * The exercise name (used also as file name)

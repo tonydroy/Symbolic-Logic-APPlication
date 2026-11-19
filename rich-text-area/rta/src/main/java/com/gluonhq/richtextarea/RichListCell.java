@@ -40,6 +40,7 @@ import com.gluonhq.richtextarea.model.TextBuffer;
 import com.gluonhq.richtextarea.model.TextDecoration;
 import com.gluonhq.richtextarea.model.TextUnit;
 import com.gluonhq.richtextarea.model.Unit;
+import javafx.application.Platform;
 import javafx.geometry.VPos;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
@@ -69,6 +70,7 @@ import java.util.stream.IntStream;
 import static com.gluonhq.richtextarea.RichTextAreaSkin.DEFAULT_FONT_SIZE;
 import static com.gluonhq.richtextarea.model.TableDecoration.TABLE_SEPARATOR;
 
+
 class RichListCell extends ListCell<Paragraph> {
 
     private static final Font MIN_LF_FONT = Font.font(DEFAULT_FONT_SIZE);
@@ -80,13 +82,25 @@ class RichListCell extends ListCell<Paragraph> {
 
     RichListCell(RichTextAreaSkin richTextAreaSkin) {
         this.richTextAreaSkin = richTextAreaSkin;
-        // controls spacing between paragraphs
-        // (it is also needed to avoid Font 13 for text, even if it is graphic only)
-
         setFont(MIN_LF_FONT);
 
         paragraphTile = new ParagraphTile(richTextAreaSkin);
         setText(null);
+
+        // =========================================================
+        // THE IRON WALL: Strict Width Constraints
+        // =========================================================
+        listViewProperty().addListener((obs, oldLv, newLv) -> {
+            if (newLv != null) {
+                // Force the Cell to never exceed the ListView's inner width
+                prefWidthProperty().bind(newLv.widthProperty().subtract(25.0));
+                maxWidthProperty().bind(newLv.widthProperty().subtract(25.0));
+
+                // Force the internal ParagraphTile to respect the Cell's bounds
+                paragraphTile.prefWidthProperty().bind(prefWidthProperty());
+                paragraphTile.maxWidthProperty().bind(maxWidthProperty());
+            }
+        });
 
         addEventHandler(MouseEvent.DRAG_DETECTED, event -> {
             event.consume();
@@ -106,21 +120,17 @@ class RichListCell extends ListCell<Paragraph> {
                         if (!richTextAreaSkin.getSkinnable().isFocused()) {
                             richTextAreaSkin.getSkinnable().requestFocus();
                         }
-                        // process click event on lower empty cells
                         int textLength = richTextAreaSkin.getViewModel().getTextLength();
                         if (richTextAreaSkin.getViewModel().getSelection().isDefined()) {
                             if (!event.isShiftDown()) {
                                 richTextAreaSkin.getViewModel().clearSelection();
                             }
                         } else {
-                            // move caret to beginning or end of document
                             richTextAreaSkin.getViewModel().setCaretPosition(textLength);
                         }
-                        // allow dragging
                         if (richTextAreaSkin.anchorIndex == -1) {
                             richTextAreaSkin.mouseDragStart = textLength;
                         }
-                        // hide context menu
                         if (richTextAreaSkin.contextMenu.isShowing()) {
                             richTextAreaSkin.contextMenu.hide();
                         }
@@ -139,7 +149,6 @@ class RichListCell extends ListCell<Paragraph> {
                     if (!richTextAreaSkin.getSkinnable().isFocused()) {
                         richTextAreaSkin.getSkinnable().requestFocus();
                     }
-                    // caret follows dnd movement
                     p.mousePressedListener(new MouseEvent(de.getSource(), de.getTarget(), MouseEvent.MOUSE_PRESSED,
                             de.getX(), de.getY(), de.getScreenX(), de.getScreenY(),
                             MouseButton.PRIMARY, 1,
@@ -216,14 +225,39 @@ class RichListCell extends ListCell<Paragraph> {
                     richTextAreaSkin.nonTextNodes.incrementAndGet();
                 }
             }, item.getStart(), item.getEnd());
+
             paragraphTile.setParagraph(item, fragments, positions, backgroundIndexRanges);
             setGraphic(paragraphTile);
-            // required: update caret and selection
+
+            // =========================================================
+            // PIPELINE SEQUENCE ENFORCER
+            // =========================================================
+
+            // 1. Force layout so the TextFlow physically hits the wall and wraps
+            paragraphTile.applyCss();
+            paragraphTile.layout();
+
+            // 2. NOW calculate the caret bounds (it will correctly report the line drop)
             paragraphTile.updateLayout();
+
+            // 3. Command the Skin to paint the Caret Path at the newly calculated coordinates
+            Platform.runLater(() -> {
+                if (richTextAreaSkin.getSkinnable() != null) {
+                    richTextAreaSkin.getSkinnable().requestLayout();
+                }
+            });
+
         } else {
-            // clean up listeners
             paragraphTile.setParagraph(null, null, null, null);
             setGraphic(null);
+
+            // Tell JavaFX to naturally recalculate the empty space,
+            // avoiding the divide-by-zero Infinity Panic!
+            setPrefHeight(javafx.scene.layout.Region.USE_COMPUTED_SIZE);
+            setMinHeight(javafx.scene.layout.Region.USE_COMPUTED_SIZE);
+            paragraphTile.setPrefHeight(javafx.scene.layout.Region.USE_COMPUTED_SIZE);
+            paragraphTile.setMinHeight(javafx.scene.layout.Region.USE_COMPUTED_SIZE);
+            // -------------------------------------------------------
         }
     }
 
@@ -247,9 +281,66 @@ class RichListCell extends ListCell<Paragraph> {
         }
     }
 
+    //new ai version
+
+    private Text buildText(String content, TextDecoration decoration) {
+        boolean isNewline = "\n".equals(content);
+        Objects.requireNonNull(decoration);
+
+        // CRITICAL: Use a zero-width space for newlines so it can hold the font height
+        Text text = new Text(isNewline ? "\u200B" : content.replace("\n", ""));
+
+        String foreground = decoration.getForeground();
+        text.setFill(COLOR_MAP.computeIfAbsent(foreground, s -> parseColorOrDefault(foreground, Color.BLACK)));
+
+        if (!isNewline) {
+            text.setStrikethrough(decoration.isStrikethrough());
+            text.setUnderline(decoration.isUnderline());
+
+            if (decoration.isSubscript() || decoration.isTransSubscript()) text.setTranslateY(decoration.getFontSize() * .17);
+            else if (decoration.isSuperscript() || decoration.isTransSuperscript()) text.setTranslateY(decoration.getFontSize() * -.4);
+            else text.setTranslateY(0.0);
+
+            if (decoration.isTransSubscript() || decoration.isTransSuperscript()) text.setTranslateX(decoration.getFontSize() * -.3);
+            else text.setTranslateX(0.0);
+        }
+
+        double actualFontSize = (decoration.isSuperscript() || decoration.isSubscript() || decoration.isTransSuperscript() || decoration.isTransSubscript() ) ? decoration.getFontSize() * .72 : decoration.getFontSize();
+
+        int hash = Objects.hash(decoration.getFontFamily(), decoration.getFontWeight(), decoration.getFontPosture(), actualFontSize);
+
+        Font font = richTextAreaSkin.getFontCache().computeIfAbsent(hash, h -> Font.font(
+                decoration.getFontFamily(), decoration.getFontWeight(), decoration.getFontPosture(), actualFontSize));
+
+        // By applying the font to the zero-width space, TextFlow sizes the empty line perfectly
+        text.setFont(font);
+
+        if (!isNewline) {
+            String url = decoration.getURL();
+            if (url != null) {
+                text.setUnderline(true);
+                text.setFill(Color.BLUE);
+                text.setCursor(Cursor.HAND);
+                text.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
+                    if (e.getButton() == MouseButton.PRIMARY) {
+                        Function<Node, Consumer<String>> linkCallbackFactory = richTextAreaSkin.getSkinnable().getLinkCallbackFactory();
+                        if (linkCallbackFactory != null) {
+                            Consumer<String> consumer = linkCallbackFactory.apply(text);
+                            if (consumer != null) {
+                                consumer.accept(url);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        return text;
+    }
+
+    /*
     private Text buildText(String content, TextDecoration decoration) {
         if ("\n".equals(content)) {
-           return Tools.noWidthText();
+            return Tools.noWidthText();
         }
         Objects.requireNonNull(decoration);
         Text text = new Text(Objects.requireNonNull(content).replace("\n", ""));
@@ -267,7 +358,6 @@ class RichListCell extends ListCell<Paragraph> {
 
         double actualFontSize = (decoration.isSuperscript() || decoration.isSubscript() || decoration.isTransSuperscript() || decoration.isTransSubscript() ) ? decoration.getFontSize() * .72 : decoration.getFontSize();
 
-        // Caching fonts, assuming their reuse, especially for default one
         int hash = Objects.hash(
                 decoration.getFontFamily(),
                 decoration.getFontWeight(),
@@ -275,10 +365,10 @@ class RichListCell extends ListCell<Paragraph> {
                 actualFontSize);
 
         Font font = richTextAreaSkin.getFontCache().computeIfAbsent(hash, h -> Font.font(
-                        decoration.getFontFamily(),
-                        decoration.getFontWeight(),
-                        decoration.getFontPosture(),
-                        actualFontSize));
+                decoration.getFontFamily(),
+                decoration.getFontWeight(),
+                decoration.getFontPosture(),
+                actualFontSize));
 
         text.setFont(font);
         String url = decoration.getURL();
@@ -301,15 +391,28 @@ class RichListCell extends ListCell<Paragraph> {
         return text;
     }
 
+     */
+
     private ImageView buildImage(ImageDecoration imageDecoration) {
         Image image = richTextAreaSkin.getImageCache().computeIfAbsent(imageDecoration.getUrl(), Image::new);
         final ImageView imageView = new ImageView(image);
-        // TODO Create resizable ImageView
         if (imageDecoration.getWidth() > -1 && imageDecoration.getHeight() > -1) {
-            imageView.setFitWidth(imageDecoration.getWidth());
-            imageView.setFitHeight(imageDecoration.getHeight());
+
+            //******** ai fit picture
+            double maxAllowedWidth = richTextAreaSkin.textFlowPrefWidthProperty.get() - 10;
+            double w = imageDecoration.getWidth();
+            double h = imageDecoration.getHeight();
+            if (maxAllowedWidth > 20 && w > maxAllowedWidth) {
+                h = h * (maxAllowedWidth / w);
+                w = maxAllowedWidth;
+            }
+            imageView.setFitWidth(w);
+            imageView.setFitHeight(h);
+
+            //**********
+       //     imageView.setFitWidth(imageDecoration.getWidth());
+        //    imageView.setFitHeight(imageDecoration.getHeight());
         } else {
-            // for now, limit the image within the content area
             double width = Math.min(image.getWidth(), richTextAreaSkin.textFlowPrefWidthProperty.get() - 10);
             imageView.setFitWidth(width);
             imageView.setPreserveRatio(true);
@@ -373,8 +476,4 @@ class RichListCell extends ListCell<Paragraph> {
             return defaultColor;
         }
     }
-
-
-
-
 }

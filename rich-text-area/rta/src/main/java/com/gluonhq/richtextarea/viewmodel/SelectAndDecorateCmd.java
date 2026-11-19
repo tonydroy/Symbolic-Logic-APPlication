@@ -6,6 +6,7 @@ import com.gluonhq.richtextarea.model.TextDecoration;
 
 import java.util.Objects;
 
+
 public class SelectAndDecorateCmd extends AbstractEditCmd {
 
     private final Selection selection;
@@ -26,6 +27,8 @@ public class SelectAndDecorateCmd extends AbstractEditCmd {
         viewModel.undo();
     }
 
+
+
     @Override
     protected void doRedo(RichTextAreaViewModel viewModel) {
         Objects.requireNonNull(viewModel);
@@ -36,4 +39,6 @@ public class SelectAndDecorateCmd extends AbstractEditCmd {
             viewModel.setSelection(Selection.UNDEFINED);
         }
     }
+
+
 }

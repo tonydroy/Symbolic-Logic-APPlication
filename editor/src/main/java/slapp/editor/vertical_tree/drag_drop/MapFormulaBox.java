@@ -17,11 +17,11 @@ package slapp.editor.vertical_tree.drag_drop;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
+import com.gluonhq.richtextarea.model.Document;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
@@ -44,6 +44,37 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.UUID;
 
+import javafx.scene.input.*;
+import javafx.scene.layout.*;
+import javafx.event.ActionEvent;
+import javafx.scene.input.*;
+import javafx.scene.layout.*;
+import javafx.scene.input.*;
+import javafx.scene.layout.*;
+
+import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
+import javafx.scene.Cursor;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.input.*;
+import javafx.scene.layout.*;
+import javafx.scene.shape.Rectangle;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.UUID;
+
+
 public class MapFormulaBox extends AnchorPane {
     private VerticalTreeView verticalTreeView;
     private Label leftDragLabel;
@@ -61,12 +92,26 @@ public class MapFormulaBox extends AnchorPane {
     private VBox centerBox;
     private String idString = "";
     Rectangle oval = new Rectangle();
-    EventHandler mappingKeyFilter;
+    EventHandler<KeyEvent> mappingKeyFilter;
     int mapStage = 0;
     Label[] mapMarkers;
     Double[] mapXAnchors = new Double[2];
     private double printWidth;
 
+    // KILL SWITCH: Prevents asynchronous listener execution during teardown
+    private boolean isTornDown = false;
+
+    // SCORCHED EARTH RULE 3: Eradicate Anonymous Lambdas
+    private ChangeListener<Object> parentPropertyListener;
+    private ChangeListener<Number> nodesWidthListener;
+    private EventHandler<KeyEvent> rtaKeyFilter;
+    private ChangeListener<Boolean> rtaFocusListener;
+    private EventHandler<MouseEvent> leftDragEnteredHandler;
+    private EventHandler<MouseEvent> leftDragExitedHandler;
+    private EventHandler<MouseEvent> closeLabelEnteredHandler;
+    private EventHandler<MouseEvent> closeLabelExitedHandler;
+    private EventHandler<MouseEvent> closeLabelClickedHandler;
+    private EventHandler<MouseEvent> leftDragDetectedHandler;
 
     public MapFormulaBox(VerticalTreeView verticalTreeView) {
         this.verticalTreeView = verticalTreeView;
@@ -95,33 +140,35 @@ public class MapFormulaBox extends AnchorPane {
         labelPane.getRowConstraints().addAll(closeRowConstraints, moveRowConstraints);
         labelPane.add(closeLabel, 0, 0); labelPane.add(leftDragLabel, 0, 1);
 
-
-        leftDragLabel.setOnMouseEntered(e -> {
+        leftDragEnteredHandler = e -> {
+            if (isTornDown || this.verticalTreeView == null || this.verticalTreeView.getMainView() == null) return;
             leftDragLabel.setStyle("-fx-background-color: grey; -fx-background-radius: 0 0 0 5;");
             closeLabel.setStyle("-fx-background-color: black; -fx-background-radius: 5 0 0 0;");
-//            leftDragLabel.setCursor(Cursor.MOVE);
-        });
-        leftDragLabel.setOnMouseExited(e -> {
+        };
+        leftDragLabel.setOnMouseEntered(leftDragEnteredHandler);
+
+        leftDragExitedHandler = e -> {
+            if (isTornDown || this.verticalTreeView == null || this.verticalTreeView.getMainView() == null) return;
             leftDragLabel.setStyle("-fx-background-color: transparent");
             closeLabel.setStyle("-fx-background-color:transparent");
-            //           leftDragLabel.setCursor(Cursor.DEFAULT);
-        });
+        };
+        leftDragLabel.setOnMouseExited(leftDragExitedHandler);
 
-        closeLabel.setOnMouseEntered(e -> {
+        closeLabelEnteredHandler = e -> {
+            if (isTornDown || this.verticalTreeView == null || this.verticalTreeView.getMainView() == null) return;
             leftDragLabel.setStyle("-fx-background-color: grey; -fx-background-radius: 0 0 0 5");
             closeLabel.setStyle("-fx-background-color: black; -fx-background-radius: 5 0 0 0");
-//            leftDragLabel.setCursor(Cursor.MOVE);
-        });
-        closeLabel.setOnMouseExited(e -> {
+        };
+        closeLabel.setOnMouseEntered(closeLabelEnteredHandler);
+
+        closeLabelExitedHandler = e -> {
+            if (isTornDown || this.verticalTreeView == null || this.verticalTreeView.getMainView() == null) return;
             leftDragLabel.setStyle("-fx-background-color: transparent");
             closeLabel.setStyle("-fx-background-color:transparent");
-            //           leftDragLabel.setCursor(Cursor.DEFAULT);
-        });
-
+        };
+        closeLabel.setOnMouseExited(closeLabelExitedHandler);
 
         formulaBox = newFormulaBoxedDRTA();
-//        RightDragResizer resizer = new RightDragResizer(verticalTreeView);
-//        resizer.makeResizable(formulaBox.getRTA());
 
         centerBox = new VBox(formulaBox.getBoxedRTA());
         centerBox.setAlignment(Pos.CENTER);
@@ -141,17 +188,22 @@ public class MapFormulaBox extends AnchorPane {
 
     private void initialize() {
         buildNodeDragHandlers();
-        parentProperty().addListener(new ChangeListener() {
+
+        parentPropertyListener = new ChangeListener<Object>() {
             @Override
             public void changed(ObservableValue ob, Object ov, Object nv) {
-                right_pane = (AnchorPane) getParent();
+                if (isTornDown || self == null) return;
+                if (getParent() instanceof AnchorPane) right_pane = (AnchorPane) getParent();
             }
-        });
+        };
+        parentProperty().addListener(parentPropertyListener);
 
         mappingKeyFilter = new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent e) {
+                if (isTornDown || verticalTreeView == null || formulaBox == null || formulaBox.getRTA() == null) return;
                 RichTextArea rta = formulaBox.getRTA();
+                if (rta.getSkin() == null) return;
                 KeyCode code = e.getCode();
                 Bounds rtaBounds = self.sceneToLocal(rta.localToScene(rta.getBoundsInLocal()));
                 if (code == KeyCode.F10) {
@@ -184,28 +236,21 @@ public class MapFormulaBox extends AnchorPane {
         mType = type;
     }
 
-
-
     public void buildNodeDragHandlers() {
         mContextDragOver = new EventHandler <DragEvent>() {
-
-            //dragover to handle node dragging in the right pane view
             @Override
             public void handle(DragEvent event) {
-
+                if (isTornDown || verticalTreeView == null || getParent() == null) return;
                 event.acceptTransferModes(TransferMode.ANY);
                 relocateToPoint(new Point2dSerial( event.getSceneX(), event.getSceneY()));
-
                 event.consume();
             }
         };
 
-        //dragdrop for node dragging
         mContextDragDropped = new EventHandler <DragEvent> () {
-
             @Override
             public void handle(DragEvent event) {
-
+                if (isTornDown || verticalTreeView == null || getParent() == null) return;
                 getParent().setOnDragOver(null);
                 getParent().setOnDragDropped(null);
                 event.setDropCompleted(true);
@@ -217,20 +262,14 @@ public class MapFormulaBox extends AnchorPane {
         };
 
 
-        //close button click
-        closeLabel.setOnMouseClicked( new EventHandler <MouseEvent> () {
+        closeLabelClickedHandler = new EventHandler <MouseEvent> () {
             @Override
             public void handle(MouseEvent event) {
+                if (isTornDown || verticalTreeView == null || self.getParent() == null) return;
                 self.requestFocus();
                 AnchorPane parent  = (AnchorPane) self.getParent();
                 parent.getChildren().remove(self);
 
-                //iterate each link id connected to this node
-                //find it's corresponding component in the right-hand
-                //AnchorPane and delete it.
-
-                //Note:  other nodes connected to these links are not being
-                //notified that the link has been removed.
                 for (ListIterator<String> iterId = mLinkIds.listIterator();
                      iterId.hasNext();) {
 
@@ -252,16 +291,18 @@ public class MapFormulaBox extends AnchorPane {
                 pushUndoRedo();
 
                 parent.requestFocus();
+
+                // SCORCHED EARTH RULE 9: Dynamic UI Deletion Fix
+                self.cleanup();
             }
 
-        });
+        };
+        closeLabel.setOnMouseClicked(closeLabelClickedHandler);
 
-
-
-        leftDragLabel.setOnDragDetected ( new EventHandler <MouseEvent> () {
-
+        leftDragDetectedHandler = new EventHandler <MouseEvent> () {
             @Override
             public void handle(MouseEvent event) {
+                if (isTornDown || verticalTreeView == null || getParent() == null) return;
 
                 getParent().setOnDragOver(null);
                 getParent().setOnDragDropped(null);
@@ -270,7 +311,6 @@ public class MapFormulaBox extends AnchorPane {
                 getParent().setOnDragDropped (mContextDragDropped);
 
 
-                //begin drag ops
                 mDragOffset = new Point2D(event.getX(), event.getY());
 
                 relocateToPoint(
@@ -286,52 +326,33 @@ public class MapFormulaBox extends AnchorPane {
                 Dragboard db = startDragAndDrop(TransferMode.MOVE);
                 db.setDragView(EditorMain.emptyImage);
                 db.setContent(content);
-  //              startDragAndDrop (TransferMode.ANY).setContent(content);
-                formulaBox.getRTA().requestFocus();
+                if (formulaBox != null && formulaBox.getRTA() != null) formulaBox.getRTA().requestFocus();
                 event.consume();
             }
-
-        });
-
+        };
+        leftDragLabel.setOnDragDetected (leftDragDetectedHandler);
     }
 
-
     public void relocateToGridPoint (Point2D p) {
-
-        //for object dropped onto pane
+        if (getParent() == null) return;
         Point2D localCoords = getParent().sceneToLocal(p);
         double localY = Math.round((localCoords.getY() - 16) / 24.0) * 24.0;
-
         relocate ((int) localCoords.getX() - 44,  (int) (localY ) );
         self.requestFocus();
     }
 
-
-    // I don't understand why both this and the following method are required to drop on line - should be same w/o offset localY??
     public void relocateToGridPoint2 (Point2D p) {
-
-        //for object moved in pane
+        if (getParent() == null) return;
         Point2D localCoords = getParent().sceneToLocal(p);
         double localY = Math.round((localCoords.getY() - 16) / 24.0) * 24.0 ;
-
         relocate (  (int) localCoords.getX(), (int) (localY )    );
     }
 
-
-
-
     public void relocateToPoint (Point2D p) {
-
-        //relocates the object to a point that has been converted to
-        //scene coordinates
+        if (getParent() == null) return;
         Point2D localCoords = getParent().sceneToLocal(p);
-
-
-        //       double localY = Math.round(localCoords.getY() / 24.0) * 24.0;
-
         relocate (
                 (int) localCoords.getX(),
-                //           (int) ((localCoords.getX() - (getBoundsInLocal().getWidth()) / 2)),
                 (int) ((localCoords.getY() - (getBoundsInLocal().getHeight()) / 2 ))
         );
     }
@@ -339,38 +360,46 @@ public class MapFormulaBox extends AnchorPane {
     private BoxedDRTA newFormulaBoxedDRTA() {
         BoxedDRTA boxedDRTA = new BoxedDRTA();
         DecoratedRTA drta = boxedDRTA.getDRTA();
-        drta.getKeyboardSelector().valueProperty().setValue(verticalTreeView.getDefaultMapKeyboard());
+        if (verticalTreeView != null && verticalTreeView.getDefaultMapKeyboard() != null) {
+            drta.getKeyboardSelector().valueProperty().setValue(verticalTreeView.getDefaultMapKeyboard());
+        }
         RichTextArea rta = boxedDRTA.getRTA();
         rta.setMaxHeight(24);
         rta.setMinHeight(24);
         rta.setPrefWidth(36);
- //       rta.setContentAreaWidth(500);
 
         RichTextAreaSkin rtaSkin = (RichTextAreaSkin) rta.getSkin();
-        rta.prefWidthProperty().bind(Bindings.max(Bindings.add(rtaSkin.nodesWidthProperty(), 6), 12));
-        rtaSkin.nodesWidthProperty().addListener((observable, oldValue, newValue) -> {
-            Platform.runLater(() -> rta.getParent().requestLayout());
-        });
-        rta.addEventFilter(KeyEvent.ANY, e -> {
+        rta.prefWidthProperty().bind(Bindings.max(Bindings.add(rtaSkin.nodesWidthProperty(), 8), 12));
+
+        nodesWidthListener = (observable, oldValue, newValue) -> {
+            if (isTornDown) return;
+            Platform.runLater(() -> {
+                if (isTornDown || verticalTreeView == null || rta == null || rta.getParent() == null) return;
+                rta.getParent().requestLayout();
+            });
+        };
+        rtaSkin.nodesWidthProperty().addListener(nodesWidthListener);
+
+        rtaKeyFilter = e -> {
+            if (isTornDown || verticalTreeView == null) return;
             if (e.getCode() == KeyCode.ENTER) e.consume();
-        });
+        };
+        rta.addEventFilter(KeyEvent.ANY, rtaKeyFilter);
 
-
-       rta.getStylesheets().add("greenFormulaBox.css");
+        rta.getStylesheets().add("greenFormulaBox.css");
         rta.setPromptText("");
- //       rta.getActionFactory().saveNow().execute(new ActionEvent());  messes up rta on reopen
-        rta.focusedProperty().addListener((ob, ov, nv) -> {
-            if (nv) {
-                verticalTreeView.getMainView().editorInFocus(drta, ControlType.FIELD);
-            }
-        });
+
+        rtaFocusListener = (ob, ov, nv) -> {
+            try {
+                if (isTornDown || verticalTreeView == null || verticalTreeView.getMainView() == null) return;
+                if (nv) {
+                    verticalTreeView.getMainView().editorInFocus(drta, ControlType.FIELD);
+                }
+            } catch (Exception e) {}
+        };
+        rta.focusedProperty().addListener(rtaFocusListener);
         return boxedDRTA;
     }
-
-
-
-
-
 
     public void processMappingRequest(boolean add) {
         if (add) {
@@ -386,6 +415,141 @@ public class MapFormulaBox extends AnchorPane {
         self.removeEventFilter(KeyEvent.KEY_PRESSED, mappingKeyFilter);
         self.getChildren().removeAll(mapMarkers[0], mapMarkers[1]);
         mapStage = 0;
+    }
+
+    // SCORCHED EARTH RULE 6: Sever Shared Nodes helper
+    private void severFromParent(Node node) {
+        try {
+            if (node != null && node.getParent() != null) {
+                if (node.getParent() instanceof javafx.scene.layout.Pane) ((javafx.scene.layout.Pane) node.getParent()).getChildren().remove(node);
+                else if (node.getParent() instanceof javafx.scene.Group) ((javafx.scene.Group) node.getParent()).getChildren().remove(node);
+            }
+        } catch (Exception e) {}
+    }
+
+    // SCORCHED EARTH RULE 5: Heavily Isolated cleanup
+    public void cleanup() {
+        // KILL SWITCH: Engaged!
+        isTornDown = true;
+
+        try {
+            if (this.getParent() != null) {
+                if (this.getParent().getOnDragOver() == mContextDragOver) this.getParent().setOnDragOver(null);
+                if (this.getParent().getOnDragDropped() == mContextDragDropped) this.getParent().setOnDragDropped(null);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (mappingKeyFilter != null) {
+                self.removeEventFilter(KeyEvent.KEY_PRESSED, mappingKeyFilter);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (parentPropertyListener != null) {
+                parentProperty().removeListener(parentPropertyListener);
+            }
+        } catch (Exception e) {}
+
+        // ---> SCORCHED EARTH RULE 4: THE JAVAFX SKIN HAMMER (DECOUPLED TIMER) <---
+        try {
+            if (formulaBox != null && formulaBox.getRTA() != null) {
+                final RichTextArea rta = formulaBox.getRTA();
+
+                try { rta.prefWidthProperty().unbind(); } catch (Exception e) {}
+                try { if (nodesWidthListener != null && rta.getSkin() != null) ((RichTextAreaSkin) rta.getSkin()).nodesWidthProperty().removeListener(nodesWidthListener); } catch (Exception e) {}
+                try { if (rtaKeyFilter != null) rta.removeEventFilter(KeyEvent.ANY, rtaKeyFilter); } catch (Exception e) {}
+                try { if (rtaFocusListener != null) rta.focusedProperty().removeListener(rtaFocusListener); } catch (Exception e) {}
+
+                // STAGE 1 (Immediate)
+                try { rta.setPromptText(""); } catch (Exception e) {}
+                try { rta.setFocusTraversable(false); } catch (Exception e) {}
+                try { if (rta.getDocument() == null || rta.getDocument().getText().isEmpty()) rta.getActionFactory().open(new Document(" ")).execute(new ActionEvent()); } catch (Exception e) {}
+
+                // STAGE 2 (Delayed Skin Removal)
+                javafx.animation.PauseTransition pt = new javafx.animation.PauseTransition(javafx.util.Duration.millis(1500));
+                pt.setOnFinished(ev -> {
+                    try { rta.setSkin(null); } catch (Exception ex) {}
+                });
+                pt.play();
+            }
+        } catch (Exception e) {}
+
+        try { if (mainBox != null) mainBox.getChildren().clear(); } catch (Exception e) {}
+        try { if (labelPane != null) labelPane.getChildren().clear(); } catch (Exception e) {}
+        try { if (centerBox != null) centerBox.getChildren().clear(); } catch (Exception e) {}
+
+        try {
+            this.setOnDragOver(null);
+            this.setOnDragDropped(null);
+            this.setOnDragDetected(null);
+            this.setOnMouseClicked(null);
+        } catch (Exception e) {}
+
+        try {
+            if (leftDragLabel != null) {
+                if (leftDragEnteredHandler != null) leftDragLabel.removeEventHandler(MouseEvent.MOUSE_ENTERED, leftDragEnteredHandler);
+                if (leftDragExitedHandler != null) leftDragLabel.removeEventHandler(MouseEvent.MOUSE_EXITED, leftDragExitedHandler);
+                if (leftDragDetectedHandler != null) leftDragLabel.removeEventHandler(MouseEvent.DRAG_DETECTED, leftDragDetectedHandler);
+                leftDragLabel.setOnMouseEntered(null);
+                leftDragLabel.setOnMouseExited(null);
+                leftDragLabel.setOnDragDetected(null);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (closeLabel != null) {
+                if (closeLabelEnteredHandler != null) closeLabel.removeEventHandler(MouseEvent.MOUSE_ENTERED, closeLabelEnteredHandler);
+                if (closeLabelExitedHandler != null) closeLabel.removeEventHandler(MouseEvent.MOUSE_EXITED, closeLabelExitedHandler);
+                if (closeLabelClickedHandler != null) closeLabel.removeEventHandler(MouseEvent.MOUSE_CLICKED, closeLabelClickedHandler);
+                closeLabel.setOnMouseEntered(null);
+                closeLabel.setOnMouseExited(null);
+                closeLabel.setOnMouseClicked(null);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (mapMarkers != null) {
+                if (mapMarkers[0] != null) severFromParent(mapMarkers[0]);
+                if (mapMarkers[1] != null) severFromParent(mapMarkers[1]);
+            }
+        } catch (Exception e) {}
+
+        try { this.getChildren().clear(); } catch (Exception e) {}
+        try { severFromParent(self); } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 10: NON-DESTRUCTIVE Data Teardown
+        try { this.mLinkIds = null; } catch (Exception e) {}
+
+        // 1. Final Nullification Sweep
+        try { this.verticalTreeView = null; } catch (Exception e) {}
+        try { this.formulaBox = null; } catch (Exception e) {}
+        try { this.right_pane = null; } catch (Exception e) {}
+        try { this.mainBox = null; } catch (Exception e) {}
+        try { this.labelPane = null; } catch (Exception e) {}
+        try { this.centerBox = null; } catch (Exception e) {}
+        try { this.leftDragLabel = null; } catch (Exception e) {}
+        try { this.closeLabel = null; } catch (Exception e) {}
+        try { this.mContextDragOver = null; } catch (Exception e) {}
+        try { this.mContextDragDropped = null; } catch (Exception e) {}
+        try { this.mappingKeyFilter = null; } catch (Exception e) {}
+        try { this.mapMarkers = null; } catch (Exception e) {}
+        try { this.mapXAnchors = null; } catch (Exception e) {}
+        try { this.oval = null; } catch (Exception e) {}
+        try { this.idString = null; } catch (Exception e) {}
+        try { this.mDragOffset = null; } catch (Exception e) {}
+        try { this.mType = null; } catch (Exception e) {}
+
+        try { this.leftDragEnteredHandler = null; } catch (Exception e) {}
+        try { this.leftDragExitedHandler = null; } catch (Exception e) {}
+        try { this.closeLabelEnteredHandler = null; } catch (Exception e) {}
+        try { this.closeLabelExitedHandler = null; } catch (Exception e) {}
+        try { this.closeLabelClickedHandler = null; } catch (Exception e) {}
+        try { this.leftDragDetectedHandler = null; } catch (Exception e) {}
+        try { this.parentPropertyListener = null; } catch (Exception e) {}
+        try { this.nodesWidthListener = null; } catch (Exception e) {}
+        try { this.rtaKeyFilter = null; } catch (Exception e) {}
+        try { this.rtaFocusListener = null; } catch (Exception e) {}
     }
 
 
@@ -439,7 +603,10 @@ public class MapFormulaBox extends AnchorPane {
     }
 
     private void pushUndoRedo() {
-        verticalTreeView.getVTExercise().pushUndoRedo();
+        if (isTornDown) return;
+        if (verticalTreeView != null && verticalTreeView.getVTExercise() != null) {
+            verticalTreeView.getVTExercise().pushUndoRedo();
+        }
     }
 
 }

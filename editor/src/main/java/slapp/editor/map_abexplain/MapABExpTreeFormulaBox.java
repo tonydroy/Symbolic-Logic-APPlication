@@ -21,7 +21,6 @@ import com.gluonhq.richtextarea.model.Document;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
@@ -51,6 +50,12 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.UUID;
 
+import javafx.scene.input.*;
+import javafx.scene.layout.*;
+import javafx.scene.input.*;
+import javafx.scene.layout.*;
+
+
 public class MapABExpTreeFormulaBox extends AnchorPane {
     private MapABExpView mapView;
 
@@ -59,26 +64,15 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
     private Label leftDragLabel;
     private Label closeLabel;
 
-    private EventHandler <MouseEvent> mLinkHandleDragDetected;
-    private EventHandler <DragEvent> mLinkHandleDragDropped;
-    private EventHandler <DragEvent> mContextLinkDragOver;
-    private EventHandler <DragEvent> mContextLinkDragDropped;
-    private EventHandler<DragEvent> mContextDragOver;
-    private EventHandler <DragEvent> mContextDragDropped;
-
-//    private ClickableNodeLink mDragLink = null;
     private NodeLink mDragLink = null;
     private AnchorPane right_pane = null;
     private List<String> mLinkIds = new ArrayList<>();
 
     private DragIconType mType = DragIconType.tree_field;
-
-    private Point2D mDragOffset = new Point2D (0.0, 0.0);
-
+    private Point2D mDragOffset = new Point2D(0.0, 0.0);
     private final MapABExpTreeFormulaBox self;
 
     private BoxedDRTA formulaBox;
-
     private HBox mainBox;
     private GridPane labelPane;
     private VBox centerBox;
@@ -92,10 +86,7 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
     private boolean annotationChanged = false;
     private BoxedDRTA annotationField;
 
-
-
     Rectangle oval = new Rectangle();
-    EventHandler circleKeyFilter;
     int circleStage = 0;
     Label[] circleMarkers;
     Double[] circleXAnchors = new Double[2];
@@ -104,7 +95,6 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
     double rtaBoundsHeight;
     double rtaBoundsMinY;
     boolean circled = false;
-    EventHandler ulineKeyFilter;
     int ulineStage = 0;
     Label[] ulineMarkers;
     Double[] ulineXAnchors = new Double[2];
@@ -116,7 +106,43 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
 
     private double printWidth;
 
+    // SCORCHED EARTH RULE 1: The Asynchronous Ghost "Kill Switch"
+    private boolean isTornDown = false;
 
+    // SCORCHED EARTH RULE 3: Eradicate Anonymous Lambdas
+    private EventHandler<MouseEvent> mLinkHandleDragDetected;
+    private EventHandler<DragEvent> mLinkHandleDragDropped;
+    private EventHandler<DragEvent> mContextLinkDragOver;
+    private EventHandler<DragEvent> mContextLinkDragDropped;
+    private EventHandler<DragEvent> mContextDragOver;
+    private EventHandler<DragEvent> mContextDragDropped;
+    private EventHandler<KeyEvent> circleKeyFilter;
+    private EventHandler<KeyEvent> ulineKeyFilter;
+
+    private ChangeListener<javafx.scene.Parent> parentListener;
+    private ChangeListener<Number> nodesWidthListener;
+    private EventHandler<KeyEvent> rtaEnterKeyFilter;
+    private ChangeListener<Boolean> rtaFocusListener;
+    private EventHandler<KeyEvent> annEnterKeyFilter;
+    private ChangeListener<Boolean> annFocusListener;
+
+    private EventHandler<MouseEvent> topLinkEnteredHandler;
+    private EventHandler<DragEvent> topLinkDragOverHandler;
+    private EventHandler<MouseEvent> topLinkExitedHandler;
+    private EventHandler<DragEvent> topLinkDragExitedHandler;
+
+    private EventHandler<MouseEvent> bottomLinkEnteredHandler;
+    private EventHandler<DragEvent> bottomLinkDragOverHandler;
+    private EventHandler<MouseEvent> bottomLinkExitedHandler;
+    private EventHandler<DragEvent> bottomLinkDragExitedHandler;
+
+    private EventHandler<MouseEvent> leftDragEnteredHandler;
+    private EventHandler<MouseEvent> leftDragExitedHandler;
+    private EventHandler<MouseEvent> leftDragDetectedHandler;
+
+    private EventHandler<MouseEvent> closeEnteredHandler;
+    private EventHandler<MouseEvent> closeExitedHandler;
+    private EventHandler<MouseEvent> closeClickedHandler;
 
     public MapABExpTreeFormulaBox(MapABExpView mapView) {
         this.mapView = mapView;
@@ -127,28 +153,65 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
         top_link_handle = new AnchorPane();
         top_link_handle.setPrefHeight(9);
         top_link_handle.setMaxWidth(30);
-        top_link_handle.setOnMouseEntered(e -> top_link_handle.setStyle("-fx-background-color: grey; -fx-background-radius: 5 5 0 0") );
-        top_link_handle.setOnDragOver(e -> top_link_handle.setStyle("-fx-background-color: grey; -fx-background-radius: 5 5 0 0") );
-        top_link_handle.setOnMouseExited(e ->  top_link_handle.setStyle("-fx-background-color: transparent") );
-        top_link_handle.setOnDragExited(e ->  top_link_handle.setStyle("-fx-background-color: transparent" ));
+
+        topLinkEnteredHandler = e -> {
+            if (isTornDown || this.mapView == null || this.mapView.getMainView() == null) return;
+            top_link_handle.setStyle("-fx-background-color: grey; -fx-background-radius: 5 5 0 0");
+        };
+        top_link_handle.setOnMouseEntered(topLinkEnteredHandler);
+
+        topLinkDragOverHandler = e -> {
+            if (isTornDown || this.mapView == null || this.mapView.getMainView() == null) return;
+            top_link_handle.setStyle("-fx-background-color: grey; -fx-background-radius: 5 5 0 0");
+        };
+        top_link_handle.setOnDragOver(topLinkDragOverHandler);
+
+        topLinkExitedHandler = e -> {
+            if (isTornDown || this.mapView == null || this.mapView.getMainView() == null) return;
+            top_link_handle.setStyle("-fx-background-color: transparent");
+        };
+        top_link_handle.setOnMouseExited(topLinkExitedHandler);
+
+        topLinkDragExitedHandler = e -> {
+            if (isTornDown || this.mapView == null || this.mapView.getMainView() == null) return;
+            top_link_handle.setStyle("-fx-background-color: transparent");
+        };
+        top_link_handle.setOnDragExited(topLinkDragExitedHandler);
 
         bottom_link_handle = new AnchorPane();
         bottom_link_handle.setPrefHeight(9);
         bottom_link_handle.setMaxWidth(30);
         bottom_link_handle.setStyle("-fx-background-radius: 0 0 5 5");
-        bottom_link_handle.setOnMouseEntered(e -> bottom_link_handle.setStyle("-fx-background-color: grey; -fx-background-radius: 0 0 5 5"));
-        bottom_link_handle.setOnDragOver(e -> bottom_link_handle.setStyle("-fx-background-color: grey; -fx-background-radius: 0 0 5 5") );
-        bottom_link_handle.setOnMouseExited(e -> bottom_link_handle.setStyle("fx-background-color: transparent"));
-        bottom_link_handle.setOnDragExited(e ->  bottom_link_handle.setStyle("-fx-background-color: transparent"));
 
+        bottomLinkEnteredHandler = e -> {
+            if (isTornDown || this.mapView == null || this.mapView.getMainView() == null) return;
+            bottom_link_handle.setStyle("-fx-background-color: grey; -fx-background-radius: 0 0 5 5");
+        };
+        bottom_link_handle.setOnMouseEntered(bottomLinkEnteredHandler);
 
+        bottomLinkDragOverHandler = e -> {
+            if (isTornDown || this.mapView == null || this.mapView.getMainView() == null) return;
+            bottom_link_handle.setStyle("-fx-background-color: grey; -fx-background-radius: 0 0 5 5");
+        };
+        bottom_link_handle.setOnDragOver(bottomLinkDragOverHandler);
+
+        bottomLinkExitedHandler = e -> {
+            if (isTornDown || this.mapView == null || this.mapView.getMainView() == null) return;
+            bottom_link_handle.setStyle("-fx-background-color: transparent");
+        };
+        bottom_link_handle.setOnMouseExited(bottomLinkExitedHandler);
+
+        bottomLinkDragExitedHandler = e -> {
+            if (isTornDown || this.mapView == null || this.mapView.getMainView() == null) return;
+            bottom_link_handle.setStyle("-fx-background-color: transparent");
+        };
+        bottom_link_handle.setOnDragExited(bottomLinkDragExitedHandler);
 
         leftDragLabel = new Label("");
         leftDragLabel.setMaxWidth(10);
         leftDragLabel.setMinWidth(10);
         leftDragLabel.setMaxHeight(10);
         leftDragLabel.setPadding(new Insets(0));
-        //       leftDragLabel.setStyle("-fx-background-color: red");
 
         closeLabel = new Label();
         closeLabel.setMaxHeight(10);
@@ -164,38 +227,39 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
         RowConstraints moveRowConstraints = new RowConstraints(10);
         moveRowConstraints.setVgrow(Priority.NEVER);
         labelPane.getRowConstraints().addAll(closeRowConstraints, moveRowConstraints);
-        labelPane.add(closeLabel, 0, 0); labelPane.add(leftDragLabel, 0, 1);
+        labelPane.add(closeLabel, 0, 0);
+        labelPane.add(leftDragLabel, 0, 1);
 
-
-        leftDragLabel.setOnMouseEntered(e -> {
+        leftDragEnteredHandler = e -> {
+            if (isTornDown || this.mapView == null || this.mapView.getMainView() == null) return;
             leftDragLabel.setStyle("-fx-background-color: grey; -fx-background-radius: 0 0 0 5;");
             closeLabel.setStyle("-fx-background-color: black; -fx-background-radius: 5 0 0 0;");
-//            leftDragLabel.setCursor(Cursor.MOVE);
-        });
-        leftDragLabel.setOnMouseExited(e -> {
+        };
+        leftDragLabel.setOnMouseEntered(leftDragEnteredHandler);
+
+        leftDragExitedHandler = e -> {
+            if (isTornDown || this.mapView == null || this.mapView.getMainView() == null) return;
             leftDragLabel.setStyle("-fx-background-color: transparent");
             closeLabel.setStyle("-fx-background-color:transparent");
-            //           leftDragLabel.setCursor(Cursor.DEFAULT);
-        });
+        };
+        leftDragLabel.setOnMouseExited(leftDragExitedHandler);
 
-        closeLabel.setOnMouseEntered(e -> {
+        closeEnteredHandler = e -> {
+            if (isTornDown || this.mapView == null || this.mapView.getMainView() == null) return;
             leftDragLabel.setStyle("-fx-background-color: grey; -fx-background-radius: 0 0 0 5");
             closeLabel.setStyle("-fx-background-color: black; -fx-background-radius: 5 0 0 0");
-//            leftDragLabel.setCursor(Cursor.MOVE);
-        });
-        closeLabel.setOnMouseExited(e -> {
+        };
+        closeLabel.setOnMouseEntered(closeEnteredHandler);
+
+        closeExitedHandler = e -> {
+            if (isTornDown || this.mapView == null || this.mapView.getMainView() == null) return;
             leftDragLabel.setStyle("-fx-background-color: transparent");
             closeLabel.setStyle("-fx-background-color:transparent");
-            //           leftDragLabel.setCursor(Cursor.DEFAULT);
-        });
-
+        };
+        closeLabel.setOnMouseExited(closeExitedHandler);
 
         formulaBox = newFormulaBoxedDRTA();
-//        ABExpRightDragResizer resizer = new ABExpRightDragResizer(verticalTreeView);
-//        resizer.makeResizable(formulaBox.getRTA());
-
         middleBox = new VBox(formulaBox.getBoxedRTA(), linesPane);
-
 
         centerBox = new VBox(top_link_handle, middleBox, bottom_link_handle);
         centerBox.setAlignment(Pos.CENTER);
@@ -204,12 +268,9 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
         mainBox.setAlignment(Pos.TOP_CENTER);
         mainBox.setMargin(labelPane, new Insets(10, 0, 0, 0));
 
-
         self.getChildren().addAll(mainBox);
-//        self.setBottomAnchor(mainBox, 0.0);
         self.setLeftAnchor(mainBox, 0.0);
         self.setTopAnchor(mainBox, 0.0);
- //       self.setRightAnchor(mainBox, 0.0);
 
         setId(UUID.randomUUID().toString());
         idString = getId();
@@ -226,112 +287,103 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
         top_link_handle.setOnDragDropped(mLinkHandleDragDropped);
         bottom_link_handle.setOnDragDropped(mLinkHandleDragDropped);
 
-  //      mDragLink = new ClickableNodeLink();
         mDragLink = new NodeLink();
         mDragLink.setVisible(false);
 
-        parentProperty().addListener(new ChangeListener() {
-            @Override
-            public void changed(ObservableValue ob, Object ov, Object nv) {
-                right_pane = (AnchorPane) getParent();
-            }
-        });
-
-        circleKeyFilter = new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent e) {
-                RichTextArea rta = formulaBox.getRTA();
-                KeyCode code = e.getCode();
-                Bounds rtaBounds = self.sceneToLocal(rta.localToScene(rta.getBoundsInLocal()));
-                rtaBoundsHeight = rtaBounds.getHeight();
-                rtaBoundsMinY = rtaBounds.getMinY();
-
-                if (code == KeyCode.F10) {
-                    if (circleStage < 2) {
-                        if (!circled) {
-
-                            int xPos = (int) Math.round(rta.getCaretRowColumn().getX());
-                            circleIndexes[circleStage] = xPos;
-
-                            Bounds caretBounds = ((RichTextAreaSkin) formulaBox.getRTA().getSkin()).getCaretPosition();
-                            Bounds newCaretBounds = rta.sceneToLocal(caretBounds);
-                            double xAnchor = newCaretBounds.getMaxX() + rtaBounds.getMinX() - 1.0;
-                            double yAnchor = newCaretBounds.getMaxY() * .75 + rtaBounds.getMinY();
-
-                            Label marker = circleMarkers[circleStage];
-                            circleXAnchors[circleStage] = xAnchor;
-                            self.getChildren().add(marker);
-                            self.setLeftAnchor(marker, xAnchor);
-                            self.setTopAnchor(marker, yAnchor);
-                            circleStage++;
-                        }
-                        else EditorAlerts.fleetingRedPopup("Text field has at most one circle annotation.");
-                    } else {
-                        self.getChildren().removeAll(circleMarkers);
-                        circleStage = 0;
-                    }
-                    e.consume();
-                } else if (code == KeyCode.F11) {
-                    if (circleStage < 2) {
-                        EditorAlerts.fleetingRedPopup("Circle requires two markers.");
-                    }
-                    else if (circleStage == 2) {
-                        setCircle();
-                        circleStage++;
-                        circled = true;
-                        pushUndoRedo();
-                    } else {
-                        EditorAlerts.fleetingRedPopup("Text field has at most one circle annotation.");
-                    }
-                    e.consume();
-                }
-            }
+        parentListener = (ob, ov, nv) -> {
+            if (isTornDown || self == null) return;
+            if (getParent() instanceof AnchorPane) right_pane = (AnchorPane) getParent();
         };
+        parentProperty().addListener(parentListener);
 
+        circleKeyFilter = e -> {
+            if (isTornDown || mapView == null || mapView.getMainView() == null || formulaBox == null || formulaBox.getRTA() == null) return;
+            RichTextArea rta = formulaBox.getRTA();
+            if (rta.getSkin() == null) return;
+            KeyCode code = e.getCode();
+            Bounds rtaBounds = self.sceneToLocal(rta.localToScene(rta.getBoundsInLocal()));
+            rtaBoundsHeight = rtaBounds.getHeight();
+            rtaBoundsMinY = rtaBounds.getMinY();
 
-        ulineKeyFilter = new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent e) {
-                RichTextArea rta = formulaBox.getRTA();
-                KeyCode code = e.getCode();
-                Bounds rtaBounds = self.sceneToLocal(rta.localToScene(rta.getBoundsInLocal()));
-                if (code == KeyCode.F10) {
-                    if (ulineStage < 2) {
-
+            if (code == KeyCode.F10) {
+                if (circleStage < 2) {
+                    if (!circled) {
                         int xPos = (int) Math.round(rta.getCaretRowColumn().getX());
-                        ulineIndexTemp[ulineStage] = xPos;
+                        circleIndexes[circleStage] = xPos;
 
                         Bounds caretBounds = ((RichTextAreaSkin) formulaBox.getRTA().getSkin()).getCaretPosition();
                         Bounds newCaretBounds = rta.sceneToLocal(caretBounds);
-                        double xAnchor = newCaretBounds.getMaxX() + rtaBounds.getMinX() - 2.0;
+                        double xAnchor = newCaretBounds.getMaxX() + rtaBounds.getMinX() - 1.0;
                         double yAnchor = newCaretBounds.getMaxY() * .75 + rtaBounds.getMinY();
 
-                        Label marker = ulineMarkers[ulineStage];
-                        ulineXAnchors[ulineStage] = xAnchor;
+                        Label marker = circleMarkers[circleStage];
+                        circleXAnchors[circleStage] = xAnchor;
                         self.getChildren().add(marker);
                         self.setLeftAnchor(marker, xAnchor);
                         self.setTopAnchor(marker, yAnchor);
-                        ulineStage++;
-                    } else {
-                        self.getChildren().removeAll(ulineMarkers);
-                        ulineStage = 0;
-                    }
-                    e.consume();
+                        circleStage++;
+                    } else EditorAlerts.fleetingRedPopup("Text field has at most one circle annotation.");
+                } else {
+                    self.getChildren().removeAll(circleMarkers);
+                    circleStage = 0;
                 }
-                else if (code == KeyCode.F11) {
-                    if (ulineStage == 2) {
-                        double minX = Math.min(ulineXAnchors[0], ulineXAnchors[1]);
-                        double maxX = Math.max(ulineXAnchors[0], ulineXAnchors[1]);
-                        self.getChildren().removeAll(ulineMarkers);
-                        setLine(minX - rtaBounds.getMinX(), maxX - rtaBounds.getMinX());
-                        setLineIndexes();
-                        ulineStage = 0;
-                        pushUndoRedo();
-                    } else {
-                        EditorAlerts.fleetingRedPopup("Underline requires two markers.");
-                    }
-                    e.consume();
+                e.consume();
+            } else if (code == KeyCode.F11) {
+                if (circleStage < 2) {
+                    EditorAlerts.fleetingRedPopup("Circle requires two markers.");
+                } else if (circleStage == 2) {
+                    setCircle();
+                    circleStage++;
+                    circled = true;
+                    pushUndoRedo();
+                } else {
+                    EditorAlerts.fleetingRedPopup("Text field has at most one circle annotation.");
                 }
+                e.consume();
+            }
+        };
+
+        ulineKeyFilter = e -> {
+            if (isTornDown || mapView == null || mapView.getMainView() == null || formulaBox == null || formulaBox.getRTA() == null) return;
+            RichTextArea rta = formulaBox.getRTA();
+            if (rta.getSkin() == null) return;
+            KeyCode code = e.getCode();
+            Bounds rtaBounds = self.sceneToLocal(rta.localToScene(rta.getBoundsInLocal()));
+
+            if (code == KeyCode.F10) {
+                if (ulineStage < 2) {
+                    int xPos = (int) Math.round(rta.getCaretRowColumn().getX());
+                    ulineIndexTemp[ulineStage] = xPos;
+
+                    Bounds caretBounds = ((RichTextAreaSkin) formulaBox.getRTA().getSkin()).getCaretPosition();
+                    Bounds newCaretBounds = rta.sceneToLocal(caretBounds);
+                    double xAnchor = newCaretBounds.getMaxX() + rtaBounds.getMinX() - 2.0;
+                    double yAnchor = newCaretBounds.getMaxY() * .75 + rtaBounds.getMinY();
+
+                    Label marker = ulineMarkers[ulineStage];
+                    ulineXAnchors[ulineStage] = xAnchor;
+                    self.getChildren().add(marker);
+                    self.setLeftAnchor(marker, xAnchor);
+                    self.setTopAnchor(marker, yAnchor);
+                    ulineStage++;
+                } else {
+                    self.getChildren().removeAll(ulineMarkers);
+                    ulineStage = 0;
+                }
+                e.consume();
+            } else if (code == KeyCode.F11) {
+                if (ulineStage == 2) {
+                    double minX = Math.min(ulineXAnchors[0], ulineXAnchors[1]);
+                    double maxX = Math.max(ulineXAnchors[0], ulineXAnchors[1]);
+                    self.getChildren().removeAll(ulineMarkers);
+                    setLine(minX - rtaBounds.getMinX(), maxX - rtaBounds.getMinX());
+                    setLineIndexes();
+                    ulineStage = 0;
+                    pushUndoRedo();
+                } else {
+                    EditorAlerts.fleetingRedPopup("Underline requires two markers.");
+                }
+                e.consume();
             }
         };
     }
@@ -352,7 +404,6 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
     }
 
     public void setCircle() {
-
         double minX = Math.min(circleXAnchors[0], circleXAnchors[1]);
         double maxX = Math.max(circleXAnchors[0], circleXAnchors[1]);
         self.getChildren().removeAll(circleMarkers);
@@ -370,14 +421,12 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
     }
 
     private void setLine(double startX, double endX) {
-        //make sure there is a baseline for new line by extending baseline to endX
         int intStartX = (int) Math.round(startX);
         int intEndX = (int) Math.round(endX);
         for (int i = baseline.size(); i <= intEndX; i++) {
             baseline.add(-((int) ulineSpace));
         }
 
-        //find base for new line
         int maxBase = 0;
         for (int i = intStartX; i <= intEndX; i++) {
             if (baseline.get(i) > maxBase) {
@@ -385,13 +434,11 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
             }
         }
 
-        //get yPosition of new line and update baseline
         double yPos = (double) maxBase + ulineSpace;
         for (int i = intStartX; i <= intEndX; i++) {
             baseline.set(i, (int) Math.round(yPos));
         }
 
-        //add line to linesPane
         addLineToPane(startX, endX - startX, yPos);
     }
 
@@ -402,351 +449,235 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
         linesPane.setBottomAnchor(line, yPos);
     }
 
-    public void registerLink(String linkId) {mLinkIds.add(linkId); }
+    public void registerLink(String linkId) { mLinkIds.add(linkId); }
 
-    public void setType (DragIconType type) {
-        mType = type;
-    }
-
-
+    public void setType(DragIconType type) { mType = type; }
 
     public void buildNodeDragHandlers() {
-
-
-        mContextDragOver = new EventHandler <DragEvent>() {
-
-            //dragover to handle node dragging in the right pane view
-            @Override
-            public void handle(DragEvent event) {
-
-                event.acceptTransferModes(TransferMode.ANY);
-                relocateToPoint(new Point2dSerial( event.getSceneX(), event.getSceneY()));
-
-                event.consume();
-            }
+        mContextDragOver = event -> {
+            if (isTornDown || mapView == null || getParent() == null) return;
+            event.acceptTransferModes(TransferMode.ANY);
+            relocateToPoint(new Point2dSerial(event.getSceneX(), event.getSceneY()));
+            event.consume();
         };
 
-
-
-        //dragdrop for node dragging
-        mContextDragDropped = new EventHandler <DragEvent> () {
-
-            @Override
-            public void handle(DragEvent event) {
-
-                getParent().setOnDragOver(null);
-                getParent().setOnDragDropped(null);
-                event.setDropCompleted(true);
-
-                relocateToGridPoint2( new Point2D(event.getSceneX(), event.getSceneY())  );
-                self.setCursor(Cursor.DEFAULT);
-                pushUndoRedo();
-            }
+        mContextDragDropped = event -> {
+            if (isTornDown || mapView == null || getParent() == null) return;
+            getParent().setOnDragOver(null);
+            getParent().setOnDragDropped(null);
+            event.setDropCompleted(true);
+            relocateToGridPoint2(new Point2D(event.getSceneX(), event.getSceneY()));
+            self.setCursor(Cursor.DEFAULT);
+            pushUndoRedo();
         };
 
+        closeClickedHandler = event -> {
+            if (isTornDown || mapView == null || self.getParent() == null) return;
+            self.requestFocus();
+            AnchorPane parent = (AnchorPane) self.getParent();
+            parent.getChildren().remove(self);
 
-        //close button click
-        closeLabel.setOnMouseClicked( new EventHandler <MouseEvent> () {
-            @Override
-            public void handle(MouseEvent event) {
-                self.requestFocus();
-                AnchorPane parent  = (AnchorPane) self.getParent();
-                parent.getChildren().remove(self);
-
-                //iterate each link id connected to this node
-                //find it's corresponding component in the right-hand
-                //AnchorPane and delete it.
-
-                //Note:  other nodes connected to these links are not being
-                //notified that the link has been removed.
-                for (ListIterator<String> iterId = mLinkIds.listIterator();
-                     iterId.hasNext();) {
-
-                    String id = iterId.next();
-
-                    for (ListIterator <Node> iterNode = parent.getChildren().listIterator();
-                         iterNode.hasNext();) {
-
-                        Node node = iterNode.next();
-
-                        if (node.getId() == null)
-                            continue;
-
-                        if (node.getId().equals(id))
-                            iterNode.remove();
-                    }
-
-                    iterId.remove();
+            for (ListIterator<String> iterId = mLinkIds.listIterator(); iterId.hasNext();) {
+                String id = iterId.next();
+                for (ListIterator<Node> iterNode = parent.getChildren().listIterator(); iterNode.hasNext();) {
+                    Node node = iterNode.next();
+                    if (node.getId() == null) continue;
+                    if (node.getId().equals(id)) iterNode.remove();
                 }
-                pushUndoRedo();
-                parent.requestFocus();
+                iterId.remove();
             }
-        });
+            pushUndoRedo();
+            parent.requestFocus();
 
+            // SCORCHED EARTH RULE 9: The UI Deletion Fix
+            self.cleanup();
+        };
+        closeLabel.setOnMouseClicked(closeClickedHandler);
 
+        leftDragDetectedHandler = event -> {
+            if (isTornDown || mapView == null || getParent() == null) return;
+            getParent().setOnDragOver(null);
+            getParent().setOnDragDropped(null);
+            getParent().setOnDragOver(mContextDragOver);
+            getParent().setOnDragDropped(mContextDragDropped);
 
-        leftDragLabel.setOnDragDetected ( new EventHandler <MouseEvent> () {
+            mDragOffset = new Point2D(event.getX(), event.getY());
+            relocateToPoint(new Point2D(event.getSceneX(), event.getSceneY()));
 
-            @Override
-            public void handle(MouseEvent event) {
+            ClipboardContent content = new ClipboardContent();
+            DragContainer container = new DragContainer();
+            container.addData("type", mType.toString());
+            content.put(DragContainer.AddNode, container);
 
-                getParent().setOnDragOver(null);
-                getParent().setOnDragDropped(null);
-
-                getParent().setOnDragOver (mContextDragOver);
-                getParent().setOnDragDropped (mContextDragDropped);
-
-
-                //begin drag ops
-                mDragOffset = new Point2D(event.getX(), event.getY());
-
-                relocateToPoint(
-                        new Point2D(event.getSceneX(), event.getSceneY())
-                );
-
-                ClipboardContent content = new ClipboardContent();
-                DragContainer container = new DragContainer();
-
-                container.addData ("type", mType.toString());
-                content.put(DragContainer.AddNode, container);
-
-                Dragboard db = startDragAndDrop(TransferMode.MOVE);
-                db.setDragView(EditorMain.emptyImage);
-                db.setContent(content);
-     //           startDragAndDrop (TransferMode.ANY).setContent(content);
-                formulaBox.getRTA().requestFocus();
-                event.consume();
-            }
-
-        });
-
+            Dragboard db = startDragAndDrop(TransferMode.MOVE);
+            db.setDragView(EditorMain.emptyImage);
+            db.setContent(content);
+            if (formulaBox != null && formulaBox.getRTA() != null) formulaBox.getRTA().requestFocus();
+            event.consume();
+        };
+        leftDragLabel.setOnDragDetected(leftDragDetectedHandler);
     }
 
     private void buildLinkDragHandlers() {
+        mLinkHandleDragDetected = event -> {
+            if (isTornDown || mapView == null || getParent() == null || right_pane == null) return;
+            getParent().setOnDragOver(null);
+            getParent().setOnDragDropped(null);
+            getParent().setOnDragOver(mContextLinkDragOver);
+            getParent().setOnDragDropped(mContextLinkDragDropped);
 
-        mLinkHandleDragDetected = new EventHandler <MouseEvent> () {
+            right_pane.getChildren().add(0, mDragLink);
+            mDragLink.setVisible(false);
 
-            @Override
-            public void handle(MouseEvent event) {
+            Point2D p = new Point2D(
+                    getLayoutX() + (getWidth() / 2.0),
+                    getLayoutY() + (middleBox.getHeight() / 2) + 9
+            );
+            mDragLink.setStart(p);
 
-                getParent().setOnDragOver(null);
-                getParent().setOnDragDropped(null);
+            ClipboardContent content = new ClipboardContent();
+            DragContainer container = new DragContainer();
+            container.addData("source", getId());
+            content.put(DragContainer.AddLink, container);
 
-                getParent().setOnDragOver(mContextLinkDragOver);
-                getParent().setOnDragDropped(mContextLinkDragDropped);
-
-                //Set up user-draggable link
-                right_pane.getChildren().add(0,mDragLink);
-
-                mDragLink.setVisible(false);
-
-                Point2D p = new Point2D(
-                        getLayoutX() + (getWidth() / 2.0),
-                        getLayoutY() + (middleBox.getHeight()/2) + 9
-
- //                       getLayoutY() + (getHeight() / 2.0)
-                );
-
-                mDragLink.setStart(p);
-
-                //Drag content code
-                ClipboardContent content = new ClipboardContent();
-                DragContainer container = new DragContainer();
-
-
-                //pass the UUID of the source node for later lookup
-                container.addData("source", getId());
-
-                content.put(DragContainer.AddLink, container);
-
-                Dragboard db = startDragAndDrop(TransferMode.MOVE);
-                db.setDragView(EditorMain.emptyImage);
-                db.setContent(content);
- //               startDragAndDrop (TransferMode.ANY).setContent(content);
-
-                event.consume();
-            }
+            Dragboard db = startDragAndDrop(TransferMode.MOVE);
+            db.setDragView(EditorMain.emptyImage);
+            db.setContent(content);
+            event.consume();
         };
 
-        mLinkHandleDragDropped = new EventHandler <DragEvent> () {
+        mLinkHandleDragDropped = event -> {
+            if (isTornDown || mapView == null || getParent() == null || right_pane == null) return;
+            getParent().setOnDragOver(null);
+            getParent().setOnDragDropped(null);
 
-            @Override
-            public void handle(DragEvent event) {
+            DragContainer container = (DragContainer) event.getDragboard().getContent(DragContainer.AddLink);
+            if (container == null) return;
 
-                getParent().setOnDragOver(null);
-                getParent().setOnDragDropped(null);
+            mDragLink.setVisible(false);
+            if (!right_pane.getChildren().isEmpty()) right_pane.getChildren().remove(0);
 
-                //get the drag data.  If it's null, abort.
-                //This isn't the drag event we're looking for.
-                DragContainer container =
-                        (DragContainer) event.getDragboard().getContent(DragContainer.AddLink);
+            ClipboardContent content = new ClipboardContent();
+            container.addData("target", getId());
+            content.put(DragContainer.AddLink, container);
 
-                if (container == null)
-                    return;
-
-                //hide the draggable NodeLink and remove it from the right-hand AnchorPane's children
-                mDragLink.setVisible(false);
-                right_pane.getChildren().remove(0);
-
-     //           bottom_link_handle.setStyle("-fx-background-color: transparent");
-     //           top_link_handle.setStyle("-fx-background-color: transparent");
-
-                AnchorPane link_handle = (AnchorPane) event.getSource();
-
-                ClipboardContent content = new ClipboardContent();
-
-                //pass the UUID of the target node for later lookup
-                container.addData("target", getId());
-
-                content.put(DragContainer.AddLink, container);
-
-                event.getDragboard().setContent(content);
-                event.setDropCompleted(true);
-                event.consume();
-            }
+            event.getDragboard().setContent(content);
+            event.setDropCompleted(true);
+            event.consume();
         };
 
-        mContextLinkDragOver = new EventHandler <DragEvent> () {
+        mContextLinkDragOver = event -> {
+            if (isTornDown || mapView == null || mDragLink == null) return;
+            event.acceptTransferModes(TransferMode.ANY);
 
-            @Override
-            public void handle(DragEvent event) {
-                event.acceptTransferModes(TransferMode.ANY);
-
-                //Relocate end of user-draggable link
-                if (!mDragLink.isVisible())
-                    mDragLink.setVisible(true);
-
-                mDragLink.setEnd(new Point2D(event.getX(), event.getY()));
-
-                event.consume();
-
-            }
+            if (!mDragLink.isVisible()) mDragLink.setVisible(true);
+            mDragLink.setEnd(new Point2D(event.getX(), event.getY()));
+            event.consume();
         };
 
-        //drop event for link creation
-        mContextLinkDragDropped = new EventHandler <DragEvent> () {
+        mContextLinkDragDropped = event -> {
+            if (isTornDown || mapView == null || getParent() == null || right_pane == null) return;
+            getParent().setOnDragOver(null);
+            getParent().setOnDragDropped(null);
 
-            @Override
-            public void handle(DragEvent event) {
+            if (mDragLink != null) mDragLink.setVisible(false);
+            if (!right_pane.getChildren().isEmpty()) right_pane.getChildren().remove(0);
 
-
-                getParent().setOnDragOver(null);
-                getParent().setOnDragDropped(null);
-
-                //hide the draggable NodeLink and remove it from the right-hand AnchorPane's children
-                mDragLink.setVisible(false);
-                right_pane.getChildren().remove(0);
-
-                event.setDropCompleted(true);
-                event.consume();
-            }
-
+            event.setDropCompleted(true);
+            event.consume();
         };
-
     }
 
-
-    public void relocateToGridPoint (Point2D p) {
-
-        //relocates the object to a point that has been converted to
-        //scene coordinates
+    public void relocateToGridPoint(Point2D p) {
+        if (getParent() == null) return;
         Point2D localCoords = getParent().sceneToLocal(p);
         double localY = Math.round((localCoords.getY() - 16) / 24.0) * 24.0;
-
-        relocate (
-                (int) localCoords.getX() - 36,
-                (int) (localY - 7 )
-        );
+        relocate((int) localCoords.getX() - 36, (int) (localY - 7));
         self.requestFocus();
     }
 
-
-    // I don't understand why both this and the following method are required to drop on line - should be same w/o offset localY??
-    public void relocateToGridPoint2 (Point2D p) {
-
-        //relocates the object to a point that has been converted to
-        //scene coordinates
+    public void relocateToGridPoint2(Point2D p) {
+        if (getParent() == null) return;
         Point2D localCoords = getParent().sceneToLocal(p);
-        double localY = Math.round((localCoords.getY() - 16) / 24.0) * 24.0 ;
-
-        relocate (
-                (int) localCoords.getX(),
-                (int) (localY - 7)
-        );
+        double localY = Math.round((localCoords.getY() - 16) / 24.0) * 24.0;
+        relocate((int) localCoords.getX(), (int) (localY - 7));
     }
 
-
-
-
-    public void relocateToPoint (Point2D p) {
-
-        //relocates the object to a point that has been converted to
-        //scene coordinates
+    public void relocateToPoint(Point2D p) {
+        if (getParent() == null) return;
         Point2D localCoords = getParent().sceneToLocal(p);
-
-
-        //       double localY = Math.round(localCoords.getY() / 24.0) * 24.0;
-
-        relocate (
-                (int) localCoords.getX(),
-                //           (int) ((localCoords.getX() - (getBoundsInLocal().getWidth()) / 2)),
-                (int) ((localCoords.getY() - (getBoundsInLocal().getHeight()) / 2 ))
-        );
+        relocate((int) localCoords.getX(), (int) ((localCoords.getY() - (getBoundsInLocal().getHeight()) / 2)));
     }
 
     private BoxedDRTA newFormulaBoxedDRTA() {
         BoxedDRTA boxedDRTA = new BoxedDRTA();
         DecoratedRTA drta = boxedDRTA.getDRTA();
-        drta.getKeyboardSelector().valueProperty().setValue(mapView.getDefaultKeyboard());
+        if (mapView != null && mapView.getDefaultKeyboard() != null) {
+            drta.getKeyboardSelector().valueProperty().setValue(mapView.getDefaultKeyboard());
+        }
         RichTextArea rta = boxedDRTA.getRTA();
         rta.setMaxHeight(24);
         rta.setMinHeight(24);
         rta.setPrefWidth(36);
 
         RichTextAreaSkin rtaSkin = (RichTextAreaSkin) rta.getSkin();
-        rta.prefWidthProperty().bind(Bindings.max(Bindings.add(rtaSkin.nodesWidthProperty(), 6), 12));
-        rtaSkin.nodesWidthProperty().addListener((observable, oldValue, newValue) -> {
-            Platform.runLater(() -> rta.getParent().requestLayout());
-        });
-        rta.addEventFilter(KeyEvent.ANY, e -> {
-            if (e.getCode() == KeyCode.ENTER) e.consume();
-        });
+        rta.prefWidthProperty().bind(Bindings.max(Bindings.add(rtaSkin.nodesWidthProperty(), 8), 12));
 
-//        rta.setContentAreaWidth(500);
-       rta.getStylesheets().add("blueFormulaBox.css");
+        nodesWidthListener = (observable, oldValue, newValue) -> {
+            Platform.runLater(() -> {
+                if (isTornDown || mapView == null || rta == null || rta.getParent() == null) return;
+                rta.getParent().requestLayout();
+            });
+        };
+        rtaSkin.nodesWidthProperty().addListener(nodesWidthListener);
+
+        rtaEnterKeyFilter = e -> {
+            if (isTornDown || mapView == null) return;
+            if (e.getCode() == KeyCode.ENTER) e.consume();
+        };
+        rta.addEventFilter(KeyEvent.ANY, rtaEnterKeyFilter);
+
+        rta.getStylesheets().add("blueFormulaBox.css");
         rta.setPromptText("");
- //       rta.getActionFactory().saveNow().execute(new ActionEvent());   ---------- this blanks text on open exercise.
-        rta.focusedProperty().addListener((ob, ov, nv) -> {
+
+        rtaFocusListener = (ob, ov, nv) -> {
+            if (isTornDown || mapView == null || mapView.getMainView() == null) return;
             if (nv) {
                 mapView.getMainView().editorInFocus(drta, ControlType.FIELD);
             }
-        });
+        };
+        rta.focusedProperty().addListener(rtaFocusListener);
         return boxedDRTA;
     }
 
     private BoxedDRTA newAnnotationBoxedDRTA() {
-
         BoxedDRTA annBDRTA = new BoxedDRTA();
         RichTextArea annRTA = annBDRTA.getRTA();
         annRTA.setPrefWidth(42);
         annBDRTA.getBoxedRTA().setMaxHeight(20);
         annBDRTA.getDRTA().getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.BASE_AND_SANS);
-        annRTA.addEventFilter(KeyEvent.ANY, e -> {
+
+        annEnterKeyFilter = e -> {
+            if (isTornDown || mapView == null) return;
             if (e.getCode() == KeyCode.ENTER) e.consume();
-        });
+        };
+        annRTA.addEventFilter(KeyEvent.ANY, annEnterKeyFilter);
+
         annRTA.getStylesheets().add("slappAnnotation.css");
         annRTA.setPromptText("");
 
-        annRTA.focusedProperty().addListener((ob, ov, nv) -> {
-            if (nv)  mapView.getMainView().editorInFocus(annBDRTA.getDRTA(), ControlType.FIELD);
+        annFocusListener = (ob, ov, nv) -> {
+            if (isTornDown || mapView == null || mapView.getMainView() == null) return;
+            if (nv) mapView.getMainView().editorInFocus(annBDRTA.getDRTA(), ControlType.FIELD);
             else {
                 if (annRTA.isModified()) {
                     pushUndoRedo();
                     annRTA.getActionFactory().saveNow().execute(new ActionEvent());
                 }
             }
-        });
-        annBDRTA.getBoxedRTA().getTransforms().add(new Scale(.75,.75));
+        };
+        annRTA.focusedProperty().addListener(annFocusListener);
+        annBDRTA.getBoxedRTA().getTransforms().add(new Scale(.75, .75));
 
         return annBDRTA;
     }
@@ -754,23 +685,24 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
     public void processBoxRequest(boolean add) {
         if (add) {
             if (!boxed) {
-                middleBox.setStyle("-fx-border-color: black; -fx-border-width: 1 1 1 1");
+                if (middleBox != null) middleBox.setStyle("-fx-border-color: black; -fx-border-width: 1 1 1 1");
                 boxed = true;
                 pushUndoRedo();
             }
         } else {
             if (boxed) {
-                middleBox.setStyle("-fx-border-width: 0 0 0 0");
+                if (middleBox != null) middleBox.setStyle("-fx-border-width: 0 0 0 0");
                 boxed = false;
                 pushUndoRedo();
             }
         }
     }
 
-    //for repopulating window (when we do not desire undo/redo push
     public void addBox() {
-        middleBox.setStyle("-fx-border-color: black; -fx-border-width: 1 1 1 1");
-        boxed = true;
+        if (middleBox != null) {
+            middleBox.setStyle("-fx-border-color: black; -fx-border-width: 1 1 1 1");
+            boxed = true;
+        }
     }
 
     public void processStarRequest(boolean add) {
@@ -781,8 +713,10 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
             }
         } else {
             if (starred) {
-                mainBox.getChildren().clear();
-                mainBox.getChildren().addAll(labelPane, centerBox);
+                if (mainBox != null) {
+                    mainBox.getChildren().clear();
+                    mainBox.getChildren().addAll(labelPane, centerBox);
+                }
                 starred = false;
                 pushUndoRedo();
             }
@@ -790,9 +724,11 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
     }
 
     public void addStar() {
+        if (mainBox == null) return;
         Label star = new Label("\u2605");
         star.setStyle("-fx-font-size: 8");
         mainBox.getChildren().clear();
+        annotation = false;
         mainBox.getChildren().addAll(labelPane, centerBox, star);
         mainBox.setMargin(star, new Insets(6,0, 0, 0));
         starred = true;
@@ -804,11 +740,12 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
                 addAnnotation();
                 pushUndoRedo();
             }
-
         } else {
             if (annotation) {
-                mainBox.getChildren().clear();
-                mainBox.getChildren().addAll(labelPane, centerBox);
+                if (mainBox != null) {
+                    mainBox.getChildren().clear();
+                    mainBox.getChildren().addAll(labelPane, centerBox);
+                }
                 annotation = false;
                 pushUndoRedo();
             }
@@ -816,15 +753,19 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
     }
 
     public void addAnnotation() {
-        annotationField = newAnnotationBoxedDRTA();
-
+        if (mainBox == null) return;
+        if (annotationField == null) {
+            annotationField = newAnnotationBoxedDRTA();
+        }
+        if (annotationField.getRTA() != null) {
+            annotationField.getRTA().getActionFactory().newDocumentNow().execute(new ActionEvent());
+        }
         mainBox.getChildren().clear();
+        starred = false;
         mainBox.getChildren().addAll(labelPane, centerBox, annotationField.getBoxedRTA());
         mainBox.setMargin(annotationField.getBoxedRTA(), new Insets(8, 0, 0, 0));
-
         annotation = true;
     }
-
 
     public void setAnnotationDoc(Document doc) {
         if (annotationField != null) {
@@ -833,7 +774,7 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
     }
 
     public Document getAnnotationDoc() {
-        if (annotationField != null) {
+        if (annotationField != null && annotationField.getRTA() != null) {
             annotationField.getRTA().getActionFactory().saveNow().execute(new ActionEvent());
             return annotationField.getRTA().getDocument();
         } else {
@@ -841,12 +782,10 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
         }
     }
 
-
-
     public void processCircleRequest(boolean add) {
         if (add) {
             RichTextArea rta = formulaBox.getRTA();
-            rta.requestFocus();
+            if (rta != null) rta.requestFocus();
             self.addEventFilter(KeyEvent.KEY_PRESSED, circleKeyFilter);
         } else {
             undoCircleRequest();
@@ -858,18 +797,19 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
     }
 
     public void undoCircleRequest() {
-        self.removeEventFilter(KeyEvent.KEY_PRESSED, circleKeyFilter);
-        self.getChildren().removeAll(circleMarkers[0], circleMarkers[1]);
+        try { if (circleKeyFilter != null) self.removeEventFilter(KeyEvent.KEY_PRESSED, circleKeyFilter); } catch (Exception e) {}
+        try { self.getChildren().removeAll(circleMarkers[0], circleMarkers[1]); } catch (Exception e) {}
         circleStage = 0;
     }
+
     public void processUnderlineRequest(boolean add) {
         if (add) {
             RichTextArea rta = formulaBox.getRTA();
-            rta.requestFocus();
+            if (rta != null) rta.requestFocus();
             self.addEventFilter(KeyEvent.KEY_PRESSED, ulineKeyFilter);
         } else {
             undoUnderlineRequest();
-            linesPane.getChildren().clear();
+            if (linesPane != null) linesPane.getChildren().clear();
             baseline.clear();
             ulineIndexes = new ArrayList<>();
             ulineInclusion = true;
@@ -878,129 +818,270 @@ public class MapABExpTreeFormulaBox extends AnchorPane {
     }
 
     public void undoUnderlineRequest() {
-        self.removeEventFilter(KeyEvent.KEY_PRESSED, ulineKeyFilter);
-        self.getChildren().removeAll(ulineMarkers[0], ulineMarkers[1]);
+        try { if (ulineKeyFilter != null) self.removeEventFilter(KeyEvent.KEY_PRESSED, ulineKeyFilter); } catch (Exception e) {}
+        try { self.getChildren().removeAll(ulineMarkers[0], ulineMarkers[1]); } catch (Exception e) {}
         ulineStage = 0;
     }
 
-    public VBox getMiddleBox() {
-        return middleBox;
+    // SCORCHED EARTH RULE 6: Sever Shared Nodes Helper
+    private void severFromParent(Node node) {
+        try {
+            if (node != null && node.getParent() != null) {
+                if (node.getParent() instanceof javafx.scene.layout.Pane) {
+                    ((javafx.scene.layout.Pane) node.getParent()).getChildren().remove(node);
+                } else if (node.getParent() instanceof javafx.scene.Group) {
+                    ((javafx.scene.Group) node.getParent()).getChildren().remove(node);
+                }
+            }
+        } catch (Exception e) {}
     }
 
-    public List<String> getmLinkIds() {
-        return mLinkIds;
+    // SCORCHED EARTH RULE 5: Rule of Isolation
+    public void cleanup() {
+        isTornDown = true;
+
+
+        try {
+            if (this.getParent() != null) {
+                if (this.getParent().getOnDragOver() == mContextDragOver) this.getParent().setOnDragOver(null);
+                if (this.getParent().getOnDragDropped() == mContextDragDropped) this.getParent().setOnDragDropped(null);
+                if (this.getParent().getOnDragOver() == mContextLinkDragOver) this.getParent().setOnDragOver(null);
+                if (this.getParent().getOnDragDropped() == mContextLinkDragDropped) this.getParent().setOnDragDropped(null);
+            }
+        } catch (Exception e) {}
+        try { severFromParent(self); } catch (Exception e) {}
+
+        try { undoCircleRequest(); } catch (Exception e) {}
+        try { undoUnderlineRequest(); } catch (Exception e) {}
+
+        try {
+            if (parentListener != null) parentProperty().removeListener(parentListener);
+        } catch (Exception e) {}
+
+        // ---> SCORCHED EARTH RULE 4: THE JAVAFX SKIN HAMMER (DECOUPLED TIMER) - BLOCK 1 <---
+        try {
+            if (formulaBox != null && formulaBox.getRTA() != null) {
+                final RichTextArea rta = formulaBox.getRTA();
+                try { rta.prefWidthProperty().unbind(); } catch (Exception e) {}
+
+                if (rtaEnterKeyFilter != null) rta.removeEventFilter(KeyEvent.ANY, rtaEnterKeyFilter);
+                if (rtaFocusListener != null) rta.focusedProperty().removeListener(rtaFocusListener);
+                if (nodesWidthListener != null && rta.getSkin() instanceof RichTextAreaSkin) {
+                    ((RichTextAreaSkin) rta.getSkin()).nodesWidthProperty().removeListener(nodesWidthListener);
+                }
+
+                // STAGE 1 (Immediate)
+                try { rta.setPromptText(""); } catch (Exception e) {}
+                try { rta.setFocusTraversable(false); } catch (Exception e) {}
+                try { if (rta.getDocument() == null || rta.getDocument().getText().isEmpty()) rta.getActionFactory().open(new Document(" ")).execute(new ActionEvent()); } catch (Exception e) {}
+
+                // STAGE 2 (Delayed Skin Removal)
+                javafx.animation.PauseTransition pt = new javafx.animation.PauseTransition(javafx.util.Duration.millis(1500));
+                pt.setOnFinished(ev -> {
+                    try { rta.setSkin(null); } catch (Exception ex) {}
+                });
+                pt.play();
+            }
+        } catch (Exception e) {}
+
+        // ---> SCORCHED EARTH RULE 4: THE JAVAFX SKIN HAMMER (DECOUPLED TIMER) - BLOCK 2 <---
+        try {
+            if (annotationField != null && annotationField.getRTA() != null) {
+                final RichTextArea annRta = annotationField.getRTA();
+                try { annRta.prefWidthProperty().unbind(); } catch (Exception e) {}
+
+                if (annEnterKeyFilter != null) annRta.removeEventFilter(KeyEvent.ANY, annEnterKeyFilter);
+                if (annFocusListener != null) annRta.focusedProperty().removeListener(annFocusListener);
+
+                // STAGE 1 (Immediate)
+                try { annRta.setPromptText(""); } catch (Exception e) {}
+                try { annRta.setFocusTraversable(false); } catch (Exception e) {}
+                try { if (annRta.getDocument() == null || annRta.getDocument().getText().isEmpty()) annRta.getActionFactory().open(new Document(" ")).execute(new ActionEvent()); } catch (Exception e) {}
+
+                // STAGE 2 (Delayed Skin Removal)
+                javafx.animation.PauseTransition pt = new javafx.animation.PauseTransition(javafx.util.Duration.millis(1500));
+                pt.setOnFinished(ev -> {
+                    try { annRta.setSkin(null); } catch (Exception ex) {}
+                });
+                pt.play();
+            }
+        } catch (Exception e) {}
+
+        try { if (mainBox != null) mainBox.getChildren().clear(); } catch (Exception e) {}
+        try { if (centerBox != null) centerBox.getChildren().clear(); } catch (Exception e) {}
+        try { if (middleBox != null) middleBox.getChildren().clear(); } catch (Exception e) {}
+        try { if (labelPane != null) labelPane.getChildren().clear(); } catch (Exception e) {}
+        try { if (linesPane != null) linesPane.getChildren().clear(); } catch (Exception e) {}
+
+        try {
+            this.setOnDragOver(null);
+            this.setOnDragDropped(null);
+            this.setOnDragDetected(null);
+            this.setOnMouseClicked(null);
+        } catch (Exception e) {}
+
+        try {
+            if (top_link_handle != null) {
+                if (topLinkEnteredHandler != null) top_link_handle.removeEventHandler(MouseEvent.MOUSE_ENTERED, topLinkEnteredHandler);
+                if (topLinkExitedHandler != null) top_link_handle.removeEventHandler(MouseEvent.MOUSE_EXITED, topLinkExitedHandler);
+                if (mLinkHandleDragDetected != null) top_link_handle.removeEventHandler(MouseEvent.DRAG_DETECTED, mLinkHandleDragDetected);
+                if (mLinkHandleDragDropped != null) top_link_handle.removeEventHandler(DragEvent.DRAG_DROPPED, mLinkHandleDragDropped);
+                if (topLinkDragOverHandler != null) top_link_handle.removeEventHandler(DragEvent.DRAG_OVER, topLinkDragOverHandler);
+                if (topLinkDragExitedHandler != null) top_link_handle.removeEventHandler(DragEvent.DRAG_EXITED, topLinkDragExitedHandler);
+
+                top_link_handle.setOnMouseEntered(null);
+                top_link_handle.setOnMouseExited(null);
+                top_link_handle.setOnDragDetected(null);
+                top_link_handle.setOnDragDropped(null);
+                top_link_handle.setOnDragOver(null);
+                top_link_handle.setOnDragExited(null);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (bottom_link_handle != null) {
+                if (bottomLinkEnteredHandler != null) bottom_link_handle.removeEventHandler(MouseEvent.MOUSE_ENTERED, bottomLinkEnteredHandler);
+                if (bottomLinkExitedHandler != null) bottom_link_handle.removeEventHandler(MouseEvent.MOUSE_EXITED, bottomLinkExitedHandler);
+                if (mLinkHandleDragDetected != null) bottom_link_handle.removeEventHandler(MouseEvent.DRAG_DETECTED, mLinkHandleDragDetected);
+                if (mLinkHandleDragDropped != null) bottom_link_handle.removeEventHandler(DragEvent.DRAG_DROPPED, mLinkHandleDragDropped);
+                if (bottomLinkDragOverHandler != null) bottom_link_handle.removeEventHandler(DragEvent.DRAG_OVER, bottomLinkDragOverHandler);
+                if (bottomLinkDragExitedHandler != null) bottom_link_handle.removeEventHandler(DragEvent.DRAG_EXITED, bottomLinkDragExitedHandler);
+
+                bottom_link_handle.setOnMouseEntered(null);
+                bottom_link_handle.setOnMouseExited(null);
+                bottom_link_handle.setOnDragDetected(null);
+                bottom_link_handle.setOnDragDropped(null);
+                bottom_link_handle.setOnDragOver(null);
+                bottom_link_handle.setOnDragExited(null);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (leftDragLabel != null) {
+                if (leftDragEnteredHandler != null) leftDragLabel.removeEventHandler(MouseEvent.MOUSE_ENTERED, leftDragEnteredHandler);
+                if (leftDragExitedHandler != null) leftDragLabel.removeEventHandler(MouseEvent.MOUSE_EXITED, leftDragExitedHandler);
+                if (leftDragDetectedHandler != null) leftDragLabel.removeEventHandler(MouseEvent.DRAG_DETECTED, leftDragDetectedHandler);
+
+                leftDragLabel.setOnMouseEntered(null);
+                leftDragLabel.setOnMouseExited(null);
+                leftDragLabel.setOnDragDetected(null);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (closeLabel != null) {
+                if (closeEnteredHandler != null) closeLabel.removeEventHandler(MouseEvent.MOUSE_ENTERED, closeEnteredHandler);
+                if (closeExitedHandler != null) closeLabel.removeEventHandler(MouseEvent.MOUSE_EXITED, closeExitedHandler);
+                if (closeClickedHandler != null) closeLabel.removeEventHandler(MouseEvent.MOUSE_CLICKED, closeClickedHandler);
+
+                closeLabel.setOnMouseEntered(null);
+                closeLabel.setOnMouseExited(null);
+                closeLabel.setOnMouseClicked(null);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (mDragLink != null) {
+                mDragLink.setVisible(false);
+                severFromParent(mDragLink);
+            }
+        } catch (Exception e) {}
+
+        try { this.getChildren().clear(); } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 10: NON-DESTRUCTIVE Data Teardown
+        try { this.mLinkIds = null; } catch (Exception e) {}
+        try { this.baseline = null; } catch (Exception e) {}
+        try { this.ulineIndexes = null; } catch (Exception e) {}
+
+        this.mapView = null;
+        this.formulaBox = null;
+        this.annotationField = null;
+        this.right_pane = null;
+        this.mainBox = null;
+        this.centerBox = null;
+        this.middleBox = null;
+        this.labelPane = null;
+        this.linesPane = null;
+        this.top_link_handle = null;
+        this.bottom_link_handle = null;
+        this.leftDragLabel = null;
+        this.closeLabel = null;
+
+        this.parentListener = null;
+        this.topLinkEnteredHandler = null;
+        this.topLinkDragOverHandler = null;
+        this.topLinkExitedHandler = null;
+        this.topLinkDragExitedHandler = null;
+        this.bottomLinkEnteredHandler = null;
+        this.bottomLinkDragOverHandler = null;
+        this.bottomLinkExitedHandler = null;
+        this.bottomLinkDragExitedHandler = null;
+        this.leftDragEnteredHandler = null;
+        this.leftDragExitedHandler = null;
+        this.leftDragDetectedHandler = null;
+        this.closeEnteredHandler = null;
+        this.closeExitedHandler = null;
+        this.closeClickedHandler = null;
+        this.nodesWidthListener = null;
+        this.rtaEnterKeyFilter = null;
+        this.rtaFocusListener = null;
+        this.annEnterKeyFilter = null;
+        this.annFocusListener = null;
+        this.mContextDragOver = null;
+        this.mContextDragDropped = null;
+        this.mLinkHandleDragDetected = null;
+        this.mLinkHandleDragDropped = null;
+        this.mContextLinkDragOver = null;
+        this.mContextLinkDragDropped = null;
+        this.mDragLink = null;
+        this.circleKeyFilter = null;
+        this.ulineKeyFilter = null;
+
+        this.ulineIndexTemp = null;
+        this.circleMarkers = null;
+        this.ulineMarkers = null;
+        this.circleXAnchors = null;
+        this.circleIndexes = null;
+        this.ulineXAnchors = null;
+        this.oval = null;
     }
 
-    public void setmLinkIds(List<String> mLinkIds) {
-        this.mLinkIds = mLinkIds;
-    }
-
-    public String getIdString() {
-        return idString;
-    }
-
-    public void setIdString(String idString) {
-        this.idString = idString;
-        setId(idString);
-
-    }
-
-    public BoxedDRTA getFormulaBox() {
-        return formulaBox;
-    }
-    public VBox getCenterBox() {return centerBox;}
-
-    public boolean isBoxed() {
-        return boxed;
-    }
-
-    public boolean isStarred() {
-        return starred;
-    }
-
-    public boolean isAnnotation() {
-        return annotation;
-    }
-
-    public BoxedDRTA getAnnotationField() {return annotationField; }
-
-    public boolean isCircled() {
-        return circled;
-    }
-
-    public void setCircled(boolean circled) {
-        this.circled = circled;
-    }
-
-    public Double[] getCircleXAnchors() {
-        return circleXAnchors;
-    }
-
-    public void setCircleXAnchors(Double[] circleXAnchors) {
-        this.circleXAnchors = circleXAnchors;
-    }
-
-    public int[] getCircleIndexes() {
-        return circleIndexes;
-    }
-
-    public void setCircleIndexes(int[] circleIndexes) {
-        this.circleIndexes = circleIndexes;
-    }
-
-
-    public double getRtaBoundsHeight() {
-        return rtaBoundsHeight;
-    }
-
-    public void setRtaBoundsHeight(double rtaBoundsHeight) {
-        this.rtaBoundsHeight = rtaBoundsHeight;
-    }
-    public double getRtaBoundsMinY() {
-        return rtaBoundsMinY;
-    }
-
-    public void setRtaBoundsMinY(double rtaBoundsMinY) {
-        this.rtaBoundsMinY = rtaBoundsMinY;
-    }
-
-    public AnchorPane getLinesPane() {
-        return linesPane;
-    }
-
-    public List<Integer> getBaseline() {
-        return baseline;
-    }
-
-    public void setBaseline(List<Integer> baseline) {
-        this.baseline = baseline;
-    }
-
-    public double getPrintWidth() {
-        return printWidth;
-    }
-
-    public void setPrintWidth(double printWidth) {
-        this.printWidth = printWidth;
-    }
-
-    public List<Integer[]> getUlineIndexes() {
-        return ulineIndexes;
-    }
-
-    public void setUlineIndexes(List<Integer[]> ulineIndexes) {
-        this.ulineIndexes = ulineIndexes;
-    }
-
-    public boolean isUlineInclusion() {
-        return ulineInclusion;
-    }
-
-    public void setUlineInclusion(boolean ulineInclusion) {
-        this.ulineInclusion = ulineInclusion;
-    }
+    public VBox getMiddleBox() { return middleBox; }
+    public List<String> getmLinkIds() { return mLinkIds; }
+    public void setmLinkIds(List<String> mLinkIds) { this.mLinkIds = mLinkIds; }
+    public String getIdString() { return idString; }
+    public void setIdString(String idString) { this.idString = idString; setId(idString); }
+    public BoxedDRTA getFormulaBox() { return formulaBox; }
+    public VBox getCenterBox() { return centerBox; }
+    public boolean isBoxed() { return boxed; }
+    public boolean isStarred() { return starred; }
+    public boolean isAnnotation() { return annotation; }
+    public BoxedDRTA getAnnotationField() { return annotationField; }
+    public boolean isCircled() { return circled; }
+    public void setCircled(boolean circled) { this.circled = circled; }
+    public Double[] getCircleXAnchors() { return circleXAnchors; }
+    public void setCircleXAnchors(Double[] circleXAnchors) { this.circleXAnchors = circleXAnchors; }
+    public int[] getCircleIndexes() { return circleIndexes; }
+    public void setCircleIndexes(int[] circleIndexes) { this.circleIndexes = circleIndexes; }
+    public double getRtaBoundsHeight() { return rtaBoundsHeight; }
+    public void setRtaBoundsHeight(double rtaBoundsHeight) { this.rtaBoundsHeight = rtaBoundsHeight; }
+    public double getRtaBoundsMinY() { return rtaBoundsMinY; }
+    public void setRtaBoundsMinY(double rtaBoundsMinY) { this.rtaBoundsMinY = rtaBoundsMinY; }
+    public AnchorPane getLinesPane() { return linesPane; }
+    public List<Integer> getBaseline() { return baseline; }
+    public void setBaseline(List<Integer> baseline) { this.baseline = baseline; }
+    public double getPrintWidth() { return printWidth; }
+    public void setPrintWidth(double printWidth) { this.printWidth = printWidth; }
+    public List<Integer[]> getUlineIndexes() { return ulineIndexes; }
+    public void setUlineIndexes(List<Integer[]> ulineIndexes) { this.ulineIndexes = ulineIndexes; }
+    public boolean isUlineInclusion() { return ulineInclusion; }
+    public void setUlineInclusion(boolean ulineInclusion) { this.ulineInclusion = ulineInclusion; }
 
     private void pushUndoRedo() {
-        mapView.getMapABExpExercise().pushUndoRedo();
+        if (isTornDown) return;
+        if (mapView != null && mapView.getMapABExpExercise() != null) {
+            mapView.getMapABExpExercise().pushUndoRedo();
+        }
     }
 }

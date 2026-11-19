@@ -17,6 +17,11 @@ package slapp.editor.main_window.assignment;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.model.Document;
+import com.teamdev.jxbrowser.browser.Browser;
+import com.teamdev.jxbrowser.view.javafx.BrowserView;
+import javafx.animation.PauseTransition;
+import javafx.animation.SequentialTransition;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -30,14 +35,21 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
+import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
 import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.MainWindowView;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
+import static slapp.editor.EditorMain.mainWindow;
 
 /**
  * Window to update of comment in assignment header
@@ -98,9 +110,11 @@ public class AssignmentCommentWindow {
         commentRTA.setPrefWidth(PrintUtilities.getPageWidth() + RTA_WIDTH_BMP);
         commentRTA.setContentAreaWidth(PrintUtilities.getPageWidth());
         commentRTA.setPrefHeight(200);
-        commentRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            header.setCommentTextHeight(mainView.getRTATextHeight(commentRTA));
+
+        commentRTA.fullHeightProperty().addListener((ob, ov, nv) -> {
+            header.setCommentTextHeight((double) nv);
         });
+
 
         Node commentNode;
         if (pointsPossible > 0) {
@@ -115,9 +129,7 @@ public class AssignmentCommentWindow {
         }
         else commentNode = commentRTA;
 
-
-
-        String helpText = "You may comment on the assignment as a whole.  Comment will not show on main screen, but does appear at top of your printed assignment.";
+        String helpText = "You may comment on the assignment as a whole.  Comment will not show on main screen, but appears (here and) at top of printed assignment.";
 
         helpArea = new TextArea(helpText);
         helpArea.setWrapText(true);
@@ -125,7 +137,7 @@ public class AssignmentCommentWindow {
         helpArea.setEditable(false);
         helpArea.setFocusTraversable(false);
         helpArea.setMouseTransparent(true);
-        helpArea.setStyle("-fx-text-fill: mediumslateblue");
+        helpArea.setFont(Font.font("Noto Serif Combo", 12));
 
         centerBox = new VBox(10, commentNode, helpArea);
         centerBox.setPadding(new Insets(20,0,0,0));
@@ -147,41 +159,28 @@ public class AssignmentCommentWindow {
         buttonBox.setAlignment(Pos.BASELINE_CENTER);
         borderPane.setBottom(buttonBox);
         Label zoomLabel = new Label(" Zoom ");
-        Spinner<Integer> zoomSpinner = new Spinner(25, 500, 100, 5);
+        Spinner<Integer> zoomSpinner = new Spinner(25, 500, 100, 1);
         zoomSpinner.setPrefSize(65,25);
+
+
         zoomSpinner.valueProperty().addListener((obs, ov, nv) -> {
-            Node increment = zoomSpinner.lookup(".increment-arrow-button");
-            if (increment != null) increment.getOnMouseReleased().handle(null);
-            Node decrement = zoomSpinner.lookup(".decrement-arrow-button");
-            if (decrement != null) decrement.getOnMouseReleased().handle(null);
+
 
             scale = (double) nv/100;
             updateZoom();
-            scene.getWindow().setWidth(Math.max(860, PrintUtilities.getPageWidth() * scale + 55));
+            scene.getWindow().setWidth(Math.max(900, PrintUtilities.getPageWidth() * scale + 55));
             setCenterVgrow();
 
         });
+
+
 
 
         ToolBar sizeToolBar = new ToolBar();
         sizeToolBar.setPrefHeight(38);
         sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     "));
 
-        /*
 
-        ToolBar editToolbar = commentDRTA.getKbdSelectorToolbar();
-        ToolBar fontsToolbar = commentDRTA.getEditToolbar();
-        ToolBar paragraphToolbar = commentDRTA.getParagraphToolbar();
-        ToolBar kbdDiaToolBar = commentDRTA.getKbdDiaToolbar();
-        kbdDiaToolBar.setPrefHeight(38);
-
-
-
-        HBox editAndKbdBox = new HBox(editToolbar, sizeToolBar, kbdDiaToolBar);
-        editAndKbdBox.setHgrow(kbdDiaToolBar, Priority.ALWAYS);
-
-
-         */
 
         ToolBar paragraphToolbar = commentDRTA.getParagraphToolbar();
         paragraphToolbar.setMinWidth(870);
@@ -219,19 +218,39 @@ public class AssignmentCommentWindow {
         stage.setTitle("Update Assignment Comment:");
         stage.getIcons().addAll(EditorMain.icons);
 
-        stage.setWidth(860);
+        stage.setWidth(855);
         stage.setHeight(520);
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 860));
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 855));
         stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 520));
 
-//        stage.initOwner(EditorMain.mainStage);
-        stage.initModality(Modality.WINDOW_MODAL);
+   //     stage.initOwner(EditorMain.mainStage);
+   //     stage.initModality(Modality.WINDOW_MODAL);
+        EditorAlerts.makeIndependentBlockingStage(stage);
+
         stage.setOnCloseRequest(e-> {
             e.consume();
             closeWindow();
         });
+
+        List<Node> rtaNodes = Arrays.asList(commentRTA, scene.getRoot());
+
+        SequentialTransition sequence = new SequentialTransition();
+        for (Node rta : rtaNodes) {
+            sequence.getChildren().add(new PauseTransition(Duration.millis(50.0)));
+            PauseTransition action = new PauseTransition(Duration.millis(1.0));
+            action.setOnFinished(e -> {
+                rta.requestFocus();
+            });
+            sequence.getChildren().add(action);
+        }
+        Platform.runLater(() -> {
+            sequence.play();
+        });
+
+        setCenterVgrow();
+
     }
 
     /*
@@ -248,7 +267,7 @@ public class AssignmentCommentWindow {
      * Update height of comment field by dragging stage size.
      */
     private void setCenterVgrow() {
-        double fixedHeight = helpArea.getHeight() * scale + 280;
+        double fixedHeight = helpArea.getHeight() * scale + 320; //280;
         DoubleProperty fixedValueProperty = new SimpleDoubleProperty(fixedHeight);
         DoubleProperty maximumHeightProperty = new SimpleDoubleProperty(PrintUtilities.getPageHeight() );
         DoubleProperty scaleProperty = new SimpleDoubleProperty(scale);

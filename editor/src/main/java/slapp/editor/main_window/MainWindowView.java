@@ -17,19 +17,21 @@ package slapp.editor.main_window;
 
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
-import com.gluonhq.richtextarea.model.Document;
 import com.license4j.License;
+import com.teamdev.jxbrowser.browser.Browser;
+import com.teamdev.jxbrowser.view.javafx.BrowserView;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.concurrent.Worker;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.geometry.*;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
@@ -40,38 +42,33 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Scale;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
 import javafx.stage.*;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.events.Event;
-import org.w3c.dom.events.EventListener;
-import org.w3c.dom.events.EventTarget;
-import org.w3c.dom.html.HTMLAnchorElement;
 import slapp.editor.*;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.decorated_rta.KeyboardDiagram;
+import slapp.editor.front_page.FrontPageExercise;
 import slapp.editor.main_window.assignment.AssignmentHeader;
 import slapp.editor.main_window.assignment.AssignmentHeaderItem;
 
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import static slapp.editor.EditorMain.mainStage;
+
 
 /**
  * View for the main SLAPP window.  View has border pane with menu bar and toolbars on top, exercise content in
  * center, the main exercise control on the left, supplementary exercise control on the right (in the current
  * version, just for the free-form exercise), and footer information at the bottom.
  */
+
+
 public class MainWindowView {
     private Stage stage = mainStage;
     private MainWindow mainWindow;
@@ -92,7 +89,7 @@ public class MainWindowView {
     private VBox centerBox;
     private Spinner<Integer> zoomSpinner;
     private Label zoomLabel;
-    double minStageWidth = 860.0;   //870
+    double minStageWidth = 855.0;   //870
 
     double mainWindowWidth;
     double mainWindowHeight;
@@ -114,8 +111,8 @@ public class MainWindowView {
     private HBox upperStatusBox;
     private FlowPane lowerStatusPane;
     private Button saveButton;
-    private Spinner<Double> horizontalSizeSpinner;
-    private Spinner<Double> verticalSizeSpinner;
+    private Spinner<Double> defaultWidthSpinner;
+    private Spinner<Double> defaultHeightSpinner;
     private ChangeListener verticalListener;
     private ChangeListener horizontalListener;
     private RichTextArea dummyRTA;
@@ -160,6 +157,7 @@ public class MainWindowView {
     private MenuItem formMapItem;
     private MenuItem horizontalTreeItem;
     private MenuItem truthTableItem;
+    private MenuItem translationItem;
     private MenuItem derivationItem;
 //    private MenuItem keyboardDiagramItem;
     private MenuItem keyboardShortcutsItem;
@@ -184,6 +182,14 @@ public class MainWindowView {
     CheckBox instructorCheck = new CheckBox();
     private boolean instructorFunctions = false;
 
+    private Tooltip txtHeightTooltip = new Tooltip("Text height as % of selected paper");
+    private final StackPane heightSpinnerPane = new StackPane();
+    private final StackPane widthSpinnerPane = new StackPane();
+
+    private boolean allowHeightIndicatorUpdate = false;
+
+
+
 
 
     /**
@@ -193,11 +199,12 @@ public class MainWindowView {
      */
     public MainWindowView(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
-        setupWindow();
+
+    //    setupWindow();
     }
 
 
-    private void setupWindow() {
+    public void setupWindow() {
         //The dummy window is used for getting height of RTA text.
         //setUpDummyWindow();
 
@@ -227,6 +234,12 @@ public class MainWindowView {
         horizontalTreeItem = new MenuItem("Horizontal Trees", filmItemGraphic3);
         Text filmItemGraphic4 = new Text("\uf008");
         filmItemGraphic4.setStyle("-fx-font-family: la-solid-900");
+
+        Text filmItemGraphic7 = new Text("\uf008");
+        filmItemGraphic7.setStyle("-fx-font-family: la-solid-900");
+        translationItem = new MenuItem("Translations", filmItemGraphic7);
+
+
         truthTableItem = new MenuItem("Truth Tables", filmItemGraphic4);
         Text filmItemGraphic5 = new Text("\uf008");
         filmItemGraphic5.setStyle("-fx-font-family: la-solid-900");
@@ -269,15 +282,11 @@ public class MainWindowView {
         exerciseMenu.getItems().addAll(openExerciseItem, recentExerciseMenu, saveExerciseItem, saveAsExerciseItem, clearExerciseItem, closeExerciseItem, printExerciseItem, exportToPDFExerciseItem, createRevisedExerciseItem, createNewExerciseItem);
         assignmentMenu.getItems().addAll(openAssignmentItem, recentAssignmentMenu, saveAssignmentItem, saveAsAssignmentItem, closeAssignmentItem, printAssignmentItem, exportAssignmentToPDFItem, createRevisedAssignmentItem, createNewAssignmentItem);
         printMenu.getItems().addAll(printExerciseItemPM, exportExerciseToPDFItemPM, printAssignmentItemPM, exportAssignmentToPDFItemPM, exportSetupItem, pageSetupItem, scaleSetupItem);
-        helpMenu.getItems().addAll(quickStartItem, slappEditorItem, formMapItem, verticalTreeItem, truthTableItem, horizontalTreeItem, derivationItem,  commonElementsTextItem, contextualTextItem, new SeparatorMenuItem(), keyboardShortcutsItem, instructorInfoItem, aboutItem, updateItem, reportItem);
+        helpMenu.getItems().addAll(quickStartItem, slappEditorItem, formMapItem, verticalTreeItem, truthTableItem, horizontalTreeItem, translationItem, derivationItem,  commonElementsTextItem, contextualTextItem, new SeparatorMenuItem(), keyboardShortcutsItem, instructorInfoItem, aboutItem, updateItem, reportItem);
 
-        createNewExerciseItem.setDisable(true);
-        createRevisedExerciseItem.setDisable(true);
-        createNewAssignmentItem.setDisable(true);
-        createRevisedAssignmentItem.setDisable(true);
 
         /*
-        if (EditorMain.os.startsWith("Mac")) {
+        if (EditorMain.os.startsWith("mac")) {
             menuBar.setUseSystemMenuBar(true);
         }
  */
@@ -285,16 +294,23 @@ public class MainWindowView {
         //toolbar items
 
         zoomLabel = new Label(" Zoom ");
-        zoomSpinner = new Spinner(25, 500, mainWindow.getSlappUsrData().getZoom(), 5);
+        zoomSpinner = new Spinner(25, 500, mainWindow.getSlappUsrData().getZoom(), 1);
         zoomSpinner.setPrefSize(65,25);
         zoomSpinner.setTooltip(new Tooltip("Window zoom as percentage of normal"));
+
+
         zoomSpinner.valueProperty().addListener((obs, ov, nv) -> {
+
+            /*
             Node increment = zoomSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = zoomSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
+
+             */
             updateZoom(nv);
         });
+
 
         saveButton = new Button("\uf0c7");  //LineAwesome.SAVE
         saveButton.getStyleClass().add("lasolid-icon");
@@ -308,19 +324,41 @@ public class MainWindowView {
             saveAsAssignmentItem.setDisable(true);
         }
 
-        horizontalSizeSpinner = new Spinner<>(0.0, 999.0, 0.0, 5.0);
-        horizontalSizeSpinner.setPrefWidth(65);
-        horizontalSizeSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
-        horizontalSizeSpinner.setDisable(true);
+        defaultWidthSpinner = new Spinner<>(0.0, 999.0, 0.0, 5.0);
+        defaultWidthSpinner.setPrefWidth(65);
+        defaultWidthSpinner.setTooltip(new Tooltip("Window width as % of selected paper"));
+        defaultWidthSpinner.setDisable(true);
 
-        verticalSizeSpinner = new Spinner<>(0.0, 999.0, 0.0, 5.0);
-        verticalSizeSpinner.setPrefWidth(65);
-        verticalSizeSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        verticalSizeSpinner.setDisable(true);
+        defaultHeightSpinner = new Spinner<>(0.0, 999.0, 0.0, 5.0);
+        defaultHeightSpinner.setPrefWidth(65);
+        defaultHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        defaultHeightSpinner.setDisable(true);
 
-        txtHeightIndicator = new TextField("100");
+        txtHeightIndicator = new TextField("  \u2014");
         txtHeightIndicator.setPrefWidth(40);
-        txtHeightIndicator.setDisable(true);
+        txtHeightIndicator.setMinWidth(40);
+        txtHeightIndicator.setMaxWidth(40);
+        txtHeightIndicator.setEditable(false);
+        txtHeightIndicator.setFocusTraversable(false);
+        txtHeightIndicator.setOpacity(0.4);
+        txtHeightIndicator.addEventFilter(MouseEvent.MOUSE_PRESSED, Event::consume);
+        txtHeightIndicator.setTooltip(txtHeightTooltip);
+        txtHeightIndicator.setTextFormatter(new TextFormatter<String>(change -> {
+            if (!allowHeightIndicatorUpdate && !"  \u2014".equals(change.getControlNewText())) {
+                return null;
+            }
+            return change;
+        }));
+
+        heightSpinnerPane.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        Tooltip.install(heightSpinnerPane, new Tooltip("Window height as % of selected paper"));
+        widthSpinnerPane.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        Tooltip.install(widthSpinnerPane, new Tooltip("Window width as % of selected paper"));
+        heightSpinnerPane.getChildren().setAll(defaultHeightSpinner);
+        widthSpinnerPane.getChildren().setAll(defaultWidthSpinner);
+
+
+
 
         progressLabel = new Label("");
         progressIndicator = new ProgressIndicator();
@@ -329,8 +367,8 @@ public class MainWindowView {
         progressIndicator.setVisible(false);
 
         sizeToolBar.setStyle("-fx-spacing: 10");
-        sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label(" T Ht:"), txtHeightIndicator,  new Label("V Sz:"), verticalSizeSpinner,
-                new Label("H Sz:"), horizontalSizeSpinner, saveButton, progressIndicator);
+        sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label(" T Ht:"), txtHeightIndicator,  new Label("V Sz:"), heightSpinnerPane,
+                new Label("H Sz:"), widthSpinnerPane, saveButton, progressIndicator);
         sizeToolBar.setPrefHeight(38);
 
 
@@ -363,9 +401,12 @@ public class MainWindowView {
 
         centerPane = new ScrollPane(comboPane);
 
+ //       centerPane.setMinHeight(0);
+
         borderPane.setCenter(centerPane);
         borderPane.setMargin(centerPane, new Insets(10,0,0,0));
         borderPane.getCenter().setStyle("-fx-background-color: transparent");
+
 
 
         //bottom
@@ -377,6 +418,11 @@ public class MainWindowView {
         statusBar.setPadding(new Insets(0,20,20,20));
 
         statusBar.getChildren().addAll(upperStatusBox, lowerStatusPane);
+
+
+
+   //     statusBar.setMinHeight(0);
+
         borderPane.setBottom(statusBar);
 
         //sides
@@ -384,32 +430,92 @@ public class MainWindowView {
         borderPane.setLeft(leftControlNode);
         borderPane.setRight(rightControlNode);
 
-        //window
+        borderPane.setFocusTraversable(true);
 
         mainScene = new Scene(borderPane);
+
+        mainScene.addEventFilter(MouseEvent.MOUSE_PRESSED, this::handleSceneMousePressed);
+        mainScene.addPostLayoutPulseListener(() -> {
+            if (!allowHeightIndicatorUpdate && txtHeightIndicator != null
+                    && (txtHeightIndicator.textProperty().isBound() || !"  \u2014".equals(txtHeightIndicator.getText()))) {
+                resetTxtHeightIndicator();
+                txtHeightIndicator.applyCss();
+                txtHeightIndicator.layout();
+            }
+        });
+
+
+
         mainScene.getStylesheets().add(DecoratedRTA.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
 
+
+
         stage.setScene(mainScene);
-        stage.setTitle("Symbolic Logic APP");
-        stage.setMinWidth(minStageWidth);
 
-        setMainWindowBounds();
 
-        stage.setWidth(mainWindowWidth);
-        stage.setHeight(mainWindowHeight);
-        stage.setX(mainWindowX);
-        stage.setY(mainWindowY);
+
+// stage.show();
+
+
+
+
+
+/*
+        mainScene = new Scene(borderPane);
+        mainScene.getStylesheets().add(DecoratedRTA.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
+        stage.setScene(mainScene);
+
+ */
 
         stage.setOnCloseRequest(e -> {
             e.consume();
             closeWindow();
         });
 
-        stage.show();
+        if (System.getProperty("os.name", "").toLowerCase().contains("mac")
+                && java.awt.Desktop.isDesktopSupported()) {
+            EventQueue.invokeLater(() -> {
+                java.awt.Desktop desktop = java.awt.Desktop.getDesktop();
+                if (desktop.isSupported(java.awt.Desktop.Action.APP_QUIT_HANDLER)) {
+                    desktop.setQuitHandler((quitEvent, quitResponse) -> {
+                        quitResponse.cancelQuit();
+                        Platform.runLater(() ->
+                                stage.fireEvent(new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST))
+                        );
+                    });
+                }
+            });
+
+        }
+
+
+
     }
 
+    public void initializeStage() {
+        stage.setTitle("Symbolic Logic APP");
+        stage.setMinWidth(minStageWidth);
 
+        setMainWindowBounds();
 
+        stage.setWidth(mainWindowWidth);
+
+        stage.setHeight(mainWindowHeight);
+        stage.setX(mainWindowX);
+        stage.setY(mainWindowY);
+
+        createNewExerciseItem.setDisable(true);
+        createRevisedExerciseItem.setDisable(true);
+        createNewAssignmentItem.setDisable(true);
+        createRevisedAssignmentItem.setDisable(true);
+
+        stage.iconifiedProperty().addListener((ob, ov, nv) -> {
+            Stage keyboardStage = KeyboardDiagram.getInstance().getKeyboardStage();
+            if (keyboardStage.isShowing() && keyboardStage.isIconified() != nv) {
+                keyboardStage.setIconified(nv);
+            }
+        });
+    }
 
     private void setMainWindowBounds() {
         SlappUsrData usrData = mainWindow.getSlappUsrData();
@@ -422,13 +528,18 @@ public class MainWindowView {
         }
         else {
             Rectangle2D mainBounds = Screen.getPrimary().getVisualBounds();
-            mainWindowX = Math.max(0.0, (mainBounds.getMaxX() - mainBounds.getMinX())/8);
-            mainWindowY = 40;
+            mainWindowX = Math.max(0.0, (mainBounds.getMaxX() - mainBounds.getMinX()) / 8);
             mainWindowWidth = minStageWidth;
-            mainWindowHeight = 860;
 
+            // Cap height at the actual usable height (maxY - minY)
+            mainWindowHeight = Math.min(860, mainBounds.getHeight());
+
+            if (mainBounds.getMinY() + 30 + mainWindowHeight < mainBounds.getMaxY()) {
+                mainWindowY = mainBounds.getMinY() + 30;
+            } else {
+                mainWindowY = mainBounds.getMaxY() - mainWindowHeight;
+            }
         }
-
     }
 
     /**
@@ -468,39 +579,110 @@ public class MainWindowView {
     }
 
 
+    public void setLastFocusedDRTA(DecoratedRTA lastFocusedDRTA) {
+        this.lastFocusedDRTA = lastFocusedDRTA;
+    }
+
+
+    public void setRTATextHeight(double height) {
+
+        Platform.runLater(() -> {
+            double scaledHeight = 100 * (height / scalePageHeight.get());
+            String strHeight = String.valueOf(Math.round(scaledHeight));
+            txtHeightIndicator.setText(strHeight);
+        });
+    }
 
 
 
-    /**
-     * Use the dummy window to extract RTA text height
-     *
-     * @param rta the RichTextArea
-     *
-     * @return height of text in RTA
-     */
+    private void resetTxtHeightIndicator() {
+        if (txtHeightIndicator != null) {
+            if (txtHeightIndicator.textProperty().isBound()) {
+                txtHeightIndicator.textProperty().unbind();
+            }
+            if (!"  \u2014".equals(txtHeightIndicator.getText())) {
+                txtHeightIndicator.setText("  \u2014");
+            }
+        }
+    }
+
+    private void handleSceneMousePressed(MouseEvent event) {
+        if (mainWindow.getCurrentExercise() instanceof FrontPageExercise) {
+            allowHeightIndicatorUpdate = false;
+            resetTxtHeightIndicator();
+            return;
+        }
+
+        Node target = (event.getTarget() instanceof Node n) ? n : null;
+
+        // Ignore scrollbar clicks so scrolling doesn't clear an active RTA height
+        for (Node n = target; n != null; n = n.getParent()) {
+            if (n instanceof ScrollBar) {
+                return;
+            }
+        }
+
+        // Enable height updates when clicking inside any RichTextArea
+        RichTextArea clickedRTA = null;
+        for (Node n = target; n != null; n = n.getParent()) {
+            if (n instanceof RichTextArea rta) {
+                clickedRTA = rta;
+                break;
+            }
+        }
+
+        if (clickedRTA != null) {
+            boolean wasInactive = !allowHeightIndicatorUpdate;
+            allowHeightIndicatorUpdate = true;
+            // If this RTA silently took focus during startup layout while blocked,
+            // clear focus first so this click's normal focus request fires its listener
+            if (wasInactive && clickedRTA.isFocused()) {
+                borderPane.requestFocus();
+            }
+            return;
+        }
+
+        // Keep height live when clicking toolbar/menu controls while an RTA is active
+        for (Node n = target; n != null; n = n.getParent()) {
+            if (n == topBox) {
+                return;
+            }
+        }
+
+        // Clicked a non-text area or non-RTA control: lock and show the dash
+        allowHeightIndicatorUpdate = false;
+        resetTxtHeightIndicator();
+    }
+
+    public void undoRTATextHeight() {
+        if (!isFocusInsideMenuBar(sizeToolBar)) {
+          resetTxtHeightIndicator();
+        }
+    }
+
+    private boolean isFocusInsideMenuBar(ToolBar bar) {
+        if (bar.getScene() == null) {
+            return false;
+        }
+        var focusedNode = menuBar.getScene().getFocusOwner();
+        while (focusedNode != null) {
+            if (focusedNode == bar) {
+                return true;
+            }
+            focusedNode = focusedNode.getParent();
+        }
+        return false;
+    }
+
+
+
+// method unused since horizontal trees create depreciated.
     public double getRTATextHeight(RichTextArea rta) {
-
         double height = rta.getFullHeight();
         double scaledHeight = 100 * (height / scalePageHeight.get());  //5.0 +
         String strHeight = String.valueOf(Math.round(scaledHeight));
         txtHeightIndicator.setText(strHeight);
         return height;
-/*
-        rta.getActionFactory().saveNow().execute(new ActionEvent());
-        Document doc = rta.getDocument();
-        dummyRTA.getActionFactory().open(doc).execute(new ActionEvent());
-        dummyRoot.applyCss();
-        dummyRoot.layout();
-        double height = dummyRTASkin.getComputedHeight();
-        double scaledHeight = 5.0 +  100 * (height / scalePageHeight.get());
-        String strHeight = String.valueOf(Math.round(scaledHeight));
-        txtHeightIndicator.setText(strHeight);
-        return height;
-
- */
-
-
-
     }
 
     /**
@@ -513,13 +695,40 @@ public class MainWindowView {
     }
 
 
-
+/*
     public static Rectangle2D getCurrentScreenBounds() {
         Screen screen = Screen.getPrimary();
         for (Screen s : Screen.getScreensForRectangle(mainStage.getX(), mainStage.getY(), mainStage.getWidth(), mainStage.getHeight())) {
             if (s.getBounds().getMinX() > screen.getBounds().getMinX()) screen = s;
         }
         return screen.getVisualBounds();
+    }
+
+ */
+
+    public static Rectangle2D getCurrentScreenBounds() {
+        double winX = mainStage.getX();
+        double winY = mainStage.getY();
+        double winW = mainStage.getWidth();
+        double winH = mainStage.getHeight();
+
+        Screen bestScreen = Screen.getPrimary();
+        double maxOverlapArea = -1;
+
+        for (Screen s : Screen.getScreensForRectangle(winX, winY, winW, winH)) {
+            Rectangle2D sb = s.getBounds();
+
+            // Calculate intersection dimensions between mainStage and this Screen
+            double overlapW = Math.max(0, Math.min(winX + winW, sb.getMaxX()) - Math.max(winX, sb.getMinX()));
+            double overlapH = Math.max(0, Math.min(winY + winH, sb.getMaxY()) - Math.max(winY, sb.getMinY()));
+            double area = overlapW * overlapH;
+
+            if (area > maxOverlapArea) {
+                maxOverlapArea = area;
+                bestScreen = s;
+            }
+        }
+        return bestScreen.getVisualBounds();
     }
 
     //least scroll motion to make node visible
@@ -557,7 +766,16 @@ public class MainWindowView {
     /**
      * Set an exercise on the main view
      */
-    public void setupExercise() {
+    public void setupExercise(boolean frontPage) {
+        borderPane.requestFocus();
+        allowHeightIndicatorUpdate = false;
+        lastFocusedDRTA = dummyDRTA;
+        resetTxtHeightIndicator();
+
+        if (this.commentNode instanceof AnchorPane) {
+            ((AnchorPane) this.commentNode).maxWidthProperty().unbind();
+            ((AnchorPane) this.commentNode).minWidthProperty().unbind();
+        }
 
         this.currentExerciseView = (ExerciseView) mainWindow.getCurrentExercise().getExerciseView();
 
@@ -587,6 +805,7 @@ public class MainWindowView {
         this.leftControlNode = currentExerciseView.getExerciseControl();
         this.rightControlNode = currentExerciseView.getRightControl();
 
+
         centerBox.getChildren().clear();
         centerBox.getChildren().addAll(commentNode, statementNode, contentNode);
 
@@ -601,8 +820,61 @@ public class MainWindowView {
         borderPane.setRight(rightControlNode);
 
         centerBox.layout();
-        Platform.runLater(() -> contentNode.requestFocus());
+
+        if (centerPane != null) {centerPane.setMinHeight(0);}
+
+        Platform.runLater(() -> {
+            // Force JavaFX to calculate the layout sizes of the newly loaded controls
+            borderPane.applyCss();
+            borderPane.layout();
+
+            // Find out exactly how much height the layout needs to not freeze
+            // (This automatically accounts for your Top toolbars, Bottom status bar, and Side controls)
+            double requiredHeight = borderPane.minHeight(-1);
+
+            // Add a buffer (~40px) to account for the physical OS window title bar
+            double safeWindowHeight = requiredHeight + 40;
+
+            // Lock the OS window so the student physically cannot shrink it past the clip point
+       //     Stage stage = (Stage) borderPane.getScene().getWindow();
+            if (stage != null) {
+
+                // TWEAK 2: Don't force the window to be taller than the student's monitor!
+                // If an exercise has a massive control set, cap it at the screen's height.
+                double screenHeight = javafx.stage.Screen.getPrimary().getVisualBounds().getHeight();
+                double finalMinHeight = Math.min(safeWindowHeight, screenHeight);
+
+                stage.setMinHeight(finalMinHeight);
+
+                // If the window is currently smaller than the newly required height,
+                // gracefully expand the window to fit the new exercise's controls.
+                if (stage.getHeight() < finalMinHeight) {
+                    stage.setHeight(finalMinHeight);
+                }
+            }
+        });
+
+        heightSpinnerPane.setMouseTransparent(frontPage);
+        widthSpinnerPane.setMouseTransparent(frontPage);
+        saveButton.setDisable(frontPage);
+
+
+
+        if (frontPage) {
+            Platform.runLater(() -> {
+                contentNode.requestFocus();
+            });
+        }
+        else {
+            resetTxtHeightIndicator();
+            Platform.runLater(() -> {
+                Platform.runLater(() -> {
+                    borderPane.requestFocus();
+                });
+            });
+        }
     }
+
 
     /**
      * Udate (reset) size spinners for active window
@@ -611,11 +883,19 @@ public class MainWindowView {
      * @param width the width spinner
      */
     public void updateSizeSpinners(Spinner<Double> height, Spinner<Double> width) {
-        sizeToolBar.getItems().remove(5);
-        sizeToolBar.getItems().add(5, height);
-        sizeToolBar.getItems().remove(7);
-        sizeToolBar.getItems().add(7, width);
+        Spinner<Double> h = (height != null) ? height : defaultHeightSpinner;
+        Spinner<Double> w = (width != null) ? width : defaultWidthSpinner;
+
+        if (!heightSpinnerPane.getChildren().contains(h)) {
+            heightSpinnerPane.getChildren().setAll(h);
+        }
+
+        if (!widthSpinnerPane.getChildren().contains(w)) {
+            widthSpinnerPane.getChildren().setAll(w);
+        }
     }
+
+
 
     /**
      * Deactivate (hide) the progress indicator
@@ -745,10 +1025,15 @@ public class MainWindowView {
         fontsAndEditBox.setHgrow(editToolbar, Priority.ALWAYS);
         kbdBox.setHgrow(sizeToolBar, Priority.ALWAYS);
 
+   //     System.out.println("menu bar: " + menuBar + " paraToobarBox: " + paraToolbarBox + " fontsAndEditBox: " + fontsAndEditBox + "kbdBox: " + kbdBox);
+
         topBox = new VBox(menuBar, paraToolbarBox, fontsAndEditBox, kbdBox);
 
-   //     topBox = new VBox(menuBar, paragraphToolbar, fontsAndEditBox, kbdBox);
+
+
         topBox.layout();
+
+        topBox.setMinSize(0,0);
 
         borderPane.topProperty().setValue(topBox);
     }
@@ -757,7 +1042,9 @@ public class MainWindowView {
      * If a non-RTA text field is in focus, disable all but the kbdDiaToolBar
      */
     public void textFieldInFocus() {
-            editorInFocus(dummyDRTA, ControlType.STATEMENT);
+        editorInFocus(dummyDRTA, ControlType.STATEMENT);
+        resetTxtHeightIndicator();
+
     }
 
     /*
@@ -765,16 +1052,28 @@ public class MainWindowView {
      */
     private void closeWindow() {
         if (mainWindow.checkCloseWindow()) {
+            mainWindow.flushPrintCleanups();
             KeyboardDiagram.getInstance().close();
-     //      dummyStage.close();
-            mainWindow.closeVideoHelp();
-            if (mainWindow.getCurrentExercise() != null) mainWindow.getCurrentExercise().clearStandingPopups();
+
+            Stage textHelpStage = TextHelpPopup.getHelpStage();
+            if (textHelpStage != null) textHelpStage.close();
+
+            if (mainWindow.getCurrentExercise() != null) {
+                mainWindow.getCurrentExercise().clearStandingPopups();
+            }
 
             recordUsrDta();
             DiskUtilities.saveProgDataFile(mainWindow.getSlappProgData());
             DiskUtilities.saveUsrDataFile(mainWindow.getSlappUsrData());
 
+            // 1. Close main stage first so UI nodes detach cleanly
             stage.close();
+
+            // 2. Close video stage and shut down the JxBrowser engine
+            mainWindow.closeVideoHelp();
+
+            // 3. Cleanly release JavaFX native Glass/Direct3D resources before terminating JVM
+            Platform.exit();
             System.exit(0);
         }
     }
@@ -805,11 +1104,20 @@ public class MainWindowView {
 
         Label studentNameLabel = new Label(header.getStudentName());
         studentNameLabel.setStyle("-fx-font-weight: bold;");
-        HBox nameBox = new HBox(studentNameLabel);
+        VBox nameBox = new VBox(studentNameLabel);
         nameBox.setAlignment(Pos.CENTER);
 
+
+        Label pointsLabel = new Label("");
+        if (pointsPossible > 0) {
+            studentNameLabel.setPadding(new Insets(0, 0, 3, 0));
+            int percent = (int) Math.round((double) pointsEarned / pointsPossible * 100);
+            pointsLabel.setText(Integer.toString(pointsEarned) + "/" + Integer.toString(pointsPossible) + " (" + Integer.toString(percent) + "/100)");
+            nameBox.getChildren().add(pointsLabel);
+        }
+
         VBox leftBox = new VBox(0);
-        leftBox.getChildren().add(new Label("Assignment: " + header.getAssignmentName()));
+        leftBox.getChildren().add(new Label("Assignment: " + header.getAssignmentName() ));
         for (AssignmentHeaderItem item : header.getStudentItems()) {
             leftBox.getChildren().add(new Label(item.getLabel() + ": " + item.getValue()));
         }
@@ -829,6 +1137,12 @@ public class MainWindowView {
 
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
+        separator.setPrefWidth(100);
+
+        double nodeWidth = PrintUtilities.getPageWidth() / mainWindow.getBaseScale();
+        HBox sepBox = new HBox(separator);
+        sepBox.setMinWidth(nodeWidth);
+        sepBox.setAlignment(Pos.CENTER);
 
         RichTextArea commentRTA = new RichTextArea(mainStage);
         commentRTA.getActionFactory().open(header.getComment()).execute(new ActionEvent());
@@ -836,6 +1150,7 @@ public class MainWindowView {
         commentRTA.setPrefWidth(PrintUtilities.getPageWidth());
         commentRTA.setPrefHeight(header.getCommentTextHeight() + 35);
 
+        /*
         Node assignmentComment;
         if (pointsPossible > 0) {
             int percent = (int) Math.round((double) pointsEarned / pointsPossible * 100);
@@ -850,8 +1165,10 @@ public class MainWindowView {
         }
         else assignmentComment = commentRTA;
 
+         */
 
-        headerBox.getChildren().addAll(nameBox,itemsBox, separator, assignmentComment );
+
+        headerBox.getChildren().addAll(nameBox,itemsBox, sepBox, commentRTA);
         headerBox.setPadding(new Insets(0,0,20,0));
         return headerBox;
     }
@@ -863,70 +1180,58 @@ public class MainWindowView {
     public void showInstructorInfo() {
         Stage helpStage = new Stage();
 
-        String textString = "<body style=\"margin-left:10; margin-right: 20\">" +
+        String header = TextHelpPopup.getHeader14();
+        String footer = TextHelpPopup.getFooter();
+
+        String textString = header +
                 "<h3>Instructor Functions</h3>" +
                 "<p> Instructor functions include activation of the 'Create New' and 'Create Revised' options for Exercises and Assignments, activation of exercise points earned fields, and " +
-                "removal of limits on exercise check and help options.  These options are explained in the Instructor Help Video.</p>" +
+                "removal of limits on exercise check and help options.  These options are explained in the Instructor Help Video and Instructor Text Help.</p>" +
                 "<p> Instructor functions require a license key which you can <a href=\"https://tonyroyphilosophy.net/sl-answers-to-exercises-password-request/\">request here</a> and submit below.  "+
-                "After registration, the functions are enabled and disabled by the small checkbox below.</p>";
+                "After registration, the functions are enabled and disabled by the small checkbox below.</p>" +
+                footer;
 
-        WebView textArea = new WebView();
-        WebEngine webEngine = textArea.getEngine();
-        webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
-        //open links in native browser
-        webEngine.getLoadWorker().stateProperty().addListener((ob, ov, nv) -> {
-            if (nv == Worker.State.SUCCEEDED) {
-                org.w3c.dom.Document document = webEngine.getDocument();
-                NodeList nodeList = document.getElementsByTagName("a");
-                for (int i = 0; i < nodeList.getLength(); i++)
-                {
-                    org.w3c.dom.Node node= nodeList.item(i);
-                    EventTarget eventTarget = (EventTarget) node;
-                    eventTarget.addEventListener("click", new EventListener()
-                    {
-                        @Override
-                        public void handleEvent(Event evt)
-                        {
-                            EventTarget target = evt.getCurrentTarget();
-                            HTMLAnchorElement anchorElement = (HTMLAnchorElement) target;
-                            String href = anchorElement.getHref();
-                            //handle opening URL outside JavaFX WebView
-                            System.out.println(href);
+        VBox textBox = new VBox();
 
-                            try {
-                                Desktop.getDesktop().browse(new URI(href));
-                            } catch (URISyntaxException e) {
-                                System.out.println("URISyntaxException (textHelpPopup)");
-                            } catch (IOException e) {
-                                System.out.println("IOException (textHelpPopup)");
-                            }
-                            evt.preventDefault();
-                        }
-                    }, false);
-                }
-            }
-        });
+        Browser browser = mainWindow.getCreateHlpBrowser();
+        if (browser != null) {
+            BrowserView view = BrowserView.newInstance(browser);
+            view.addEventFilter(ScrollEvent.ANY, Event::consume);
+            browser.navigation().loadHtml(textString);
+            view.setPrefHeight(230);
+            view.setPrefWidth(500);
+      //      view.prefWidthProperty().bind(textBoxes.widthProperty());
+            textBox.getChildren().add(view);
+        }
 
 
 
-
-        webEngine.loadContent(textString);
-        textArea.setPrefHeight(230);
-        textArea.setPrefWidth(500);
 
         Button videoButton = new Button("Play Instructor Help Video");
-        videoButton.setOnAction(e -> mainWindow.videoHelp("https://www.slappservices.net/instructor/instructor_player1.html", 900, 609));
+        videoButton.setOnAction(e -> mainWindow.videoHelp("https://www.slappservices.net/instructor/instructor_player1.html", 900, 576));
+        videoButton.setPrefWidth(200);
+
+        Button textButton = new Button("Show Instructor Text Help");
+        textButton.setOnAction(e -> TextHelpPopup.helpInstructor());
+        textButton.setPrefWidth(200);
+
+        HBox helpButtonsBox = new HBox(30, videoButton, textButton);
+        helpButtonsBox.setAlignment(Pos.CENTER);
+
         TextField licenseField = new TextField();
         licenseField.setPromptText("License Key");
         licenseField.setPrefWidth(250);
         licenseField.setMaxWidth(250);
         Button licenseButton = new Button("Submit License");
         licenseButton.setOnAction(e -> {
+
             License license = License.getInstance();
 
             license.getBuilder()
                     .product("8B4A2B871E73E19C931F2D599719FFB7")
                     .build();
+
+            license.getSystemInformation().getFingerprint();
 
             license.validate(licenseField.getText());
             if (license.getStatus().isValid()) {
@@ -949,7 +1254,7 @@ public class MainWindowView {
 
 
 
-        VBox helpBox = new VBox(20, textArea, videoButton, licenseField, licenseButton, checkHBox);
+        VBox helpBox = new VBox(20, textBox, helpButtonsBox, licenseField, licenseButton, checkHBox);
         helpBox.setMinWidth(300);
         helpBox.setAlignment(Pos.CENTER);
         helpBox.setPadding(new Insets(20,20,20,20));
@@ -963,7 +1268,7 @@ public class MainWindowView {
         helpStage.getIcons().addAll(EditorMain.icons);
         helpStage.initOwner(mainStage);
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        helpStage.setX(Math.min(mainStage.getX() + mainStage.getWidth(), bounds.getMaxX() - 500));
+        helpStage.setX(Math.min(mainStage.getX() + mainStage.getWidth(), bounds.getMaxX() - 550));
         helpStage.setY(mainStage.getY() + 20);
 
         helpStage.show();
@@ -981,6 +1286,10 @@ public class MainWindowView {
         createRevisedExerciseItem.setDisable(true);
         createNewAssignmentItem.setDisable(true);
         createRevisedAssignmentItem.setDisable(true);
+    }
+
+    public void clearSizeSpinners() {
+        updateSizeSpinners(null, null);
     }
 
 
@@ -1289,6 +1598,10 @@ public class MainWindowView {
         return horizontalTreeItem;
     }
 
+    public MenuItem getTranslationItem() {
+        return translationItem;
+    }
+
     /**
      * Menu item to open the truth table help video
      *
@@ -1406,7 +1719,7 @@ public class MainWindowView {
      */
     public DoubleProperty scalePageWidthProperty() {    return scalePageWidth;  }
 
-    DecoratedRTA getLastFocusedDRTA() {
+    public DecoratedRTA getLastFocusedDRTA() {
         return lastFocusedDRTA;
     }
 
@@ -1446,5 +1759,17 @@ public class MainWindowView {
 
     public Node getLeftControlNode() {
         return leftControlNode;
+    }
+
+    public Stage getStage() {
+        return stage;
+    }
+
+    public double getMainWindowHeight() {
+        return mainWindowHeight;
+    }
+
+    public DecoratedRTA getCommentDecoratedRTA() {
+        return commentDecoratedRTA;
     }
 }

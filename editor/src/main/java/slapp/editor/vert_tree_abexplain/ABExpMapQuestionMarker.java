@@ -60,7 +60,7 @@ public class ABExpMapQuestionMarker extends Pane {
         questionLabel.setOnMouseEntered(e -> setCursor(Cursor.HAND));
         questionLabel.setOnMouseExited(e -> setCursor(Cursor.DEFAULT));
         questionLabel.setOnMouseClicked(e -> {
-            if (e.getButton() == MouseButton.SECONDARY) {
+            if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 2) {
                 AnchorPane parent = (AnchorPane) this.getParent();
                 parent.getChildren().remove(this);
                 verticalTreeView.setUndoRedoFlag(true);

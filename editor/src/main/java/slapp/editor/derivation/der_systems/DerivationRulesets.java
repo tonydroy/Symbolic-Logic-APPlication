@@ -34,6 +34,7 @@ public class DerivationRulesets implements Serializable {
         rulesets.add(getADs());
         rulesets.add(getADq());
         rulesets.add(getAD());
+        rulesets.add(getADE3_9());
         rulesets.add(getAstar());
     }
 
@@ -168,6 +169,31 @@ public class DerivationRulesets implements Serializable {
 
         return ADs;
     }
+
+    private static DerivationRuleset getADE3_9() {
+        DerivationRuleset ADE3_9 = new DerivationRuleset("A_E3.9", Collections.singletonList(ParseUtilities.newItalicText("ADE_3.9")));
+
+        DerivationRule premiseRule = new Premise("prem","^\\s*prem\\s*$");
+        ADE3_9.setPremiseRule(premiseRule);
+        ADE3_9.setGenericAssumption(Pattern.compile("^\\s*assp.*$"));
+
+        List<Pair<Pattern, String>> dummyRules = new ArrayList<>();
+        dummyRules.add(new Pair(Pattern.compile("^\\s*A\\d+\\s*$"), "Insert dot prior to axiom number (as 'A.1')."));
+        dummyRules.add(new Pair(Pattern.compile("^\\s*P\\s*$"), "Justification for ADE_3.9 premise is 'prem'."));
+        ADE3_9.setDummyRules(dummyRules);
+
+        List<DerivationRule> rules = new ArrayList<>();
+        rules.add(premiseRule);
+        rules.add(new ConditionalExploit("MP","^\\s*\\d+\\s*,\\s*\\d+\\s*MP\\s*$"));
+        rules.add(new Abb_ADq("abv", "^\\s*\\d+\\s*abv\\s*$" ));
+        ADE3_9.setRules(rules);
+
+        ADE3_9.setRequirePremisesAtTop(false);
+        ADE3_9.setPermitSubderivations(false);
+
+        return ADE3_9;
+    }
+
 
     private static DerivationRuleset getADq() {
         DerivationRuleset ADq = new DerivationRuleset("\ud835\udc34\ud835\udc37\ud835\udc5e", Collections.singletonList(ParseUtilities.newItalicText("ADq")));

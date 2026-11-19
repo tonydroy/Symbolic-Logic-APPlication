@@ -1,0 +1,49 @@
+/* 1. Main Container: Holds the Border & Background Color */
+.rich-text-area {
+    /* --- Your Original Border Settings --- */
+    -fx-border-color: lightgrey;
+    -fx-border-width: 2;
+
+    /* --- The Background Fix --- */
+    -fx-background-color: mistyrose;
+    -fx-control-inner-background: mistyrose; /* Forces inner defaults to match */
+    -fx-background-insets: 0; /* Ensures color hits the border */
+}
+
+/* 2. Focus State: Changes Border to Lightblue */
+.rich-text-area:focused {
+    -fx-border-color: lightblue;
+    /* No need to restate width/background here unless they change */
+}
+
+/* 3. The Inner List View: Holds the Padding/Text Alignment */
+.rich-text-area .list-view,
+.rich-text-area .paragraph-list-view {
+    -fx-background-color: transparent; /* Let parent mistyrose show through */
+    -fx-padding: 10 10 10 10; /* Adjust this to position your text */
+}
+
+/* 4. The Scrolling Area (The "White Box" Fix) */
+.rich-text-area .virtual-flow {
+    -fx-background-color: mistyrose;
+}
+
+/* 5. The Viewport (The empty area below the text) */
+.rich-text-area .virtual-flow .viewport {
+    -fx-background-color: mistyrose;
+}
+
+/* 6. The Text Rows */
+.rich-text-area .list-cell,
+.rich-text-area .paragraph-tile {
+    -fx-background-color: mistyrose;
+    -fx-padding: 0 0 0 2;
+}
+
+/* 7. Empty Rows */
+.rich-text-area .list-cell:empty {
+    -fx-background-color: mistyrose;
+}
+
+
+

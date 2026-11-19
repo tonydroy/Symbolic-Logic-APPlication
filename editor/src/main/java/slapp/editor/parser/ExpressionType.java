@@ -63,6 +63,17 @@ public enum ExpressionType {
     SLASH_DIVIDER("Slash Divider"),
     DOUBLE_SLASH_DIVIDER("Double Slash Divider"),
 
+    CURLEY_OPEN_BRACKET("Curley Open Bracket"),
+    CURLEY_CLOSE_BRACKET("Curley Close Bracket"),
+    VERTICAL_BAR_DIVIDER("Vertical Bar Divider"),
+    UNIV_SYM("Univ Sym"),
+    META_UNIV_SYM("Meta Univ Sym"),
+    OBJ_UNIV_SYM("Object Univ Sym"),
+    OBJ_VAR("Object Variable"),
+    OBJ_OBJ_VAR("Object Object Variable"),
+    MET_OBJ_VAR("Meta Object Variable"),
+
+
 
     TERM("Term"),
     FORMULA("Formula"),

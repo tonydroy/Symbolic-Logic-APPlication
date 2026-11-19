@@ -24,6 +24,8 @@ import javafx.animation.ParallelTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -46,7 +48,6 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
-import slapp.editor.PrintUtilities;
 import slapp.editor.decorated_rta.BoxedDRTA;
 import slapp.editor.decorated_rta.DecoratedRTA;
 import slapp.editor.main_window.ControlType;
@@ -59,11 +60,18 @@ import java.util.function.UnaryOperator;
 
 import static slapp.editor.EditorMain.RTA_SCREEN_BMP;
 import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.event.EventHandler;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 
-/**
- * View for the truth table exercise
- */
+
+
 public class TruthTableView implements ExerciseView<DecoratedRTA> {
+
     private MainWindowView mainView;
     private DecoratedRTA exerciseStatement = new DecoratedRTA();
     private double statementPrefHeight = 0;
@@ -81,17 +89,20 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
     private VBox controlBox;
     private Spinner rowsSpinner;
     Button setupTableButton;
+    private Button addBasicFormulaButton;
+    private Button removeBasicFormulaButton;
+
     private GridPane tableGrid;
     private VBox centerBox;
     private double contentFixedHeight = -50;
     private List<TableHeadItem> tableHeadItemsList;
-    private TextField[][]  tableFields; //list of text field columns
+    private TextField[][] tableFields; //list of text field columns
     private BoxedDRTA[] rowCommentsArray;
     private ToggleButton[] highlightButtons;
     private int tableRows = 0;
     private VBox[] sizers;
     private Pane endPane;
-    private int formulaBoxHeight = 22;
+    private int formulaBoxHeight = 23;  //22
     private BoxedDRTA focusedBoxedDRTA;
     private int pointsPossible;
     private TextField pointsEarnedTextField;
@@ -108,7 +119,36 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
     private Color checkElementsColor;
     private boolean checkShowing = false;
     private Button staticHelpButton;
-    private Stage  staticHelpStage;;
+    private Stage staticHelpStage;
+
+    private final DoubleProperty localScalePageHeight = new SimpleDoubleProperty(1.0);
+    private final DoubleProperty localScalePageWidth = new SimpleDoubleProperty(1.0);
+
+    // SCORCHED EARTH RULE 1: The Asynchronous Ghost "Kill Switch"
+    private boolean isTornDown = false;
+
+    // SCORCHED EARTH RULE 3: Eradicate Anonymous Lambdas
+    private ChangeListener<Node> exerciseFocusListener;
+    private EventHandler<KeyEvent> basicFormulasKeyFilter;
+    private EventHandler<ActionEvent> addBasicFormulaHandler;
+    private EventHandler<ActionEvent> removeBasicFormulaHandler;
+    private UnaryOperator<TextFormatter.Change> pointsFilter;
+    private ChangeListener<Number> tableGridHeightListener;
+    private ChangeListener<Number> tableGridWidthListener;
+    private ChangeListener<Number> localScalePageHeightListener;
+    private ChangeListener<Number> localScalePageWidthListener;
+    private EventHandler<MouseEvent> tableGridClickHandler;
+    private EventHandler<KeyEvent> commentKeyFilter;
+    private ChangeListener<Boolean> commentFocusListener;
+    private ChangeListener<Number> commentNodesWidthListener;
+    private ChangeListener<Boolean> formulaFocusListener;
+    private UnaryOperator<TextFormatter.Change> singleCharTextFilter;
+    private EventHandler<KeyEvent> singleCharTypeFilter;
+    private EventHandler<KeyEvent> singleCharPressFilter;
+    private EventHandler<ActionEvent> highlightButtonHandler;
+
+    private ChangeListener<Boolean> pointsEarnedFocusListener;
+    private EventHandler<MouseEvent> pointsEarnedClickHandler;
 
     /**
      * Construct the truth table view
@@ -117,13 +157,50 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
     TruthTableView(MainWindowView mainView) {
         this.mainView = mainView;
 
+        localScalePageHeight.bind(mainView.scalePageHeightProperty());
+        localScalePageWidth.bind(mainView.scalePageWidthProperty());
+
+        exerciseFocusListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null) return;
+            try {
+
+                RichTextArea statementRTA = exerciseStatement != null ? exerciseStatement.getEditor() : null;
+                RichTextArea commentRTA = exerciseComment != null ? exerciseComment.getEditor() : null;
+
+                if (statementRTA != null && inHierarchy(nv, statementRTA)) {
+                    if (currentSpinnerNode != statementRTA) {
+                        currentSpinnerNode = statementRTA;
+                        if (statementHeightSpinner != null && statementWidthSpinner != null) {
+                            this.mainView.updateSizeSpinners(statementHeightSpinner, statementWidthSpinner);
+                        }
+                    }
+                } else if (commentRTA != null && inHierarchy(nv, commentRTA)) {
+                    if (currentSpinnerNode != commentRTA) {
+                        currentSpinnerNode = commentRTA;
+                        if (commentHeightSpinner != null && commentWidthSpinner != null) {
+                            this.mainView.updateSizeSpinners(commentHeightSpinner, commentWidthSpinner);
+                        }
+                    }
+                } else if (tableGrid != null && inHierarchy(nv, tableGrid)) {
+                    if (currentSpinnerNode != tableGrid) {
+                        currentSpinnerNode = tableGrid;
+                        if (tableGridHeightSpinner != null && tableGridWidthSpinner != null) {
+                            this.mainView.updateSizeSpinners(tableGridHeightSpinner, tableGridWidthSpinner);
+                        }
+                    }
+                } else {
+                    currentSpinnerNode = null;
+                }
+            } catch (Exception e) {}
+        };
+
         basicFormulasPane = new GridPane();
         basicFormulasPane.setVgap(10);
         basicFormulasBoxedDRTAList = new ArrayList<>();
 
         Label basicFormulasLabel = new Label("Basic Sentences:");
-        Button addBasicFormulaButton = new Button("+");
-        Button removeBasicFormulaButton = new Button("-");
+        addBasicFormulaButton = new Button("+");
+        removeBasicFormulaButton = new Button("-");
         addBasicFormulaButton.setFont(new Font(16));
         addBasicFormulaButton.setPadding(new Insets(0,5,0,5));
         removeBasicFormulaButton.setFont(new Font(16));
@@ -132,50 +209,85 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
         HBox controlButtonBox = new HBox(20, addBasicFormulaButton, removeBasicFormulaButton);
         VBox upperControlBox = new VBox(10, basicFormulasLabel, controlButtonBox);
 
+        // Pre-initialize class-level dynamic listeners
+        initializeDynamicHandlers();
+
         BoxedDRTA boxedDRTA = newFormulaDRTAField();
         basicFormulasBoxedDRTAList.add(boxedDRTA);
         updateBasicFormulasPaneFromList();
 
-        //this is messy: can't get an event filter on the RTA itself to fire.  Why?
-        basicFormulasPane.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
-            KeyCode code = e.getCode();
-            int index = basicFormulasBoxedDRTAList.indexOf(focusedBoxedDRTA);
-            if (index >= 0) {
-                if (code == KeyCode.DOWN || code == KeyCode.ENTER) {
-                    if (index + 1 < basicFormulasBoxedDRTAList.size()) {
-                        basicFormulasBoxedDRTAList.get(index + 1).getRTA().requestFocus();
+        basicFormulasKeyFilter = e -> {
+            if (isTornDown || this.mainView == null || basicFormulasBoxedDRTAList == null) return;
+            try {
+                KeyCode code = e.getCode();
+                int index = basicFormulasBoxedDRTAList.indexOf(focusedBoxedDRTA);
+                if (index >= 0) {
+                    if (code == KeyCode.DOWN || code == KeyCode.ENTER) {
+                        if (index + 1 < basicFormulasBoxedDRTAList.size()) {
+                            basicFormulasBoxedDRTAList.get(index + 1).getRTA().requestFocus();
+                        }
+                        e.consume();
                     }
-                    e.consume();
-                }
-                if (code == KeyCode.UP) {
-                    if (index > 0) {
-                        basicFormulasBoxedDRTAList.get(index - 1).getRTA().requestFocus();
+                    if (code == KeyCode.UP) {
+                        if (index > 0) {
+                            basicFormulasBoxedDRTAList.get(index - 1).getRTA().requestFocus();
+                        }
+                        e.consume();
                     }
-                    e.consume();
                 }
-            }
-        });
+            } catch (Exception ex) {}
+        };
+        basicFormulasPane.addEventFilter(KeyEvent.KEY_PRESSED, basicFormulasKeyFilter);
 
-        addBasicFormulaButton.setOnAction(e -> {
-            basicFormulasBoxedDRTAList.add(newFormulaDRTAField());
-            updateBasicFormulasPaneFromList();
-     //       basicFormulasBoxedDRTAList.get(0).getBoxedRTA().requestFocus();  //doesn't work  same for RTA
-        });
-        removeBasicFormulaButton.setOnAction(e -> {
-           int index = basicFormulasBoxedDRTAList.size();
-           index--;
-           if (index > 0) {
-               basicFormulasBoxedDRTAList.remove(index);
-               updateBasicFormulasPaneFromList();
-           } else {
-               EditorAlerts.showSimpleAlert("Cannot Remove", "A truth table must include at least one basic sentence.");
-           }
-        });
+        addBasicFormulaHandler = e -> {
+            if (isTornDown || this.mainView == null || basicFormulasBoxedDRTAList == null) return;
+            try {
+                basicFormulasBoxedDRTAList.add(newFormulaDRTAField());
+                updateBasicFormulasPaneFromList();
+            } catch (Exception ex) {}
+        };
+        addBasicFormulaButton.setOnAction(addBasicFormulaHandler);
+
+        removeBasicFormulaHandler = e -> {
+            if (isTornDown || this.mainView == null || basicFormulasBoxedDRTAList == null) return;
+            try {
+                int index = basicFormulasBoxedDRTAList.size();
+                index--;
+
+                if (index > 0) {
+                    BoxedDRTA removedDRTA = basicFormulasBoxedDRTAList.remove(index);
+                    if (focusedBoxedDRTA == removedDRTA) focusedBoxedDRTA = null;
+                    if (removedDRTA != null && removedDRTA.getRTA() != null) {
+                        RichTextArea rta = removedDRTA.getRTA();
+                        try { if (formulaFocusListener != null) rta.focusedProperty().removeListener(formulaFocusListener); } catch (Exception ex) {}
+                        try { rta.setUserData(null); } catch (Exception ex) {}
+                        try { rta.setPromptText(""); } catch (Exception ex) {}
+                        try { rta.setFocusTraversable(false); } catch (Exception ex) {}
+                        try {
+                            if (rta.getDocument() == null || rta.getDocument().getText().isEmpty()) {
+                                rta.getActionFactory().open(new Document(" ")).execute(new ActionEvent());
+                            }
+                        } catch (Exception ex) {}
+                        javafx.animation.PauseTransition pt = new javafx.animation.PauseTransition(javafx.util.Duration.millis(1500));
+                        pt.setOnFinished(ev -> {
+                            try { rta.setSkin(null); } catch (Exception ex) {}
+                        });
+                        pt.play();
+                    }
+                    updateBasicFormulasPaneFromList();
+                } else {
+
+
+
+                    EditorAlerts.showSimpleAlert("Cannot Remove", "A truth table must include at least one basic sentence.");
+                }
+            } catch (Exception ex) {}
+        };
+        removeBasicFormulaButton.setOnAction(removeBasicFormulaHandler);
 
         Label rowNumLabel = new Label("Rows ");
         rowsSpinner = new Spinner<>(0,256,0);
         rowsSpinner.setPrefWidth(65);
-        //rowsSpinner.setEditable(true);  //maybe setup: would need to verify input, update on setup button (rather than 'enter').
         HBox spinnerBox = new HBox(5, rowsSpinner, rowNumLabel);
         spinnerBox.setAlignment(Pos.CENTER_LEFT);
 
@@ -183,8 +295,9 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
         setupTableButton.setPrefWidth(100);
 
         controlBox = new VBox(20, upperControlBox, basicFormulasPane, spinnerBox, setupTableButton);
-        controlBox.setPadding(new Insets(100, 20, 00, 20));
+        controlBox.setPadding(new Insets(150, 20, 0, 20));
         controlBox.setMinWidth(150); controlBox.setMaxWidth(150);
+        controlBox.setAlignment(Pos.TOP_CENTER);
 
         tableGrid = new GridPane();
         tableGrid.setPadding(new Insets(15, RTA_WIDTH_BMP,15,10));
@@ -195,114 +308,298 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
         pointsEarnedTextField.setPrefWidth(27);
         pointsEarnedTextField.setAlignment(Pos.CENTER_RIGHT);
         pointsEarnedTextField.setPadding(new Insets(0,5,0,3));
-        UnaryOperator<TextFormatter.Change> filter = change -> {
+
+        pointsFilter = change -> {
+            if (isTornDown || change == null) return null;
             String text = change.getText();
-            if (text.matches("[0-9]*")) {
-                return change;
-            }
+            if (text.matches("[0-9]*")) return change;
             return null;
         };
-        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        TextFormatter<String> textFormatter = new TextFormatter<>(pointsFilter);
         pointsEarnedTextField.setTextFormatter(textFormatter);
+
+        pointsEarnedFocusListener = (obs, wasFocused, isNowFocused) -> {
+            if (isTornDown || pointsEarnedTextField == null) return;
+            if (isNowFocused) {
+                Platform.runLater(() -> {
+                    if (!isTornDown && pointsEarnedTextField != null) {
+                        pointsEarnedTextField.selectAll();
+                    }
+                });
+                if (mainView != null) {
+                    mainView.textFieldInFocus();
+                }
+            } else if (pointsEarnedTextField.getText().isEmpty()) {
+                pointsEarnedTextField.setText("0");
+            }
+        };
+        pointsEarnedTextField.focusedProperty().addListener(pointsEarnedFocusListener);
+
+        pointsEarnedClickHandler = event -> {
+            if (isTornDown || pointsEarnedTextField == null) return;
+            if (pointsEarnedTextField.getSelectedText().isEmpty()) {
+                pointsEarnedTextField.selectAll();
+            }
+        };
+        pointsEarnedTextField.setOnMouseClicked(pointsEarnedClickHandler);
+
+    }
+
+    private void initializeDynamicHandlers() {
+        singleCharTextFilter = c -> {
+            if (isTornDown || this.mainView == null || c == null) return null;
+            try {
+                if (c.getText().matches("[0-9a-zA-Z]")) {
+                    TextField field = (TextField) c.getControl();
+                    c.setRange(0, field.getText().length());
+                    return c;
+                } else if (c.getText().isEmpty()) {
+                    return c;
+                }
+            } catch (Exception e) {}
+            return null;
+        };
+
+        singleCharTypeFilter = e -> {
+            if (isTornDown || this.mainView == null || tableFields == null) return;
+            try {
+                TextField field = (TextField) e.getSource();
+                int[] pos = (int[]) field.getUserData();
+                if (pos == null) return;
+                int column = pos[0]; int row = pos[1];
+                if (tableFields.length <= column || tableFields[column] == null) return;
+
+                if (row < tableRows - 1) {
+                    if (tableFields[column][row + 1] != null) tableFields[column][row + 1].requestFocus();
+                } else {
+                    if (tableFields[column][0] != null) tableFields[column][0].requestFocus();
+                }
+            } catch (Exception ex) {}
+        };
+
+        singleCharPressFilter = e -> {
+            if (isTornDown || this.mainView == null || tableFields == null) return;
+            try {
+                TextField field = (TextField) e.getSource();
+                int[] pos = (int[]) field.getUserData();
+                if (pos == null) return;
+                int column = pos[0]; int row = pos[1];
+                if (tableFields.length <= column || tableFields[column] == null) return;
+                KeyCode code = e.getCode();
+                if (code == KeyCode.UP && row > 0) {
+                    if (tableFields[column][row - 1] != null) tableFields[column][row - 1].requestFocus();
+                    e.consume();
+                } else if (code == KeyCode.DOWN && row < tableRows - 1) {
+                    if (tableFields[column][row + 1] != null) tableFields[column][row + 1].requestFocus();
+                    e.consume();
+                } else if (code == KeyCode.RIGHT) {
+                    int rightCol = tableColToRight(column);
+                    if (rightCol < tableFields.length && tableFields[rightCol] != null && tableFields[rightCol][row] != null) {
+                        tableFields[rightCol][row].requestFocus();
+                    }
+                    e.consume();
+                } else if (code == KeyCode.LEFT) {
+                    int leftCol = tableColToLeft(column);
+                    if (leftCol >= 0 && leftCol < tableFields.length && tableFields[leftCol] != null && tableFields[leftCol][row] != null) {
+                        tableFields[leftCol][row].requestFocus();
+                    }
+                    e.consume();
+                }
+            } catch (Exception ex) {}
+        };
+
+        highlightButtonHandler = e -> {
+            if (isTornDown || this.mainView == null || tableFields == null) return;
+            try {
+                ToggleButton button = (ToggleButton) e.getSource();
+                if (button.getUserData() == null) return;
+                int index = (int) button.getUserData();
+                if (tableFields.length <= index || tableFields[index] == null) return;
+
+                if (button.isSelected()) {
+                    button.setStyle("-fx-border-radius: 10; -fx-border-color: dodgerblue; -fx-background-color: lightblue; -fx-background-radius: 10;");
+                    for (int j = 0; j < tableRows; j++) {
+                        if (tableFields[index].length > j && tableFields[index][j] != null) {
+                            // Use -fx-control-inner-background to color the cell while keeping the default border intact
+                            tableFields[index][j].setStyle("-fx-background-radius: 2; -fx-control-inner-background: lightblue;");
+                        }
+                    }
+                } else {
+                    button.setStyle("-fx-border-radius: 10; -fx-border-color: lightblue; -fx-background-color: ghostwhite;");
+                    for (int j = 0; j < tableRows; j++) {
+                        if (tableFields[index].length > j && tableFields[index][j] != null) {
+                            // Revert completely to the original style set in newSingleCharTextField
+                            tableFields[index][j].setStyle("-fx-background-radius: 2;");
+                        }
+                    }
+                }
+            } catch (Exception ex) {}
+        };
+
+        formulaFocusListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null) return;
+            try {
+                if (nv && ob instanceof javafx.beans.property.ReadOnlyProperty) {
+                    Object bean = ((javafx.beans.property.ReadOnlyProperty<?>) ob).getBean();
+                    if (bean instanceof RichTextArea) {
+                        BoxedDRTA box = (BoxedDRTA) ((RichTextArea) bean).getUserData();
+                        if (box != null) {
+                            mainView.editorInFocus(box.getDRTA(), ControlType.FIELD);
+                            focusedBoxedDRTA = box;
+                        }
+                    }
+                }
+            } catch (Exception e) {}
+        };
+
+        commentNodesWidthListener = (observable, oldValue, newValue) -> {
+            if (isTornDown || this.mainView == null) return;
+            Platform.runLater(() -> {
+                if (isTornDown || this.mainView == null) return;
+                try { if (tableGrid != null) tableGrid.requestLayout(); } catch (Exception e) {}
+            });
+        };
+
+        commentKeyFilter = e -> {
+            if (isTornDown || this.mainView == null) return;
+            if (e.getCode() == KeyCode.ENTER) e.consume();
+        };
+
+        commentFocusListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null) return;
+            try {
+                if (nv && ob instanceof javafx.beans.property.ReadOnlyProperty) {
+                    Object bean = ((javafx.beans.property.ReadOnlyProperty<?>) ob).getBean();
+                    if (bean instanceof RichTextArea) {
+                        BoxedDRTA box = (BoxedDRTA) ((RichTextArea) bean).getUserData();
+                        if (box != null) {
+                            mainView.editorInFocus(box.getDRTA(), ControlType.FIELD);
+                        }
+                    }
+                }
+            } catch (Exception e) {}
+        };
     }
 
     /**
      * Initialize table structure
      */
     void updateTableGridFromTableItems() {
-        tableGrid.getChildren().clear();
-        List<ColumnConstraints> gridColConstraints =  tableGrid.getColumnConstraints();
-        gridColConstraints.clear();
+        if (isTornDown || this.mainView == null || tableGrid == null || tableHeadItemsList == null) return;
 
-        for (int i = 0; i < tableHeadItemsList.size(); i++) {
-
-            TableHeadItem headItem = tableHeadItemsList.get(i);
-            gridColConstraints.add(headItem.getColumnConstraints());
-
-            if (!headItem.isBlankColumn()) {
-                TextFlow headFlow = headItem.getExpression();
-                headFlow.setStyle("-fx-border-color: black; -fx-border-width: 0 0 1 0;");
-                tableGrid.add(headFlow, i, 0);
-                for (int j = 0; j < tableRows; j++) {
-                    tableGrid.add(tableFields[i][j], i, j + 2);
+        // SCORCHED EARTH RULE 8: Safely sever existing nodes before clearing (Prevent CME)
+        try {
+            if (tableGrid.getChildren() != null) {
+                List<Node> childrenCopy = new ArrayList<>(tableGrid.getChildren());
+                for (Node n : childrenCopy) {
+                    try { n.getClass().getMethod("cleanup").invoke(n); } catch (Exception e) {}
+                    severFromParent(n);
                 }
-                tableGrid.add(highlightButtons[i], i, tableRows + 3);
-                if (highlightButtons[i].isSelected()) {
-                    highlightButtons[i].setStyle("-fx-border-radius: 10; -fx-border-color: dodgerblue; -fx-background-color: lightblue; -fx-background-radius: 10");
+            }
+            tableGrid.getChildren().clear();
+
+            List<ColumnConstraints> gridColConstraints = tableGrid.getColumnConstraints();
+            gridColConstraints.clear();
+
+            for (int i = 0; i < tableHeadItemsList.size(); i++) {
+                TableHeadItem headItem = tableHeadItemsList.get(i);
+                gridColConstraints.add(headItem.getColumnConstraints());
+
+                if (!headItem.isBlankColumn()) {
+                    TextFlow headFlow = headItem.getExpression();
+                    headFlow.setStyle("-fx-border-color: black; -fx-border-width: 0 0 1 0;");
+                    tableGrid.add(headFlow, i, 0);
                     for (int j = 0; j < tableRows; j++) {
-                        tableFields[i][j].setStyle("-fx-background-radius: 2; -fx-background-color: lightblue");
+                        tableGrid.add(tableFields[i][j], i, j + 2);
                     }
+                    tableGrid.add(highlightButtons[i], i, tableRows + 3);
+                    if (highlightButtons[i].isSelected()) {
+                        highlightButtons[i].setStyle("-fx-border-radius: 10; -fx-border-color: dodgerblue; -fx-background-color: lightblue; -fx-background-radius: 10");
+                        for (int j = 0; j < tableRows; j++) {
+                            if (tableFields[i][j] != null) tableFields[i][j].setStyle("-fx-background-radius: 2; -fx-control-inner-background: lightblue");
+                        }
+                    }
+
+                } else if (headItem.isDividerColumn()) {
+                    TextFlow headFlow = headItem.getExpression();
+                    headFlow.setStyle("-fx-border-color: black; -fx-border-width: 0 0 1 1");
+                    tableGrid.add(headFlow, i, 0);
+
+                    for (int j = 0; j < tableRows + 3; j++) {
+                        Pane dividerPane = new Pane();
+                        dividerPane.setStyle("-fx-border-color: black; -fx-border-width: 0 0 0 1");
+                        tableGrid.add(dividerPane, i, j + 1);
+                    }
+                } else if (headItem.isBlankColumn()) {
+                    TextFlow headFlow = headItem.getExpression();
+                    headFlow.setStyle("-fx-border-color: black; -fx-border-width: 0 0 1 0");
+                    tableGrid.add(headFlow, i, 0);
                 }
+            }
 
-            } else if (headItem.isDividerColumn()) {
-                TextFlow headFlow = headItem.getExpression();
-                headFlow.setStyle("-fx-border-color: black; -fx-border-width: 0 0 1 1");
-                tableGrid.add(headFlow, i, 0);
+            ColumnConstraints commentConstraints = new ColumnConstraints();
+            commentConstraints.setMinWidth(100);
+            gridColConstraints.add(commentConstraints);
 
-                for (int j = 0; j < tableRows + 3; j++) {
-                    Pane dividerPane = new Pane();
-                    dividerPane.setStyle("-fx-border-color: black; -fx-border-width: 0 0 0 1");
-                    tableGrid.add(dividerPane, i, j + 1);
+            endPane = new Pane();
+            endPane.setStyle("-fx-border-color: black; -fx-border-width: 0 0 1 0");
+            tableGrid.add(endPane, tableHeadItemsList.size(), 0);
+            for (int j = 0; j < tableRows; j++) {
+                if (j != 0 && j % 4 == 0) {
+                    rowCommentsArray[j].getBoxedRTA().setAlignment(Pos.BOTTOM_LEFT);
+                    rowCommentsArray[j].getBoxedRTA().setPadding(new Insets(0,0,1.5,0));
                 }
-            } else if (headItem.isBlankColumn()) {
-                TextFlow headFlow = headItem.getExpression();
-                headFlow.setStyle("-fx-border-color: black; -fx-border-width: 0 0 1 0");
-                tableGrid.add(headFlow, i, 0);
+                tableGrid.add(rowCommentsArray[j].getBoxedRTA(), tableHeadItemsList.size(), j + 2);
             }
-        }
 
-        ColumnConstraints commentConstraints = new ColumnConstraints();
-        commentConstraints.setMinWidth(100);
-        gridColConstraints.add(commentConstraints);
-
-        endPane = new Pane();
-        endPane.setStyle("-fx-border-color: black; -fx-border-width: 0 0 1 0");
-        tableGrid.add(endPane, tableHeadItemsList.size(), 0);
-        for (int j = 0; j < tableRows; j++) {
-            if (j != 0 && j % 4 == 0) {
-                rowCommentsArray[j].getBoxedRTA().setAlignment(Pos.BOTTOM_LEFT);
-                rowCommentsArray[j].getBoxedRTA().setPadding(new Insets(0,0,1.5,0));
+            sizers = new VBox[tableRows + 3];
+            for (int i = 0; i < tableRows + 3; i++) {
+                sizers[i] = new VBox();
+                tableGrid.add(sizers[i], tableHeadItemsList.size() + 1, i);
             }
-            tableGrid.add(rowCommentsArray[j].getBoxedRTA(), tableHeadItemsList.size(), j + 2);
-        }
 
-        sizers = new VBox[tableRows + 3];
-
-        for (int i = 0; i < tableRows + 3; i++) {
-            sizers[i] = new VBox();
-            tableGrid.add(sizers[i], tableHeadItemsList.size() + 1, i);
-        }
-
-        //setup blank separator row gaps
-        List<RowConstraints> tableRowConstraints = tableGrid.getRowConstraints();
-        tableRowConstraints.clear();
-        tableRowConstraints.add(new RowConstraints());
-        tableRowConstraints.add(new RowConstraints(5));
-        for (int i = 0; i < tableRows; i++) {
-            RowConstraints rowCon = new RowConstraints();
-            if (i != 0 && i % 4 == 0) {
-                rowCon.setMinHeight(30);
-                rowCon.setMaxHeight(30);
-                rowCon.setValignment(VPos.BOTTOM);
+            //setup blank separator row gaps
+            List<RowConstraints> tableRowConstraints = tableGrid.getRowConstraints();
+            tableRowConstraints.clear();
+            tableRowConstraints.add(new RowConstraints());
+            tableRowConstraints.add(new RowConstraints(5));
+            for (int i = 0; i < tableRows; i++) {
+                RowConstraints rowCon = new RowConstraints();
+                if (i != 0 && i % 4 == 0) {
+                    rowCon.setMinHeight(30);
+                    rowCon.setMaxHeight(30);
+                    rowCon.setValignment(VPos.BOTTOM);
+                } else {
+                    rowCon.setMinHeight(25);
+                    rowCon.setMaxHeight(25);
+                }
+                tableRowConstraints.add(rowCon);
             }
-            else {
-                rowCon.setMinHeight(25);
-                rowCon.setMaxHeight(25);
-            }
-            tableRowConstraints.add(rowCon);
-        }
-        tableRowConstraints.add(new RowConstraints(5));
-        tableRowConstraints.add(new RowConstraints());
+            tableRowConstraints.add(new RowConstraints(5));
+            tableRowConstraints.add(new RowConstraints());
+        } catch (Exception e) {}
     }
 
     /**
      * Update the (left-hand) basic formulas pane from the basicFormulasBoxedDRTAList
      */
     void updateBasicFormulasPaneFromList() {
-        basicFormulasPane.getChildren().clear();
-        for (int i = 0; i < basicFormulasBoxedDRTAList.size(); i++) {
-            basicFormulasPane.add(basicFormulasBoxedDRTAList.get(i).getBoxedRTA(),0, i);
-        }
+        if (isTornDown || this.mainView == null || basicFormulasPane == null || basicFormulasBoxedDRTAList == null) return;
+
+        // SCORCHED EARTH RULE 8: Rebuild Fix
+        try {
+            if (basicFormulasPane.getChildren() != null) {
+                List<Node> childrenCopy = new ArrayList<>(basicFormulasPane.getChildren());
+                for (Node n : childrenCopy) {
+                    try { n.getClass().getMethod("cleanup").invoke(n); } catch (Exception e) {}
+                    severFromParent(n);
+                }
+                basicFormulasPane.getChildren().clear();
+            }
+            for (int i = 0; i < basicFormulasBoxedDRTAList.size(); i++) {
+                basicFormulasPane.add(basicFormulasBoxedDRTAList.get(i).getBoxedRTA(),0, i);
+            }
+        } catch (Exception e) {}
     }
 
     /**
@@ -315,55 +612,22 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
         TextField singleCharField = new TextField() {
             @Override
             public void replaceText(int start, int end, String text) {
+                if (isTornDown || mainView == null) return;
                 super.replaceText(start, end, text.toUpperCase());
             }
         };
 
         singleCharField.setPadding(new Insets(0));
         singleCharField.setMaxWidth(18);
-
         singleCharField.setAlignment(Pos.CENTER);
         singleCharField.setStyle("-fx-background-radius: 2");
         singleCharField.setPadding(new Insets(3));
 
-        UnaryOperator<TextFormatter.Change> textFilter = c -> {
-            if (c.getText().matches("[0-9a-zA-Z]")) {
-                c.setRange(0, singleCharField.getText().length());
-                return c;
-            } else if (c.getText().isEmpty()) {
-                return c;
-            }
-            return null;
-        };
-        TextFormatter<String> formatter = new TextFormatter<>(textFilter);
+        singleCharField.setUserData(new int[]{column, row});
+        TextFormatter<String> formatter = new TextFormatter<>(singleCharTextFilter);
         singleCharField.setTextFormatter(formatter);
-
-        singleCharField.addEventFilter(KeyEvent.KEY_TYPED, e -> {
-           if (row < tableRows - 1) {
-                tableFields[column][row + 1].requestFocus();
-           } else {
-                tableFields[column][0].requestFocus();
-           }
-
-        });
-
-        singleCharField.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
-            KeyCode code = e.getCode();
-            if (code == KeyCode.UP && row > 0) {
-                tableFields[column][row - 1].requestFocus();
-                e.consume();
-            } else if (code == KeyCode.DOWN && row < tableRows - 1) {
-                tableFields[column][row + 1].requestFocus();
-                e.consume();
-            } else if (code == KeyCode.RIGHT) {
-                tableFields[tableColToRight(column)][row].requestFocus();
-                e.consume();
-            }  else if (code == KeyCode.LEFT) {
-                tableFields[tableColToLeft(column)][row].requestFocus();
-                e.consume();
-            }
-
-        });
+        singleCharField.addEventFilter(KeyEvent.KEY_TYPED, singleCharTypeFilter);
+        singleCharField.addEventFilter(KeyEvent.KEY_PRESSED, singleCharPressFilter);
 
         return singleCharField;
     }
@@ -375,6 +639,7 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
      */
     private int tableColToRight(int column) {
         int rightCol = column;
+        if (tableHeadItemsList == null) return rightCol;
         for (int i = column + 1; i < tableHeadItemsList.size(); i++) {
             TableHeadItem item = tableHeadItemsList.get(i);
             if (!item.isBlankColumn()) {
@@ -392,6 +657,7 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
      */
     private int tableColToLeft(int column) {
         int leftCol = column;
+        if (tableHeadItemsList == null) return leftCol;
         for (int i = column - 1; i >= 0; i--) {
             TableHeadItem item = tableHeadItemsList.get(i);
             if (!item.isBlankColumn()) {
@@ -411,25 +677,9 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
         ToggleButton button = new ToggleButton();
         button.setPadding(new Insets(0));
         button.setPrefWidth(20);
-
         button.setStyle("-fx-border-radius: 10; -fx-border-color: lightblue; -fx-background-color: ghostwhite");
-
-        button.setOnAction(e -> {
-            if (button.isSelected()) {
-                button.setStyle("-fx-border-radius: 10; -fx-border-color: dodgerblue; -fx-background-color: lightblue; -fx-background-radius: 10;");
-          //      button.setStyle("-fx-border-radius: 10; -fx-border-color: tomato; -fx-background-color: lavenderblush;");
-                for (int j = 0; j < tableRows; j++) {
-                    tableFields[index][j].setStyle("-fx-background-radius: 2; -fx-background-color: lightblue");  //pink
-                }
-
-            } else {
-                button.setStyle("-fx-border-radius: 10; -fx-border-color: lightblue; -fx-background-color: ghostwhite;");
-                for (int j = 0; j < tableRows; j++) {
-                    tableFields[index][j].setStyle("-fx-background-radius: 2; -fxBackground-color: white");
-                }
-            }
-
-        });
+        button.setUserData(index);
+        button.setOnAction(highlightButtonHandler);
         return button;
     }
 
@@ -447,12 +697,8 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
         rta.setPrefWidth(100);
         rta.getStylesheets().add("RichTextFieldWide.css");
         rta.setPromptText("Formula");
-        rta.focusedProperty().addListener((ob, ov, nv) -> {
-            if (nv) {
-                mainView.editorInFocus(bdrta.getDRTA(), ControlType.FIELD);
-                focusedBoxedDRTA = bdrta;
-            }
-        });
+        rta.setUserData(bdrta);
+        rta.focusedProperty().addListener(formulaFocusListener);
         return bdrta;
     }
 
@@ -467,21 +713,13 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
         rta.setMinHeight(formulaBoxHeight);
 
         RichTextAreaSkin rtaSkin = (RichTextAreaSkin) rta.getSkin();
-        rta.prefWidthProperty().bind(Bindings.max(Bindings.add(rtaSkin.nodesWidthProperty(), 6), 100));
-        rtaSkin.nodesWidthProperty().addListener((observable, oldValue, newValue) -> {
-            Platform.runLater(() -> rta.getParent().requestLayout());
-        });
-        rta.addEventFilter(KeyEvent.ANY, e -> {
-            if (e.getCode() == KeyCode.ENTER) e.consume();
-        });
+        rta.prefWidthProperty().bind(Bindings.max(Bindings.add(rtaSkin.nodesWidthProperty(), 8), 100));
+        rtaSkin.nodesWidthProperty().addListener(commentNodesWidthListener);
+        rta.addEventFilter(KeyEvent.ANY, commentKeyFilter);
 
         rta.getStylesheets().add("RichTextField.css");
- //       rta.setPromptText("Comment");
-        rta.focusedProperty().addListener((ob, ov, nv) -> {
-            if (nv) {
-                mainView.editorInFocus(bdrta.getDRTA(), ControlType.FIELD);
-            }
-        });
+        rta.setUserData(bdrta);
+        rta.focusedProperty().addListener(commentFocusListener);
         return bdrta;
     }
 
@@ -489,107 +727,104 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
      * Setup size controls for statement, comment, and table grid
      */
     void initializeViewDetails() {
+        double spinnerMin = (double) ((int) (100 * 45.0 / localScalePageHeight.get()));
+
         //statement
         RichTextArea statementRTA = exerciseStatement.getEditor();
         statementRTA.getStylesheets().add("slappTextArea.css");
         statementRTA.setEditable(false);
 
-        double statementInitialHeight = Math.round((statementPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100.0);
-        statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
+        double statementInitialHeight = Math.ceil((statementPrefHeight - RTA_SCREEN_BMP) / localScalePageHeight.get() * 100.0);
+        statementHeightSpinner = new Spinner<>(spinnerMin, 999.0, statementInitialHeight, 1.0);
         statementHeightSpinner.setPrefWidth(65);
         statementHeightSpinner.setDisable(false);
-        statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
-        statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
-            Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
-            if (increment != null) increment.getOnMouseReleased().handle(null);
-            Node decrement = statementHeightSpinner.lookup(".decrement-arrow-button");
-            if (decrement != null) decrement.getOnMouseReleased().handle(null);
-        });
+        statementHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
-        statementRTA.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.maxWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
-
+        statementRTA.prefWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.contentAreaWidthProperty().bind(localScalePageWidth);
 
         statementWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         statementWidthSpinner.setPrefWidth(65);
         statementWidthSpinner.setDisable(true);
-        statementWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
-
-        /*
-        statementRTA.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-            if (currentSpinnerNode != statementRTA) {
-                currentSpinnerNode = statementRTA;
-                mainView.updateSizeSpinners(statementHeightSpinner, statementWidthSpinner);
-            }
-        });
-
-         */
+        statementWidthSpinner.setTooltip(new Tooltip("Window width as % of selected paper"));
 
         //comment
         RichTextArea commentRTA = exerciseComment.getEditor();
         commentRTA.getStylesheets().add("slappTextArea.css");
         commentRTA.setPromptText("Comment:");
 
-        double commentInitialHeight = Math.round((commentPrefHeight - RTA_SCREEN_BMP) / mainView.getScalePageHeight() * 100.0);
-        commentHeightSpinner = new Spinner<>(0.0, 999.0, commentInitialHeight, 1.0);
+        double commentInitialHeight = Math.round((commentPrefHeight - RTA_SCREEN_BMP) / localScalePageHeight.get() * 100.0);
+        commentHeightSpinner = new Spinner<>(spinnerMin, 999.0, commentInitialHeight, 1.0);
         commentHeightSpinner.setPrefWidth(65);
         commentHeightSpinner.setDisable(false);
-        commentHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        commentRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainView.scalePageHeightProperty(), DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
-        commentHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
-            Node increment = commentHeightSpinner.lookup(".increment-arrow-button");
-            if (increment != null) increment.getOnMouseReleased().handle(null);
-            Node decrement = commentHeightSpinner.lookup(".decrement-arrow-button");
-            if (decrement != null) decrement.getOnMouseReleased().handle(null);
-        });
+        commentHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        commentRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
-        commentRTA.prefWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
-        commentRTA.maxWidthProperty().bind(Bindings.add(mainView.scalePageWidthProperty(), RTA_WIDTH_BMP));
-        commentRTA.contentAreaWidthProperty().bind(mainView.scalePageWidthProperty());
+        commentRTA.prefWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        commentRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        commentRTA.contentAreaWidthProperty().bind(localScalePageWidth);
         commentWidthSpinner = new Spinner<>(0.0, 999.0, 100, 1.0);
         commentWidthSpinner.setPrefWidth(65);
         commentWidthSpinner.setDisable(true);
-        commentWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
-
+        commentWidthSpinner.setTooltip(new Tooltip("Window width as % of selected paper"));
 
         //table grid
         tableGridHeightSpinner = new Spinner<>(0.0,999.0, 0,1.0);
         tableGridHeightSpinner.setPrefWidth(65);
         tableGridHeightSpinner.setDisable(true);
-        tableGridHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        tableGrid.heightProperty().addListener((ob, ov, nv) -> {
-            tableGridHeightSpinner.getValueFactory().setValue((double) Math.round(tableGrid.getHeight() / mainView.getScalePageHeight() * 100));
-        });
+        tableGridHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        tableGridHeightListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || tableGridHeightSpinner == null || tableGrid == null) return;
+            try { tableGridHeightSpinner.getValueFactory().setValue((double) Math.round(tableGrid.getHeight() / localScalePageHeight.get() * 100)); } catch (Exception e) {}
+        };
+        tableGrid.heightProperty().addListener(tableGridHeightListener);
 
         tableGridWidthSpinner = new Spinner<>(100.0,999.0, 0,1.0);
         tableGridWidthSpinner.setPrefWidth(65);
         tableGridWidthSpinner.setDisable(true);
-        tableGridWidthSpinner.setTooltip(new Tooltip("Width as % of selected paper"));
-        tableGrid.widthProperty().addListener((ob, ov, nv) -> {
-            tableGridWidthSpinner.getValueFactory().setValue((double) Math.round((tableGrid.getWidth() - RTA_WIDTH_BMP) / mainView.getScalePageWidth() * 100));
-        });
-
-
+        tableGridWidthSpinner.setTooltip(new Tooltip("Window width as % of selected paper"));
+        tableGridWidthListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || tableGridWidthSpinner == null || tableGrid == null) return;
+            try { tableGridWidthSpinner.getValueFactory().setValue((double) Math.round((tableGrid.getWidth() - RTA_WIDTH_BMP) / localScalePageWidth.get() * 100)); } catch(Exception e) {}
+        };
+        tableGrid.widthProperty().addListener(tableGridWidthListener);
 
         //page size listeners
-        mainView.scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeightListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || exerciseStatement == null || exerciseComment == null || tableGrid == null || tableGridHeightSpinner == null) return;
+            try {
+                double revSpinnerMin = (double) ((int) (100 * 45.0 / (double) nv));
 
-            statementRTA.prefHeightProperty().unbind();
-            statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+                RichTextArea statementRTAUnbind = exerciseStatement.getEditor();
+                statementRTAUnbind.prefHeightProperty().unbind();
+                if (statementHeightSpinner != null && statementHeightSpinner.getValueFactory() != null) {
+                    statementHeightSpinner.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(revSpinnerMin, 999.0, (double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()), 1.0));
+                    statementRTAUnbind.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+                }
 
-            commentRTA.prefHeightProperty().unbind();
-            commentHeightSpinner.getValueFactory().setValue((double) Math.round(commentHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
-            commentRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+                RichTextArea commentRTAUnbind = exerciseComment.getEditor();
+                commentRTAUnbind.prefHeightProperty().unbind();
+                if (commentHeightSpinner != null && commentHeightSpinner.getValueFactory() != null) {
+                    commentHeightSpinner.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(revSpinnerMin, 999.0, (double) Math.round(commentHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()), 1.0));
+                    commentRTAUnbind.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(commentHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+                }
 
-            tableGridHeightSpinner.getValueFactory().setValue((double) Math.round(tableGrid.getHeight() / mainView.getScalePageHeight() * 100.0));
-        });
+                if (tableGridHeightSpinner.getValueFactory() != null) {
+                    tableGridHeightSpinner.getValueFactory().setValue((double) Math.round(tableGrid.getHeight() / localScalePageHeight.get() * 100.0));
+                }
+            } catch (Exception e) {}
+        };
+        localScalePageHeight.addListener(localScalePageHeightListener);
 
-        mainView.scalePageWidthProperty().addListener((ob, ov, nv) -> {
-            tableGridWidthSpinner.getValueFactory().setValue((double) Math.round((tableGrid.getWidth() - RTA_WIDTH_BMP) / mainView.getScalePageWidth() * 100.0));
-        });
+        localScalePageWidthListener = (ob, ov, nv) -> {
+            if (isTornDown || this.mainView == null || tableGrid == null || tableGridWidthSpinner == null || tableGridWidthSpinner.getValueFactory() == null) return;
+            try {
+                tableGridWidthSpinner.getValueFactory().setValue((double) Math.round((tableGrid.getWidth() - RTA_WIDTH_BMP) / localScalePageWidth.get() * 100.0));
+            } catch (Exception e) {}
+        };
+        localScalePageWidth.addListener(localScalePageWidthListener);
 
         setSizeSpinners();
     }
@@ -614,18 +849,13 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
 
         checkProgButton = new Button();
 
-        //     checkProgButton = new Button("Check Progress");
-        //     checkProgButton.setPrefWidth(105);
-        //     checkProgButton.setTooltip(new Tooltip("Check tree progress so far."));
         VBox checksBox = new VBox(10, checkButton, checkTriesLabel);
         checksBox.setAlignment(Pos.CENTER);
         checkTriesLabel.setAlignment(Pos.CENTER);
-//        checksBox.setMargin(checkProgButton, new Insets(0,0,10, 0));
 
         staticHelpButton = new Button("Static Help");
         staticHelpButton.setPrefWidth(105);
         staticHelpButton.setTooltip(new Tooltip("Get static help text"));
-
 
         VBox rightControlBox = new VBox(40, bigCheckBox, checksBox, staticHelpButton );
         rightControlBox.setAlignment(Pos.TOP_CENTER);
@@ -633,10 +863,10 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
         rightControlNode = rightControlBox;
 
         deactivateBigCheck();
-
     }
 
     public void activateBigCheck() {
+        if (bigCheck == null || checkedElements == null) return;
         bigCheck.setFill(checkColor);
         checkedElements.setText(checkMessage);
         checkedElements.setFill(checkElementsColor);
@@ -652,8 +882,7 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
 
             ParallelTransition pt = new ParallelTransition(t1, t2);
             pt.play();
-        }
-        else {
+        } else {
             bigCheck.setOpacity(1.0);
             checkedElements.setOpacity(1.0);
         }
@@ -661,6 +890,7 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
 
     //record status, and deactivate
     public void deactivateBigCheck() {
+        if (bigCheck == null || checkedElements == null) return;
         if (bigCheck.getOpacity() > .5) checkShowing = true;
         else checkShowing = false;
         bigCheck.setOpacity(0.0);
@@ -668,16 +898,15 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
     }
 
     public void showStaticHelp(Document doc) {
-
         if (staticHelpStage == null || !staticHelpStage.isShowing()) {
             RichTextArea hrta = new RichTextArea(EditorMain.mainStage);
             hrta.getActionFactory().open(doc).execute(new ActionEvent());
             hrta.setPadding(new Insets(20, 0, 20, 20));
             hrta.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
-            hrta.setPrefWidth(400);
+            hrta.setContentAreaWidth(400);
+            hrta.setPrefWidth(400 + RTA_WIDTH_BMP);
             hrta.setPrefHeight(300);
             hrta.setEditable(false);
-
 
             Scene scene = new Scene(hrta);
             scene.getStylesheets().add(RichTextArea.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
@@ -689,7 +918,7 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
             staticHelpStage.getIcons().addAll(EditorMain.icons);
             staticHelpStage.initOwner(EditorMain.mainStage);
             Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-            staticHelpStage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 420));
+            staticHelpStage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - (420 + RTA_WIDTH_BMP)));
             staticHelpStage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 320));
 
             staticHelpStage.show();
@@ -698,51 +927,336 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
 
     public Stage getStaticHelpStage() { return staticHelpStage; }
 
-
-
-
-
     private void setSizeSpinners() {
+        tableGridClickHandler = e -> {
+            if (isTornDown || this.mainView == null || tableGrid == null) return;
+            try {
+                if (currentSpinnerNode != tableGrid) {
+                    tableGrid.requestFocus();
+                }
+            } catch (Exception ex) {}
+        };
+        tableGrid.addEventFilter(MouseEvent.MOUSE_CLICKED, tableGridClickHandler);
 
-        tableGrid.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-            if (currentSpinnerNode != tableGrid) {
-                tableGrid.requestFocus();
-            }
-        });
-
-        mainView.getMainScene().focusOwnerProperty().addListener((ob, ov, nv) -> {
-
-            RichTextArea statementRTA = exerciseStatement.getEditor();
-            if (inHierarchy(nv, statementRTA) && currentSpinnerNode != statementRTA) {
-                currentSpinnerNode = statementRTA;
-                mainView.updateSizeSpinners(statementHeightSpinner, statementWidthSpinner);
-                return;
-            }
-            RichTextArea commentRTA = exerciseComment.getEditor();
-            if (inHierarchy(nv, commentRTA) && currentSpinnerNode != commentRTA) {
-                currentSpinnerNode = commentRTA;
-                mainView.updateSizeSpinners(commentHeightSpinner, commentWidthSpinner);
-                return;
-            }
-            if (inHierarchy(nv, tableGrid) && currentSpinnerNode != tableGrid) {
-                currentSpinnerNode = tableGrid;
-                mainView.updateSizeSpinners(tableGridHeightSpinner, tableGridWidthSpinner);
-            }
-
-        });
+        if (mainView != null && mainView.getMainScene() != null) {
+            mainView.getMainScene().focusOwnerProperty().addListener(exerciseFocusListener);
+        }
     }
 
     private static boolean inHierarchy(Node node, Node potentialHierarchyElement) {
-        if (potentialHierarchyElement == null) {
-            return true;
-        }
+        if (potentialHierarchyElement == null) return true;
         while (node != null) {
-            if (node == potentialHierarchyElement) {
-                return true;
-            }
+            if (node == potentialHierarchyElement) return true;
             node = node.getParent();
         }
         return false;
+    }
+
+    // SCORCHED EARTH RULE 6: Sever Shared Nodes helper
+    private void severFromParent(Node node) {
+        try {
+            if (node != null && node.getParent() != null) {
+                if (node.getParent() instanceof javafx.scene.layout.Pane) ((javafx.scene.layout.Pane) node.getParent()).getChildren().remove(node);
+                else if (node.getParent() instanceof javafx.scene.Group) ((javafx.scene.Group) node.getParent()).getChildren().remove(node);
+            }
+        } catch (Exception e) {}
+    }
+
+    public void cleanup() {
+        // KILL SWITCH: Engaged!
+        isTornDown = true;
+
+        try {
+            if (pointsEarnedTextField != null) {
+                if (pointsEarnedFocusListener != null) {
+                    pointsEarnedTextField.focusedProperty().removeListener(pointsEarnedFocusListener);
+                }
+                if (pointsEarnedClickHandler != null) {
+                    pointsEarnedTextField.removeEventHandler(MouseEvent.MOUSE_CLICKED, pointsEarnedClickHandler);
+                }
+                pointsEarnedTextField.setOnMouseClicked(null);
+                pointsEarnedTextField.setTextFormatter(null);
+            }
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 5: Rule of Isolation applied via dozens of tiny isolated try-catch blocks
+        try {
+            if (tableGrid != null && tableGridClickHandler != null) {
+                tableGrid.removeEventFilter(MouseEvent.MOUSE_CLICKED, tableGridClickHandler);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (mainView != null && mainView.getMainScene() != null && exerciseFocusListener != null) {
+                mainView.getMainScene().focusOwnerProperty().removeListener(exerciseFocusListener);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (basicFormulasPane != null && basicFormulasKeyFilter != null) {
+                basicFormulasPane.removeEventFilter(KeyEvent.KEY_PRESSED, basicFormulasKeyFilter);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (tableGrid != null && tableGridHeightListener != null) tableGrid.heightProperty().removeListener(tableGridHeightListener);
+            if (tableGrid != null && tableGridWidthListener != null) tableGrid.widthProperty().removeListener(tableGridWidthListener);
+        } catch (Exception e) {}
+
+        try {
+            if (localScalePageHeight != null) {
+                if (localScalePageHeightListener != null) localScalePageHeight.removeListener(localScalePageHeightListener);
+                localScalePageHeight.unbind();
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (localScalePageWidth != null) {
+                if (localScalePageWidthListener != null) localScalePageWidth.removeListener(localScalePageWidthListener);
+                localScalePageWidth.unbind();
+            }
+        } catch (Exception e) {}
+
+        // Unbind RTA properties
+        try {
+            if (exerciseStatement != null && exerciseStatement.getEditor() != null) {
+                exerciseStatement.getEditor().prefHeightProperty().unbind();
+                exerciseStatement.getEditor().prefWidthProperty().unbind();
+                exerciseStatement.getEditor().maxWidthProperty().unbind();
+                exerciseStatement.getEditor().contentAreaWidthProperty().unbind();
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (exerciseComment != null && exerciseComment.getEditor() != null) {
+                exerciseComment.getEditor().prefHeightProperty().unbind();
+                exerciseComment.getEditor().prefWidthProperty().unbind();
+                exerciseComment.getEditor().maxWidthProperty().unbind();
+                exerciseComment.getEditor().minWidthProperty().unbind();
+                exerciseComment.getEditor().contentAreaWidthProperty().unbind();
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (rowCommentsArray != null) {
+                for (BoxedDRTA bdrta : rowCommentsArray) {
+                    if (bdrta != null && bdrta.getRTA() != null) {
+                        bdrta.getRTA().prefWidthProperty().unbind();
+                        if (commentFocusListener != null) bdrta.getRTA().focusedProperty().removeListener(commentFocusListener);
+                        if (commentKeyFilter != null) bdrta.getRTA().removeEventFilter(KeyEvent.ANY, commentKeyFilter);
+                        try {
+                            RichTextAreaSkin rtaSkin = (RichTextAreaSkin) bdrta.getRTA().getSkin();
+                            if (rtaSkin != null && commentNodesWidthListener != null) rtaSkin.nodesWidthProperty().removeListener(commentNodesWidthListener);
+                        } catch(Exception ex) {}
+                        bdrta.getRTA().setUserData(null);
+                    }
+                }
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (basicFormulasBoxedDRTAList != null) {
+                for (BoxedDRTA bdrta : basicFormulasBoxedDRTAList) {
+                    if (bdrta != null && bdrta.getRTA() != null) {
+                        if (formulaFocusListener != null) bdrta.getRTA().focusedProperty().removeListener(formulaFocusListener);
+                        bdrta.getRTA().setUserData(null);
+                    }
+                }
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (tableFields != null) {
+                for (int i = 0; i < tableFields.length; i++) {
+                    if (tableFields[i] != null) {
+                        for (int j = 0; j < tableFields[i].length; j++) {
+                            if (tableFields[i][j] != null) {
+                                if (singleCharTypeFilter != null) tableFields[i][j].removeEventFilter(KeyEvent.KEY_TYPED, singleCharTypeFilter);
+                                if (singleCharPressFilter != null) tableFields[i][j].removeEventFilter(KeyEvent.KEY_PRESSED, singleCharPressFilter);
+                                tableFields[i][j].setTextFormatter(null);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (highlightButtons != null) {
+                for (int i = 0; i < highlightButtons.length; i++) {
+                    if (highlightButtons[i] != null) highlightButtons[i].setOnAction(null);
+                }
+            }
+        } catch (Exception e) {}
+
+        // ---> SCORCHED EARTH RULE 4: THE JAVAFX SKIN HAMMER (DECOUPLED TIMER) <---
+        try {
+            final RichTextArea stEditor = (exerciseStatement != null) ? exerciseStatement.getEditor() : null;
+            final RichTextArea commEditor = (exerciseComment != null) ? exerciseComment.getEditor() : null;
+
+            final List<RichTextArea> rtasToClear = new ArrayList<>();
+            if (stEditor != null) rtasToClear.add(stEditor);
+            if (commEditor != null) rtasToClear.add(commEditor);
+
+            if (basicFormulasBoxedDRTAList != null) {
+                for (BoxedDRTA bdrta : basicFormulasBoxedDRTAList) {
+                    if (bdrta != null && bdrta.getRTA() != null) {
+                        rtasToClear.add(bdrta.getRTA());
+                    }
+                }
+            }
+
+            if (rowCommentsArray != null) {
+                for (BoxedDRTA bdrta : rowCommentsArray) {
+                    if (bdrta != null && bdrta.getRTA() != null) {
+                        rtasToClear.add(bdrta.getRTA());
+                    }
+                }
+            }
+
+            if (!rtasToClear.isEmpty()) {
+                // STAGE 1 (Immediate)
+                for (RichTextArea rta : rtasToClear) {
+                    try { rta.setPromptText(""); } catch (Exception e) {}
+                    try { rta.setFocusTraversable(false); } catch (Exception e) {}
+                    try { if (rta.getDocument() == null || rta.getDocument().getText().isEmpty()) rta.getActionFactory().open(new Document(" ")).execute(new ActionEvent()); } catch (Exception e) {}
+                }
+
+                // STAGE 2 (Delayed Skin Removal)
+                javafx.animation.PauseTransition pt = new javafx.animation.PauseTransition(javafx.util.Duration.millis(1500));
+                pt.setOnFinished(ev -> {
+                    for (RichTextArea rta : rtasToClear) {
+                        try { rta.setSkin(null); } catch (Exception ex) {}
+                    }
+                });
+                pt.play();
+            }
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 8: The Undo/Redo Rebuild Fix (Iterate over children copy)
+        try {
+            if (basicFormulasPane != null) {
+                if (basicFormulasPane.getChildren() != null) {
+                    List<Node> childrenCopy = new ArrayList<>(basicFormulasPane.getChildren());
+                    for (Node node : childrenCopy) severFromParent(node);
+                }
+                basicFormulasPane.getChildren().clear();
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (controlBox != null) {
+                if (controlBox.getChildren() != null) {
+                    List<Node> childrenCopy = new ArrayList<>(controlBox.getChildren());
+                    for (Node node : childrenCopy) severFromParent(node);
+                }
+                controlBox.getChildren().clear();
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (centerBox != null) {
+                if (centerBox.getChildren() != null) {
+                    List<Node> childrenCopy = new ArrayList<>(centerBox.getChildren());
+                    for (Node node : childrenCopy) severFromParent(node);
+                }
+                centerBox.getChildren().clear();
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (tableGrid != null) {
+                if (tableGrid.getChildren() != null) {
+                    List<Node> childrenCopy = new ArrayList<>(tableGrid.getChildren());
+                    for (Node node : childrenCopy) severFromParent(node);
+                }
+                tableGrid.getChildren().clear();
+                tableGrid.getRowConstraints().clear();
+                tableGrid.getColumnConstraints().clear();
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (pointsEarnedTextField != null) pointsEarnedTextField.setTextFormatter(null);
+        } catch (Exception e) {}
+
+
+        try { if (addBasicFormulaButton != null) addBasicFormulaButton.setOnAction(null); } catch (Exception e) {}
+        try { if (removeBasicFormulaButton != null) removeBasicFormulaButton.setOnAction(null); } catch (Exception e) {}
+        try { if (setupTableButton != null) setupTableButton.setOnAction(null); } catch (Exception e) {}
+
+        try { if (checkButton != null) checkButton.setOnAction(null); } catch (Exception e) {}
+        try { if (checkProgButton != null) checkProgButton.setOnAction(null); } catch (Exception e) {}
+        try { if (staticHelpButton != null) staticHelpButton.setOnAction(null); } catch (Exception e) {}
+
+        // Null out all fields
+        this.mainView = null;
+        this.exerciseStatement = null;
+        this.exerciseComment = null;
+        this.statementHeightSpinner = null;
+        this.statementWidthSpinner = null;
+        this.commentHeightSpinner = null;
+        this.commentWidthSpinner = null;
+        this.tableGridHeightSpinner = null;
+        this.tableGridWidthSpinner = null;
+        this.currentSpinnerNode = null;
+        this.basicFormulasPane = null;
+
+        // SCORCHED EARTH RULE 10: NON-DESTRUCTIVE Data Teardown
+        this.basicFormulasBoxedDRTAList = null;
+        this.tableHeadItemsList = null;
+
+        this.controlBox = null;
+        this.rowsSpinner = null;
+        this.setupTableButton = null;
+        this.tableGrid = null;
+        this.centerBox = null;
+        this.tableFields = null;
+        this.rowCommentsArray = null;
+        this.highlightButtons = null;
+        this.sizers = null;
+        this.endPane = null;
+        this.focusedBoxedDRTA = null;
+        this.pointsEarnedTextField = null;
+        this.rightControlNode = null;
+        this.checkButton = null;
+        this.checkProgButton = null;
+        this.bigCheck = null;
+        this.checkMessage = null;
+        this.checkedElements = null;
+        this.checkTriesLabel = null;
+        this.staticHelpButton = null;
+        try {
+            if (this.staticHelpStage != null) {
+                this.staticHelpStage.close();
+            }
+        } catch (Exception e) {}
+        this.staticHelpStage = null;
+
+        // Nullify listeners cleanly via matching variable names
+        this.exerciseFocusListener = null;
+        this.basicFormulasKeyFilter = null;
+        this.addBasicFormulaHandler = null;
+        this.removeBasicFormulaHandler = null;
+        this.pointsFilter = null;
+        this.tableGridHeightListener = null;
+        this.tableGridWidthListener = null;
+        this.localScalePageHeightListener = null;
+        this.localScalePageWidthListener = null;
+        this.tableGridClickHandler = null;
+        this.singleCharTypeFilter = null;
+        this.singleCharPressFilter = null;
+        this.singleCharTextFilter = null;
+        this.highlightButtonHandler = null;
+        this.formulaFocusListener = null;
+        this.commentNodesWidthListener = null;
+        this.commentKeyFilter = null;
+        this.commentFocusListener = null;
+        this.addBasicFormulaButton = null;
+        this.removeBasicFormulaButton = null;
+
+        this.pointsEarnedFocusListener = null;
+        this.pointsEarnedClickHandler = null;
     }
 
     public Button getCheckProgButton() {
@@ -859,6 +1373,10 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
      */
     void setCommentPrefHeight(double commentPrefHeight) {  this.commentPrefHeight = commentPrefHeight;   }
 
+    public VBox getControlBox() {
+        return controlBox;
+    }
+
     /**
      * The comment decoratedRTA
      * @return comment DecoratedRTA
@@ -928,7 +1446,7 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
     @Override
     public Node getPointsNode() {
         if (pointsPossible > 0) {
-            if (!mainView.isInstructorFunctions()) pointsEarnedTextField.setDisable(true);
+            if (mainView != null && !mainView.isInstructorFunctions()) pointsEarnedTextField.setDisable(true);
             return pointsEarnedTextField;
         }
         return null;
@@ -951,5 +1469,15 @@ public class TruthTableView implements ExerciseView<DecoratedRTA> {
 
     public Button getCheckButton() {
         return checkButton;
+    }
+
+    public DoubleProperty localScalePageHeightProperty() { return localScalePageHeight; }
+
+    public DoubleProperty localScalePageWidthProperty() {
+        return localScalePageWidth;
+    }
+
+    public ChangeListener<Node> getExerciseFocusListener() {
+        return exerciseFocusListener;
     }
 }

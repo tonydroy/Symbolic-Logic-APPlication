@@ -156,8 +156,8 @@ public class UpdateAssignmentHeader {
         helpArea.setEditable(false);
         helpArea.setFocusTraversable(false);
         helpArea.setMouseTransparent(true);
+        helpArea.setFont(Font.font("Noto Serif Combo", 12));
         helpArea.setPadding(new Insets(5,5,5,5));
-        helpArea.setStyle("-fx-text-fill: mediumslateblue");
 
         borderPane.setBottom(helpArea);
 

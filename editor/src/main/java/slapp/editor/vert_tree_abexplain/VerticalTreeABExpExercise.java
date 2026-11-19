@@ -21,22 +21,22 @@ import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -60,6 +60,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static slapp.editor.EditorMain.*;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.event.EventHandler;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 
 
 public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpModel, VerticalTreeABExpView>, VTAuxExer {
@@ -78,6 +86,28 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
     Pane thumbPane = new Pane();
     Scene tScene = new Scene(new Pane());
 
+    // KILL SWITCH: Prevents asynchronous listener execution during teardown
+    private boolean isTornDown = false;
+
+    // SCORCHED EARTH RULE 3: Eradicate Anonymous Lambdas
+    private ChangeListener<Boolean> undoRedoFlagListener;
+    private ChangeListener<String> pointsEarnedListener;
+    private ChangeListener<Boolean> statementFocusListener;
+    private ChangeListener<Number> commentFullHeightListener;
+    private ChangeListener<Boolean> commentModifiedListener;
+    private ChangeListener<Boolean> commentFocusListener;
+    private ChangeListener<Boolean> aCheckBoxListener;
+    private ChangeListener<Boolean> bCheckBoxListener;
+    private ChangeListener<Number> explainFullHeightListener;
+    private ChangeListener<Boolean> explainModifiedListener;
+    private ChangeListener<Boolean> explainFocusListener;
+    private EventHandler<ActionEvent> undoButtonHandler;
+    private EventHandler<ActionEvent> redoButtonHandler;
+    private EventHandler<MouseEvent> thumbPaneClickHandler;
+
+    private boolean isRebuilding = false;
+    private boolean isUndoQueued = false;
+
 
     public VerticalTreeABExpExercise(VerticalTreeABExpModel model, MainWindow mainWindow) {
         this.mainWindow = mainWindow;
@@ -92,16 +122,24 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
 
         undoRedoFlag.set(false);
         undoRedoFlag.bind(verticalTreeABExpView.undoRedoFlagProperty());
-        undoRedoFlag.addListener((ob, ov, nv) -> {
+
+        undoRedoFlagListener = (ob, ov, nv) -> {
+            if (isTornDown || isRebuilding || mainView == null) return;
             if (nv) {
                 exerciseModified = true;
                 pushUndoRedo();
             }
-        });
+        };
+        undoRedoFlag.addListener(undoRedoFlagListener);
+
         VerticalTreeABExpModel deepCopy = (VerticalTreeABExpModel) SerializationUtils.clone(verticalTreeABExpModel);
         undoRedoList.push(deepCopy);
         updateUndoRedoButtons();
-        Platform.runLater(() -> exerciseModified = false);
+
+        Platform.runLater(() -> {
+            if (isTornDown || mainView == null) return;
+            exerciseModified = false;
+        });
     }
 
     private void setVerticalTreeView() {
@@ -116,41 +154,73 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
 
         verticalTreeABExpView.setPointsPossible(verticalTreeABExpModel.getPointsPossible());
         if (verticalTreeABExpModel.getPointsEarned() >= 0) verticalTreeABExpView.getPointsEarnedTextField().setText(Integer.toString(verticalTreeABExpModel.getPointsEarned()));
-        verticalTreeABExpView.getPointsEarnedTextField().textProperty().addListener((ob, ov, nv) -> {
+
+        pointsEarnedListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
             exerciseModified = true;
-        });
+        };
+        verticalTreeABExpView.getPointsEarnedTextField().textProperty().addListener(pointsEarnedListener);
 
         //Statement
         DecoratedRTA statementDRTA = new DecoratedRTA();
         RichTextArea statementEditor = statementDRTA.getEditor();
         statementEditor.getActionFactory().open(verticalTreeABExpModel.getExerciseStatement()).execute(new ActionEvent());
 
-        statementEditor.focusedProperty().addListener((o, ov, nv) -> {
-            if (nv) {
-                mainView.editorInFocus(statementDRTA, ControlType.STATEMENT);
-                mainView.getRTATextHeight(statementEditor);
-            }
-        });
+        mainView.editorInFocus(statementDRTA, ControlType.STATEMENT);
+
+        statementFocusListener = (o, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            try {
+                if (nv) {
+                    mainView.editorInFocus(statementDRTA, ControlType.STATEMENT);
+                    mainView.setRTATextHeight(statementEditor.getFullHeight());
+                }
+                else mainView.undoRTATextHeight();
+            } catch (Exception e) {}
+        };
+        statementEditor.focusedProperty().addListener(statementFocusListener);
         verticalTreeABExpView.setExerciseStatement(statementDRTA);
-        statementEditor.setPrefHeight(statementEditor.getFullHeight() + RTA_SCREEN_BMP);
 
         //comment
         DecoratedRTA commentDRTA = new DecoratedRTA();
         RichTextArea commentEditor = commentDRTA.getEditor();
         commentEditor.setPromptText("Comment: ");
         commentEditor.getActionFactory().open(verticalTreeABExpModel.getExerciseComment()).execute(new ActionEvent());
-        mainView.editorInFocus(commentDRTA, ControlType.AREA);
-        commentEditor.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            exerciseModified = true;
-            double commentTextHeight = mainView.getRTATextHeight(commentEditor);
-            verticalTreeABExpModel.setCommentTextHeight(commentTextHeight);
-        });
-        commentEditor.focusedProperty().addListener((o, ov, nv) -> {
-            if (nv) {
-                mainView.editorInFocus(commentDRTA, ControlType.AREA);
-                verticalTreeABExpModel.setCommentTextHeight(mainView.getRTATextHeight(commentEditor));
+        commentEditor.getActionFactory().saveNow().execute(new ActionEvent());
+
+        final boolean[] commentPrimed = {false};
+
+        commentFullHeightListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null || verticalTreeABExpModel == null) return;
+            if (!commentPrimed[0]) {
+                commentPrimed[0] = true;
+                return;
             }
-        });
+            double height = (double) nv;
+            mainView.setRTATextHeight(height);
+            verticalTreeABExpModel.setCommentTextHeight(height);
+        };
+        commentEditor.fullHeightProperty().addListener(commentFullHeightListener);
+
+        commentModifiedListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            if (nv) exerciseModified = true;
+        };
+        commentEditor.modifiedProperty().addListener(commentModifiedListener);
+
+        mainView.editorInFocus(commentDRTA, ControlType.AREA);
+
+        commentFocusListener = (o, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            try {
+                if (nv) {
+                    mainView.editorInFocus(commentDRTA, ControlType.AREA);
+                    mainView.setRTATextHeight(commentEditor.getFullHeight());
+                }
+                else mainView.undoRTATextHeight();
+            } catch (Exception e) {}
+        };
+        commentEditor.focusedProperty().addListener(commentFocusListener);
         verticalTreeABExpView.setExerciseComment(commentDRTA);
 
         //choices
@@ -159,45 +229,77 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
         CheckBox bCheckBox = verticalTreeABExpView.getbCheckBox();
         aCheckBox.setText(verticalTreeABExpModel.getaPrompt());
         aCheckBox.setSelected(verticalTreeABExpModel.isaSelected());
-        aCheckBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue ob, Boolean ov, Boolean nv) {
-                if (nv == true) bCheckBox.setSelected(false);
-                exerciseModified = true;
-            }
-        });
+
+        aCheckBoxListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null || bCheckBox == null) return;
+            if (nv) bCheckBox.setSelected(false);
+            exerciseModified = true;
+        };
+        aCheckBox.selectedProperty().addListener(aCheckBoxListener);
+
         bCheckBox.setText(verticalTreeABExpModel.getbPrompt());
         bCheckBox.setSelected(verticalTreeABExpModel.isbSelected());
-        bCheckBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue ob, Boolean ov, Boolean nv) {
-                if (nv == true) aCheckBox.setSelected(false);
-                exerciseModified = true;
-            }
-        });
+
+        bCheckBoxListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null || aCheckBox == null) return;
+            if (nv) aCheckBox.setSelected(false);
+            exerciseModified = true;
+        };
+        bCheckBox.selectedProperty().addListener(bCheckBoxListener);
 
         //explain
         DecoratedRTA explainDRTA = verticalTreeABExpView.getExplainDRTA();
         RichTextArea explainEditor = explainDRTA.getEditor();
         explainEditor.getActionFactory().open(verticalTreeABExpModel.getExplainDocument()).execute(new ActionEvent());
-        explainEditor.setPromptText("Explain:");
         explainEditor.getActionFactory().saveNow().execute(new ActionEvent());
-        mainView.editorInFocus(explainDRTA, ControlType.AREA);
-        explainEditor.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            exerciseModified = true;
-            double explainTextHeight = mainView.getRTATextHeight(explainEditor);
-            verticalTreeABExpModel.setExplainTextHeight(explainTextHeight);
-        });
-        explainEditor.focusedProperty().addListener((o, ov, nv) -> {
-            if (nv) {
-                mainView.editorInFocus(explainDRTA, ControlType.AREA);
-                verticalTreeABExpModel.setExplainTextHeight(mainView.getRTATextHeight(explainEditor));
+        explainEditor.setPromptText(verticalTreeABExpModel.getExplainPrompt());
+
+        final boolean[] explainPrimed = {false};
+
+        explainFullHeightListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null || verticalTreeABExpModel == null) return;
+            if (!explainPrimed[0]) {
+                explainPrimed[0] = true;
+                return;
             }
-        });
+            double height = (double) nv;
+            mainView.setRTATextHeight(height);
+            verticalTreeABExpModel.setExplainTextHeight(height);
+        };
+        explainEditor.fullHeightProperty().addListener(explainFullHeightListener);
+
+        explainModifiedListener = (ob, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            if (nv) exerciseModified = true;
+        };
+        explainEditor.modifiedProperty().addListener(explainModifiedListener);
+
+        mainView.editorInFocus(explainDRTA, ControlType.AREA);
+
+        explainFocusListener = (o, ov, nv) -> {
+            if (isTornDown || mainView == null) return;
+            try {
+                if (nv) {
+                    mainView.editorInFocus(explainDRTA, ControlType.AREA);
+                    mainView.setRTATextHeight(explainEditor.getFullHeight());
+                }
+                else mainView.undoRTATextHeight();
+            } catch (Exception e) {}
+        };
+        explainEditor.focusedProperty().addListener(explainFocusListener);
 
         //cleanup
-        verticalTreeABExpView.getUndoButton().setOnAction(e -> undoAction());
-        verticalTreeABExpView.getRedoButton().setOnAction(e -> redoAction());
+        undoButtonHandler = e -> {
+            if (isTornDown || mainView == null) return;
+            undoAction();
+        };
+        verticalTreeABExpView.getUndoButton().setOnAction(undoButtonHandler);
+
+        redoButtonHandler = e -> {
+            if (isTornDown || mainView == null) return;
+            redoAction();
+        };
+        verticalTreeABExpView.getRedoButton().setOnAction(redoButtonHandler);
 
         populateControlBox();
         for (DragIconType type : verticalTreeABExpModel.getDragIconList()) {
@@ -209,161 +311,178 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
     }
 
     private void populateMainPaneNodes() {
+        if (verticalTreeABExpView == null || verticalTreeABExpView.getRootLayout() == null) return;
         AnchorPane mainPane = verticalTreeABExpView.getRootLayout().getMain_pane();
-        mainPane.getChildren().clear();
 
-        for (VerticalBracketMod bracketMod : verticalTreeABExpModel.getVerticalBrackets()) {
-            ABExpVerticalBracket bracket = new ABExpVerticalBracket(verticalTreeABExpView);
-            mainPane.getChildren().add(bracket);
-            bracket.setLayoutX(bracketMod.getLayoutX());
-            bracket.setLayoutY(bracketMod.getLayoutY());
-            bracket.getMainPane().setPrefHeight(bracketMod.getHeight());
-        }
+        isRebuilding = true;
 
-        for (DashedLineMod dlMod : verticalTreeABExpModel.getDashedLineMods()) {
-            ABExpDashedLine dashedLine = new ABExpDashedLine(verticalTreeABExpView);
-            mainPane.getChildren().add(dashedLine);
-            dashedLine.setLayoutX(dlMod.getLayoutX());
-            dashedLine.setLayoutY(dlMod.getLayoutY());
-            dashedLine.getMainPane().setPrefWidth(dlMod.getWidth());
-        }
-
-        for (MapFormulaBoxMod mapBoxMod : verticalTreeABExpModel.getMapFormulaBoxes()) {
-            ABExpMapFormulaBox mapFormulaBox = new ABExpMapFormulaBox(verticalTreeABExpView);
-            mainPane.getChildren().add(mapFormulaBox);
-            mapFormulaBox.setLayoutX(mapBoxMod.getLayoutX());
-            mapFormulaBox.setLayoutY(mapBoxMod.getLayoutY());
-            mapFormulaBox.setIdString(mapBoxMod.getIdString());
-            mapFormulaBox.setmLinkIds(mapBoxMod.getLinkIdStrings());
-
-            mapFormulaBox.setPrintWidth(mapBoxMod.getPrintWidth());
-
-            BoxedDRTA formulaBox = mapFormulaBox.getFormulaBox();
-            RichTextArea mapBoxRTA = formulaBox.getRTA();
-//            mapBoxRTA.setPrefWidth(mapBoxMod.getWidth());
-            mapBoxRTA.getActionFactory().open(mapBoxMod.getText()).execute(new ActionEvent());
-            mapBoxRTA.getActionFactory().saveNow().execute(new ActionEvent());
-        }
-
-        for (TreeFormulaBoxMod treeBoxMod : verticalTreeABExpModel.getTreeFormulaBoxes()) {
-            ABExpTreeFormulaBox treeFormulaBox = new ABExpTreeFormulaBox(verticalTreeABExpView);
-            mainPane.getChildren().add(treeFormulaBox);
-            treeFormulaBox.setLayoutX(treeBoxMod.getLayoutX());
-            treeFormulaBox.setLayoutY(treeBoxMod.getLayoutY());
-            treeFormulaBox.setIdString(treeBoxMod.getIdString());
-            treeFormulaBox.setmLinkIds(treeBoxMod.getLinkIdStrings());
-
-            treeFormulaBox.setCircleIndexes(treeBoxMod.getCircleIndexes());
-            treeFormulaBox.setUlineIndexes(treeBoxMod.getUlineIndexes());
-            treeFormulaBox.setUlineInclusion(treeBoxMod.isUlineInclusion());
-
-            treeFormulaBox.setPrintWidth(treeBoxMod.getPrintWidth());
-
-            BoxedDRTA treeFormulaDRTA = treeFormulaBox.getFormulaBox();
-            RichTextArea treeBoxRTA = treeFormulaDRTA.getRTA();
-//            treeBoxRTA.setPrefWidth(treeBoxMod.getWidth());
-            treeBoxRTA.getActionFactory().open(treeBoxMod.getText()).execute(new ActionEvent());
-            treeBoxRTA.getActionFactory().saveNow().execute(new ActionEvent());
-
-
-            if (treeBoxMod.isBoxed()) treeFormulaBox.addBox();
-            if (treeBoxMod.isStarred()) treeFormulaBox.addStar();
-            if (treeBoxMod.isAnnotation()) {
-                treeFormulaBox.addAnnotation();
-                treeFormulaBox.setAnnotationDoc(treeBoxMod.getAnnotationDoc());
-            }
-            treeFormulaBox.setCircleXAnchors(treeBoxMod.getCircleXAnchors());
-            treeFormulaBox.setRtaBoundsHeight(treeBoxMod.getRtaBoundsHeight());
-            treeFormulaBox.setRtaBoundsMinY(treeBoxMod.getRtaBoundsMinY());
-            if (treeBoxMod.isCircled()) {
-                treeFormulaBox.setCircled(treeBoxMod.isCircled());
-                treeFormulaBox.setCircle();
-            }
-
-            for (UnderlineMod underlineMod : treeBoxMod.getUnderlineList()) {
-                treeFormulaBox.addLineToPane(underlineMod.getStartX(), underlineMod.getLength(), underlineMod.getyPos());
-            }
-            treeFormulaBox.setBaseline(treeBoxMod.getBaseline());
-        }
-
-        ObservableList<Node> nodesList = mainPane.getChildren();
-        for (ClickableNodeLinkMod nodeLinkMod : verticalTreeABExpModel.getClickableNodeLinks()) {
-            ABExpClickableNodeLink nodeLink = new ABExpClickableNodeLink(verticalTreeABExpView);
-            mainPane.getChildren().add(nodeLink);
-            nodeLink.setId(nodeLinkMod.getIdString());
-            ABExpTreeFormulaBox source = null;
-            ABExpTreeFormulaBox target = null;
-            for (Node node : nodesList) {
-                if (node instanceof ABExpTreeFormulaBox) {
-                    ABExpTreeFormulaBox treeBox = (ABExpTreeFormulaBox) node;
-                    if (treeBox.getIdString().equals(nodeLinkMod.getSourceId())) source = treeBox;
-                    if (treeBox.getIdString().equals(nodeLinkMod.getTargetId())) target = treeBox;
+        try {
+            // SCORCHED EARTH RULE 8: The Undo/Redo Rebuild Fix (Prevent CME)
+            if (mainPane.getChildren() != null) {
+                List<Node> childrenCopy = new ArrayList<>(mainPane.getChildren());
+                for (Node node : childrenCopy) {
+                    try {
+                        node.getClass().getMethod("cleanup").invoke(node);
+                    } catch (Exception e) {
+                    }
+                    severFromParent(node);
                 }
             }
-            if (source != null && target != null) {nodeLink.bindEnds(source, target); }
+            mainPane.getChildren().clear();
 
-        }
+            for (VerticalBracketMod bracketMod : verticalTreeABExpModel.getVerticalBrackets()) {
+                ABExpVerticalBracket bracket = new ABExpVerticalBracket(verticalTreeABExpView);
+                mainPane.getChildren().add(bracket);
+                bracket.setLayoutX(bracketMod.getLayoutX());
+                bracket.setLayoutY(bracketMod.getLayoutY());
+                bracket.getMainPane().setPrefHeight(bracketMod.getHeight());
+            }
 
-        for (MapQuestionMarkerMod mapQuestMod : verticalTreeABExpModel.getMapQuestionMarkers()) {
-            ABExpMapQuestionMarker mapQuestion = new ABExpMapQuestionMarker(verticalTreeABExpView);
-            mainPane.getChildren().add(mapQuestion);
-            mapQuestion.setId(mapQuestMod.getIdString());
+            for (DashedLineMod dlMod : verticalTreeABExpModel.getDashedLineMods()) {
+                ABExpDashedLine dashedLine = new ABExpDashedLine(verticalTreeABExpView);
+                mainPane.getChildren().add(dashedLine);
+                dashedLine.setLayoutX(dlMod.getLayoutX());
+                dashedLine.setLayoutY(dlMod.getLayoutY());
+                dashedLine.getMainPane().setPrefWidth(dlMod.getWidth());
+            }
 
-            for (Node node : nodesList) {
-                if (node instanceof ABExpMapFormulaBox) {
-                    ABExpMapFormulaBox mapBox = (ABExpMapFormulaBox) node;
-                    if (mapBox.getIdString().equals(mapQuestMod.getTargetId())) {
-                        mapBox.setMapStage(mapQuestMod.getTargetMapStage());
-                        mapBox.setMapXAnchors(mapQuestMod.getTargetXAnchors());
-                        mapQuestion.bindQuestionLabel(mapBox);
-                        mapBox.undoMappingRequest();
-                        break;
+            for (MapFormulaBoxMod mapBoxMod : verticalTreeABExpModel.getMapFormulaBoxes()) {
+                ABExpMapFormulaBox mapFormulaBox = new ABExpMapFormulaBox(verticalTreeABExpView);
+                mainPane.getChildren().add(mapFormulaBox);
+                mapFormulaBox.setLayoutX(mapBoxMod.getLayoutX());
+                mapFormulaBox.setLayoutY(mapBoxMod.getLayoutY());
+                mapFormulaBox.setIdString(mapBoxMod.getIdString());
+                mapFormulaBox.setmLinkIds(mapBoxMod.getLinkIdStrings());
+
+                mapFormulaBox.setPrintWidth(mapBoxMod.getPrintWidth());
+
+                BoxedDRTA formulaBox = mapFormulaBox.getFormulaBox();
+                RichTextArea mapBoxRTA = formulaBox.getRTA();
+                mapBoxRTA.getActionFactory().open(mapBoxMod.getText()).execute(new ActionEvent());
+                mapBoxRTA.getActionFactory().saveNow().execute(new ActionEvent());
+            }
+
+            for (TreeFormulaBoxMod treeBoxMod : verticalTreeABExpModel.getTreeFormulaBoxes()) {
+                ABExpTreeFormulaBox treeFormulaBox = new ABExpTreeFormulaBox(verticalTreeABExpView);
+                mainPane.getChildren().add(treeFormulaBox);
+                treeFormulaBox.setLayoutX(treeBoxMod.getLayoutX());
+                treeFormulaBox.setLayoutY(treeBoxMod.getLayoutY());
+                treeFormulaBox.setIdString(treeBoxMod.getIdString());
+                treeFormulaBox.setmLinkIds(treeBoxMod.getLinkIdStrings());
+
+                treeFormulaBox.setCircleIndexes(treeBoxMod.getCircleIndexes());
+                treeFormulaBox.setUlineIndexes(treeBoxMod.getUlineIndexes());
+                treeFormulaBox.setUlineInclusion(treeBoxMod.isUlineInclusion());
+
+                treeFormulaBox.setPrintWidth(treeBoxMod.getPrintWidth());
+
+                BoxedDRTA treeFormulaDRTA = treeFormulaBox.getFormulaBox();
+                RichTextArea treeBoxRTA = treeFormulaDRTA.getRTA();
+                treeBoxRTA.getActionFactory().open(treeBoxMod.getText()).execute(new ActionEvent());
+                treeBoxRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
+                if (treeBoxMod.isBoxed()) treeFormulaBox.addBox();
+                if (treeBoxMod.isStarred()) treeFormulaBox.addStar();
+                if (treeBoxMod.isAnnotation()) {
+                    treeFormulaBox.addAnnotation();
+                    treeFormulaBox.setAnnotationDoc(treeBoxMod.getAnnotationDoc());
+                }
+                treeFormulaBox.setCircleXAnchors(treeBoxMod.getCircleXAnchors());
+                treeFormulaBox.setRtaBoundsHeight(treeBoxMod.getRtaBoundsHeight());
+                treeFormulaBox.setRtaBoundsMinY(treeBoxMod.getRtaBoundsMinY());
+                if (treeBoxMod.isCircled()) {
+                    treeFormulaBox.setCircled(treeBoxMod.isCircled());
+                    treeFormulaBox.setCircle();
+                }
+
+                for (UnderlineMod underlineMod : treeBoxMod.getUnderlineList()) {
+                    treeFormulaBox.addLineToPane(underlineMod.getStartX(), underlineMod.getLength(), underlineMod.getyPos());
+                }
+                treeFormulaBox.setBaseline(treeBoxMod.getBaseline());
+            }
+
+            ObservableList<Node> nodesList = mainPane.getChildren();
+            for (ClickableNodeLinkMod nodeLinkMod : verticalTreeABExpModel.getClickableNodeLinks()) {
+                ABExpClickableNodeLink nodeLink = new ABExpClickableNodeLink(verticalTreeABExpView);
+                mainPane.getChildren().add(nodeLink);
+                nodeLink.setId(nodeLinkMod.getIdString());
+                ABExpTreeFormulaBox source = null;
+                ABExpTreeFormulaBox target = null;
+                for (Node node : nodesList) {
+                    if (node instanceof ABExpTreeFormulaBox) {
+                        ABExpTreeFormulaBox treeBox = (ABExpTreeFormulaBox) node;
+                        if (treeBox.getIdString().equals(nodeLinkMod.getSourceId())) source = treeBox;
+                        if (treeBox.getIdString().equals(nodeLinkMod.getTargetId())) target = treeBox;
+                    }
+                }
+                if (source != null && target != null) {
+                    nodeLink.bindEnds(source, target);
+                }
+
+            }
+
+            for (MapQuestionMarkerMod mapQuestMod : verticalTreeABExpModel.getMapQuestionMarkers()) {
+                ABExpMapQuestionMarker mapQuestion = new ABExpMapQuestionMarker(verticalTreeABExpView);
+                mainPane.getChildren().add(mapQuestion);
+                mapQuestion.setId(mapQuestMod.getIdString());
+
+                for (Node node : nodesList) {
+                    if (node instanceof ABExpMapFormulaBox) {
+                        ABExpMapFormulaBox mapBox = (ABExpMapFormulaBox) node;
+                        if (mapBox.getIdString().equals(mapQuestMod.getTargetId())) {
+                            mapBox.setMapStage(mapQuestMod.getTargetMapStage());
+                            mapBox.setMapXAnchors(mapQuestMod.getTargetXAnchors());
+                            mapQuestion.bindQuestionLabel(mapBox);
+                            mapBox.undoMappingRequest();
+                            break;
+                        }
                     }
                 }
             }
-        }
 
-        for (ClickableMapLinkMod mapLinkMod : verticalTreeABExpModel.getClickableMapLinks()) {
-            ABExpClickableMapLink mapLink = new ABExpClickableMapLink(verticalTreeABExpView);
-            mainPane.getChildren().add(0, mapLink);
-            mapLink.setId(mapLinkMod.getIdString());
+            for (ClickableMapLinkMod mapLinkMod : verticalTreeABExpModel.getClickableMapLinks()) {
+                ABExpClickableMapLink mapLink = new ABExpClickableMapLink(verticalTreeABExpView);
+                mainPane.getChildren().add(0, mapLink);
+                mapLink.setId(mapLinkMod.getIdString());
 
-            ABExpMapFormulaBox source = null;
-            ABExpMapFormulaBox target = null;
-            for (Node node : nodesList) {
-                if (node instanceof ABExpMapFormulaBox) {
-                    ABExpMapFormulaBox mapFormulaBox = (ABExpMapFormulaBox) node;
-                    if (mapFormulaBox.getIdString().equals(mapLinkMod.getSourceId())) {
-                        source = mapFormulaBox;
-                        source.setMapStage(mapLinkMod.getSourceMapStage());
-                        source.setMapXAnchors(mapLinkMod.getSourceXAnchors());
-                    }
-                    if (mapFormulaBox.getIdString().equals(mapLinkMod.getTargetId())) {
-                        target = mapFormulaBox;
-                        target.setMapStage(mapLinkMod.getTargetMapStage());
-                        target.setMapXAnchors(mapLinkMod.getTargetXAnchors());
+                ABExpMapFormulaBox source = null;
+                ABExpMapFormulaBox target = null;
+                for (Node node : nodesList) {
+                    if (node instanceof ABExpMapFormulaBox) {
+                        ABExpMapFormulaBox mapFormulaBox = (ABExpMapFormulaBox) node;
+                        if (mapFormulaBox.getIdString().equals(mapLinkMod.getSourceId())) {
+                            source = mapFormulaBox;
+                            source.setMapStage(mapLinkMod.getSourceMapStage());
+                            source.setMapXAnchors(mapLinkMod.getSourceXAnchors());
+                        }
+                        if (mapFormulaBox.getIdString().equals(mapLinkMod.getTargetId())) {
+                            target = mapFormulaBox;
+                            target.setMapStage(mapLinkMod.getTargetMapStage());
+                            target.setMapXAnchors(mapLinkMod.getTargetXAnchors());
+                        }
                     }
                 }
+                if (source != null && target != null) {
+                    mapLink.bindEnds(source, target);
+                    source.undoMappingRequest();
+                    target.undoMappingRequest();
+                }
             }
-            if (source != null && target != null) {
-                mapLink.bindEnds(source, target);
-                source.undoMappingRequest();
-                target.undoMappingRequest();
-            }
+        } finally {
+            isRebuilding = false;
         }
-
     }
 
     private void populateControlBox() {
+        if (verticalTreeABExpView == null || verticalTreeABExpView.getControlBox() == null) return;
         VBox controlBox = verticalTreeABExpView.getControlBox();
-        controlBox.setAlignment(Pos.TOP_LEFT);
+        controlBox.setAlignment(Pos.TOP_CENTER);
 
         ABExpRootLayout layout = verticalTreeABExpView.getRootLayout();
         ToggleGroup buttonGroup = verticalTreeABExpView.getRootLayout().getButtonGroup();
 
         for (ObjectControlType type : verticalTreeABExpModel.getObjectControlList()) {
             switch(type) {
-
                 case FORMULA_BOX: {
                     ToggleButton boxButton = layout.getBoxToggle();
                     controlBox.getChildren().add(boxButton);
@@ -385,7 +504,6 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
                 case ANNOTATION: {
                     controlBox.getChildren().add(layout.getAnnotationBox());
                     layout.getAnnotationToggle().setToggleGroup(buttonGroup);
-            //        controlBox.setMargin(layout.getAnnotationBox(), new Insets(20, 0, -15, 0));  //don't understand weird spacing this "papers over"
                     break;
                 }
                 case UNDERLINE: {
@@ -398,100 +516,142 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
                     ToggleButton mappingButton = layout.getMappingToggle();
                     controlBox.getChildren().add(mappingButton);
                     mappingButton.setToggleGroup(buttonGroup);
-                    controlBox.setMargin(mappingButton, new Insets(10, 0, 0, 0));  //don't understand spacing this "papers over"
+                    controlBox.setMargin(mappingButton, new Insets(10, 0, 0, 0));
                 }
             }
         }
 
         Platform.runLater(() -> {
+            if (isTornDown || mainView == null) return;
+            if (mainWindow != null && mainWindow.getCurrentExercise() != this) return;
             if (auxExerciseA != null) {
                 thumbPane = auxImage();
-                verticalTreeABExpView.getControlBox().getChildren().add(thumbPane);
+                if (verticalTreeABExpView != null && verticalTreeABExpView.getControlBox() != null) {
+                    verticalTreeABExpView.getControlBox().getChildren().add(thumbPane);
+                }
             }
         });
-
     }
 
     private Pane auxImage() {
-        AnchorPane mainPane = null;
         Pane thumbPane = new Pane();
-        if (auxExerciseA instanceof VTAuxExer) mainPane = ((VTAuxExer) auxExerciseA).getMainPane();
+        if (auxExerciseA != null && auxExerciseA.getAuxExerNode() != null)  {
 
-        if(mainPane != null) {
-            mainPane.setStyle("-fx-border-color: black; -fx-border-width: 1; -fx-background-color: FAFAFA;");
-            thumbPane.getChildren().add(mainPane);
+            thumbPane.setStyle("-fx-background-color: FAFAFA;");
+            Node auxExerNode = auxExerciseA.getAuxExerNode();
+            auxExerNode.setMouseTransparent(true);
+            auxExerNode.setFocusTraversable(false);
+            thumbPane.getChildren().add(auxExerNode);
 
             Group thumbRoot = new Group();
             Scene scene = new Scene(thumbRoot);
             thumbRoot.getChildren().add(thumbPane);
             thumbRoot.applyCss();
             thumbRoot.layout();
-            double scale = 85.0 / mainPane.getLayoutBounds().getWidth();   //
+            double thumbWidth = thumbPane.getLayoutBounds().getWidth();
+            double scale = thumbWidth > 0 ? 85.0 / thumbWidth : .16;
+
+
+            Rectangle clip = new Rectangle();
+            clip.setWidth(800);
+            clip.setHeight(400);
+            thumbPane.setClip(clip);
 
             thumbPane.getTransforms().clear();
             thumbPane.getTransforms().add(new Scale(scale, scale));
-            thumbPane.setMaxWidth(85);
 
+            thumbPaneClickHandler = event -> {
+                if (isTornDown || mainView == null || auxExerciseB == null) return;
 
-            thumbPane.setOnMouseClicked(event -> {
                 if (tStage == null || !tStage.isShowing()) {
-                    Pane tPane = null;
-                    if (auxExerciseB instanceof VTAuxExer) tPane = ((VTAuxExer) auxExerciseB).getMainPane();
+                    Pane pane1 = new Pane(auxExerciseB.getAuxExerNode());
+                    pane1.setDisable(true);
 
-                    if (tPane != null) {
-                        tScene.setRoot(tPane);
-                        tPane.setDisable(true);
-                        tPane.applyCss();
-                        tPane.layout();
+                    pane1.setId("aux-pane");
+                    String css = "#aux-pane { -fx-opacity: 0.85; } \n" +
+                            "#aux-pane * { -fx-opacity: 1.0; } \n" +
+                            "#aux-pane .caret { -fx-opacity: 0.0; }";
+                    String cssUri = "data:text/css;base64," +
+                            java.util.Base64.getEncoder().encodeToString(css.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    pane1.getStylesheets().add(cssUri);
 
-                        tStage = new Stage();
-                        tStage.setScene(tScene);
-                        tStage.setTitle(((ExerciseModel) auxExerciseB.getExerciseModel()).getExerciseName());
-                        tStage.initStyle(StageStyle.UTILITY);
+                    Pane spacerPane = new Pane();
+                    spacerPane.prefHeightProperty().bind(pane1.heightProperty());
+                    spacerPane.prefWidthProperty().bind(pane1.widthProperty());
+                    Group group = new Group(spacerPane);
+                    AnchorPane comboPane = new AnchorPane(group, pane1);
+                    ScrollPane tPane = new ScrollPane(comboPane);
+                    tPane.setFitToHeight(false);
+                    tPane.setFitToWidth(false);
 
-                        tStage.initOwner(EditorMain.mainStage);
-                        tStage.initModality(Modality.NONE);
-                        Stage mainStage = EditorMain.mainStage;
-                        tStage.setX(mainStage.getX() + mainStage.getWidth()  - 500);
-                        tStage.setY(mainStage.getY() + mainStage.getHeight()  - 300);
-                        tStage.show();
+                    tScene.setRoot(tPane);
+                    tPane.applyCss();
+                    tPane.layout();
 
-                        //           tStage.setX(mainStage.getX() + mainStage.getWidth() - tStage.getWidth() + 50);
-                        //          tStage.setY(mainStage.getY() + mainStage.getHeight() - tStage.getHeight() + 50);
-                        Platform.runLater(() -> {
-                            tStage.sizeToScene();
-                            tStage.setX(mainStage.getX() + mainStage.getWidth() - tStage.getWidth() + 50);
-                            tStage.setY(mainStage.getY() + mainStage.getHeight() - tStage.getHeight() + 50);
+                    tStage = new Stage();
+                    tStage.setScene(tScene);
+                    tStage.setTitle(((ExerciseModel) auxExerciseB.getExerciseModel()).getExerciseName());
+                    tStage.initStyle(StageStyle.UTILITY);
 
-                        });
-                    }
+             //       tStage.initOwner(EditorMain.mainStage);
+                    tStage.initModality(Modality.NONE);
+                    Stage mainStage = EditorMain.mainStage;
+                    tStage.setX(mainStage.getX() + mainStage.getWidth()  - 500);
+                    tStage.setY(mainStage.getY() + mainStage.getHeight()  - 300);
+
+                    tStage.setWidth(pane1.getWidth() + RTA_WIDTH_BMP);
+                    tStage.setHeight(Math.min(mainStage.getHeight() - 100, pane1.getHeight() + RTA_SCREEN_BMP + 25));
+
+                    tStage.show();
+
+                    Platform.runLater(() -> {
+                        if (isTornDown || mainView == null || tStage == null) return;
+                        double prefX = mainStage.getX() + mainStage.getWidth() - tStage.getWidth() + 50;
+                        double prefY = mainStage.getY() + mainStage.getHeight() - tStage.getHeight()+ 50;
+                        Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
+
+                        tStage.setX(Math.min(prefX, bounds.getMaxX() - tStage.getWidth()));
+                        tStage.setY(Math.min(prefY, bounds.getMaxY() - tStage.getHeight()));
+                    });
+
                 } else {
                     tStage.close();
                 }
-            });
-
+            };
+            thumbPane.setOnMouseClicked(thumbPaneClickHandler);
         }
-
         return thumbPane;
     }
 
     public void handleMouseEvent(MouseEvent event) {
+        if (isTornDown || mainView == null || verticalTreeABExpView == null || verticalTreeABExpView.getRootLayout() == null) return;
 
         ObservableList<Node> nodesList = verticalTreeABExpView.getRootLayout().getMain_pane().getChildren();
         for (Node node : nodesList) {
-            if (node instanceof TreeFormulaBox) {
-                RichTextArea treeRTA = ((TreeFormulaBox) node).getFormulaBox().getRTA();
-                if (treeRTA.isModified()) {
+            if (node instanceof ABExpTreeFormulaBox) {
+                ABExpTreeFormulaBox treeBox = (ABExpTreeFormulaBox) node;
+                RichTextArea treeRTA = treeBox.getFormulaBox().getRTA();
+                if (treeRTA != null && treeRTA.isModified()) {
                     verticalTreeABExpView.getVtABExpExercise().setExerciseModified(true);
                     verticalTreeABExpView.getVtABExpExercise().pushUndoRedo();
                     treeRTA.getActionFactory().saveNow().execute(new ActionEvent());
                 }
+                if (treeBox.isAnnotation() && treeBox.getAnnotationField() != null) {
+                    RichTextArea annRTA = treeBox.getAnnotationField().getRTA();
+                    if (annRTA != null && annRTA.isModified()) {
+                        verticalTreeABExpView.getVtABExpExercise().setExerciseModified(true);
+                        verticalTreeABExpView.getVtABExpExercise().pushUndoRedo();
+                        annRTA.getActionFactory().saveNow().execute(new ActionEvent());
+                    }
+                }
             }
-            if (node instanceof MapFormulaBox) {
-                RichTextArea mapRTA = ((MapFormulaBox) node).getFormulaBox().getRTA();
-                if (mapRTA.isModified()) {
-                    verticalTreeABExpView.getVtABExpExercise().setExerciseModified(true);
-                    verticalTreeABExpView.getVtABExpExercise().pushUndoRedo();
+            if (node instanceof ABExpMapFormulaBox) {
+                RichTextArea mapRTA = ((ABExpMapFormulaBox) node).getFormulaBox().getRTA();
+                if (mapRTA != null && mapRTA.isModified()) {
+                    if (verticalTreeABExpView.getVtABExpExercise() != null) {
+                        verticalTreeABExpView.getVtABExpExercise().setExerciseModified(true);
+                        verticalTreeABExpView.getVtABExpExercise().pushUndoRedo();
+                    }
                     mapRTA.getActionFactory().saveNow().execute(new ActionEvent());
                 }
             }
@@ -500,6 +660,7 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
 
 
     private void undoAction() {
+        if (isTornDown || undoRedoList == null) return;
         VerticalTreeABExpModel undoElement = undoRedoList.getUndoElement();
         if (undoElement != null) {
             verticalTreeABExpModel = (VerticalTreeABExpModel) SerializationUtils.clone(undoElement);
@@ -509,6 +670,7 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
     }
 
     private void redoAction() {
+        if (isTornDown || undoRedoList == null) return;
         VerticalTreeABExpModel redoElement = undoRedoList.getRedoElement();
         if (redoElement != null) {
             verticalTreeABExpModel = (VerticalTreeABExpModel) SerializationUtils.clone(redoElement);
@@ -518,17 +680,46 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
     }
 
     private void updateUndoRedoButtons() {
-        verticalTreeABExpView.getUndoButton().setDisable(!undoRedoList.canUndo());
-        verticalTreeABExpView.getRedoButton().setDisable(!undoRedoList.canRedo());
+        if (verticalTreeABExpView == null || undoRedoList == null) return;
+        if (verticalTreeABExpView.getUndoButton() != null) verticalTreeABExpView.getUndoButton().setDisable(!undoRedoList.canUndo());
+        if (verticalTreeABExpView.getRedoButton() != null) verticalTreeABExpView.getRedoButton().setDisable(!undoRedoList.canRedo());
     }
 
     public void pushUndoRedo() {
+        if (isTornDown || isRebuilding || undoRedoList == null || verticalTreeABExpModel == null) return;
+
+        exerciseModified = true;
+
+        // DEBOUNCER: If a loop triggers multiple saves in the same frame, group them
+        if (!isUndoQueued) {
+            isUndoQueued = true; // Lock the queue
+
+            // Queue the actual save for the end of the current JavaFX frame
+            Platform.runLater(() -> {
+                isUndoQueued = false; // Release the lock
+
+                // Double check teardown/rebuild status after the delay
+                if (isTornDown || isRebuilding || undoRedoList == null || verticalTreeABExpModel == null) return;
+
+                VerticalTreeABExpModel model = getVerticalTreeModelFromView();
+                VerticalTreeABExpModel deepCopy = (VerticalTreeABExpModel) SerializationUtils.clone(model);
+                undoRedoList.push(deepCopy);
+                updateUndoRedoButtons();
+            });
+        }
+    }
+
+
+    /*
+    public void pushUndoRedo() {
+        if (undoRedoList == null || isRebuilding || verticalTreeABExpModel == null) return;
         VerticalTreeABExpModel model = getVerticalTreeModelFromView();
         VerticalTreeABExpModel deepCopy = (VerticalTreeABExpModel) SerializationUtils.clone(model);
         undoRedoList.push(deepCopy);
         updateUndoRedoButtons();
         exerciseModified = true;
     }
+     */
 
 
     @Override
@@ -553,9 +744,15 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
         //header node
         Label exerciseName = new Label(printModel.getExerciseName());
         exerciseName.setStyle("-fx-font-weight: bold;");
-        Region spacer = new Region();
 
-        HBox hbox = new HBox(exerciseName, spacer, printCheckNode());
+
+        Region spacer = new Region();
+        Label pointsLabel = new Label("");
+        if (printModel.getPointsPossible() > 0)
+            pointsLabel.setText("   " + Integer.toString(printModel.getPointsEarned()) + "/" + Integer.toString(printModel.getPointsPossible()));
+
+        HBox hbox = new HBox(exerciseName, spacer, printCheckNode(), pointsLabel);
+        hbox.setAlignment(Pos.CENTER_LEFT);
         hbox.setHgrow(spacer, Priority.ALWAYS);
         hbox.setPadding(new Insets(0,0,10,0));
         hbox.setMinWidth(nodeWidth);
@@ -610,8 +807,6 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
                 if (treeBox.getAnnotationField() != null) treeBox.getAnnotationField().getRTA().setStyle("-fx-border-width: 0; -fx-border-color: transparent");
             }
 
-
-
             if (node instanceof ABExpMapFormulaBox) {
                 ABExpMapFormulaBox mapBox = (ABExpMapFormulaBox) node;
                 mapBox.getFormulaBox().getRTA().setStyle("-fx-border-width: 0; -fx-border-color: transparent");
@@ -643,11 +838,12 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
         explanationRTA.prefHeightProperty().unbind();
         explanationRTA.minWidthProperty().unbind();
         explanationRTA.maxWidthProperty().unbind();
-        explanationRTA.setPrefHeight(Math.max(40, printModel.getCommentTextHeight() + RTA_PRINT_BMP));
+        explanationRTA.setPrefHeight(Math.max(40, printModel.getExplainTextHeight() + RTA_PRINT_BMP));
         explanationRTA.setMaxWidth(nodeWidth);
         explanationRTA.setMinWidth(nodeWidth);
 
-        explanationRTA.getStylesheets().clear(); statementRTA.getStylesheets().add("richTextAreaPrinter.css");
+        explanationRTA.getStylesheets().clear();
+        explanationRTA.getStylesheets().add("richTextAreaPrinter.css");
         nodeList.add(explanationRTA);
 
         Separator contentSeparator = new Separator(Orientation.HORIZONTAL);
@@ -664,24 +860,14 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
         commentRTA.minWidthProperty().unbind();
         commentRTA.maxWidthProperty().unbind();
         commentRTA.setPrefHeight(Math.max(40, printModel.getCommentTextHeight() + RTA_PRINT_BMP));
+
         commentRTA.setMaxWidth(nodeWidth);
         commentRTA.setMinWidth(nodeWidth);
 
         commentRTA.getStylesheets().clear(); commentRTA.getStylesheets().add("richTextAreaPrinter.css");
 
-        Node commentNode;
-        if (printModel.getPointsPossible() > 0) {
-            Label pointsLabel = new Label(Integer.toString(printModel.getPointsEarned()) + "/" + Integer.toString(printModel.getPointsPossible()));
-            AnchorPane anchorPane = new AnchorPane(commentRTA, pointsLabel);
-            anchorPane.setTopAnchor(commentRTA, 0.0);
-            anchorPane.setLeftAnchor(commentRTA, 0.0);
-            anchorPane.setBottomAnchor(pointsLabel, 3.0);
-            anchorPane.setRightAnchor(pointsLabel, 3.0);
-       //     anchorPane.setPrefHeight(printModel.getCommentTextHeight() + 35);
-            commentNode = anchorPane;
-        }
-        else commentNode = commentRTA;
-        nodeList.add(commentNode);
+
+        nodeList.add(commentRTA);
 
         return nodeList;
     }
@@ -689,7 +875,7 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
     TextFlow printCheckNode() {
         TextFlow flow = new TextFlow();
         flow.setMaxWidth(200);
-        if (vtABExpCheck.isCheckSuccess()) {
+        if (vtABExpCheck != null && vtABExpCheck.isCheckSuccess()) {
             Text bigCheck = new Text("\ue89a");
             bigCheck.setFont(Font.font("Noto Serif Combo", 14));
             Text message = new Text("  " + verticalTreeABExpView.getCheckMessage());
@@ -710,17 +896,33 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
 
     @Override
     public Exercise<VerticalTreeABExpModel, VerticalTreeABExpView> resetExercise() {
+        if (verticalTreeABExpView == null) return null;
         RichTextArea commentRTA = verticalTreeABExpView.getExerciseComment().getEditor();
         commentRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document commentDocument = commentRTA.getDocument();
+
+
         int pointsEarned = -1;
-        if (!verticalTreeABExpView.getPointsEarnedTextField().getText().equals("")) pointsEarned = Integer.parseInt(verticalTreeABExpView.getPointsEarnedTextField().getText());
+        TextField pointsField = verticalTreeABExpView.getPointsEarnedTextField();
+        if ((pointsField.isFocused() || verticalTreeABExpModel.getPointsEarned() >= 0) && pointsField.getText().isEmpty()) {
+            pointsField.setText("0");
+        }
+        if (!pointsField.getText().equals("")) pointsEarned = Integer.parseInt(pointsField.getText());
+
+
+
         VerticalTreeABExpModel originalModel = (VerticalTreeABExpModel) (verticalTreeABExpModel.getOriginalModel());
         originalModel.setExerciseComment(commentDocument);
+
+        double commentHeight = commentRTA.getFullHeight();
+        originalModel.setCommentTextHeight(commentHeight > 0 ? commentHeight : verticalTreeABExpModel.getCommentTextHeight());
+
         originalModel.setPointsEarned(pointsEarned);
 
         VTcheckSetup setup = originalModel.getCheckSetup();
-        setup.setCheckTries(vtABExpCheck.getCheckTries());
+        if (vtABExpCheck != null) {
+            setup.setCheckTries(vtABExpCheck.getCheckTries());
+        }
         setup.setCheckSuccess(false);
         setup.setChoiceSuccess(false);
         originalModel.setCheckSetup(setup);
@@ -731,17 +933,27 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
 
     @Override
     public boolean isExerciseModified() {
+        if (verticalTreeABExpView == null) return false;
+
         RichTextArea commentEditor = verticalTreeABExpView.getExerciseComment().getEditor();
         if (commentEditor.isModified()) {   exerciseModified = true;      }
 
-        RichTextArea explanationEditor = verticalTreeABExpView.getExplainDRTA().getEditor();
-        if (explanationEditor.isModified()) exerciseModified = true;
+        if (verticalTreeABExpView.getExplainDRTA() != null) {
+            RichTextArea explanationEditor = verticalTreeABExpView.getExplainDRTA().getEditor();
+            if (explanationEditor.isModified()) exerciseModified = true;
+        }
 
+        if (verticalTreeABExpView.getRootLayout() == null || verticalTreeABExpView.getRootLayout().getMain_pane() == null) return exerciseModified;
         ObservableList<Node> nodes = verticalTreeABExpView.getRootLayout().getMain_pane().getChildren();
         for (Node node : nodes) {
             if (node instanceof ABExpTreeFormulaBox) {
                 ABExpTreeFormulaBox treeBox = (ABExpTreeFormulaBox) node;
                 if (treeBox.getFormulaBox().getRTA().isModified()) exerciseModified = true;
+
+                if (treeBox.isAnnotation() && treeBox.getAnnotationField() != null) {
+                    RichTextArea annRTA = treeBox.getAnnotationField().getRTA();
+                    if (annRTA != null && annRTA.isModified()) exerciseModified = true;
+                }
             }
             if (node instanceof ABExpMapFormulaBox) {
                 ABExpMapFormulaBox mapBox = (ABExpMapFormulaBox) node;
@@ -753,6 +965,7 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
 
     @Override
     public void setExerciseModified(boolean modified) { exerciseModified = modified; }
+
     @Override
     public Node getFFViewNode() {return null;}
     @Override
@@ -761,6 +974,7 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
     public Spinner getFFHeightSpinner() {return null;}
     @Override
     public Spinner getFFWidthSpinner() {return null;}
+
     @Override
     public ExerciseModel<VerticalTreeABExpModel> getExerciseModelFromView() {
         return (ExerciseModel) getVerticalTreeModelFromView();
@@ -787,30 +1001,29 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
         VTcheckSetup checkSetup = verticalTreeABExpModel.getCheckSetup();
         if (vtABExpCheck != null) checkSetup.setCheckTries(vtABExpCheck.getCheckTries());
         if (vtABExpCheck != null) checkSetup.setCheckSuccess(vtABExpCheck.isCheckSuccess());
-   //     if (vtABExpCheck != null) checkSetup.setChoiceSuccess(vtABExpCheck.isChoiceSuccess());
-        if (vtABExpCheck != null) checkSetup.setCheckMessage(verticalTreeABExpView.getCheckMessage());
+        if (vtABExpCheck != null && verticalTreeABExpView != null) checkSetup.setCheckMessage(verticalTreeABExpView.getCheckMessage());
         model.setCheckSetup(checkSetup);
 
         model.setStatementPrefHeight(verticalTreeABExpView.getExerciseStatement().getEditor().getPrefHeight());
         model.setCommentPrefHeight(verticalTreeABExpView.getCommentPrefHeight());
         model.setExplainPrefHeight(verticalTreeABExpView.getExplainPrefHeight());
-        model.setStatementTextHeight(verticalTreeABExpModel.getStatementTextHeight());
-        model.setCommentTextHeight(verticalTreeABExpModel.getCommentTextHeight());
-        model.setExplainTextHeight(verticalTreeABExpModel.getExplainTextHeight());
         model.setExerciseStatement(verticalTreeABExpModel.getExerciseStatement());
 
         model.setMainPanePrefHeight(verticalTreeABExpView.getMainPanePrefHeight());
         model.setMainPanePrefWidth(verticalTreeABExpView.getRootLayout().getMain_pane().getWidth());
 
-
-
         RichTextArea commentRTA = verticalTreeABExpView.getExerciseComment().getEditor();
         commentRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExerciseComment(commentRTA.getDocument());
+        double commentTextHeight = commentRTA.getFullHeight();
+        model.setCommentTextHeight(commentTextHeight > 0 ? commentTextHeight : verticalTreeABExpModel.getCommentTextHeight());
+
 
         RichTextArea explainRTA = verticalTreeABExpView.getExplainDRTA().getEditor();
         explainRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExplainDocument(explainRTA.getDocument());
+        double explainTextHeight = explainRTA.getFullHeight();
+        model.setExplainTextHeight(explainTextHeight > 0 ? explainTextHeight : verticalTreeABExpModel.getExplainTextHeight());
 
         ABExpRootLayout rootLayout = verticalTreeABExpView.getRootLayout();
         AnchorPane mainPane = rootLayout.getMain_pane();
@@ -833,7 +1046,6 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
                 BoxedDRTA treeFormulaBox = originalTreeBox.getFormulaBox();
                 RichTextArea treeRTA = treeFormulaBox.getRTA();
                 newTreeMod.setPrintWidth(treeRTA.getPrefWidth());
-
 
                 treeRTA.getActionFactory().saveNow().execute(new ActionEvent());
                 newTreeMod.setText(treeRTA.getDocument());
@@ -904,22 +1116,224 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
                 ABExpMapQuestionMarker mapQuest = (ABExpMapQuestionMarker) node;
                 MapQuestionMarkerMod qMod = new MapQuestionMarkerMod(mapQuest.getIdString(), mapQuest.getTargetId(), mapQuest.getTargetMapStage(), mapQuest.getTargetXAnchors());
                 model.getMapQuestionMarkers().add(qMod);
-            }  
+            }
         }
 
         model.setPointsPossible(verticalTreeABExpModel.getPointsPossible());
-        if (!verticalTreeABExpView.getPointsEarnedTextField().getText().equals("")) model.setPointsEarned(Integer.parseInt(verticalTreeABExpView.getPointsEarnedTextField().getText()));
+        TextField pointsField = verticalTreeABExpView.getPointsEarnedTextField();
+        if ((pointsField.isFocused() || verticalTreeABExpModel.getPointsEarned() >= 0) && pointsField.getText().isEmpty()) {
+            pointsField.setText("0");
+        }
+        if (!pointsField.getText().equals("")) model.setPointsEarned(Integer.parseInt(pointsField.getText()));
         else model.setPointsEarned(-1);
 
         return model;
     }
+
     public MainWindow getMainWindow() {
         return mainWindow;
     }
 
+    // SCORCHED EARTH RULE 6: Sever Shared Nodes helper
+    private void severFromParent(Node node) {
+        try {
+            if (node != null && node.getParent() != null) {
+                if (node.getParent() instanceof javafx.scene.layout.Pane) ((javafx.scene.layout.Pane) node.getParent()).getChildren().remove(node);
+                else if (node.getParent() instanceof javafx.scene.Group) ((javafx.scene.Group) node.getParent()).getChildren().remove(node);
+            }
+        } catch (Exception e) {}
+    }
+
+    // SCORCHED EARTH RULE 5: The Rule of Isolation
+
+    @Override
+    public void cleanup() {
+        // SCORCHED EARTH RULE 1: Engage Kill Switch
+        isTornDown = true;
+
+        // SCORCHED EARTH RULE 2: No Global Null-Poisoning
+        try {
+            if (mainView != null) {
+                mainView.textFieldInFocus(); // Remove toolbars for RTAs safely
+            }
+        } catch (Exception e) {}
+
+        // 1. Unbind local properties and remove isolated listeners
+        try { if (undoRedoFlag != null && undoRedoFlagListener != null) undoRedoFlag.removeListener(undoRedoFlagListener); } catch (Exception e) {}
+        try { if (undoRedoFlag != null) undoRedoFlag.unbind(); } catch (Exception e) {}
+
+        try { if (verticalTreeABExpView != null && verticalTreeABExpView.localScalePageHeightProperty() != null) verticalTreeABExpView.localScalePageHeightProperty().unbind(); } catch (Exception e) {}
+        try { if (verticalTreeABExpView != null && verticalTreeABExpView.localScalePageWidthProperty() != null) verticalTreeABExpView.localScalePageWidthProperty().unbind(); } catch (Exception e) {}
+
+        try {
+            if (mainView != null && mainView.getMainScene() != null && verticalTreeABExpView != null && verticalTreeABExpView.getExerciseFocusListener() != null) {
+                mainView.getMainScene().focusOwnerProperty().removeListener(verticalTreeABExpView.getExerciseFocusListener());
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (verticalTreeABExpView != null && verticalTreeABExpView.getPointsEarnedTextField() != null && pointsEarnedListener != null) {
+                verticalTreeABExpView.getPointsEarnedTextField().textProperty().removeListener(pointsEarnedListener);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (verticalTreeABExpView != null && verticalTreeABExpView.getaCheckBox() != null && aCheckBoxListener != null) {
+                verticalTreeABExpView.getaCheckBox().selectedProperty().removeListener(aCheckBoxListener);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (verticalTreeABExpView != null && verticalTreeABExpView.getbCheckBox() != null && bCheckBoxListener != null) {
+                verticalTreeABExpView.getbCheckBox().selectedProperty().removeListener(bCheckBoxListener);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (verticalTreeABExpView != null && verticalTreeABExpView.getExerciseStatement() != null && verticalTreeABExpView.getExerciseStatement().getEditor() != null) {
+                if (statementFocusListener != null) verticalTreeABExpView.getExerciseStatement().getEditor().focusedProperty().removeListener(statementFocusListener);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (verticalTreeABExpView != null && verticalTreeABExpView.getExerciseComment() != null && verticalTreeABExpView.getExerciseComment().getEditor() != null) {
+                if (commentFullHeightListener != null) verticalTreeABExpView.getExerciseComment().getEditor().fullHeightProperty().removeListener(commentFullHeightListener);
+                if (commentModifiedListener != null) verticalTreeABExpView.getExerciseComment().getEditor().modifiedProperty().removeListener(commentModifiedListener);
+                if (commentFocusListener != null) verticalTreeABExpView.getExerciseComment().getEditor().focusedProperty().removeListener(commentFocusListener);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (verticalTreeABExpView != null && verticalTreeABExpView.getExplainDRTA() != null && verticalTreeABExpView.getExplainDRTA().getEditor() != null) {
+                if (explainFullHeightListener != null) verticalTreeABExpView.getExplainDRTA().getEditor().fullHeightProperty().removeListener(explainFullHeightListener);
+                if (explainModifiedListener != null) verticalTreeABExpView.getExplainDRTA().getEditor().modifiedProperty().removeListener(explainModifiedListener);
+                if (explainFocusListener != null) verticalTreeABExpView.getExplainDRTA().getEditor().focusedProperty().removeListener(explainFocusListener);
+            }
+        } catch (Exception e) {}
+
+        // ---> SCORCHED EARTH RULE 4: Isolate the Skin Hammer (DEFERRED TO VIEW) <---
+        try {
+            if (verticalTreeABExpView != null) {
+                final RichTextArea stEditor = (verticalTreeABExpView.getExerciseStatement() != null) ? verticalTreeABExpView.getExerciseStatement().getEditor() : null;
+                final RichTextArea commEditor = (verticalTreeABExpView.getExerciseComment() != null) ? verticalTreeABExpView.getExerciseComment().getEditor() : null;
+                final RichTextArea expEditor = (verticalTreeABExpView.getExplainDRTA() != null) ? verticalTreeABExpView.getExplainDRTA().getEditor() : null;
+
+                try { if (stEditor != null) { stEditor.prefHeightProperty().unbind(); stEditor.minWidthProperty().unbind(); stEditor.maxWidthProperty().unbind(); } } catch (Exception ex) {}
+                try { if (commEditor != null) { commEditor.prefHeightProperty().unbind(); commEditor.minWidthProperty().unbind(); commEditor.maxWidthProperty().unbind(); } } catch (Exception ex) {}
+                try { if (expEditor != null) { expEditor.prefHeightProperty().unbind(); expEditor.minWidthProperty().unbind(); expEditor.maxWidthProperty().unbind(); } } catch (Exception ex) {}
+            }
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 8: Safely destroy sub-components
+        try {
+            if (verticalTreeABExpView != null && verticalTreeABExpView.getRootLayout() != null && verticalTreeABExpView.getRootLayout().getMain_pane() != null) {
+                AnchorPane mainPane = verticalTreeABExpView.getRootLayout().getMain_pane();
+                if (mainPane.getChildren() != null) {
+                    List<Node> childrenCopy = new ArrayList<>(mainPane.getChildren());
+                    for (Node node : childrenCopy) {
+                        try { node.getClass().getMethod("cleanup").invoke(node); } catch (Exception ex) {}
+                        severFromParent(node);
+                    }
+                    mainPane.getChildren().clear();
+                }
+            }
+        } catch (Exception e) {}
+
+        // ---> 4. DISMANTLE THE UI TREE <---
+        try {
+            if (verticalTreeABExpView != null) {
+                if (verticalTreeABExpView.getControlBox() != null) {
+                    severFromParent(verticalTreeABExpView.getControlBox());
+                    verticalTreeABExpView.getControlBox().getChildren().clear();
+                }
+                if (verticalTreeABExpView.getUndoButton() != null) {
+                    if (undoButtonHandler != null) verticalTreeABExpView.getUndoButton().removeEventHandler(ActionEvent.ACTION, undoButtonHandler);
+                    verticalTreeABExpView.getUndoButton().setOnAction(null);
+                }
+                if (verticalTreeABExpView.getRedoButton() != null) {
+                    if (redoButtonHandler != null) verticalTreeABExpView.getRedoButton().removeEventHandler(ActionEvent.ACTION, redoButtonHandler);
+                    verticalTreeABExpView.getRedoButton().setOnAction(null);
+                }
+                if (verticalTreeABExpView.getaCheckBox() != null) verticalTreeABExpView.getaCheckBox().setOnAction(null);
+                if (verticalTreeABExpView.getbCheckBox() != null) verticalTreeABExpView.getbCheckBox().setOnAction(null);
+                if (verticalTreeABExpView.getCheckButton() != null) verticalTreeABExpView.getCheckButton().setOnAction(null);
+                if (verticalTreeABExpView.getCheckProgButton() != null) verticalTreeABExpView.getCheckProgButton().setOnAction(null);
+                if (verticalTreeABExpView.getstaticHelpButton() != null) verticalTreeABExpView.getstaticHelpButton().setOnAction(null);
+            }
+        } catch (Exception e) {}
+
+        try {
+            if (thumbPane != null) {
+                if (thumbPaneClickHandler != null) thumbPane.removeEventHandler(MouseEvent.MOUSE_CLICKED, thumbPaneClickHandler);
+                thumbPane.setOnMouseClicked(null);
+                thumbPane.getChildren().clear();
+                severFromParent(thumbPane);
+            }
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 10: NON-DESTRUCTIVE Data Teardown
+        try {
+            if (undoRedoList != null) {
+                undoRedoList = null;
+            }
+        } catch (Exception e) {}
+
+        // 5. Clear OS-level popups
+        try { clearStandingPopups(); } catch (Exception e) {}
+
+        // 6. Cascade cleanup to auxiliary exercises
+        try { if (auxExerciseA != null) auxExerciseA.cleanup(); } catch (Exception e) {}
+        try { if (auxExerciseB != null) auxExerciseB.cleanup(); } catch (Exception e) {}
+
+        // 7. Tell View & Check to specifically clean up
+        try { if (verticalTreeABExpView != null) verticalTreeABExpView.cleanup(); } catch (Exception e) {}
+        try { if (vtABExpCheck != null) vtABExpCheck.cleanup(); } catch (Exception e) {}
+
+        // 8. Final severed ties
+        try { this.mainWindow = null; } catch (Exception e) {}
+        try { this.mainView = null; } catch (Exception e) {}
+        try { this.verticalTreeABExpModel = null; } catch (Exception e) {}
+        try { this.verticalTreeABExpView = null; } catch (Exception e) {}
+        try { this.vtABExpCheck = null; } catch (Exception e) {}
+        try { this.auxExerciseA = null; } catch (Exception e) {}
+        try { this.auxExerciseB = null; } catch (Exception e) {}
+        try { this.tStage = null; } catch (Exception e) {}
+        try { this.thumbPane = null; } catch (Exception e) {}
+        try { this.tScene = null; } catch (Exception e) {}
+
+        try { this.undoRedoFlagListener = null; } catch (Exception e) {}
+        try { this.pointsEarnedListener = null; } catch (Exception e) {}
+        try { this.statementFocusListener = null; } catch (Exception e) {}
+        try { this.commentFullHeightListener = null; } catch (Exception e) {}
+        try { this.commentModifiedListener = null; } catch (Exception e) {}
+        try { this.commentFocusListener = null; } catch (Exception e) {}
+        try { this.aCheckBoxListener = null; } catch (Exception e) {}
+        try { this.bCheckBoxListener = null; } catch (Exception e) {}
+        try { this.explainFullHeightListener = null; } catch (Exception e) {}
+        try { this.explainModifiedListener = null; } catch (Exception e) {}
+        try { this.explainFocusListener = null; } catch (Exception e) {}
+        try { this.undoButtonHandler = null; } catch (Exception e) {}
+        try { this.redoButtonHandler = null; } catch (Exception e) {}
+        try { this.thumbPaneClickHandler = null; } catch (Exception e) {}
+        try { this.undoRedoFlag = null; } catch (Exception e) {}
+    }
+
+
     @Override
     public String getAuxExerName() {
+        if (verticalTreeABExpModel == null || verticalTreeABExpModel.getCheckSetup() == null) return "";
         return getExerciseModel().getCheckSetup().getAuxExerName();
+    }
+
+    @Override
+    public Node getAuxExerNode() {
+        if (verticalTreeABExpView == null || verticalTreeABExpView.getExplainDRTA() == null || verticalTreeABExpView.getRootLayout() == null) return new Pane();
+        RichTextArea explainRTA = verticalTreeABExpView.getExplainDRTA().getEditor();
+        if (explainRTA != null) {
+            explainRTA.prefHeightProperty().unbind();
+            if (verticalTreeABExpModel != null) explainRTA.setPrefHeight(verticalTreeABExpModel.getExplainTextHeight() + RTA_SCREEN_BMP);
+        }
+        return new VBox(5, verticalTreeABExpView.getRootLayout().getMain_pane(), verticalTreeABExpView.getChoiceBox(), explainRTA);
     }
 
     @Override
@@ -934,12 +1348,13 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
 
     @Override
     public void clearStandingPopups() {
-        if (verticalTreeABExpView.getStaticHelpStage() != null) verticalTreeABExpView.getStaticHelpStage().close();
+        if (verticalTreeABExpView != null && verticalTreeABExpView.getStaticHelpStage() != null) verticalTreeABExpView.getStaticHelpStage().close();
         if (tStage != null) tStage.close();
     }
 
     @Override
     public AnchorPane getMainPane() {
+        if (verticalTreeABExpView == null || verticalTreeABExpView.getRootLayout() == null) return new AnchorPane();
         return verticalTreeABExpView.getRootLayout().getMain_pane();
     }
 
@@ -950,8 +1365,7 @@ public class VerticalTreeABExpExercise implements Exercise<VerticalTreeABExpMode
 
     @Override
     public VTAuxExer getVTAuxExer() {
-        return (VTAuxExer) auxExerciseA;
+        if (auxExerciseA instanceof VTAuxExer) return (VTAuxExer) auxExerciseA;
+        else return null;
     }
-
-
 }

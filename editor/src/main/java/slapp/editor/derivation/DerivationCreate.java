@@ -18,6 +18,10 @@ package slapp.editor.derivation;
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.model.Document;
+import com.teamdev.jxbrowser.browser.Browser;
+import com.teamdev.jxbrowser.view.javafx.BrowserView;
+import javafx.animation.PauseTransition;
+import javafx.animation.SequentialTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
@@ -27,6 +31,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.*;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -44,14 +49,15 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.transform.Scale;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
+
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import javafx.util.Duration;
 import javafx.util.Pair;
 import slapp.editor.DiskUtilities;
 import slapp.editor.EditorAlerts;
@@ -68,6 +74,7 @@ import slapp.editor.derivation.theorems.ThrmSetElement;
 import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
+import slapp.editor.main_window.TextHelpPopup;
 import slapp.editor.parser.Language;
 import slapp.editor.parser.Languages;
 
@@ -93,6 +100,7 @@ public class DerivationCreate {
     private TextField nameField;
     private boolean fieldModified = false;
     private ChangeListener nameListener;
+    private ChangeListener auxExerListener;
     private ChangeListener leftmostScopeListner;
     private ChangeListener defaultShelfListener;
     private double scale = 1.0;
@@ -156,8 +164,10 @@ public class DerivationCreate {
     private RichTextArea currentSpinnerNode;
 
     private TextField pointsPossibleTextField;
+    private TextField auxExerNameField;
 
-
+    private final DoubleProperty localScalePageHeight = new SimpleDoubleProperty(1.0);
+    private final DoubleProperty localScalePageWidth = new SimpleDoubleProperty(1.0);
 
     /**
      * Create new derivation exercise
@@ -165,6 +175,9 @@ public class DerivationCreate {
      */
     public DerivationCreate(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
+
+        localScalePageHeight.bind(mainWindow.getMainView().scalePageHeightProperty());
+        localScalePageWidth.bind(mainWindow.getMainView().scalePageWidthProperty());
         setupWindow();
     }
 
@@ -182,6 +195,8 @@ public class DerivationCreate {
         nameField.setText(originalModel.getExerciseName());
         statementTextHeight = originalModel.getStatementTextHeight();
         pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
+        auxExerNameField.setText(originalModel.getAuxExerName());
+        auxExerNameField.textProperty().addListener(auxExerListener);
 
 
 
@@ -257,7 +272,7 @@ public class DerivationCreate {
 
         verticalSizeSpinner = new Spinner<>(0.0, 999.0, 0.0, 5.0);
         verticalSizeSpinner.setPrefWidth(65);
-        verticalSizeSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
+        verticalSizeSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
         verticalSizeSpinner.setDisable(true);
 
         //empty bar for consistent look
@@ -269,44 +284,51 @@ public class DerivationCreate {
         statementRTA = statementDRTA.getEditor();
         statementRTA.setPromptText("Exercise Statement:");
         statementRTA.getStylesheets().add("slappTextArea.css");
-        statementRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
+        statementRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.minWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.contentAreaWidthProperty().bind(localScalePageWidth);
 
         statementRTA.setMinHeight(100);
 
-        double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
-        statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
+        double statementInitialHeight = Math.round(100 / localScalePageHeight.get() * 100.0);
+        statementHeightSpinner = new Spinner<>(statementInitialHeight, 999.0, statementInitialHeight, 1.0);
         statementHeightSpinner.setPrefWidth(60);
         statementHeightSpinner.setDisable(false);
-        statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+        statementHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        /*
         statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = statementHeightSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+         */
 
-        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeight.addListener((ob, ov, nv) -> {
             statementRTA.prefHeightProperty().unbind();
             statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
             statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
-
-        statementRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            fieldModified = true;
-            statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
+        final boolean[] statementPrimed = {false};
+        statementRTA.fullHeightProperty().addListener((ob, ov, nv) -> {
+            if (!statementPrimed[0]) {
+                statementPrimed[0] = true;
+                return;
+            }
+            double height = (double) nv;
+            statementTextHeight = height;
         });
 
         statementRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(statementDRTA, ControlType.AREA);
-                statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
             }
         });
+        statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
 
         //static help editor
 
@@ -321,36 +343,41 @@ public class DerivationCreate {
         staticHelpRTA.setContentAreaWidth(400);
         staticHelpRTA.setMinHeight(100);
 
-        double staticHelpInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
+        double staticHelpInitialHeight = Math.round(100 / localScalePageHeight.get() * 100 );
 
 
-        staticHelpHeightSpinner = new Spinner<>(0.0, 999.0, staticHelpInitialHeight, 1.0);
+        staticHelpHeightSpinner = new Spinner<>(staticHelpInitialHeight, 999.0, staticHelpInitialHeight, 1.0);
         staticHelpHeightSpinner.setPrefWidth(60);
         staticHelpHeightSpinner.setDisable(false);
-        staticHelpHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+        staticHelpHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        /*
         staticHelpHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = staticHelpHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = staticHelpHeightSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+         */
 
-        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeight.addListener((ob, ov, nv) -> {
             staticHelpRTA.prefHeightProperty().unbind();
             staticHelpHeightSpinner.getValueFactory().setValue((double) Math.round(staticHelpHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
             staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
-        staticHelpRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            fieldModified = true;
-            staticHelpTextHeight = mainWindow.getMainView().getRTATextHeight(staticHelpRTA);
-        });
+
         staticHelpRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(staticHelpDRTA, ControlType.AREA);
-                staticHelpTextHeight = mainWindow.getMainView().getRTATextHeight(staticHelpRTA);
+            }
+        });
+
+        staticHelpRTA.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) {
+                editorInFocus(staticHelpDRTA, ControlType.AREA);
             }
         });
         staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
@@ -375,6 +402,24 @@ public class DerivationCreate {
         nameField.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) textFieldInFocus();
         });
+
+        Label auxExerLabel = new Label("Aux Exer Name: ");
+        auxExerLabel.setPrefWidth(95);
+        auxExerNameField = new TextField();
+        auxExerNameField.setPadding(new Insets(5));
+        auxExerNameField.setPromptText("(plain text)");
+        auxExerNameField.setPrefWidth(200);
+        auxExerListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                fieldModified = true;
+            }
+        };
+        auxExerNameField.textProperty().addListener(auxExerListener);
+        auxExerNameField.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) textFieldInFocus();
+        });
+
 
         //check boxes
         scopeLineCheck = new CheckBox("Leftmost scope line");
@@ -510,9 +555,43 @@ public class DerivationCreate {
 
         Label pointsPossibleLabel = new Label("Points Possible: ");
         pointsPossibleLabel.setPrefWidth(90);
+
         pointsPossibleTextField = new TextField();
         pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setAlignment(Pos.CENTER_RIGHT);
         pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
+
+        pointsPossibleTextField.setText("0");
+        pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { fieldModified = true; });
+
+        UnaryOperator<TextFormatter.Change> pointsPossibleFilter = change -> {
+            if (change == null) return null;
+            String text = change.getText();
+            if (text.matches("[0-9]*")) return change;
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(pointsPossibleFilter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+
+
+        pointsPossibleTextField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+            if (isNowFocused) {
+                Platform.runLater(() -> pointsPossibleTextField.selectAll());
+                textFieldInFocus();
+            } else if (pointsPossibleTextField.getText().isEmpty()) {
+                pointsPossibleTextField.setText("0");
+            }
+        });
+
+        pointsPossibleTextField.setOnMouseClicked(event -> {
+            if (pointsPossibleTextField.getSelectedText().isEmpty()) {
+                pointsPossibleTextField.selectAll();
+            }
+        });
+
+
+
+        /*
         UnaryOperator<TextFormatter.Change> filter = change -> {
             String text = change.getText();
             if (text.matches("[0-9]*")) {
@@ -525,6 +604,9 @@ public class DerivationCreate {
         pointsPossibleTextField.setText("0");
         pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { fieldModified = true; });
         pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
+
+         */
+
 
 
 
@@ -540,9 +622,9 @@ public class DerivationCreate {
         Label helpMaxLabel = new Label("   Help Max:");
 
         //language list view
-        Label languageLabel = new Label("   Language:");
+        Label languageLabel = new Label("   Lang:");
         langMap = new LinkedHashMap<>();
-        for (int i = 0; i < Languages.getFixedLanguages().size() - 1; i++) {
+        for (int i = 0; i < Languages.getFixedLanguages().size() - 2; i++) {
             Language language = Languages.getFixedLanguages().get(i);
             SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
             if (language.getNameString().equals(defaultLangName)) booleanProperty.setValue(true); //default check
@@ -550,7 +632,7 @@ public class DerivationCreate {
             langMap.put(language.getNameString(), booleanProperty);
         }
         ListView<String> languageListView = new ListView<>();
-        languageListView.setPrefSize(120, 95);
+        languageListView.setPrefSize(130, 95);
 
         languageListView.getItems().addAll(langMap.keySet());
         Callback<String, ObservableValue<Boolean>> langToBoolean = (String item) -> langMap.get(item);
@@ -568,14 +650,14 @@ public class DerivationCreate {
         }
 
         ListView<String> rulesetListView = new ListView<>();
-        rulesetListView.setPrefSize(120, 95);
+        rulesetListView.setPrefSize(130, 95);
 
         rulesetListView.getItems().addAll(ruleMap.keySet());
         Callback<String, ObservableValue<Boolean>> rulesetToBoolean = (String item) -> ruleMap.get(item);
         rulesetListView.setCellFactory(CheckBoxListCell.forListView(rulesetToBoolean));
 
         //empty list view 1
-        Label theoremSetLabel = new Label("   Theorem Set(s):");
+        Label theoremSetLabel = new Label("   Thrm Set(s):");
         thrmMap1 = new LinkedHashMap<>();
         for (int i = 0; i < TheoremSets.getTheoremSets().size(); i++) {
             EmptyObject emptyObject = new EmptyObject();
@@ -584,7 +666,7 @@ public class DerivationCreate {
             thrmMap1.put(emptyObject, booleanProperty);
         }
         ListView<EmptyObject> thrmSet1ListView = new ListView<>();
-        thrmSet1ListView.setPrefSize(45, 95);
+        thrmSet1ListView.setPrefSize(50, 95);
 
         thrmSet1ListView.getItems().addAll(thrmMap1.keySet());
         Callback<EmptyObject, ObservableValue<Boolean>> thrmSet1ToBoolean = (EmptyObject item) -> thrmMap1.get(item);
@@ -603,7 +685,7 @@ public class DerivationCreate {
             thrmMap2.put(emptyObject, booleanProperty);
         }
         ListView<EmptyObject> thrmSet2ListView = new ListView<>();
-        thrmSet2ListView.setPrefSize(45, 95);
+        thrmSet2ListView.setPrefSize(50, 95);
 
         thrmSet2ListView.getItems().addAll(thrmMap2.keySet());
         Callback<EmptyObject, ObservableValue<Boolean>> thrmSet2ToBoolean = (EmptyObject item) -> thrmMap2.get(item);
@@ -616,7 +698,7 @@ public class DerivationCreate {
             theoremSetList.add(theoremSet.toString());
         }
         ListView<String> thrmListView = new ListView<>(theoremSetList);
-        thrmListView.setPrefSize(120, 95);
+        thrmListView.setPrefSize(130, 95);
         thrmListView.setStyle("-fx-background-color: transparent");
 
         thrmListView.setCellFactory(lv -> new ListCell<String>() {
@@ -629,11 +711,14 @@ public class DerivationCreate {
                 } else {
                     setText(item);
                     setGraphic(null);
+
+                    /*
                     setOnMouseClicked(mouseClickedEvent -> {
                         if (mouseClickedEvent.getButton().equals(MouseButton.PRIMARY) && mouseClickedEvent.getClickCount() == 2) {
                             System.out.println(item);
                         }
                     });
+                     */
                 }
             }
         });
@@ -712,10 +797,11 @@ public class DerivationCreate {
         HBox keyboardBox = new HBox(10, keyboardLabel, italicAndSansCheck, scriptAndItalicCheck, scriptAndSansCheck, italicAndBlackboardCheck, greekAndFrakturCheck);
 
         Label widthLabel = new Label("Width: ");
-        HBox topFields = new HBox(30, scopeLineCheck, defaultShelfCheck, widthLabel, widthSpinner, pointsPossibleLabel, pointsPossibleTextField);
+        HBox topFields = new HBox(30, scopeLineCheck, defaultShelfCheck, widthLabel, widthSpinner, pointsPossibleLabel, pointsPossibleTextField, auxExerLabel, auxExerNameField);
         topFields.setAlignment(Pos.CENTER_LEFT);
         topFields.setMargin(widthLabel, new Insets(0, -10, 0, 0));
         topFields.setMargin(pointsPossibleLabel, new Insets(0, -10, 0, 0));
+        topFields.setMargin(auxExerLabel, new Insets(0, -10, 0, 0));
 
 
         HBox setupLineButtons = new HBox(30, metalangCheckLabel, showMetalanguageCheck, staticHelpCheckLabel, staticHelpCheck, setupLinesLabel, addSetupLineButton, removeSetupLineButton);
@@ -748,38 +834,50 @@ public class DerivationCreate {
         upperFieldsBox.setPadding(new Insets(20, 0, 20, 0));
         //   upperFieldsBox.setPadding(new Insets(20,0,20,20));
 
-        String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
+        HBox textEntryRow = new HBox(10, statementRTA, staticHelpRTA);
+
+        String header = TextHelpPopup.getHeader14();
+        String footer = TextHelpPopup.getFooter();
+        String helpText = header +
                 "<p>Derivation Exercise is appropriate for any exercise that calls for a derivation as response.<p>" +
                 "<ul>" +
 
-                "<li><p>Supply the exercise name.  The name for a theorem exercise should be of the sort, exercise name / underscore / theorem name (as 'E3.3_T3.14') -- as the check feature sorts on theorem names to identify 'prior' theorems available in a derivation.  Then select the default keyboard for derivation content lines, and select whether there is to be a leftmost scope line, and/or a \"shelf\" beneath the top line of an automatically generated subderivation. " +
+                "<li><p>Supply the exercise name.  The name for a theorem exercise should be of the sort, exercise name / underscore / theorem name (as 'E3.3_T3.14') -- as the check feature sorts on names after the underscore to identify 'prior' theorems available in a derivation.  Then select the default keyboard for derivation content lines, and select whether there is to be a leftmost scope line, and/or a \"shelf\" beneath the top line of an automatically generated subderivation.</p> " +
                 "The width is the (default) percentage of the window's width allocated to this derivation.  " +
-                "If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
+                "If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area). " +
+                "In the context of an assignment containing a previous exercise relevant to the one being worked, it is possible to add its name in order to include a thumbnail that will pop up its work area. </p></li>" +
                 "<li><p>For the check and help functions: A 'max value' of -1 corresponds to 'unlimited', 0 to 'none', and otherwise to the maximum number of check or help tries allotted for the exercise.  " +
                 "Then there are checkboxes to select the formal language and ruleset.  Notice that a given keyboard selection may be compatible with multiple formal languages, but a given formal language will typically have some preferred default keyboard. </p>" +
                 "<p>The Theorem Set option is relevant only to exercises which appeal to axiom or theorem lists.  Multiple selections are possible, though behavior is unpredictable in case members of selected sets have the same name. " +
-                "The first checkbox selects the set; the second whether its members are \"cumulative\" -- in the sense that one member depends just on ones before. (Ordinarily, then, an axiom set leaves the second box unchecked, but exercises that generate sequenced theorems have the second check.) " +
+                "The first checkbox selects the set; the second whether its members are \"cumulative\" -- in the sense that one member depends just on ones before. (Ordinarily, then, an axiom set leaves the second box unchecked, but exercises that generate sequenced theorems have the second check too.) " +
                 "</p>" +
                 "<p> The Show \u2133\u2112 check inserts a metalanguage help button into the lower left corner of the exercise statement (and so is relevant only to derivations conducted in the metalanguage).  " +
                 "The static help check activates the Static Help button which pops up a message which you may state in the right hand text area below." +
                 "</p>" +
                 "</li>" +
-                "<li><p>After that, insert setup derivation lines as appropriate.  In the ordinary case, setup lines will include some premise lines with justification 'P' (the last sitting on a shelf), a blank line, and a conclusion line (without justification), all at scope depth 1. " +
+                "<li><p>After that, insert setup derivation lines as appropriate.  " +
+                "In the ordinary natural derivation case, setup lines will include some premise lines with justification 'P' (the last sitting on a shelf), a blank line, and a conclusion line (without justification), all at scope depth 1. " +
                 "A line identified as a premise cannot have either its formula or justification modified; one identified as a conclusion cannot have its formula modified.  Different arrangements (as, e.g. \"fill in the justification\" exercises) are possible.</p></li>" +
                 "<li><p>Finally, fill in the exercise statement and, if desired, static help.</p></li>" +
-                "</ul>";
+                "</ul>" +
+                footer;
 
-        WebView helpArea = new WebView();
-        WebEngine webEngine = helpArea.getEngine();
-        webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
-        webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(230);
+        scene = new Scene(borderPane);
 
+        Browser browser = mainWindow.getCreateHlpBrowser();
+        if (browser != null) {
+            BrowserView view = BrowserView.newInstance(browser);
+            view.setMouseTransparent(true);
+            Platform.runLater(() -> TextHelpPopup.loadHtmlSmoothly(browser, view, helpText));
+            view.setPrefHeight(640);
+            view.prefWidthProperty().bind(textEntryRow.widthProperty());
+            centerBox = new VBox(10, upperFieldsBox, textEntryRow, view);
+            centerBox.setFillWidth(true);
+        }
+        else {
+            centerBox = new VBox(10, upperFieldsBox, textEntryRow, new Label("JxBrowser not started.  Please try again."));
+        }
 
-        HBox textEntryRow = new HBox(10, statementRTA, staticHelpRTA);
-
-
-        centerBox = new VBox(10, upperFieldsBox, textEntryRow, helpArea);
         centerBox.setPadding(new Insets(10, 0, 10, 20));
 
   //      centerBox.setVgrow(statementRTA, Priority.ALWAYS);
@@ -827,17 +925,19 @@ public class DerivationCreate {
             saveAsButton.setDisable(true);
         }
 
-        scene = new Scene(borderPane);
+
         scene.getStylesheets().add(DecoratedRTA.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
 
         zoomLabel = new Label(" Zoom ");
-        zoomSpinner = new Spinner(25, 500, 100, 5);
+        zoomSpinner = new Spinner(25, 500, 100, 1);
         zoomSpinner.setPrefSize(65,25);
         zoomSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            /*
             Node increment = zoomSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = zoomSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
+             */
 
             scale = (double) nv/100;
             updateZoom();
@@ -853,19 +953,28 @@ public class DerivationCreate {
         setSizeSpinners();
 
         stage = new Stage();
-        stage.initOwner(EditorMain.mainStage);
+  //      stage.initOwner(EditorMain.mainStage);
         stage.setScene(scene);
 
         stage.setTitle("Create Derivation Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
         stage.setWidth(1040);
-        stage.setHeight(950);
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
+        double stageHeight = Math.min(950, bounds.getHeight() - 20);
+        stage.setHeight(stageHeight);
+        double mainWinY = EditorMain.mainStage.getY();
+        if (mainWinY + stageHeight + 20 < bounds.getMaxY()) {
+            stage.setY(mainWinY + 10);
+        }
+        else {
+            stage.setY(bounds.getMaxY() - (stageHeight + 10));
+        }
         stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1040));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 900));
 
-        stage.initModality(Modality.NONE);
+
+   //     stage.initModality(Modality.NONE);
+        EditorAlerts.makeIndependentBlockingStage(stage);
         stage.setOnCloseRequest(e-> {
             e.consume();
             closeWindow();
@@ -892,7 +1001,7 @@ public class DerivationCreate {
         }
         ////
 
-        Platform.runLater(() -> nameField.requestFocus());
+        Platform.runLater(() -> Platform.runLater(() -> nameField.requestFocus()));
     }
 
     //force single selection on list views
@@ -1030,6 +1139,8 @@ public class DerivationCreate {
      */
     private void closeWindow() {
         if (checkContinue("Confirm Close", "This exercise appears to have unsaved changes.\nContinue to close window?")) {
+            localScalePageHeight.unbind();
+            localScalePageWidth.unbind();
             mainWindow.closeExercise();
             stage.close();
         }
@@ -1042,6 +1153,7 @@ public class DerivationCreate {
         if (checkContinue("Confirm Clear", "This exercise appears to have unsaved changes.\nContinue to clear exercise?")) {
             nameField.clear();
             nameField.textProperty().addListener(nameListener);
+            auxExerNameField.clear();
             widthSpinner.getValueFactory().setValue(0.0);
 
             setupLines.clear();
@@ -1135,7 +1247,7 @@ public class DerivationCreate {
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         Document statementDocument = statementRTA.getDocument();
 
-        double statementPrefHeight = Math.max(40, statementTextHeight + RTA_SCREEN_BMP);
+
 
         Document commentDocument = new Document();
 
@@ -1175,6 +1287,9 @@ public class DerivationCreate {
                modelLines.add(new ModelLine(depth, null, "", LineType.GAP_LINE));
            }
         }
+
+        statementTextHeight = statementRTA.getFullHeight();
+        double statementPrefHeight = Math.max(40, statementTextHeight + RTA_SCREEN_BMP);
 
         DerivationModel model = new DerivationModel(name, false, statementPrefHeight, gridWidth, leftmostScope, defaultShelf, keyboardSelector, statementDocument, commentDocument, modelLines);
         model.setStatementTextHeight(statementTextHeight);
@@ -1278,6 +1393,10 @@ public class DerivationCreate {
             model.setPointsPossible(0);
             pointsPossibleTextField.setText("0");
         }
+
+        model.setAuxExerName(auxExerNameField.getText());
+
+
 
 
         return model;

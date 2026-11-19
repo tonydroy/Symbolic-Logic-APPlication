@@ -18,6 +18,10 @@ package slapp.editor.horiz_trees;
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.model.Document;
+import com.teamdev.jxbrowser.browser.Browser;
+import com.teamdev.jxbrowser.view.javafx.BrowserView;
+import javafx.animation.PauseTransition;
+import javafx.animation.SequentialTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
@@ -26,6 +30,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -36,15 +41,16 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Scale;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
+
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import javafx.util.Duration;
 import slapp.editor.DiskUtilities;
 import slapp.editor.EditorAlerts;
 import slapp.editor.EditorMain;
@@ -67,6 +73,7 @@ import slapp.editor.m_parse.m_symbols.MInterpretationVariable;
 import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
+import slapp.editor.main_window.TextHelpPopup;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.Language;
 import slapp.editor.parser.Languages;
@@ -85,6 +92,8 @@ import static slapp.editor.EditorMain.RTA_WIDTH_BMP;
 /**
  * Create window for horizontal tree exercise
  */
+
+
 public class HorizTreesCreate {
     private MainWindow mainWindow;
     private RichTextArea statementRTA;
@@ -97,6 +106,7 @@ public class HorizTreesCreate {
     private TextField nameField;
     private boolean fieldModified = false;
     private ChangeListener nameListener;
+    private ChangeListener auxExerListener;
     private TextField promptField;
     private ChangeListener promptListener;
     private double scale =1.0;
@@ -132,7 +142,10 @@ public class HorizTreesCreate {
     private List<BoxedDRTA> targetFormulaList;
     private double formulaBoxHeight = 27;
     private BoxedDRTA focusedBoxedDRTA;
+    private TextField auxExerNameField;
 
+    private final DoubleProperty localScalePageHeight = new SimpleDoubleProperty(1.0);
+    private final DoubleProperty localScalePageWidth = new SimpleDoubleProperty(1.0);
 
 
     /**
@@ -141,6 +154,9 @@ public class HorizTreesCreate {
      */
     public HorizTreesCreate(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
+        localScalePageHeight.bind(mainWindow.getMainView().scalePageHeightProperty());
+        localScalePageWidth.bind(mainWindow.getMainView().scalePageWidthProperty());
+
         setupWindow();
     }
 
@@ -160,6 +176,8 @@ public class HorizTreesCreate {
         promptField.setText(originalModel.getExplainPrompt());
         nameField.textProperty().addListener(nameListener);
         pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
+        auxExerNameField.setText(originalModel.getAuxExerName());
+        auxExerNameField.textProperty().addListener(auxExerListener);
 
         HorizTreesCheckSetup checkSetup = originalModel.getCheckSetup();
         if (checkSetup == null) {
@@ -186,6 +204,7 @@ public class HorizTreesCreate {
             else langMap.get(key).setValue(false);
         }
         fieldModified = false;
+
     }
 
     /*
@@ -203,42 +222,51 @@ public class HorizTreesCreate {
         statementRTA = statementDRTA.getEditor();
         statementRTA.setPromptText("Exercise Statement");
         statementRTA.getStylesheets().add("slappTextArea.css");
-        statementRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
+        statementRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.minWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.contentAreaWidthProperty().bind(localScalePageWidth);
         statementRTA.setMinHeight(100);
 
-        double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
-        statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
+        double statementInitialHeight = Math.round(100 / localScalePageHeight.get() * 100.0);
+        statementHeightSpinner = new Spinner<>(statementInitialHeight, 999.0, statementInitialHeight, 1.0);
         statementHeightSpinner.setPrefWidth(60);
         statementHeightSpinner.setDisable(false);
-        statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+        statementHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        /*
         statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = statementHeightSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+         */
 
-        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeight.addListener((ob, ov, nv) -> {
             statementRTA.prefHeightProperty().unbind();
             statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
             statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
-        statementRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            fieldModified = true;
-            statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
+        final boolean[] statementPrimed = {false};
+        statementRTA.fullHeightProperty().addListener((ob, ov, nv) -> {
+            if (!statementPrimed[0]) {
+                statementPrimed[0] = true;
+                return;
+            }
+            double height = (double) nv;
+            statementTextHeight = height;
         });
 
         statementRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(statementDRTA, ControlType.AREA);
-                statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
             }
         });
+        statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
 
         //static help editor
         staticHelpDRTA = new DecoratedRTA();
@@ -252,36 +280,36 @@ public class HorizTreesCreate {
         staticHelpRTA.setContentAreaWidth(400);
         staticHelpRTA.setMinHeight(100);
 
-        double staticHelpInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
+        double staticHelpInitialHeight = Math.round(100 / localScalePageHeight.get() * 100 );
 
-        staticHelpHeightSpinner = new Spinner<>(0.0, 999.0, staticHelpInitialHeight, 1.0);
+        staticHelpHeightSpinner = new Spinner<>(staticHelpInitialHeight, 999.0, staticHelpInitialHeight, 1.0);
         staticHelpHeightSpinner.setPrefWidth(60);
         staticHelpHeightSpinner.setDisable(false);
-        staticHelpHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+        staticHelpHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        /*
         staticHelpHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = staticHelpHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = staticHelpHeightSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+         */
 
-        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeight.addListener((ob, ov, nv) -> {
             staticHelpRTA.prefHeightProperty().unbind();
             staticHelpHeightSpinner.getValueFactory().setValue((double) Math.round(staticHelpHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
             staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
-        staticHelpRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            fieldModified = true;
-        });
         staticHelpRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(staticHelpDRTA, ControlType.AREA);
             }
         });
-
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
 
 
         //interpretation
@@ -290,42 +318,49 @@ public class HorizTreesCreate {
         interpretationRTA = interpretationDRTA.getEditor();
         interpretationRTA.setPromptText("Interpretation (may be blank)");
         interpretationRTA.getStylesheets().add("slappTextArea.css");
-        interpretationRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        interpretationRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        interpretationRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
+        interpretationRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        interpretationRTA.minWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        interpretationRTA.contentAreaWidthProperty().bind(localScalePageWidth);
 
         interpretationRTA.setMinHeight(100);
 
-        double interpretationInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
+        double interpretationInitialHeight = Math.round(100 / localScalePageHeight.get() * 100 );
 
-
-        interpretationHeightSpinner = new Spinner<>(0.0, 999.0, interpretationInitialHeight, 1.0);
+        interpretationHeightSpinner = new Spinner<>(interpretationInitialHeight, 999.0, interpretationInitialHeight, 1.0);
         interpretationHeightSpinner.setPrefWidth(60);
         interpretationHeightSpinner.setDisable(false);
-        interpretationHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        interpretationRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(interpretationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+        interpretationHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        interpretationRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(interpretationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        /*
         interpretationHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = interpretationHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = interpretationHeightSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+         */
 
-        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeight.addListener((ob, ov, nv) -> {
             interpretationRTA.prefHeightProperty().unbind();
             interpretationHeightSpinner.getValueFactory().setValue((double) Math.round(interpretationHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
             interpretationRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(interpretationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
-        interpretationRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            fieldModified = true;
-            interpretationTextHeight = mainWindow.getMainView().getRTATextHeight(interpretationRTA);
+        final boolean[] commentPrimed = {false};
+        interpretationRTA.fullHeightProperty().addListener((ob, ov, nv) -> {
+            if (!commentPrimed[0]) {
+                commentPrimed[0] = true;
+                return;
+            }
+            double height = (double) nv;
+            interpretationTextHeight = height;
         });
+
         interpretationRTA.focusedProperty().addListener((ob, ov, nv) -> {
             if (nv) {
                 editorInFocus(interpretationDRTA, ControlType.AREA);
-                interpretationTextHeight = mainWindow.getMainView().getRTATextHeight(interpretationRTA);
             }
         });
         interpretationRTA.getActionFactory().saveNow().execute(new ActionEvent());
@@ -337,7 +372,8 @@ public class HorizTreesCreate {
             viewInterpretation();
         });
 
-        HBox textBoxes = new HBox(10, interpretationRTA, staticHelpRTA);
+        HBox hTextBoxes = new HBox(10, statementRTA, staticHelpRTA);
+        VBox textBoxes = new VBox(10, interpretationRTA, hTextBoxes);
 
 
         //name field
@@ -361,6 +397,26 @@ public class HorizTreesCreate {
         HBox nameBox = new HBox(nameLabel, nameField);
         nameBox.setAlignment(Pos.BASELINE_LEFT);
 
+        Label auxExerLabel = new Label("Aux Exer Name: ");
+        auxExerLabel.setPrefWidth(110);
+        auxExerNameField = new TextField();
+        auxExerNameField.setPadding(new Insets(5));
+        auxExerNameField.setPromptText("(plain text)");
+        auxExerNameField.setPrefWidth(200);
+        auxExerListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                fieldModified = true;
+            }
+        };
+        auxExerNameField.textProperty().addListener(auxExerListener);
+        auxExerNameField.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) textFieldInFocus();
+        });
+        HBox auxExerNameBox = new HBox(auxExerLabel, auxExerNameField);
+        auxExerNameBox.setAlignment(Pos.BASELINE_LEFT);
+
+
         //prompt
         Label promptLabel = new Label("Explain Prompt: ");
         promptLabel.setPrefWidth(110);
@@ -383,21 +439,41 @@ public class HorizTreesCreate {
         //points possible
         Label pointsPossibleLabel = new Label("Points Possible: ");
         pointsPossibleLabel.setPrefWidth(110);
+
         pointsPossibleTextField = new TextField();
         pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setAlignment(Pos.CENTER_RIGHT);
         pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
-        UnaryOperator<TextFormatter.Change> filter = change -> {
-            String text = change.getText();
-            if (text.matches("[0-9]*")) {
-                return change;
-            }
-            return null;
-        };
-        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
-        pointsPossibleTextField.setTextFormatter(textFormatter);
+
         pointsPossibleTextField.setText("0");
         pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { fieldModified = true; });
-        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
+
+        UnaryOperator<TextFormatter.Change> pointsPossibleFilter = change -> {
+            if (change == null) return null;
+            String text = change.getText();
+            if (text.matches("[0-9]*")) return change;
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(pointsPossibleFilter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+
+
+        pointsPossibleTextField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+            if (isNowFocused) {
+                Platform.runLater(() -> pointsPossibleTextField.selectAll());
+                textFieldInFocus();
+            } else if (pointsPossibleTextField.getText().isEmpty()) {
+                pointsPossibleTextField.setText("0");
+            }
+        });
+
+        pointsPossibleTextField.setOnMouseClicked(event -> {
+            if (pointsPossibleTextField.getSelectedText().isEmpty()) {
+                pointsPossibleTextField.selectAll();
+            }
+        });
+
+
         HBox pointsBox = new HBox(pointsPossibleLabel, pointsPossibleTextField);
         pointsBox.setAlignment(Pos.CENTER_LEFT);
 
@@ -477,30 +553,8 @@ public class HorizTreesCreate {
 
 
 
-        topFieldsBox = new VBox(15, nameBox, promptBox, pointsStaticHelpBox, mainFormulasTop);
+        topFieldsBox = new VBox(15, nameBox, promptBox, auxExerNameBox, pointsStaticHelpBox, mainFormulasTop);
         topFieldsBox.setPadding(new Insets(20, 0,20, 0));
-
-        //help area
-        String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
-                "<p>The Horizontal Tree Explain Exercise is appropriate for exercises that involve horizontal trees (of the sort that appear in Chapter 4 of <em>Symbolic Logic</em>), along with an explanation of some sort.</p>" +
-                "<ul>" +
-                "<li><p>Provide the exercise name.</p></li>" +
-                "<li><p>Provide a prompt for the explain field.</p></li>" +
-                "<li><p>If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).  The static help check activates the Static Help button which pops up a message which you may state in the right-hand text area below.</p></li>" +
-                "<li><p>Check applies to a tree or trees, but does not evaluate (text) answers about truth, validity or the like:</p></li>" +
-                "<ul>" +
-                "<li><p>Enter the target formula(s).  If there are multiple targets, SLAPP activates an option in the exercise to permit multiple tree windows.</p></li>" +
-                "<li><p>If Check Max is 0, checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.  The Empty Branch box says whether check permits \"incomplete\" branches (supposing completed branches suffice for a result).  And you may need to select the object language.</p></li>" +
-                "<li><p>SLAPP finds an interpretation and/ or variable assignment stated in interpretation field - as supplied by you as part of the exercise, or by the student. If the field includes 'interpretation \ue3bd' it includes a preconfigured \"fragment\" of \ue3bd from <i>Symbolic Logic</i> with a universe including just 0 ... 99 and the functions all mod 100 (this won't be useful for any expression that includes quantifiers as, even when there are empty branches, SLAPP requires that the <i>number</i> of branches be the same as the number of members in the universe).</p>" +
-                "<p>View the parsed result by the \"view interp\" button. (If one or more components are missing, be sure that you specify members using the proper fonts and regular equals sign (not the Shift-Alt/Option version).  Note that the specification of a universe is of the sort <font face = \"Noto Sans\">UI</font> = {. . .} or <font face = \"Noto Sans\">UJ</font> = {. . .} - the universe <i>for</i> interpretation  <font face = \"Noto Sans\">I</font> or <font face = \"Noto Sans\">J</font> or whatever equals the set, and objects in the universe identified by non-negative numerals or proper names - all in the sans font.</p></li>"  +
-                "</ul>" +
-                "<li><p>And, finally, provided the exercise statement, and if desired static help.</p></li>" +
-                "</ul>";
-        WebView helpArea = new WebView();
-        WebEngine webEngine = helpArea.getEngine();
-        webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
-        webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(230);
 
         //check items/
         Label helpCheckLabel = new Label("HelpCheck: ");
@@ -529,7 +583,7 @@ public class HorizTreesCreate {
         //language list view
         Label languageLabel = new Label("   Object Language:");
         langMap = new LinkedHashMap<>();
-        for (int i = 0; i < Languages.getFixedLanguages().size(); i++) {
+        for (int i = 0; i < Languages.getFixedLanguages().size() - 3; i++) {
             Language language = Languages.getFixedLanguages().get(i);
             SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
             if (language.getNameString().equals(defaultLangName)) booleanProperty.setValue(true); //default check
@@ -537,7 +591,7 @@ public class HorizTreesCreate {
             langMap.put(language.getNameString(), booleanProperty);
         }
         ListView<String> languageListView = new ListView<>();
-        languageListView.setPrefSize(120, 95);
+        languageListView.setPrefSize(150, 95);
 
         languageListView.getItems().addAll(langMap.keySet());
         Callback<String, ObservableValue<Boolean>> langToBoolean = (String item) -> langMap.get(item);
@@ -546,8 +600,68 @@ public class HorizTreesCreate {
         HBox checkLine1 = new HBox(30, checkMaxBox, justificationCheckBox, languageLabel, languageListView);
         checkLine1.setAlignment(Pos.CENTER_LEFT);
 
+
+        //help area
+        String header = TextHelpPopup.getHeader14();
+        String footer = TextHelpPopup.getFooter();
+        String helpText = header +
+                "<p>The Horizontal Tree Explain Exercise is appropriate for exercises that involve horizontal trees (of the sort that appear in Chapter 4 of <em>Symbolic Logic</em>), along with an explanation of some sort.</p>" +
+                "<ul>" +
+                "<li><p>Provide the exercise name.</p></li>" +
+                "<li><p>Provide a prompt for the explain field.</p></li>" +
+                "<li><p>In the context of an assignment containing a previous exercise relevant to the one being worked, it is possible to add its name in order to include a thumbnail that will pop up its work area. </p></li>" +
+                "<li><p>If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).  The static help check activates the Static Help button which pops up a message which you may state in the right-hand text area below.</p></li>" +
+                "<li><p>Check applies to a tree or trees, but does not evaluate (text) answers about truth, validity or the like:</p></li>" +
+                "<ul>" +
+                "<li><p>Enter the target formula(s).  If there are multiple targets, SLAPP activates an option in the exercise to permit multiple tree windows.</p></li>" +
+                "<li><p>If Check Max is 0, checking is disabled; if -1 checks are unlimited; otherwise the value sets the maximum number of allowable check tries.  The Empty Branch box says whether check permits \"incomplete\" branches (supposing completed branches suffice for a result).  And you may need to select the object language.</p></li>" +
+                "<li><p>SLAPP finds an interpretation and/ or variable assignment stated in the interpretation field - as supplied by you as part of the exercise, or by the student. " +
+                "If the field includes 'interpretation \ue3bd' it includes a preconfigured \"fragment\" of \ue3bd from <i>Symbolic Logic</i> for the math languages with a universe including just \ud835\udfe2 ... \ud835\udfeb\ud835\udfeb and the functions all mod 100 (this won't be useful for any expression that includes quantifiers as, even when there are empty branches, SLAPP requires that the <i>number</i> of branches be the same as the number of members in the universe).</p>" +
+                "<p>An interpretation includes a universe and assignments to symbols.  Some sample entries are,</p>" +
+        "<p>&nbsp&nbsp&nbsp&nbsp \ud835\uddb4\ud835\udda9 = {\ud835\uddba, \ud835\uddbb}    </p>" +
+                "<p>&nbsp&nbsp&nbsp&nbsp \ud835\udda9[\ud835\udc4e] = \ud835\uddba   </p>" + //constant
+                "<p>&nbsp&nbsp&nbsp&nbsp \ud835\udda9[\ud835\udc53<sup>1</sup>] =  {\u27e8\ud835\uddba, \ud835\uddbb\u27e9, \u27e8\ud835\uddbb, \ud835\uddba\u27e9}   </p>" +  //one place function
+                "<p>&nbsp&nbsp&nbsp&nbsp \ud835\udda9[\ud835\udc54<sup>2</sup>] =  {" +
+                "\u27e8\u27e8\ud835\uddba, \ud835\uddba\u27e9, \ud835\uddba\u27e9, " +
+                "\u27e8\u27e8\ud835\uddba, \ud835\uddbb\u27e9, \ud835\uddbb\u27e9, " +
+                "\u27e8\u27e8\ud835\uddbb, \ud835\uddba\u27e9, \ud835\uddbb\u27e9, " +
+                "\u27e8\u27e8\ud835\uddbb, \ud835\uddbb\u27e9, \ud835\uddba\u27e9}   </p>" +  //two place function
+                "<p>&nbsp&nbsp&nbsp&nbsp \ud835\udda9[\ud835\udc44<sup>1</sup>] = {\ud835\uddbb}   </p>" +  //one place relation
+                "<p>&nbsp&nbsp&nbsp&nbsp \ud835\udda9[\ud835\udc45<sup>2</sup>] = " +
+                "{\u27e8\ud835\uddba, \ud835\uddba\u27e9, " +
+                "\u27e8\ud835\uddbb, \ud835\uddba\u27e9, " +
+                "\u27e8\ud835\uddbb, \ud835\uddbb\u27e9} " +
+                "  </p>" +
+
+
+
+
+                "<p>You can view the parsed result by the \"view interp\" button. (If one or more components are missing, be sure that you specify members using the proper fonts and regular equals sign (not the Shift-Alt/Option version).  " +
+                "Note that the specification of a universe is of the sort \ud835\uddb4\ud835\udda8 = {. . .} or \ud835\uddb4\ud835\udda9 = {. . .} - the universe <i>for</i> interpretation  \ud835\udda8 or \ud835\udda9 (or whatever) equals the set, and objects in the universe are identified by non-negative numerals or proper names - all in the sans font.</p></li>"  +
+
+
+                "</ul>" +
+                "<li><p>And, finally, provide the exercise statement, and if desired static help.</p></li>" +
+                "</ul>";
+
+        scene = new Scene(borderPane);
+
+        Browser browser = mainWindow.getCreateHlpBrowser();
+        if (browser != null) {
+            BrowserView view = BrowserView.newInstance(browser);
+            view.setMouseTransparent(true);
+            Platform.runLater(() -> TextHelpPopup.loadHtmlSmoothly(browser, view, helpText));
+            view.setPrefHeight(920);
+            view.prefWidthProperty().bind(textBoxes.widthProperty());
+            centerBox = new VBox(10, topFieldsBox, checkLine1, textBoxes, view);
+            centerBox.setFillWidth(true);
+        }
+        else {
+            centerBox = new VBox(10, topFieldsBox, checkLine1, textBoxes, new Label("JxBrowser not started.  Please try again."));
+        }
+
         //center
-        centerBox = new VBox(10, topFieldsBox, checkLine1, textBoxes, statementRTA, helpArea);
+
         centerBox.setPadding(new Insets(10,0,10,20));
 
         spacerPane = new Pane();
@@ -588,17 +702,20 @@ public class HorizTreesCreate {
         }
 
         //window setup
-        scene = new Scene(borderPane);
+
         scene.getStylesheets().add(DecoratedRTA.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
 
         Label zoomLabel = new Label(" Zoom ");
-        Spinner<Integer> zoomSpinner = new Spinner(25, 500, 100, 5);
+        Spinner<Integer> zoomSpinner = new Spinner(25, 500, 100, 1);
         zoomSpinner.setPrefSize(65,25);
         zoomSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            /*
             Node increment = zoomSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = zoomSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
+
+             */
 
             scale = (double) nv/100;
             updateZoom();
@@ -612,17 +729,27 @@ public class HorizTreesCreate {
         setSizeSpinners();
 
         stage = new Stage();
-        stage.initOwner(EditorMain.mainStage);
+   //     stage.initOwner(EditorMain.mainStage);
         stage.setScene(scene);
         stage.setTitle("Create Horizontal Tree(s) Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
         stage.setWidth(1040);
-        stage.setHeight(1000);
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
+        double stageHeight = Math.min(1000, bounds.getHeight() - 20);
+        stage.setHeight(stageHeight);
+        double mainWinY = EditorMain.mainStage.getY();
+        if (mainWinY + stageHeight + 10 < bounds.getMaxY()) {
+            stage.setY(mainWinY + 10);
+        }
+        else {
+            stage.setY(bounds.getMaxY() - (stageHeight + 10));
+        }
         stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1040));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 1000));
-        stage.initModality(Modality.WINDOW_MODAL);
+
+
+   //     stage.initModality(Modality.WINDOW_MODAL);
+        EditorAlerts.makeIndependentBlockingStage(stage);
         stage.setOnCloseRequest(e-> {
             e.consume();
             closeWindow();
@@ -631,7 +758,8 @@ public class HorizTreesCreate {
         stage.show();
         statementRTA.getActionFactory().save().execute(new ActionEvent());
         centerBox.layout();
-        Platform.runLater(() -> nameField.requestFocus());
+
+        Platform.runLater(() -> Platform.runLater(() -> nameField.requestFocus()));
     }
 
 
@@ -729,6 +857,8 @@ public class HorizTreesCreate {
      */
     private void closeWindow() {
         if (checkContinue("Confirm Close", "This exercise appears to have unsaved changes.\nContinue to close window?")) {
+            localScalePageHeight.unbind();
+            localScalePageWidth.unbind();
             mainWindow.closeExercise();
             stage.close();
         }
@@ -741,6 +871,7 @@ public class HorizTreesCreate {
         if (checkContinue("Confirm Clear", "This exercise appears to have unsaved changes.\nContinue to clear exercise?")) {
             nameField.clear();
             nameField.textProperty().addListener(nameListener);
+            auxExerNameField.clear();
             targetFormulaList.clear();
             BoxedDRTA mainFormulaBoxedDRTA = newMainFormulaBoxedDRTA();
             targetFormulaList.add(mainFormulaBoxedDRTA);
@@ -858,12 +989,18 @@ public class HorizTreesCreate {
         HorizTreesModel model = new HorizTreesModel(nameField.getText(), Collections.singletonList(ElementTypes.HORIZ_TREE));
 
         model.setExplainPrompt(promptField.getText());
+        model.setAuxExerName(auxExerNameField.getText());
 
         if (statementRTA.isModified()) fieldModified = true;
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExerciseStatement(statementRTA.getDocument());
+
+
+        statementTextHeight = statementRTA.getFullHeight();
         model.setStatementTextHeight(statementTextHeight);
         model.setStatementPrefHeight(Math.max(40, statementTextHeight + RTA_SCREEN_BMP));   //+29
+
+  //      System.out.println("statement: " + statementTextHeight);
 
 
         if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
@@ -878,8 +1015,12 @@ public class HorizTreesCreate {
         interpretationRTA.getActionFactory().saveNow().execute(new ActionEvent());
         checkSetup.setInterpretationDoc(interpretationRTA.getDocument());
 
+
+        interpretationTextHeight = interpretationRTA.getFullHeight();
         checkSetup.setInterpretationTextHeight(interpretationTextHeight);
         checkSetup.setInterpretationPrefHeight(Math.max(90, interpretationTextHeight + RTA_SCREEN_BMP));  //+29
+
+  //      System.out.println("interp: " + interpretationTextHeight);
 
         String langName = null;
         for (String key : langMap.keySet()) {
@@ -906,7 +1047,7 @@ public class HorizTreesCreate {
             List<Expression> expressions = ParseUtilities.parseDoc(doc, langName);
             if (expressions.size() != 0 && (expressions.size() != 1 || !(expressions.get(0) instanceof Formula))) {
                 bdrta.setVTtreeBoxHighlight();
-                mainWindow.getMainView().scrollToNode(bdrta.getRTA());
+          //      mainWindow.getMainView().scrollToNode(bdrta.getRTA());
                 List<Text> texts = new ArrayList<>();
                 texts.add(ParseUtilities.newRegularText("Expression is not a formula of "));
                 texts.addAll(Languages.getLanguage(langName).getNameTextList());

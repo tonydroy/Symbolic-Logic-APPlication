@@ -59,6 +59,7 @@ public class DrvtnExpModel implements ExerciseModel<Document>, Serializable {
     private CheckSetup checkSetup;
     private int pointsPossible;
     private int pointsEarned;
+    private String auxExerName;
 
     /**
      * Construct derivation explain model
@@ -93,6 +94,7 @@ public class DrvtnExpModel implements ExerciseModel<Document>, Serializable {
         this.checkSetup = new CheckSetup();
         this.pointsPossible = 0;
         this.pointsEarned = -1;
+        this.auxExerName = "";
     }
 
     /**
@@ -218,6 +220,14 @@ public class DrvtnExpModel implements ExerciseModel<Document>, Serializable {
 
     public void setCheckSetup(CheckSetup checkSetup) {
         this.checkSetup = checkSetup;
+    }
+
+    public String getAuxExerName() {
+        return auxExerName;
+    }
+
+    public void setAuxExerName(String auxExerName) {
+        this.auxExerName = auxExerName;
     }
 
     /**

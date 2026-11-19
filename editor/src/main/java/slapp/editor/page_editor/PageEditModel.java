@@ -44,6 +44,8 @@ public class PageEditModel implements ExerciseModel<Document>, Serializable {
     private String contentPrompt = "";
     private int pointsPossible;
     private int pointsEarned;
+    private String auxExerName;
+    private PECheckSetup checkSetup;
 
 
     /**
@@ -67,6 +69,15 @@ public class PageEditModel implements ExerciseModel<Document>, Serializable {
         if (pageContents.isEmpty()) pageContents.add(new PageContent(new Document(), 0.0));
         this.pointsPossible = 0;
         this.pointsEarned = -1;
+        this.auxExerName = "";
+    }
+
+    public PECheckSetup getCheckSetup() {
+        return checkSetup;
+    }
+
+    public void setCheckSetup(PECheckSetup checkSetup) {
+        this.checkSetup = checkSetup;
     }
 
     /**
@@ -147,6 +158,14 @@ public class PageEditModel implements ExerciseModel<Document>, Serializable {
      */
    void setStatementTextHeight(double statementTextHeight) {
         this.statementTextHeight = statementTextHeight;
+    }
+
+    public String getAuxExerName() {
+        return auxExerName;
+    }
+
+    public void setAuxExerName(String auxExerName) {
+        this.auxExerName = auxExerName;
     }
 
     /**

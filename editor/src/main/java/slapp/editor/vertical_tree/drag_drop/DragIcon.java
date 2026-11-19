@@ -96,6 +96,36 @@ public class DragIcon extends AnchorPane {
                 break;
 
             case map_field:
+                Rectangle maprectangle = new Rectangle(48, 20);
+                maprectangle.setFill(Color.rgb(230, 255, 245));
+                maprectangle.setStrokeWidth(1.5);
+                maprectangle.setStroke(Color.BLACK);
+                maprectangle.setArcHeight(8); maprectangle.setArcWidth(8);
+
+                Line mapline = new Line(0,0,0,12);
+                mapline.setStrokeWidth(1.0);
+                Line maptopLine = new Line(0, 0, 8, 0);
+                Line mapbottomLine = new Line(0, 12, 8, 12);
+
+                AnchorPane mapfieldPane = new AnchorPane(maprectangle, mapline, maptopLine, mapbottomLine);
+                mapfieldPane.setLeftAnchor(mapline, 8.0);
+                mapfieldPane.setTopAnchor(mapline, 3.0);
+
+                mapfieldPane.setLeftAnchor(maptopLine, 4.0);
+                mapfieldPane.setTopAnchor(maptopLine, 3.0);
+
+                mapfieldPane.setLeftAnchor(mapbottomLine, 4.0);
+                mapfieldPane.setTopAnchor(mapbottomLine, 16.0);
+
+                this.setPrefHeight(24); this.setPrefWidth(64);
+                this.setMaxWidth(64); this.setMinWidth(64); this.setMaxHeight(24); this.setMinHeight(24);
+
+                getChildren().add(mapfieldPane);
+                //              this.setLeftAnchor(fieldPane, 8.0);
+                //              this.setTopAnchor(fieldPane, 20.0);
+                break;
+
+            case parse_field:
                 Rectangle mrectangle = new Rectangle(48, 20);
                 mrectangle.setFill(Color.rgb(230, 255, 245));
                 mrectangle.setStrokeWidth(1.5);
@@ -124,6 +154,8 @@ public class DragIcon extends AnchorPane {
                 //              this.setLeftAnchor(fieldPane, 8.0);
                 //              this.setTopAnchor(fieldPane, 20.0);
                 break;
+
+
 
             case bracket:
                 Pane brackPane = new Pane();

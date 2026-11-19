@@ -24,8 +24,12 @@ module slapp.editor {
 
    // requires com.teamdev.jxbrowser.view.javafx;
 
-
+    requires ai.djl.tokenizers;
+    requires ai.djl.pytorch_engine;
+    requires ai.djl.api;
+    //requires ai.djl.modality;
     requires org.apache.commons.lang3;
+    requires org.apache.opennlp.tools;
     //requires org.apache.logging.log4j.core;
     requires jdk.xml.dom;
     requires com.install4j.runtime;
@@ -37,11 +41,16 @@ module slapp.editor {
     requires java.management;
     requires jxbrowser;
     requires jxbrowser.javafx;
+    requires org.apache.commons.codec;
+    requires com.github.oshi;
+    requires com.google.errorprone.annotations;
 
     opens slapp.editor to javafx.fxml;
     exports slapp.editor;
     exports slapp.editor.decorated_rta;
     opens slapp.editor.decorated_rta to javafx.fxml;
+
+    //opens models;
 //    exports slapp.editor.tests;
 //    opens slapp.editor.tests to javafx.fxml;
     exports slapp.editor.vertical_tree.drag_drop;

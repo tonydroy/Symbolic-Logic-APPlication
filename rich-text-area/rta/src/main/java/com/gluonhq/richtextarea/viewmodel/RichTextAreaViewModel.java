@@ -29,15 +29,7 @@ package com.gluonhq.richtextarea.viewmodel;
 
 import com.gluonhq.richtextarea.Selection;
 import com.gluonhq.richtextarea.Tools;
-import com.gluonhq.richtextarea.model.Decoration;
-import com.gluonhq.richtextarea.model.Document;
-import com.gluonhq.richtextarea.model.ImageDecoration;
-import com.gluonhq.richtextarea.model.Paragraph;
-import com.gluonhq.richtextarea.model.ParagraphDecoration;
-import com.gluonhq.richtextarea.model.TextBuffer;
-import com.gluonhq.richtextarea.model.TextDecoration;
-import com.gluonhq.richtextarea.model.Unit;
-import com.gluonhq.richtextarea.model.UnitBuffer;
+import com.gluonhq.richtextarea.model.*;
 import com.gluonhq.richtextarea.undo.CommandManager;
 import javafx.application.Platform;
 import javafx.beans.property.*;
@@ -82,6 +74,28 @@ public class RichTextAreaViewModel {
     //**
     private DoubleProperty nodesWidth = new SimpleDoubleProperty();
     //**
+
+
+    //*** AI ADDED: Signal property to force a deep UI refresh on paste
+    private final BooleanProperty forceUiRefreshProperty = new SimpleBooleanProperty(this, "forceUiRefresh", false);
+
+    public final BooleanProperty forceUiRefreshProperty() {
+        return forceUiRefreshProperty;
+    }
+    private boolean uiRefreshPending = false;
+
+    public final void fireUiRefresh() {
+        if (!uiRefreshPending) {
+            uiRefreshPending = true;
+            javafx.application.Platform.runLater(() -> {
+                uiRefreshPending = false;
+                forceUiRefreshProperty.set(!forceUiRefreshProperty.get());
+            });
+        }
+    }
+
+    //***
+
 
     /// PROPERTIES ///////////////////////////////////////////////////////////////
 
@@ -347,9 +361,39 @@ public class RichTextAreaViewModel {
     void moveCaretPosition(final int charCount) {
         int pos = getCaretPosition() + charCount;
         if (pos >= 0 && pos <= getTextLength()) {
+
+            // SURROGATE-AWARE CARET MOVEMENT
+            if (pos > 0 && pos < getTextLength()) {
+                if (charCount > 0) {
+                    // Moving forward: if we landed on a low surrogate, push forward out of it
+                    if (Character.isLowSurrogate(getTextBuffer().charAt(pos)) &&
+                            Character.isHighSurrogate(getTextBuffer().charAt(pos - 1))) {
+                        pos += 1;
+                    }
+                } else if (charCount < 0) {
+                    // Moving backward: if we landed on a low surrogate, push backward out of it
+                    if (Character.isLowSurrogate(getTextBuffer().charAt(pos)) &&
+                            Character.isHighSurrogate(getTextBuffer().charAt(pos - 1))) {
+                        pos -= 1;
+                    }
+                }
+            }
+
+            if (pos >= 0 && pos <= getTextLength()) {
+                setCaretPosition(pos);
+            }
+        }
+    }
+
+
+    /*
+    void moveCaretPosition(final int charCount) {
+        int pos = getCaretPosition() + charCount;
+        if (pos >= 0 && pos <= getTextLength()) {
             setCaretPosition(pos);
         }
     }
+     */
 
     boolean hasSelection() {
         return getSelection().isDefined();
@@ -380,12 +424,52 @@ public class RichTextAreaViewModel {
     void remove(int caretOffset, int length) {
         if (!removeSelection()) {
             int position = getCaretPosition() + caretOffset;
+            int actualLength = length;
+
+            if (actualLength > 0 && position >= 0 && position <= getTextLength()) {
+
+                // Adjust if start position splits a surrogate pair (e.g., Backspace)
+                if (position > 0 && position < getTextLength()) {
+                    if (Character.isLowSurrogate(getTextBuffer().charAt(position)) &&
+                            Character.isHighSurrogate(getTextBuffer().charAt(position - 1))) {
+                        position -= 1;
+                        actualLength += 1;
+                    }
+                }
+
+                // Adjust if end position splits a surrogate pair (e.g., Delete key)
+                int endPos = position + actualLength;
+                if (endPos > 0 && endPos < getTextLength()) {
+                    if (Character.isLowSurrogate(getTextBuffer().charAt(endPos)) &&
+                            Character.isHighSurrogate(getTextBuffer().charAt(endPos - 1))) {
+                        actualLength += 1;
+                    }
+                }
+
+                if (position >= 0 && position + actualLength <= getTextLength()) {
+                    getTextBuffer().delete(position, actualLength);
+                    setCaretPosition(position);
+                }
+            } else if (position >= 0 && position <= getTextLength()) {
+                // Fallback for 0-length just in case
+                getTextBuffer().delete(position, length);
+                setCaretPosition(position);
+            }
+        }
+    }
+
+    /*
+    void remove(int caretOffset, int length) {
+        if (!removeSelection()) {
+            int position = getCaretPosition() + caretOffset;
             if (position >= 0 && position <= getTextLength()) {
                 getTextBuffer().delete(position, length);
                 setCaretPosition(position);
             }
         }
     }
+
+     */
 
     void decorate(Decoration decoration) {
         if (decoration instanceof TextDecoration) {
@@ -427,6 +511,7 @@ public class RichTextAreaViewModel {
                 setCaretPosition(caretPosition);
             }
         }
+        fireUiRefresh();
     }
 
     /**
@@ -443,6 +528,80 @@ public class RichTextAreaViewModel {
         return false;
     }
 
+
+    void clipboardCopy(final boolean cutText) {
+        Selection selection = getSelection();
+        if (selection.isDefined()) {
+            int start = Math.min(selection.getStart(), selection.getEnd());
+            int end = Math.max(selection.getStart(), selection.getEnd());
+
+            StringBuilder sb = new StringBuilder();
+            List<DecorationModel> cleanDecorations = new ArrayList<>();
+            ParagraphDecoration defaultPDec = ParagraphDecoration.builder().presets().build();
+            TextDecoration defaultTDec = TextDecoration.builder().presets().build();
+
+            try {
+                walkFragments((unit, decoration) -> {
+                    if (unit == null || unit.isEmpty()) {
+                        return;
+                    }
+                    String unitText = unit.getText();
+                    if (unitText == null || unitText.isEmpty()) {
+                        return;
+                    }
+                    String cleanUnitText = unitText.replace(TextBuffer.ZERO_WIDTH_NO_BREAK_SPACE_TEXT, "");
+                    if (cleanUnitText.isEmpty()) {
+                        return;
+                    }
+                    Decoration safeDec = (decoration instanceof TextDecoration || decoration instanceof ImageDecoration)
+                            ? decoration : defaultTDec;
+
+                    int fragStart = sb.length();
+                    sb.append(cleanUnitText);
+                    int fragLen = cleanUnitText.length();
+
+                    if (!cleanDecorations.isEmpty()) {
+                        DecorationModel prev = cleanDecorations.get(cleanDecorations.size() - 1);
+                        if (Objects.equals(prev.getDecoration(), safeDec)) {
+                            cleanDecorations.set(cleanDecorations.size() - 1,
+                                    new DecorationModel(prev.getStart(), prev.getLength() + fragLen, safeDec, defaultPDec));
+                            return;
+                        }
+                    }
+                    cleanDecorations.add(new DecorationModel(fragStart, fragLen, safeDec, defaultPDec));
+                }, start, end);
+            } catch (Exception ignored) {
+            }
+
+            String text = sb.toString();
+            if (text.isEmpty() && end > start) {
+                // Fallback if walkFragments returned nothing
+                text = getTextBuffer().getText(start, end)
+                        .replace(TextBuffer.ZERO_WIDTH_NO_BREAK_SPACE_TEXT, "");
+                if (!text.isEmpty()) {
+                    Decoration caretDec = getDecorationAtCaret();
+                    Decoration safeDec = (caretDec instanceof TextDecoration) ? caretDec : defaultTDec;
+                    cleanDecorations.add(new DecorationModel(0, text.length(), safeDec, defaultPDec));
+                }
+            }
+
+            Document currentDocument = new Document(text, cleanDecorations, text.length());
+            final ClipboardContent content = new ClipboardContent();
+            if (Tools.isURL(text)) {
+                content.putUrl(text);
+            } else {
+                content.put(RTA_DATA_FORMAT, currentDocument);
+            }
+            content.putString(text);
+
+            if (cutText) {
+                commandManager.execute(new RemoveTextCmd(0));
+            }
+            Clipboard.getSystemClipboard().setContent(content);
+        }
+    }
+
+    /*
     void clipboardCopy(final boolean cutText) {
         Selection selection = getSelection();
         if (selection.isDefined()) {
@@ -463,6 +622,8 @@ public class RichTextAreaViewModel {
         }
     }
 
+     */
+
     boolean clipboardHasImage() {
         return Clipboard.getSystemClipboard().hasImage();
     }
@@ -479,6 +640,167 @@ public class RichTextAreaViewModel {
         return Clipboard.getSystemClipboard().hasUrl();
     }
 
+    //new ai version
+    void clipboardPaste() {
+        Document content = null;
+        if (clipboardHasDocument()) {
+            Object rawData = Clipboard.getSystemClipboard().getContent(RTA_DATA_FORMAT);
+            if (rawData instanceof Document) {
+                content = (Document) rawData;
+            } else if (rawData instanceof java.nio.ByteBuffer) {
+                java.nio.ByteBuffer buffer = (java.nio.ByteBuffer) rawData;
+                byte[] bytes = new byte[buffer.remaining()];
+                buffer.duplicate().get(bytes);
+                try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(bytes);
+                     java.io.ObjectInputStream ois = new java.io.ObjectInputStream(bais) {
+                         @Override
+                         protected Class<?> resolveClass(java.io.ObjectStreamClass desc)
+                                 throws java.io.IOException, ClassNotFoundException {
+                             try {
+                                 return Class.forName(desc.getName(), false, Document.class.getClassLoader());
+                             } catch (ClassNotFoundException ex) {
+                                 return super.resolveClass(desc);
+                             }
+                         }
+                     }) {
+                    Object decoded = ois.readObject();
+                    if (decoded instanceof Document) {
+                        content = (Document) decoded;
+                    }
+                } catch (Exception ignored) {
+                    // If deserialization fails, content remains null and falls through to plain-text paste
+                }
+            } else if (rawData instanceof byte[]) {
+                try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream((byte[]) rawData);
+                     java.io.ObjectInputStream ois = new java.io.ObjectInputStream(bais) {
+                         @Override
+                         protected Class<?> resolveClass(java.io.ObjectStreamClass desc)
+                                 throws java.io.IOException, ClassNotFoundException {
+                             try {
+                                 return Class.forName(desc.getName(), false, Document.class.getClassLoader());
+                             } catch (ClassNotFoundException ex) {
+                                 return super.resolveClass(desc);
+                             }
+                         }
+                     }) {
+                    Object decoded = ois.readObject();
+                    if (decoded instanceof Document) {
+                        content = (Document) decoded;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
+
+        if (content != null) {
+            // 1. Prevent pasting a document over a highlighted selection without deleting it first
+            if (getSelection().isDefined()) {
+                commandManager.execute(new RemoveTextCmd(0));
+            }
+
+            // 2. Execute the multi-line paste
+            // This is now the ONLY command executed, keeping your Undo stack perfectly intact!
+            commandManager.execute(new PasteDocumentCmd(content));
+
+            // 3. THE FIX: Toggle the boolean property to signal the Skin to rebuild visible UI cells.
+            // Wrapped in Platform.runLater so the signal fires AFTER the initial flawed rendering finishes.
+        //    javafx.application.Platform.runLater(() -> {
+         //       forceUiRefreshProperty.set(!forceUiRefreshProperty.get());
+        //    });
+
+            fireUiRefresh();
+
+        } else if (clipboardHasImage()) {
+            final Image image = Clipboard.getSystemClipboard().getImage();
+            if (image != null) {
+                String url = image.getUrl() != null ? image.getUrl() : Clipboard.getSystemClipboard().getUrl();
+                if (url != null) {
+                    commandManager.execute(new DecorateCmd(new ImageDecoration(url)));
+                }
+            }
+        } else if (clipboardHasUrl()) {
+            final String url = Clipboard.getSystemClipboard().getUrl();
+            if (url != null) {
+                if (!getSelection().isDefined()) {
+                    int caret = getCaretPosition();
+                    commandManager.execute(new InsertCmd(url));
+                    setSelection(new Selection(caret, caret + url.length()));
+                }
+                commandManager.execute(new DecorateCmd(TextDecoration.builder().url(url).build()));
+            }
+        } else {
+            String text = null;
+            if (clipboardHasString()) {
+                text = Clipboard.getSystemClipboard().getString();
+            }
+            if (text != null) {
+                if (getSelection().isDefined()) {
+                    commandManager.execute(new ReplaceCmd(text));
+                } else {
+                    commandManager.execute(new InsertCmd(text));
+                }
+            }
+        }
+    }
+
+
+/*
+    //ai version
+    void clipboardPaste() {
+        if (clipboardHasDocument()) {
+            // 1. Prevent pasting a document over a highlighted selection without deleting it first
+            if (getSelection().isDefined()) {
+                commandManager.execute(new ReplaceCmd(""));
+            }
+
+            // 2. Execute the multi-line paste
+            // This is now the ONLY command executed, keeping your Undo stack perfectly intact!
+            commandManager.execute(new PasteDocumentCmd((Document) Clipboard.getSystemClipboard().getContent(RTA_DATA_FORMAT)));
+
+            // 3. THE FIX: Toggle the boolean property to signal the Skin to rebuild visible UI cells.
+            // Wrapped in Platform.runLater so the signal fires AFTER the initial flawed rendering finishes.
+            javafx.application.Platform.runLater(() -> {
+                forceUiRefreshProperty.set(!forceUiRefreshProperty.get());
+            });
+
+        } else if (clipboardHasImage()) {
+            final Image image = Clipboard.getSystemClipboard().getImage();
+            if (image != null) {
+                String url = image.getUrl() != null ? image.getUrl() : Clipboard.getSystemClipboard().getUrl();
+                if (url != null) {
+                    commandManager.execute(new DecorateCmd(new ImageDecoration(url)));
+                }
+            }
+        } else if (clipboardHasUrl()) {
+            final String url = Clipboard.getSystemClipboard().getUrl();
+            if (url != null) {
+                if (!getSelection().isDefined()) {
+                    int caret = getCaretPosition();
+                    commandManager.execute(new InsertCmd(url));
+                    setSelection(new Selection(caret, caret + url.length()));
+                }
+                commandManager.execute(new DecorateCmd(TextDecoration.builder().url(url).build()));
+            }
+        } else {
+            String text = null;
+            if (clipboardHasString()) {
+                text = Clipboard.getSystemClipboard().getString();
+            }
+            if (text != null) {
+                if (getSelection().isDefined()) {
+                    commandManager.execute(new ReplaceCmd(text));
+                } else {
+                    commandManager.execute(new InsertCmd(text));
+                }
+            }
+        }
+    }
+
+ */
+
+
+
+/*
     void clipboardPaste() {
         if (clipboardHasDocument()) {
             commandManager.execute(new PasteDocumentCmd((Document) Clipboard.getSystemClipboard().getContent(RTA_DATA_FORMAT)));
@@ -514,6 +836,14 @@ public class RichTextAreaViewModel {
             }
         }
     }
+
+ */
+
+
+
+
+
+
 
     void moveCaret(Direction direction, boolean changeSelection, boolean wordSelection, boolean lineSelection, boolean paragraphSelection) {
         Selection prevSelection = getSelection();
@@ -676,7 +1006,9 @@ public class RichTextAreaViewModel {
     }
 
     void undo() {
+
         this.getTextBuffer().undo();
+        fireUiRefresh();
     }
 
     void undoDecoration() {

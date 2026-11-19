@@ -65,6 +65,7 @@ public class Formula implements Expression {
             for (Expression child : children) {
                 if (child.getMatch() == null) return null;
                 else newChildren.add(child.getMatch());
+       //         System.out.println("child: " + child + " match: " + child.getMatch());
             }
             Formula newFormula = new Formula();
             newFormula.setChildren(newChildren);

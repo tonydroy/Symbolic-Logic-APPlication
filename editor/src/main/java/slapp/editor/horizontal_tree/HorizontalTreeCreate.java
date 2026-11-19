@@ -18,6 +18,8 @@ package slapp.editor.horizontal_tree;
 import com.gluonhq.richtextarea.RichTextArea;
 import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.model.Document;
+import com.teamdev.jxbrowser.browser.Browser;
+import com.teamdev.jxbrowser.view.javafx.BrowserView;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
@@ -26,6 +28,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -36,12 +39,12 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Scale;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
+
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -55,6 +58,7 @@ import slapp.editor.decorated_rta.KeyboardDiagram;
 import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
+import slapp.editor.main_window.TextHelpPopup;
 import slapp.editor.parser.*;
 import slapp.editor.parser.grammatical_parts.Formula;
 
@@ -115,12 +119,17 @@ public class HorizontalTreeCreate {
     private double formulaBoxHeight = 27;
     private BoxedDRTA focusedBoxedDRTA;
 
+    private final DoubleProperty localScalePageHeight = new SimpleDoubleProperty(1.0);
+    private final DoubleProperty localScalePageWidth = new SimpleDoubleProperty(1.0);
+
     /**
      * Create new horizontal tree exercise
      * @param mainWindow the main window
      */
     public HorizontalTreeCreate(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
+        localScalePageHeight.bind(mainWindow.getMainView().scalePageHeightProperty());
+        localScalePageWidth.bind(mainWindow.getMainView().scalePageWidthProperty());
         setupWindow();
     }
 
@@ -183,20 +192,20 @@ public class HorizontalTreeCreate {
         statementRTA = statementDRTA.getEditor();
         statementRTA.setPromptText("Exercise Statement");
         statementRTA.getStylesheets().add("slappTextArea.css");
-        statementRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
+        statementRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.minWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.contentAreaWidthProperty().bind(localScalePageWidth);
 
  //       System.out.println("cont w: " + statementRTA.getContentAreaWidth());
 
         statementRTA.setMinHeight(100);
 
-        double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
-        statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
+        double statementInitialHeight = Math.round(100 / localScalePageHeight.get() * 100.0);
+        statementHeightSpinner = new Spinner<>(statementInitialHeight, 999.0, statementInitialHeight, 1.0);
         statementHeightSpinner.setPrefWidth(60);
         statementHeightSpinner.setDisable(false);
-        statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+        statementHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
         statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
@@ -204,7 +213,7 @@ public class HorizontalTreeCreate {
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
 
-        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeight.addListener((ob, ov, nv) -> {
             statementRTA.prefHeightProperty().unbind();
             statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
             statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
@@ -235,13 +244,13 @@ public class HorizontalTreeCreate {
         staticHelpRTA.setContentAreaWidth(400);
         staticHelpRTA.setMinHeight(100);
 
-        double staticHelpInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
+        double staticHelpInitialHeight = Math.round(100 / localScalePageHeight.get() * 100 );
 
-        staticHelpHeightSpinner = new Spinner<>(0.0, 999.0, staticHelpInitialHeight, 1.0);
+        staticHelpHeightSpinner = new Spinner<>(staticHelpInitialHeight, 999.0, staticHelpInitialHeight, 1.0);
         staticHelpHeightSpinner.setPrefWidth(60);
         staticHelpHeightSpinner.setDisable(false);
-        staticHelpHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+        staticHelpHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
         staticHelpHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = staticHelpHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
@@ -249,7 +258,7 @@ public class HorizontalTreeCreate {
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
 
-        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeight.addListener((ob, ov, nv) -> {
             staticHelpRTA.prefHeightProperty().unbind();
             staticHelpHeightSpinner.getValueFactory().setValue((double) Math.round(staticHelpHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
             staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
@@ -275,20 +284,20 @@ public class HorizontalTreeCreate {
         interpretationRTA = interpretationDRTA.getEditor();
         interpretationRTA.setPromptText("Interpretation (may be blank)");
         interpretationRTA.getStylesheets().add("slappTextArea.css");
-        interpretationRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        interpretationRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        interpretationRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
+        interpretationRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        interpretationRTA.minWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        interpretationRTA.contentAreaWidthProperty().bind(localScalePageWidth);
 
         interpretationRTA.setMinHeight(100);
 
-        double interpretationInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100 );
+        double interpretationInitialHeight = Math.round(100 / localScalePageHeight.get() * 100 );
 
 
-        interpretationHeightSpinner = new Spinner<>(0.0, 999.0, interpretationInitialHeight, 1.0);
+        interpretationHeightSpinner = new Spinner<>(interpretationInitialHeight, 999.0, interpretationInitialHeight, 1.0);
         interpretationHeightSpinner.setPrefWidth(60);
         interpretationHeightSpinner.setDisable(false);
-        interpretationHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        interpretationRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(interpretationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+        interpretationHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        interpretationRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(interpretationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
         interpretationHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = interpretationHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
@@ -296,7 +305,7 @@ public class HorizontalTreeCreate {
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
 
-        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeight.addListener((ob, ov, nv) -> {
             interpretationRTA.prefHeightProperty().unbind();
             interpretationHeightSpinner.getValueFactory().setValue((double) Math.round(interpretationHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
             interpretationRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(interpretationHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
@@ -439,7 +448,11 @@ public class HorizontalTreeCreate {
         topFieldsBox.setPadding(new Insets(20, 0,20, 0));
 
         //help area
-        String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
+        String header = TextHelpPopup.getHeader14();
+        String footer = TextHelpPopup.getFooter();
+
+
+        String helpText = header +
                 "<p>The Horizontal Tree Explain Exercise is appropriate for exercises that involve horizontal trees (of the sort that appear in Chapter 4 of <em>Symbolic Logic</em>), along with an explanation of some sort.</p>" +
                 "<ul>" +
                 "<li><p>Provide the exercise name.</p></li>" +
@@ -453,12 +466,21 @@ public class HorizontalTreeCreate {
                 "<li><p>SLAPP finds an interpretation (and variable assignment as necessary) stated in interpretation field - as supplied by you as part of the exercise, or by the student.  SLAPP is picky about this: In particular a universe is of the sort <font face = \"Noto Sans\">UI</font> = {. . .} or <font face = \"Noto Sans\">UJ</font> = {. . .} (the universe <i>for</i> interpretation  <font face = \"Noto Sans\">I</font> or <font face = \"Noto Sans\">J</font> or . . . equals the set) with the regular (not Shift-Alt/Option) equals sign, and objects in the universe identified by non-negative numerals or proper names - all in the sans font.  If the interpretation field includes 'interpretation \ue3bd' it includes a preconfigued \"fragment\" of \ue3bd from <i>Symbolic Logic</i> with a universe including just 0 ... 99 and the functions all mod 100 (this won't be useful for any expression with a quantifier).</p></li>" +
                 "</ul>" +
                 "<li><p>And, finally, provided the exercise statement, and if desired static help.</p></li>" +
-                "</ul>";
-        WebView helpArea = new WebView();
-        WebEngine webEngine = helpArea.getEngine();
-        webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
-        webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(230);
+                "</ul>" +
+                footer;
+
+        scene = new Scene(borderPane);
+
+        VBox helpArea = new VBox();
+        Browser browser = mainWindow.getCreateHlpBrowser();
+        if (browser != null) {
+            BrowserView view = BrowserView.newInstance(browser);
+            view.addEventFilter(ScrollEvent.ANY, Event::consume);
+            Platform.runLater(() -> TextHelpPopup.loadHtmlSmoothly(browser, view, helpText));
+            view.setPrefHeight(230);
+            helpArea.getChildren().add(view);
+        }
+
 
         //check items
         Label helpCheckLabel = new Label("Help/Check: ");
@@ -499,7 +521,7 @@ public class HorizontalTreeCreate {
         //language list view
         Label languageLabel = new Label("   Object Language:");
         langMap = new LinkedHashMap<>();
-        for (int i = 0; i < Languages.getFixedLanguages().size(); i++) {
+        for (int i = 0; i < Languages.getFixedLanguages().size() - 2; i++) {
             Language language = Languages.getFixedLanguages().get(i);
             SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(false);
             if (language.getNameString().equals(defaultLangName)) booleanProperty.setValue(true); //default check
@@ -562,13 +584,16 @@ public class HorizontalTreeCreate {
         scene.getStylesheets().add(DecoratedRTA.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
 
         Label zoomLabel = new Label(" Zoom ");
-        Spinner<Integer> zoomSpinner = new Spinner(25, 500, 100, 5);
+        Spinner<Integer> zoomSpinner = new Spinner(25, 500, 100, 1);
         zoomSpinner.setPrefSize(65,25);
         zoomSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            /*
             Node increment = zoomSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = zoomSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
+
+             */
 
             scale = (double) nv/100;
             updateZoom();
@@ -582,7 +607,7 @@ public class HorizontalTreeCreate {
         setSizeSpinners();
 
         stage = new Stage();
-        stage.initOwner(EditorMain.mainStage);
+   //     stage.initOwner(EditorMain.mainStage);
         stage.setScene(scene);
         stage.setTitle("Create Horizontal Tree Explain Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
@@ -592,7 +617,8 @@ public class HorizontalTreeCreate {
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
         stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1040));
         stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 1000));
-        stage.initModality(Modality.WINDOW_MODAL);
+ //       stage.initModality(Modality.WINDOW_MODAL);
+        EditorAlerts.makeIndependentBlockingStage(stage);
         stage.setOnCloseRequest(e-> {
             e.consume();
             closeWindow();
@@ -601,7 +627,7 @@ public class HorizontalTreeCreate {
         stage.show();
         statementRTA.getActionFactory().save().execute(new ActionEvent());
         centerBox.layout();
-        Platform.runLater(() -> nameField.requestFocus());
+        Platform.runLater(() -> Platform.runLater(() -> nameField.requestFocus()));
     }
 
 
@@ -699,6 +725,8 @@ public class HorizontalTreeCreate {
      */
     private void closeWindow() {
         if (checkContinue("Confirm Close", "This exercise appears to have unsaved changes.\nContinue to close window?")) {
+            localScalePageHeight.unbind();
+            localScalePageWidth.unbind();
             mainWindow.closeExercise();
             stage.close();
         }
@@ -716,6 +744,7 @@ public class HorizontalTreeCreate {
             targetFormulaList.add(mainFormulaBoxedDRTA);
             updateTargetFormulaGridFromFields();
             statementRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
+            staticHelpRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
             viewExercise();
             fieldModified = false;
         }
@@ -803,7 +832,7 @@ public class HorizontalTreeCreate {
         if (statementRTA.isModified()) fieldModified = true;
         statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
         model.setExerciseStatement(statementRTA.getDocument());
-        model.setStatementTextHeight(statementTextHeight);
+        model.setStatementTextHeight(statementRTA.getFullHeight());
         model.setStatementPrefHeight(Math.max(40, statementTextHeight + RTA_SCREEN_BMP));
 
 

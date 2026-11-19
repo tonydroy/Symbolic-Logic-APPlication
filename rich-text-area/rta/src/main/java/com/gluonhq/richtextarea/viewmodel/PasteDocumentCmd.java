@@ -28,6 +28,7 @@
 package com.gluonhq.richtextarea.viewmodel;
 
 import com.gluonhq.richtextarea.Selection;
+import com.gluonhq.richtextarea.model.DecorationModel;
 import com.gluonhq.richtextarea.model.Document;
 
 import java.util.Objects;
@@ -43,24 +44,39 @@ class PasteDocumentCmd extends AbstractEditCmd {
     @Override
     public void doRedo(RichTextAreaViewModel viewModel) {
         Objects.requireNonNull(viewModel);
+        String fullText = content.getText();
+        if (fullText == null || fullText.isEmpty()) {
+            return;
+        }
+        java.util.List<DecorationModel> decorations = content.getDecorations();
+        if (decorations == null || decorations.isEmpty()) {
+            viewModel.insert(fullText);
+            return;
+        }
         // Go through all decorations: inserting unit and decorating it
-        content.getDecorations().forEach(dm -> {
+        decorations.forEach(dm -> {
+            int start = Math.max(0, Math.min(dm.getStart(), fullText.length()));
+            int end = Math.max(start, Math.min(dm.getStart() + dm.getLength(), fullText.length()));
+            if (end <= start) {
+                return;
+            }
             int caretPosition = viewModel.getCaretPosition();
             int initialLength = viewModel.getTextLength();
             // 1. insert unit
-            String text = content.getText().substring(dm.getStart(), dm.getStart() + dm.getLength());
+            String text = fullText.substring(start, end);
             viewModel.insert(text);
-            // 1. decorate unit
+            // 2. decorate unit
             int addedLength = viewModel.getTextLength() - initialLength;
-            Selection newSelection = new Selection(caretPosition, Math.min(caretPosition + addedLength, viewModel.getTextLength()));
-            viewModel.setSelection(newSelection);
-            viewModel.decorate(dm.getDecoration());
-            // For now: ignore paragraph decoration
-//            viewModel.decorate(dm.getParagraphDecoration());
-            viewModel.setSelection(Selection.UNDEFINED);
-            viewModel.setCaretPosition(newSelection.getEnd());
+            if (addedLength > 0 && dm.getDecoration() != null) {
+                Selection newSelection = new Selection(caretPosition, Math.min(caretPosition + addedLength, viewModel.getTextLength()));
+                viewModel.setSelection(newSelection);
+                viewModel.decorate(dm.getDecoration());
+                // For now: ignore paragraph decoration
+//                viewModel.decorate(dm.getParagraphDecoration());
+                viewModel.setSelection(Selection.UNDEFINED);
+                viewModel.setCaretPosition(newSelection.getEnd());
+            }
         });
-
     }
 
     @Override

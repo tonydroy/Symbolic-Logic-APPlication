@@ -12,7 +12,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class SentenceLetter implements Expression {
+public class SentenceLetter extends LanguageElement implements Expression {
+    private static final long serialVersionUID = 100L;
 
     private ExpressionType type = ExpressionType.SENTENCE_LETTER;
     private String baseStr;
@@ -24,10 +25,12 @@ public class SentenceLetter implements Expression {
         this.subscriptStr = subscriptSymbol;
     }
 
+    @Override
     public String getBaseStr() {
         return baseStr;
     }
 
+    @Override
     public String getSubscriptStr() {
         return subscriptStr;
     }

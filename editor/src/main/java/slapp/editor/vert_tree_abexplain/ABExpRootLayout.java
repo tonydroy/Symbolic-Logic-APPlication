@@ -106,7 +106,7 @@ public class ABExpRootLayout extends AnchorPane {
         HBox boxToggleGraphic = new HBox(rectangle);
         boxToggleGraphic.setAlignment(Pos.CENTER);
         boxToggle.setGraphic(boxToggleGraphic);
-        boxToggle.setTooltip(new Tooltip("Add (left click) or remove (right click) box"));
+        boxToggle.setTooltip(new Tooltip("Add (left click) or remove (double click) box"));
 
 
         starToggle = new ToggleButton("\uf005");  //LineAwsomeSolid.STAR
@@ -114,7 +114,7 @@ public class ABExpRootLayout extends AnchorPane {
         starToggle.setPrefWidth(64);
         starToggle.setPrefHeight(28);
         starToggle.setStyle("-fx-font-size: 20");
-        starToggle.setTooltip(new Tooltip("Add (left click) or remove (right click) star"));
+        starToggle.setTooltip(new Tooltip("Add (left click) or remove (double click) star"));
 
         annotationToggle = new ToggleButton();
         annotationToggle.setPrefWidth(44);
@@ -134,7 +134,7 @@ public class ABExpRootLayout extends AnchorPane {
         HBox buttonBox = new HBox(boxesPane);
         buttonBox.setAlignment(Pos.CENTER);
         annotationToggle.setGraphic(buttonBox);
-        annotationToggle.setTooltip(new Tooltip("Add (left click) or remove (right click) annotation box"));
+        annotationToggle.setTooltip(new Tooltip("Add (left click) or remove (double click) annotation box"));
 
         annotationPlus = new Button("+");
         annotationPlus.setFont(new Font(10));
@@ -161,13 +161,13 @@ public class ABExpRootLayout extends AnchorPane {
         circlePane.getChildren().add(circleIcon);
         circlePane.setAlignment(Pos.CENTER);
         circleToggle.setGraphic(circlePane);
-        circleToggle.setTooltip(new Tooltip("Add (left click) or remove (right click) circle"));
+        circleToggle.setTooltip(new Tooltip("Add (left click) or remove (double click) circle"));
 
         underlineToggle = new ToggleButton("\uf7a4");  //LineAwesomeSolid.GRIP_LINES
         underlineToggle.getStyleClass().add("lasolid-icon");
         underlineToggle.setPrefWidth(64);
         underlineToggle.setPrefHeight(28);
-        underlineToggle.setTooltip(new Tooltip("Add (left click) or remove (right click) underline"));
+        underlineToggle.setTooltip(new Tooltip("Add (left click) or remove (double click) underline"));
 
         mappingToggle = new ToggleButton();
         mappingToggle.setGraphic(new Text("\u21a7"));
@@ -177,7 +177,7 @@ public class ABExpRootLayout extends AnchorPane {
         mappingToggle.setPrefHeight(28);
         mappingToggle.setMinHeight(28);
         mappingToggle.setMaxHeight(28);
-        mappingToggle.setTooltip(new Tooltip("Add (left click) or remove (right click) map lines"));
+        mappingToggle.setTooltip(new Tooltip("Add (left click) or remove (double click) map lines"));
 
 
 
@@ -212,7 +212,7 @@ public class ABExpRootLayout extends AnchorPane {
                 for (Node node : nodesList) {
                     if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
                         if (node instanceof ABExpTreeFormulaBox) {
-                            ((ABExpTreeFormulaBox) node).processBoxRequest(event.getButton() == MouseButton.PRIMARY);
+                            ((ABExpTreeFormulaBox) node).processBoxRequest(event.getClickCount() == 1);
                             break;
                         }
                     }
@@ -232,7 +232,7 @@ public class ABExpRootLayout extends AnchorPane {
                 for (Node node : nodesList) {
                     if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
                         if (node instanceof ABExpTreeFormulaBox) {
-                            ((ABExpTreeFormulaBox) node).processStarRequest(event.getButton() == MouseButton.PRIMARY);
+                            ((ABExpTreeFormulaBox) node).processStarRequest(event.getClickCount() == 1);
                             break;
                         }
                     }
@@ -252,7 +252,7 @@ public class ABExpRootLayout extends AnchorPane {
                 for (Node node : nodesList) {
                     if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
                         if (node instanceof ABExpTreeFormulaBox) {
-                            ((ABExpTreeFormulaBox) node).processAnnotationRequest(event.getButton() == MouseButton.PRIMARY);
+                            ((ABExpTreeFormulaBox) node).processAnnotationRequest(event.getClickCount() == 1);
                             break;
                         }
                     }
@@ -292,7 +292,7 @@ public class ABExpRootLayout extends AnchorPane {
                 for (Node node : nodesList) {
                     if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
                         if (node instanceof ABExpTreeFormulaBox) {
-                            ((ABExpTreeFormulaBox) node).processCircleRequest(event.getButton() == MouseButton.PRIMARY);
+                            ((ABExpTreeFormulaBox) node).processCircleRequest(event.getClickCount() == 1);
                             break;
                         }
                     }
@@ -320,7 +320,7 @@ public class ABExpRootLayout extends AnchorPane {
                 for (Node node : nodesList) {
                     if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
                         if (node instanceof ABExpTreeFormulaBox) {
-                            ((ABExpTreeFormulaBox) node).processUnderlineRequest(event.getButton() == MouseButton.PRIMARY);
+                            ((ABExpTreeFormulaBox) node).processUnderlineRequest(event.getClickCount() == 1);
                             break;
                         }
                     }
@@ -348,7 +348,7 @@ public class ABExpRootLayout extends AnchorPane {
                 for (Node node : nodesList) {
                     if (inHierarchy(event.getPickResult().getIntersectedNode(), node)) {
                         if (node instanceof ABExpMapFormulaBox) {
-                            ((ABExpMapFormulaBox) node).processMappingRequest(event.getButton() == MouseButton.PRIMARY);
+                            ((ABExpMapFormulaBox) node).processMappingRequest(event.getClickCount() == 1);
                             break;
                         }
                     }
@@ -678,10 +678,11 @@ public class ABExpRootLayout extends AnchorPane {
 
                         }
 
-                        if (source != null && target != null)
+                        if (source != null && target != null) {
                             link.bindEnds(source, target);
                             verticalTreeView.setUndoRedoFlag(true);
                             verticalTreeView.setUndoRedoFlag(false);
+                        }
                     }
 
                 }

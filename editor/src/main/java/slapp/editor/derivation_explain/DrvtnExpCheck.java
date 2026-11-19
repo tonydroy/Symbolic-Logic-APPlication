@@ -1,3 +1,4 @@
+
 package slapp.editor.derivation_explain;
 
 import com.gluonhq.richtextarea.RichTextArea;
@@ -19,6 +20,7 @@ import slapp.editor.derivation.theorems.Theorem;
 import slapp.editor.main_window.Exercise;
 import slapp.editor.parser.Expression;
 import slapp.editor.parser.Languages;
+import slapp.editor.parser.MatchUtilities;
 import slapp.editor.parser.ParseUtilities;
 import slapp.editor.parser.grammatical_parts.Formula;
 
@@ -28,12 +30,15 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 public class DrvtnExpCheck implements DCheck {
 
     private DrvtnExpExercise drvtnExpExercise;
     private DrvtnExpView drvtnExpView;
     private DrvtnExpModel drvtnExpModel;
     private DerivationRuleset derivationRuleset;
+
+    // SCORCHED EARTH RULE 8: Safely nullify tracked lines upon cleanup
     private ViewLine markedLine;
     private List<ViewLine> viewLines;
 
@@ -44,30 +49,45 @@ public class DrvtnExpCheck implements DCheck {
     private boolean checkFinal;
     private boolean checkSuccess;
 
+    // SCORCHED EARTH RULE 3: Kill Switch
+    private boolean isTornDown = false;
+
+    // SCORCHED EARTH RULE 4: Eradicate Anonymous Lambdas
+    private javafx.event.EventHandler<ActionEvent> checkButtonHandler;
+    private javafx.event.EventHandler<ActionEvent> checkProgButtonHandler;
+    private javafx.event.EventHandler<ActionEvent> staticHelpButtonHandler;
+
     DrvtnExpCheck(DrvtnExpExercise drvtnExpExercise) {
         this.drvtnExpExercise = drvtnExpExercise;
         this.drvtnExpView = drvtnExpExercise.getExerciseView();
         this.drvtnExpModel = drvtnExpExercise.getExerciseModel();
-        setRightControlBox();
 
         CheckSetup checkSetup = drvtnExpExercise.getExerciseModel().getCheckSetup();
         if (checkSetup == null) {checkSetup = new CheckSetup();}
 
-
         checkSuccess = checkSetup.isCheckSuccess();
         checkFinal = checkSetup.isCheckFinal();
+
+        setRightControlBox();
+
         if (checkFinal) {
-            drvtnExpView.setCheckColor(Color.LAWNGREEN);
-            drvtnExpView.setCheckElementsColor(Color.GREEN);
-            drvtnExpView.setCheckMessage("Derivation");
+            if (drvtnExpView != null) {
+                drvtnExpView.setCheckColor(Color.LAWNGREEN);
+                drvtnExpView.setCheckElementsColor(Color.GREEN);
+                drvtnExpView.setCheckMessage("Derivation");
+            }
+        } else {
+            if (drvtnExpView != null) {
+                drvtnExpView.setCheckColor(Color.ORCHID);
+                drvtnExpView.setCheckElementsColor(Color.PURPLE);
+                drvtnExpView.setCheckMessage("Justified Lines");
+            }
         }
-        else {
-            drvtnExpView.setCheckColor(Color.ORCHID);
-            drvtnExpView.setCheckElementsColor(Color.PURPLE);
-            drvtnExpView.setCheckMessage("Checked Lines: Good");
+
+        if (drvtnExpView != null) {
+            if (checkSuccess) drvtnExpView.activateBigCheck();
+            else drvtnExpView.deactivateBigCheck();
         }
-        if (checkSuccess) drvtnExpView.activateBigCheck();
-        else drvtnExpView.deactivateBigCheck();
 
         derivationRuleset = DerivationRulesets.getRuleset(checkSetup.getRulesetName());
         derivationRuleset.setMetaLanguage(Languages.getLanguage(checkSetup.getMetLangName()));
@@ -77,630 +97,754 @@ public class DrvtnExpCheck implements DCheck {
         checkTries = checkSetup.getCheckTries();
         helpMax = checkSetup.getHelpMax();
         helpTries = checkSetup.getHelpTries();
-        updateCounters();
 
+        updateCounters();
     }
 
     public String getContradictionSymbolString() {
+        if (isTornDown || derivationRuleset == null || derivationRuleset.getObjectLanguage() == null) return "";
         return derivationRuleset.getObjectLanguage().getContradictionSymbol().toString();
     }
 
     public void updateCounters() {
+        if (isTornDown) return;
         setChecksCounter();
         setHelpCounter();
     }
 
     private void setChecksCounter() {
-        if (checkMax != -1 && checkTries >= checkMax && !drvtnExpExercise.getMainWindow().isInstructorFunctions()) {
-            drvtnExpView.getCheckButton().setDisable(true);
-            drvtnExpView.getCheckProgButton().setDisable(true);
-        }
-        String checkString;
-        if (checkMax == -1) checkString = "(unlimited)";
-        else if (checkMax == 0) checkString = "(none)";
-        else checkString = "(" + String.valueOf(checkTries) + "/" + String.valueOf(checkMax) + ")";
+        if (isTornDown || drvtnExpView == null || drvtnExpExercise == null || drvtnExpExercise.getMainWindow() == null) return;
+        try {
+            if (checkMax != -1 && checkTries >= checkMax && !drvtnExpExercise.getMainWindow().isInstructorFunctions()) {
+                if (drvtnExpView.getCheckButton() != null) drvtnExpView.getCheckButton().setDisable(true);
+                if (drvtnExpView.getCheckProgButton() != null) drvtnExpView.getCheckProgButton().setDisable(true);
+            }
+            String checkString;
+            if (checkMax == -1) checkString = "(unlimited)";
+            else if (checkMax == 0) checkString = "(none)";
+            else checkString = "(" + String.valueOf(checkTries) + "/" + String.valueOf(checkMax) + ")";
 
-        drvtnExpView.getCheckTriesLabel().setText(checkString);
+            if (drvtnExpView.getCheckTriesLabel() != null) drvtnExpView.getCheckTriesLabel().setText(checkString);
+        } catch (Exception e) {}
     }
 
     public void setHelpCounter() {
-        if ( (helpMax != -1 && helpTries >= helpMax && !drvtnExpExercise.getMainWindow().isInstructorFunctions()) || !derivationRuleset.isContextualHelpCompatible() ||
-                !drvtnExpModel.getCheckSetup().getTheoremSets().isEmpty() ) {
-            drvtnExpView.getHelpButton().setDisable(true);
-        }
+        if (isTornDown || drvtnExpView == null || drvtnExpExercise == null || drvtnExpExercise.getMainWindow() == null || derivationRuleset == null || drvtnExpModel == null || drvtnExpModel.getCheckSetup() == null) return;
+        try {
+            if ( (helpMax != -1 && helpTries >= helpMax && !drvtnExpExercise.getMainWindow().isInstructorFunctions()) || !derivationRuleset.isContextualHelpCompatible() ||
+                    !drvtnExpModel.getCheckSetup().getTheoremSets().isEmpty() ) {
+                if (drvtnExpView.getHelpButton() != null) drvtnExpView.getHelpButton().setDisable(true);
+            }
 
-        String helpString;
-        if (helpMax == -1) helpString = "(unlimited)";
-        else if (helpMax == 0) helpString = "(none)";
-        else helpString = "(" + String.valueOf(helpTries) + "/" + String.valueOf(helpMax) + ")";
+            String helpString;
+            if (helpMax == -1) helpString = "(unlimited)";
+            else if (helpMax == 0) helpString = "(none)";
+            else helpString = "(" + String.valueOf(helpTries) + "/" + String.valueOf(helpMax) + ")";
 
-        drvtnExpView.getHelpTriesLabel().setText(helpString);
+            if (drvtnExpView.getHelpTriesLabel() != null) drvtnExpView.getHelpTriesLabel().setText(helpString);
+        } catch (Exception e) {}
     }
 
     private void setRightControlBox() {
+        if (isTornDown || drvtnExpView == null) return;
 
-        drvtnExpView.getCheckButton().setOnAction(e -> {
-            checkFinal = true;
-            drvtnExpView.setCheckColor(Color.LAWNGREEN);
-            drvtnExpView.setCheckMessage("Derivation");
-            drvtnExpView.setCheckElementsColor(Color.GREEN);
-            boolean check = runCheck();
-        });
+        checkButtonHandler = e -> {
+            if (isTornDown) return;
+            try {
+                checkFinal = true;
+                drvtnExpView.setCheckColor(Color.LAWNGREEN);
+                drvtnExpView.setCheckMessage("Derivation");
+                drvtnExpView.setCheckElementsColor(Color.GREEN);
+                boolean check = runCheck();
+            } catch (Exception ex) {}
+        };
+        if (drvtnExpView.getCheckButton() != null) drvtnExpView.getCheckButton().setOnAction(checkButtonHandler);
 
-        drvtnExpView.getCheckProgButton().setOnAction(e -> {
-            checkFinal = false;
-            drvtnExpView.setCheckColor(Color.ORCHID);
-            drvtnExpView.setCheckMessage("Checked Lines: Good");
-            drvtnExpView.setCheckElementsColor(Color.PURPLE);
+        checkProgButtonHandler = e -> {
+            if (isTornDown) return;
+            try {
+                checkFinal = false;
+                drvtnExpView.setCheckColor(Color.ORCHID);
+                drvtnExpView.setCheckMessage("Justified Lines");
+                drvtnExpView.setCheckElementsColor(Color.PURPLE);
+                boolean check = runCheck();
+            } catch (Exception ex) {}
+        };
+        if (drvtnExpView.getCheckProgButton() != null) drvtnExpView.getCheckProgButton().setOnAction(checkProgButtonHandler);
 
-            boolean check = runCheck();
-        });
+        if (drvtnExpView.getStaticHelpButton() != null && drvtnExpModel != null && drvtnExpModel.getCheckSetup() != null) {
+            drvtnExpView.getStaticHelpButton().setDisable(!drvtnExpModel.getCheckSetup().isStaticHelpButton());
 
-
-
-        drvtnExpView.getStaticHelpButton().setDisable(!drvtnExpModel.getCheckSetup().isStaticHelpButton());
-        drvtnExpView.getStaticHelpButton().setOnAction(e -> {
-            Stage helpStage = drvtnExpView.getStaticHelpStage();
-            if (helpStage != null && helpStage.isShowing()) helpStage.close();
-            else drvtnExpView.showStaticHelp(drvtnExpModel.getCheckSetup().getStaticHelpDoc());
-        });
-
+            staticHelpButtonHandler = e -> {
+                if (isTornDown || drvtnExpView == null || drvtnExpModel == null || drvtnExpModel.getCheckSetup() == null) return;
+                try {
+                    Stage helpStage = drvtnExpView.getStaticHelpStage();
+                    if (helpStage != null && helpStage.isShowing()) helpStage.close();
+                    else drvtnExpView.showStaticHelp(drvtnExpModel.getCheckSetup().getStaticHelpDoc());
+                } catch (Exception ex) {}
+            };
+            drvtnExpView.getStaticHelpButton().setOnAction(staticHelpButtonHandler);
+        }
     }
 
     private boolean runCheck() {
-        checkSuccess = false;
-        drvtnExpView.deactivateBigCheck();
-        if (!drvtnExpExercise.getMainWindow().isInstructorFunctions()) {
-            checkTries++;
-            setChecksCounter();
-        }
-        drvtnExpExercise.getDrvtnExpHelp().closeHelpWindows();
+        if (isTornDown || drvtnExpView == null || drvtnExpExercise == null || drvtnExpExercise.getMainWindow() == null) return false;
+        try {
+            checkSuccess = false;
+            drvtnExpView.deactivateBigCheck();
+            if (!drvtnExpExercise.getMainWindow().isInstructorFunctions()) {
+                checkTries++;
+                setChecksCounter();
+            }
+            if (drvtnExpExercise.getDrvtnExpHelp() != null) drvtnExpExercise.getDrvtnExpHelp().closeHelpWindows();
 
-        viewLines = drvtnExpView.getViewLines();
+            viewLines = drvtnExpView.getViewLines();
 
-        if (!checkFormulas()) return false;
-        if (!checkScopeStructure()) return false;
- //       if (!checkFormulas()) return false;
-        if (!checkAssumptionScopes()) return false;
-        if (!checkJustificationForms()) return false;
-        setScopeLists();
-        if (!checkJustifications()) return false;
+            if (!checkFormulas()) return false;
+            if (!checkScopeStructure()) return false;
+            if (!checkAssumptionScopes()) return false;
+            if (!checkJustificationForms()) return false;
+            setScopeLists();
+            if (!checkJustifications()) return false;
 
-        checkSuccess = true;
-        drvtnExpView.activateBigCheck();
+            checkSuccess = true;
+            drvtnExpView.activateBigCheck();
 
-        //set check on model
-        return true;
+            return true;
+        } catch (Exception e) { return false; }
     }
 
     public boolean backgroundProgressCheck() {
-        checkFinal = false;
+        if (isTornDown || drvtnExpView == null) return false;
+        try {
+            checkFinal = false;
+            viewLines = drvtnExpView.getViewLines();
 
-        viewLines = drvtnExpView.getViewLines();
+            if (!checkFormulas()) return false;
+            if (!checkScopeStructure()) return false;
+            if (!checkAssumptionScopes()) return false;
+            if (!checkJustificationForms()) return false;
+            setScopeLists();
+            if (!checkJustifications()) return false;
 
-        if (!checkFormulas()) return false;
-        if (!checkScopeStructure()) return false;
-        if (!checkAssumptionScopes()) return false;
-        if (!checkJustificationForms()) return false;
-        setScopeLists();
-        if (!checkJustifications()) return false;
-
-        return true;
-
+            return true;
+        } catch (Exception e) { return false; }
     }
 
-
-
     private boolean checkJustifications() {
-        for (int i = 0; i < viewLines.size(); i++) {
-            ViewLine viewLine = viewLines.get(i);
-            if (LineType.isContentLine(viewLine.getLineType())) {
-                TextFlow justificationFlow = viewLine.getJustificationFlow();
-                String justificationString = drvtnExpExercise.getStringFromJustificationFlow(justificationFlow);
+        if (isTornDown || viewLines == null || derivationRuleset == null || drvtnExpExercise == null) return false;
+        try {
+            for (int i = 0; i < viewLines.size(); i++) {
+                if (isTornDown) return false;
+                ViewLine viewLine = viewLines.get(i);
+                if (viewLine != null && LineType.isContentLine(viewLine.getLineType())) {
+                    TextFlow justificationFlow = viewLine.getJustificationFlow();
+                    String justificationString = drvtnExpExercise.getStringFromJustificationFlow(justificationFlow);
 
-                for (DerivationRule rule : derivationRuleset.getRules()) {
-                    if (rule.matches(justificationString)) {
-                        List<String> lineLabels = drvtnExpExercise.getLineLabelsFromJustificationFlow(justificationFlow);
-                        String[] labelArray = new String[lineLabels.size()];
-                        lineLabels.toArray(labelArray);
-                        Pair<Boolean, List<Text>> resultPair = rule.applies(this, viewLines.get(i), labelArray);
-                        if (!resultPair.getKey()) {
-                            highlightLine(i);
-                            EditorAlerts.showSimpleTxtListAlert("Justification Issue:", resultPair.getValue());
-                            resetHighlights();
-                            return false;
+                    if (derivationRuleset.getRules() != null) {
+                        for (DerivationRule rule : derivationRuleset.getRules()) {
+                            if (rule.matches(justificationString)) {
+                                List<String> lineLabels = drvtnExpExercise.getLineLabelsFromJustificationFlow(justificationFlow);
+                                String[] labelArray = new String[lineLabels.size()];
+                                lineLabels.toArray(labelArray);
+                                Pair<Boolean, List<Text>> resultPair = rule.applies(this, viewLine, labelArray);
+                                if (!resultPair.getKey()) {
+                                    highlightLine(i);
+                                    EditorAlerts.showSimpleTxtListAlert("Justification Issue:", resultPair.getValue());
+                                    resetHighlights();
+                                    return false;
+                                }
+                                break;
+                            }
                         }
-                        break;
                     }
-                }
-                for (Theorem theorem : drvtnExpExercise.getTheorems()) {
-                    if (theorem.matches(justificationString)) {
-                        List<String> lineLabels = drvtnExpExercise.getLineLabelsFromJustificationFlow(justificationFlow);
-                        String[] labelArray = new String[lineLabels.size()];
-                        lineLabels.toArray(labelArray);
-                        Pair<Boolean, List<Text>> resultPair = theorem.applies(this, viewLines.get(i), labelArray);
-                        if (!resultPair.getKey()) {
-                            highlightLine(i);
-                            EditorAlerts.showSimpleTxtListAlert("Justification Issue:", resultPair.getValue());
-                            resetHighlights();
-                            return false;
+                    if (drvtnExpExercise.getTheorems() != null) {
+                        for (Theorem theorem : drvtnExpExercise.getTheorems()) {
+                            if (theorem.matches(justificationString)) {
+                                List<String> lineLabels = drvtnExpExercise.getLineLabelsFromJustificationFlow(justificationFlow);
+                                String[] labelArray = new String[lineLabels.size()];
+                                lineLabels.toArray(labelArray);
+                                Pair<Boolean, List<Text>> resultPair = theorem.applies(this, viewLine, labelArray);
+                                if (!resultPair.getKey()) {
+                                    highlightLine(i);
+                                    EditorAlerts.showSimpleTxtListAlert("Justification Issue:", resultPair.getValue());
+                                    resetHighlights();
+                                    return false;
+                                }
+                                break;
+                            }
                         }
-                        break;
                     }
                 }
             }
-        }
-
-        return true;
+            return true;
+        } catch (Exception e) { return false; }
     }
 
-    public Pair<ViewLine, List<Text>>getLineFromLabel(String label) {
+    public Pair<ViewLine, List<Text>> getLineFromLabel(String label) {
         ViewLine line = null;
+        if (isTornDown || viewLines == null) return new Pair<>(null, new ArrayList<>());
 
         for (ViewLine viewLine : viewLines) {
-            if (LineType.isContentLine(viewLine.getLineType()) && viewLine.getLineNumberLabel().getText().equals(label)) {
+            if (viewLine != null && LineType.isContentLine(viewLine.getLineType()) && viewLine.getLineNumberLabel() != null && viewLine.getLineNumberLabel().getText().equals(label)) {
                 line = viewLine;
                 break;
             }
         }
-        List texts = new ArrayList();
+        List<Text> texts = new ArrayList<>();
         if (line == null) texts.add(ParseUtilities.newRegularText("Line (" + label + ") not found in this derivation."));
-        return new Pair(line, texts);
+        return new Pair<>(line, texts);
     }
 
-    //requires justifier and candidate are content lines
     public Pair<Boolean, List<Text>> lineIsAccessibleTo(ViewLine justifier, ViewLine candidate) {
-        String justifierLabel = justifier.getLineNumberLabel().getText();
-        String candidateLabel = candidate.getLineNumberLabel().getText();
-        if (viewLines.indexOf(candidate) <= viewLines.indexOf(justifier)) {
-            return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Line " + justifierLabel + " (does not come before and) is not available for justification of line " + candidateLabel + ".")));
-        }
-        List<String> justifierAssps = justifier.getAssumptionList();
-        List<String> candidateAssps = candidate.getAssumptionList();
-        for (String labelStr : justifierAssps) {
-            if (!candidateAssps.contains(labelStr)) {
-                return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Line " + justifierLabel + " is not accessible for justification of line " + candidateLabel + ".")));
+        if (isTornDown || viewLines == null || justifier == null || candidate == null || justifier.getLineNumberLabel() == null || candidate.getLineNumberLabel() == null)
+            return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Invalid line accessibility.")));
+
+        try {
+            String justifierLabel = justifier.getLineNumberLabel().getText();
+            String candidateLabel = candidate.getLineNumberLabel().getText();
+            if (viewLines.indexOf(candidate) <= viewLines.indexOf(justifier)) {
+                return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Line " + justifierLabel + " (does not come before and) is not available for justification of line " + candidateLabel + ".")));
             }
-        }
-        return new Pair(true, null);
+            List<String> justifierAssps = justifier.getAssumptionList();
+            List<String> candidateAssps = candidate.getAssumptionList();
+
+            if (justifierAssps != null && candidateAssps != null) {
+                for (String labelStr : justifierAssps) {
+                    if (!candidateAssps.contains(labelStr)) {
+                        return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Line " + justifierLabel + " is not accessible for justification of line " + candidateLabel + ".")));
+                    }
+                }
+            }
+            return new Pair<>(true, null);
+        } catch (Exception e) { return new Pair<>(false, null); }
     }
 
-    //requires start line is content line
     public ViewLine lastLineAtScope(ViewLine startLine) {
-        int index = viewLines.indexOf(startLine);
-        int depth = startLine.realDepth();
-        ViewLine lastCandidate = startLine;
-        for (int i = index; i < viewLines.size(); i++) {
-            ViewLine viewLine = viewLines.get(i);
-            if (viewLine.realDepth() >= depth) {
-                if (LineType.isContentLine(viewLine.getLineType())) lastCandidate = viewLine;
-            }
-            else break;
-        }
-        return lastCandidate;
-    }
+        if (isTornDown || viewLines == null || startLine == null) return null;
 
+        try {
+            int index = viewLines.indexOf(startLine);
+            int depth = startLine.realDepth();
+            ViewLine lastCandidate = startLine;
+
+            if (index != -1) {
+                for (int i = index; i < viewLines.size(); i++) {
+                    ViewLine viewLine = viewLines.get(i);
+                    if (viewLine != null) {
+                        if (viewLine.realDepth() >= depth) {
+                            if (LineType.isContentLine(viewLine.getLineType())) lastCandidate = viewLine;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+            return lastCandidate;
+        } catch (Exception e) { return null; }
+    }
 
     public Pair<Boolean, List<Text>> isSubderivation(String label1, String label2) {
+        if (isTornDown || drvtnExpExercise == null || derivationRuleset == null) return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Internal Error")));
 
-        ViewLine startLine;
-        Pair<ViewLine, List<Text>> startLinePair = getLineFromLabel(label1);
-        if (startLinePair.getKey() != null) startLine = startLinePair.getKey();
-        else return new Pair<>(false, startLinePair.getValue());
+        try {
+            ViewLine startLine;
+            Pair<ViewLine, List<Text>> startLinePair = getLineFromLabel(label1);
+            if (startLinePair.getKey() != null) startLine = startLinePair.getKey();
+            else return new Pair<>(false, startLinePair.getValue());
 
-        TextFlow startJustificationFlow = startLine.getJustificationFlow();
-        String startJustificationString = drvtnExpExercise.getStringFromJustificationFlow(startJustificationFlow);
-        Matcher matcher = derivationRuleset.getGenericAssumption().matcher(startJustificationString);
-        if (!matcher.matches()) {
-            return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("A subderivation " + label1 + "-" + label2 + " must start with an assumption.")));
-        }
-        ViewLine lastLine = lastLineAtScope(startLine);
-        if (!lastLine.getLineNumberLabel().getText().equals(label2)) {
-            return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText(label2 + " does not identify the last line of the subderivation beginning at " + label1 + ".")));
-        }
-        return new Pair<>(true, null);
+            TextFlow startJustificationFlow = startLine.getJustificationFlow();
+            String startJustificationString = drvtnExpExercise.getStringFromJustificationFlow(startJustificationFlow);
+
+            if (derivationRuleset.getGenericAssumption() != null) {
+                Matcher matcher = derivationRuleset.getGenericAssumption().matcher(startJustificationString);
+                if (!matcher.matches()) {
+                    return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("A subderivation " + label1 + "-" + label2 + " must start with an assumption.")));
+                }
+            }
+
+            ViewLine lastLine = lastLineAtScope(startLine);
+            if (lastLine == null || lastLine.getLineNumberLabel() == null || !lastLine.getLineNumberLabel().getText().equals(label2)) {
+                return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText(label2 + " does not identify the last line of the subderivation beginning at " + label1 + ".")));
+            }
+            return new Pair<>(true, null);
+        } catch (Exception e) { return new Pair<>(false, null); }
     }
 
     public Pair<Boolean, List<Text>> isAccessibleSubderivationFor(ViewLine line, String label1, String label2) {
-        Pair<Boolean, List<Text>> subderResult = isSubderivation(label1, label2);
-        if (!subderResult.getKey()) {
-            return subderResult;
-        }
+        if (isTornDown || viewLines == null || line == null || line.getLineNumberLabel() == null)
+            return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Internal Error")));
 
-
-        ViewLine firstLine;
-        Pair<ViewLine, List<Text>> firstLinePair = getLineFromLabel(label1);
-        if (firstLinePair.getKey() != null) firstLine = firstLinePair.getKey();
-        else return new Pair(false, firstLinePair.getValue());
-
-        ViewLine lastLine;
-        Pair<ViewLine, List<Text>> lastLinePair = getLineFromLabel(label2);
-        if (lastLinePair.getKey() != null) lastLine = lastLinePair.getKey();
-        else return new Pair(false, lastLinePair.getValue());
-
-        String candidateLabel = line.getLineNumberLabel().getText();
-        if (viewLines.indexOf(line) <= viewLines.indexOf(firstLine)) {
-            return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Subderivation must be complete (and assumption discharged) before any appeal to it.")));
-        }
-
-        if (viewLines.indexOf(line) <= viewLines.indexOf(lastLine)) {
-            return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Assumption (" + label1 + ") is not discharged at (" + candidateLabel + ") and so (" + label1 + ")-(" + label2 +") is not accessible to (" + candidateLabel + ").")));
-        }
-
-        List<String> lastLineAssps = lastLine.getAssumptionList();
-        List<String> candidateAssps = line.getAssumptionList();
-        for (int i = 0; i < lastLineAssps.size() - 1; i++) {
-            String labelStr = lastLineAssps.get(i);
-            if (!candidateAssps.contains(labelStr)) {
-                return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Subderivation " + label1 + "-" + label2 + " is not accessible for the justification of (" + line.getLineNumberLabel().getText() + ").")));
+        try {
+            Pair<Boolean, List<Text>> subderResult = isSubderivation(label1, label2);
+            if (!subderResult.getKey()) {
+                return subderResult;
             }
-        }
-        return new Pair<>(true, null);
-    }
 
+            ViewLine firstLine;
+            Pair<ViewLine, List<Text>> firstLinePair = getLineFromLabel(label1);
+            if (firstLinePair.getKey() != null) firstLine = firstLinePair.getKey();
+            else return new Pair<>(false, firstLinePair.getValue());
 
-    private void setScopeLists() {
-        ArrayList<String> premiseList = new ArrayList();
-        ArrayList<String> assumptionList = new ArrayList<>();
-        int currentDepth = 1;
+            ViewLine lastLine;
+            Pair<ViewLine, List<Text>> lastLinePair = getLineFromLabel(label2);
+            if (lastLinePair.getKey() != null) lastLine = lastLinePair.getKey();
+            else return new Pair<>(false, lastLinePair.getValue());
 
-        for (int i = 0; i < viewLines.size(); i++) {
-            ViewLine viewLine = viewLines.get(i);
-            if (viewLine.realDepth() == currentDepth) {
-                if (LineType.isContentLine(viewLine.getLineType())) {
-                    TextFlow justificationFlow = viewLine.getJustificationFlow();
-                    String justificationString = drvtnExpExercise.getStringFromJustificationFlow(justificationFlow);
-                    if (derivationRuleset.getPremiseRule().matches(justificationString)) {
-                        premiseList.add(viewLine.getLineNumberLabel().getText());
+            String candidateLabel = line.getLineNumberLabel().getText();
+            if (viewLines.indexOf(line) <= viewLines.indexOf(firstLine)) {
+                return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Subderivation must be complete (and assumption discharged) before any appeal to it.")));
+            }
+
+            if (viewLines.indexOf(line) <= viewLines.indexOf(lastLine)) {
+                return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Assumption (" + label1 + ") is not discharged at (" + candidateLabel + ") and so (" + label1 + ")-(" + label2 +") is not accessible to (" + candidateLabel + ").")));
+            }
+
+            List<String> lastLineAssps = lastLine.getAssumptionList();
+            List<String> candidateAssps = line.getAssumptionList();
+
+            if (lastLineAssps != null && candidateAssps != null) {
+                for (int i = 0; i < lastLineAssps.size() - 1; i++) {
+                    String labelStr = lastLineAssps.get(i);
+                    if (!candidateAssps.contains(labelStr)) {
+                        return new Pair<>(false, Collections.singletonList(ParseUtilities.newRegularText("Subderivation " + label1 + "-" + label2 + " is not accessible for the justification of (" + candidateLabel + ").")));
                     }
                 }
             }
-            else {
-                if (LineType.isContentLine(viewLine.getLineType()) && viewLine.realDepth() == currentDepth + 1) {
-                    assumptionList.add(viewLine.getLineNumberLabel().getText());
-                    currentDepth++;
+            return new Pair<>(true, null);
+        } catch (Exception e) { return new Pair<>(false, null); }
+    }
+
+    private void setScopeLists() {
+        if (isTornDown || viewLines == null || derivationRuleset == null || drvtnExpExercise == null) return;
+        try {
+            ArrayList<String> premiseList = new ArrayList<>();
+            ArrayList<String> assumptionList = new ArrayList<>();
+            int currentDepth = 1;
+
+            for (int i = 0; i < viewLines.size(); i++) {
+                ViewLine viewLine = viewLines.get(i);
+                if (viewLine == null) continue;
+
+                if (viewLine.realDepth() == currentDepth) {
+                    if (LineType.isContentLine(viewLine.getLineType())) {
+                        TextFlow justificationFlow = viewLine.getJustificationFlow();
+                        String justificationString = drvtnExpExercise.getStringFromJustificationFlow(justificationFlow);
+                        if (derivationRuleset.getPremiseRule() != null && derivationRuleset.getPremiseRule().matches(justificationString)) {
+                            if (viewLine.getLineNumberLabel() != null) premiseList.add(viewLine.getLineNumberLabel().getText());
+                        }
+                    }
+                } else {
+                    if (LineType.isContentLine(viewLine.getLineType()) && viewLine.realDepth() == currentDepth + 1) {
+                        if (viewLine.getLineNumberLabel() != null) assumptionList.add(viewLine.getLineNumberLabel().getText());
+                        currentDepth++;
+                    } else if (viewLine.realDepth() == currentDepth - 1) {
+                        if (!assumptionList.isEmpty()) assumptionList.remove(assumptionList.size() - 1);
+                        currentDepth--;
+                    }
                 }
-                else if (viewLine.realDepth() == currentDepth - 1) {
-                    assumptionList.remove(assumptionList.size() - 1);
-                    currentDepth--;
-                }
+                ArrayList<String> newList = new ArrayList<>(premiseList);
+                newList.addAll(assumptionList);
+                viewLine.setAssumptionList(newList);
             }
-            ArrayList newList = new ArrayList(premiseList);
-            newList.addAll(assumptionList);
-            viewLine.setAssumptionList(newList);
-        }
+        } catch (Exception e) {}
     }
 
     private boolean checkAssumptionScopes() {
-        int currentDepth = 1;
-        for (int i = 0; i < viewLines.size(); i++) {
-            ViewLine viewLine = viewLines.get(i);
-            String justificationString = "";
-            if (LineType.isContentLine(viewLine.getLineType())) {
-                TextFlow justificationFlow = viewLine.getJustificationFlow();
-                justificationString = drvtnExpExercise.getStringFromJustificationFlow(justificationFlow);
-            }
+        if (isTornDown || viewLines == null || derivationRuleset == null || drvtnExpExercise == null) return false;
+        try {
+            int currentDepth = 1;
+            for (int i = 0; i < viewLines.size(); i++) {
+                ViewLine viewLine = viewLines.get(i);
+                if (viewLine == null) continue;
 
-            Matcher matcher = derivationRuleset.getGenericAssumption().matcher(justificationString);
-            if (viewLine.realDepth() == currentDepth + 1 && !matcher.matches()) {
-                highlightLine(i);
-                EditorAlerts.showSimpleTxtListAlert("Scope Increase:", Collections.singletonList(ParseUtilities.newRegularText("An increase in scope should be associated with a justification by assumption.")));
-                resetHighlights();
-                return false;
+                String justificationString = "";
+                if (LineType.isContentLine(viewLine.getLineType())) {
+                    TextFlow justificationFlow = viewLine.getJustificationFlow();
+                    justificationString = drvtnExpExercise.getStringFromJustificationFlow(justificationFlow);
+                }
+
+                if (derivationRuleset.getGenericAssumption() != null) {
+                    Matcher matcher = derivationRuleset.getGenericAssumption().matcher(justificationString);
+                    if (viewLine.realDepth() == currentDepth + 1 && !matcher.matches()) {
+                        highlightLine(i);
+                        EditorAlerts.showSimpleTxtListAlert("Scope Increase:", Collections.singletonList(ParseUtilities.newRegularText("An increase in scope should be associated with a justification by assumption.")));
+                        resetHighlights();
+                        return false;
+                    } else if (viewLine.realDepth() != currentDepth + 1 && matcher.matches()) {
+                        highlightLine(i);
+                        EditorAlerts.showSimpleTxtListAlert("Assumption Scope:", Collections.singletonList(ParseUtilities.newRegularText("A justification by assumption should be associated with a scope increase.")));
+                        resetHighlights();
+                        return false;
+                    } else {
+                        currentDepth = viewLine.realDepth();
+                    }
+                } else {
+                    currentDepth = viewLine.realDepth();
+                }
             }
-            else if (viewLine.realDepth() != currentDepth + 1 && matcher.matches()) {
-                highlightLine(i);
-                EditorAlerts.showSimpleTxtListAlert("Assumption Scope:", Collections.singletonList(ParseUtilities.newRegularText("A justification by assumption should be associated with a scope increase.")));
-                resetHighlights();
-                return false;
-            }
-            else{
-                currentDepth = viewLine.realDepth();
-            }
-        }
-        return true;
+            return true;
+        } catch (Exception e) { return false; }
     }
 
     private boolean checkJustificationForms() {
-        for (int i = 0; i < viewLines.size(); i++) {
-            ViewLine viewLine = viewLines.get(i);
-            if (LineType.isContentLine(viewLine.getLineType())) {
-                BoxedDRTA bdrta = viewLine.getLineContentBoxedDRTA();
-                RichTextArea rta = bdrta.getRTA();
-                rta.getActionFactory().saveNow().execute(new ActionEvent());
-                Document lineDoc = rta.getDocument();
-                TextFlow justificationFlow = viewLine.getJustificationFlow();
-                String justificationString = drvtnExpExercise.getStringFromJustificationFlow(justificationFlow);
+        if (isTornDown || viewLines == null || derivationRuleset == null || drvtnExpExercise == null) return false;
+        try {
+            for (int i = 0; i < viewLines.size(); i++) {
+                ViewLine viewLine = viewLines.get(i);
+                if (viewLine != null && LineType.isContentLine(viewLine.getLineType())) {
+                    BoxedDRTA bdrta = viewLine.getLineContentBoxedDRTA();
+                    if (bdrta == null || bdrta.getRTA() == null) continue;
+                    RichTextArea rta = bdrta.getRTA();
+                    rta.getActionFactory().saveNow().execute(new ActionEvent());
+                    Document lineDoc = rta.getDocument();
+                    TextFlow justificationFlow = viewLine.getJustificationFlow();
+                    String justificationString = drvtnExpExercise.getStringFromJustificationFlow(justificationFlow);
 
-                if (lineDoc.getText().equals("") && !justificationString.equals("")) {
-                    highlightJustification(i);
-                    EditorAlerts.showSimpleTxtListAlert("Missing Formula", Collections.singletonList(ParseUtilities.newRegularText("No formula to which justification applies.")));
-                    resetHighlights();
-                    return false;
-                }
-
-                if (!lineDoc.getText().equals("")) {
-                    boolean blankOK = false;
-
-                    ViewLine priorLine = drvtnExpExercise.getContentLineAbove(i);
-                    if (!priorLine.equals(viewLine)) {
-                        TextFlow priorJustificationFlow = priorLine.getJustificationFlow();
-                        String priorJustificationString = drvtnExpExercise.getStringFromJustificationFlow(priorJustificationFlow);
-                        if ((derivationRuleset.getAsspRestrictedExisExploitCRule() != null && derivationRuleset.getAsspRestrictedExisExploitCRule().matches(priorJustificationString))
-                                || (derivationRuleset.getAsspRestrictedExisExploitGRule() != null) && derivationRuleset.getAsspRestrictedExisExploitGRule().matches(priorJustificationString)) {
-                            blankOK = true;
-                        }
+                    if (lineDoc != null && lineDoc.getText().equals("") && !justificationString.equals("")) {
+                        highlightJustification(i);
+                        EditorAlerts.showSimpleTxtListAlert("Missing Formula", Collections.singletonList(ParseUtilities.newRegularText("No formula to which justification applies.")));
+                        resetHighlights();
+                        return false;
                     }
 
-                    if (justificationString.equals("")) {
-                        if (blankOK) break;
-                        if (checkFinal) {
-                            highlightJustification(i);
-                            EditorAlerts.showSimpleTxtListAlert("Missing Justification:", Collections.singletonList(ParseUtilities.newRegularText("Line requires justification.")));
-                            resetHighlights();
-                            return false;
-                        }
-                    } else {
-                        boolean ok = false;
-                        for (DerivationRule rule : derivationRuleset.getRules()) {
-                            if (rule.matches(justificationString)) {
-                                ok = true;
-                                break;
+                    if (lineDoc != null && !lineDoc.getText().equals("")) {
+                        boolean blankOK = false;
+
+                        ViewLine priorLine = drvtnExpExercise.getContentLineAbove(i);
+                        if (priorLine != null && !priorLine.equals(viewLine)) {
+                            TextFlow priorJustificationFlow = priorLine.getJustificationFlow();
+                            String priorJustificationString = drvtnExpExercise.getStringFromJustificationFlow(priorJustificationFlow);
+                            if ((derivationRuleset.getAsspRestrictedExisExploitCRule() != null && derivationRuleset.getAsspRestrictedExisExploitCRule().matches(priorJustificationString))
+                                    || (derivationRuleset.getAsspRestrictedExisExploitGRule() != null && derivationRuleset.getAsspRestrictedExisExploitGRule().matches(priorJustificationString))) {
+                                blankOK = true;
                             }
                         }
 
-                        for (Theorem theorem : drvtnExpExercise.getTheorems()) {
-                            if (theorem.matches(justificationString)) {
-                                ok = true;
-                                break;
+                        if (justificationString.equals("")) {
+                            if (blankOK) break;
+                            if (checkFinal) {
+                                highlightJustification(i);
+                                EditorAlerts.showSimpleTxtListAlert("Missing Justification:", Collections.singletonList(ParseUtilities.newRegularText("Line requires justification.")));
+                                resetHighlights();
+                                return false;
                             }
-                        }
-                        if (!ok) {
-                            for (Pair<Pattern, String> dummyPair : derivationRuleset.getDummyRules()) {
-                                Matcher matcher = dummyPair.getKey().matcher(justificationString);
-                                if (matcher.matches()) {
-                                    highlightJustification(i);
-                                    EditorAlerts.showSimpleTxtListAlert("Justification Error:", Collections.singletonList(ParseUtilities.newRegularText(dummyPair.getValue())));
-                                    resetHighlights();
-                                    return false;
+                        } else {
+                            boolean ok = false;
+                            if (derivationRuleset.getRules() != null) {
+                                for (DerivationRule rule : derivationRuleset.getRules()) {
+                                    if (rule.matches(justificationString)) {
+                                        ok = true;
+                                        break;
+                                    }
                                 }
                             }
-                            String message = "I do not recognize this as a(n) ";
-                            if (!drvtnExpExercise.getTheorems().isEmpty()) message = "I do not recognize this as an (available) ";
-                            highlightJustification(i);
+
+                            if (!ok && drvtnExpExercise.getTheorems() != null) {
+                                for (Theorem theorem : drvtnExpExercise.getTheorems()) {
+                                    if (theorem.matches(justificationString)) {
+                                        ok = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (!ok) {
+                                if (derivationRuleset.getDummyRules() != null) {
+                                    for (Pair<Pattern, String> dummyPair : derivationRuleset.getDummyRules()) {
+                                        if (dummyPair.getKey() != null) {
+                                            Matcher matcher = dummyPair.getKey().matcher(justificationString);
+                                            if (matcher.matches()) {
+                                                highlightJustification(i);
+                                                EditorAlerts.showSimpleTxtListAlert("Justification Error:", Collections.singletonList(ParseUtilities.newRegularText(dummyPair.getValue())));
+                                                resetHighlights();
+                                                return false;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                String message = "I do not recognize this as a(n) ";
+                                if (drvtnExpExercise.getTheorems() != null && !drvtnExpExercise.getTheorems().isEmpty()) message = "I do not recognize this as an (available) ";
+                                highlightJustification(i);
+                                List<Text> texts = new ArrayList<>();
+                                texts.add(new Text(message));
+                                if (derivationRuleset.getTextName() != null) texts.addAll(derivationRuleset.getTextName());
+                                texts.add(new Text(" justification."));
+                                EditorAlerts.showSimpleTxtListAlert("Justification Issue:", texts);
+                                resetHighlights();
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+        } catch (Exception e) { return false; }
+    }
+
+    private boolean checkFormulas() {
+        if (isTornDown || viewLines == null || derivationRuleset == null || derivationRuleset.getObjectLanguage() == null) return false;
+        try {
+            for (int i = 0; i < viewLines.size(); i++) {
+                ViewLine viewLine = viewLines.get(i);
+                if (viewLine != null && LineType.isContentLine(viewLine.getLineType())) {
+                    BoxedDRTA bdrta = viewLine.getLineContentBoxedDRTA();
+                    if (bdrta == null || bdrta.getRTA() == null) continue;
+                    RichTextArea rta = bdrta.getRTA();
+                    rta.getActionFactory().saveNow().execute(new ActionEvent());
+                    Document lineDoc = rta.getDocument();
+
+                    if (lineDoc != null && !lineDoc.getText().equals("")) {
+                        List<Expression> parseExpressions = ParseUtilities.parseDoc(lineDoc, derivationRuleset.getObjectLanguage().getNameString());
+                        if (parseExpressions != null && parseExpressions.size() == 1 && parseExpressions.get(0) instanceof Formula) {
+                            if (ParseUtilities.getAlternateMessage() != null && !ParseUtilities.getAlternateMessage().isEmpty()) {
+                                highlightFormula(i);
+                                EditorAlerts.showSimpleTxtListAlert("Problem in bounded quantifier:", ParseUtilities.getAlternateMessage());
+                                resetHighlights();
+                                return false;
+                            }
+                            continue;
+                        } else {
                             List<Text> texts = new ArrayList<>();
-                  //          texts.add(new Text("I do not recognize this as a(n) "));
-                            texts.add(new Text(message));
-                            texts.addAll(derivationRuleset.getTextName());
-                            texts.add(new Text(" justification."));
-                            EditorAlerts.showSimpleTxtListAlert("Justification Issue:", texts);
+                            Text leadText = new Text("Parse results:\n");
+                            leadText.setFont(Font.font("Noto Serif Combo", FontPosture.ITALIC, 11));
+                            texts.add(leadText);
+
+                            if (parseExpressions != null) {
+                                for (Expression expr : parseExpressions) {
+                                    texts.add(new Text("    "));
+                                    texts.add(new Text(expr.getType() + ": "));
+                                    texts.addAll(expr.toTextList());
+                                    texts.add(new Text("\n"));
+                                }
+                            }
+                            highlightFormula(i);
+                            EditorAlerts.showSimpleTxtListAlert("Not a formula of " + derivationRuleset.getObjectLanguage().getNameString() + ":", texts);
                             resetHighlights();
                             return false;
                         }
                     }
                 }
             }
-        }
-        return true;
+            return true;
+        } catch (Exception e) { return false; }
     }
 
-    private boolean checkFormulas() {
-        for (int i = 0; i < viewLines.size(); i++) {
-            ViewLine viewLine = viewLines.get(i);
-            if (LineType.isContentLine(viewLine.getLineType())) {
-                BoxedDRTA bdrta = viewLine.getLineContentBoxedDRTA();
-                RichTextArea rta = bdrta.getRTA();
-                rta.getActionFactory().saveNow().execute(new ActionEvent());
-                Document lineDoc = rta.getDocument();
-                if (!lineDoc.getText().equals("")) {
-
-                    List<Expression> parseExpressions = ParseUtilities.parseDoc(lineDoc, derivationRuleset.getObjectLanguage().getNameString());
-                    if (parseExpressions.size() == 1 && parseExpressions.get(0) instanceof Formula) {
-                        if (!ParseUtilities.getAlternateMessage().isEmpty()) {
-                            highlightFormula(i);
-                            EditorAlerts.showSimpleTxtListAlert("Problem in bounded quantifier:", ParseUtilities.getAlternateMessage());
-                            resetHighlights();
-                            return false;
-                        }
-                        continue;
+    private boolean checkScopeStructure() {
+        if (isTornDown || viewLines == null || derivationRuleset == null) return false;
+        try {
+            if (viewLines.size() > 0) {
+                ViewLine firstLine = viewLines.get(0);
+                if (firstLine != null) {
+                    if (!LineType.isContentLine(firstLine.getLineType())) {
+                        EditorAlerts.showSimpleTxtListAlert("Derivation Start:", Collections.singletonList(ParseUtilities.newRegularText("Top line of derivation cannot be a 'shelf' or 'gap'.")));
+                        return false;
                     }
-                    else {
-                        List<Text> texts = new ArrayList<>();
-                        Text leadText = new Text("Parse results:\n");
-                        leadText.setFont(Font.font("Noto Serif Combo", FontPosture.ITALIC, 11));
-                        texts.add(leadText);
-
-                        for (Expression expr : parseExpressions) {
-                            texts.add(new Text("    "));
-                            texts.add(new Text(expr.getType() + ": "));
-                            texts.addAll(expr.toTextList());
-                            texts.add(new Text("\n"));
-                        }
-                        highlightFormula(i);
-                        EditorAlerts.showSimpleTxtListAlert("Not a formula of " + derivationRuleset.getObjectLanguage().getNameString() + ":", texts);
+                    if (firstLine.realDepth() > 2) {
+                        highlightFormula(0);
+                        EditorAlerts.showSimpleTxtListAlert("Derivation Start:", Collections.singletonList(ParseUtilities.newRegularText("Starting scope depth cannot be greater than 2.")));
                         resetHighlights();
                         return false;
                     }
                 }
             }
-        }
-        return true;
+            if (viewLines.size() > 1) {
+                ViewLine lastLine = viewLines.get(viewLines.size() - 1);
+                if (lastLine != null) {
+                    if (!LineType.isContentLine(lastLine.getLineType())) {
+                        EditorAlerts.showSimpleTxtListAlert("Derivation End", Collections.singletonList(ParseUtilities.newRegularText("Last line of derivation cannot be a 'shelf' or 'gap'.")));
+                        return false;
+                    }
+                    if (lastLine.realDepth() != 1) {
+                        highlightFormula(viewLines.size() - 1);
+                        EditorAlerts.showSimpleTxtListAlert("Derivation End", Collections.singletonList(ParseUtilities.newRegularText("Last line of derivation cannot have scope depth greater than 1.")));
+                        resetHighlights();
+                        return false;
+                    }
+
+                    BoxedDRTA bottomDRTA = lastLine.getLineContentBoxedDRTA();
+                    if (bottomDRTA != null && bottomDRTA.getRTA() != null) {
+                        RichTextArea bottomRTA = bottomDRTA.getRTA();
+                        bottomRTA.getActionFactory().saveNow().execute(new ActionEvent());
+                        Document bottomLineDoc = bottomRTA.getDocument();
+
+                        if (bottomLineDoc != null && bottomLineDoc.getText().equals("")) {
+                            highlightFormula(viewLines.size() - 1);
+                            EditorAlerts.showSimpleTxtListAlert("Derivation End", Collections.singletonList(ParseUtilities.newRegularText("Last line of derivation should be populated with a formula.")));
+                            resetHighlights();
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            if (viewLines.isEmpty() || viewLines.get(0) == null) return true;
+
+            int depth = viewLines.get(0).getDepth();
+            for (int i = 0; i < viewLines.size(); i++) {
+                ViewLine currentLine = viewLines.get(i);
+                if (currentLine == null) continue;
+
+                int currentDepth = currentLine.realDepth();
+
+                if (currentDepth != 1 && !derivationRuleset.isPermitSubderivations()) {
+                    highlightLine(i);
+                    EditorAlerts.showSimpleTxtListAlert("Scope Increase:", Collections.singletonList(ParseUtilities.newRegularText("Basic " + derivationRuleset.getName() + " does not permit subderivations.")));
+                    resetHighlights();
+                    return false;
+                }
+
+                if (LineType.isGapLine(currentLine.getLineType())) {
+                    if (i > 0 && viewLines.get(i - 1) != null && currentDepth + 1 != viewLines.get(i - 1).realDepth() ) {
+                        highlightFormula(i - 1);
+                        EditorAlerts.showSimpleTxtListAlert("Gap Scope:", Collections.singletonList(ParseUtilities.newRegularText("Scope depth of line before gap should be one more than that of gap.")));
+                        resetHighlights();
+                        return false;
+                    }
+                    if (i + 1 < viewLines.size() && viewLines.get(i + 1) != null && currentDepth + 1 != viewLines.get(i + 1).realDepth()) {
+                        highlightFormula(i + 1);
+                        EditorAlerts.showSimpleTxtListAlert("Gap Scope:", Collections.singletonList(ParseUtilities.newRegularText("Scope depth of line after gap should be one more than that of gap.")));
+                        resetHighlights();
+                        return false;
+                    }
+                } else if (LineType.isContentLine(currentLine.getLineType())) {
+                    if (currentLine.realDepth() > depth + 1 || currentLine.realDepth() < depth - 1) {
+                        highlightFormula(i);
+                        EditorAlerts.showSimpleTxtListAlert("Scope Jump:", Collections.singletonList(ParseUtilities.newRegularText("From one line to the next, scope depth cannot change by more than one.")));
+                        resetHighlights();
+                        return false;
+                    }
+                }
+                depth = currentDepth;
+            }
+            return true;
+        } catch (Exception e) { return false; }
     }
-
-    private boolean checkScopeStructure() {
-
-        if (viewLines.size() > 0) {
-            ViewLine firstLine = viewLines.get(0);
-            if (!LineType.isContentLine(firstLine.getLineType())) {
-                EditorAlerts.showSimpleTxtListAlert("Derivation Start:", Collections.singletonList(ParseUtilities.newRegularText("Top line of derivation cannot be a 'shelf' or 'gap'.")));
-                return false;
-            }
-            if (firstLine.realDepth() > 2) {
-                highlightFormula(0);
-                EditorAlerts.showSimpleTxtListAlert("Derivation Start:", Collections.singletonList(ParseUtilities.newRegularText("Starting scope depth cannot be greater than 2.")));
-                resetHighlights();
-                return false;
-            }
-        }
-        if (viewLines.size() > 1) {
-            ViewLine lastLine = viewLines.get(viewLines.size() - 1);
-            if (!LineType.isContentLine(lastLine.getLineType())) {
-                EditorAlerts.showSimpleTxtListAlert("Derivation End", Collections.singletonList(ParseUtilities.newRegularText("Last line of derivation cannot be a 'shelf' or 'gap'.")));
-                return false;
-            }
-            if (lastLine.realDepth() != 1) {
-                highlightFormula(viewLines.size() - 1);
-                EditorAlerts.showSimpleTxtListAlert("Derivation End", Collections.singletonList(ParseUtilities.newRegularText("Last line of derivation cannot have scope depth greater than 1.")));
-                resetHighlights();
-                return false;
-            }
-
-            BoxedDRTA bottomDRTA = lastLine.getLineContentBoxedDRTA();
-            RichTextArea bottomRTA = bottomDRTA.getRTA();
-            bottomRTA.getActionFactory().saveNow().execute(new ActionEvent());
-            Document bottomLineDoc = bottomRTA.getDocument();
-
-            if (bottomLineDoc.getText().equals("")) {
-                highlightFormula(viewLines.size() - 1);
-                EditorAlerts.showSimpleTxtListAlert("Derivation End", Collections.singletonList(ParseUtilities.newRegularText("Last line of derivation should be populated with a formula.")));
-                resetHighlights();
-                return false;
-
-            }
-        }
-        int depth = viewLines.get(0).getDepth();
-        for (int i = 0; i < viewLines.size(); i++) {
-            ViewLine currentLine = viewLines.get(i);
-            int currentDepth = currentLine.realDepth();
-
-            if (currentDepth != 1 && !derivationRuleset.isPermitSubderivations()) {
-                highlightLine(i);
-                EditorAlerts.showSimpleTxtListAlert("Scope Increase:", Collections.singletonList(ParseUtilities.newRegularText("Basic " + derivationRuleset.getName() + " does not permit subderivations.")));
-                resetHighlights();
-                return false;
-            }
-
-            if (LineType.isGapLine(currentLine.getLineType())) {
-                if (currentDepth + 1 != viewLines.get(i - 1).realDepth() ) {
-                    highlightFormula(i - 1);
-                    EditorAlerts.showSimpleTxtListAlert("Gap Scope:", Collections.singletonList(ParseUtilities.newRegularText("Scope depth of line before gap should be one more than that of gap.")));
-                    resetHighlights();
-                    return false;
-                }
-                if (currentDepth + 1 != viewLines.get(i + 1).realDepth()) {
-                    highlightFormula(i + 1);
-                    EditorAlerts.showSimpleTxtListAlert("Gap Scope:", Collections.singletonList(ParseUtilities.newRegularText("Scope depth of line after gap should be one more than that of gap.")));
-                    resetHighlights();
-                    return false;
-                }
-            }
-            else if (LineType.isContentLine(currentLine.getLineType())) {
-                if (currentLine.realDepth() > depth + 1 || currentLine.realDepth() < depth - 1) {
-                    highlightFormula(i);
-                    EditorAlerts.showSimpleTxtListAlert("Scope Jump:", Collections.singletonList(ParseUtilities.newRegularText("From one line to the next, scope depth cannot change by more than one.")));
-                    resetHighlights();
-                    return false;
-                }
-            }
-            depth = currentDepth;
-        }
-        return true;
-    }
-
-
 
     private void highlightLine(int index) {
+        if (isTornDown) return;
         highlightFormula(index);
         highlightJustification(index);
     }
 
     private void highlightJustification(int index) {
-        ViewLine line = viewLines.get(index);
-        TextFlow justificationFlow = line.getJustificationFlow();
-        justificationFlow.setStyle("-fx-background-color: mistyrose");
-        line.setLineHighlight(true);
-        markedLine = line;
+        if (isTornDown || viewLines == null || index < 0 || index >= viewLines.size()) return;
+        try {
+            ViewLine line = viewLines.get(index);
+            if (line != null && line.getJustificationFlow() != null) {
+                TextFlow justificationFlow = line.getJustificationFlow();
+                justificationFlow.setStyle("-fx-background-color: mistyrose");
+                line.setLineHighlight(true);
+                markedLine = line;
+            }
+        } catch (Exception e) {}
     }
 
     private void highlightFormula(int index) {
-
+        if (isTornDown || viewLines == null || index < 0 || index >= viewLines.size() || drvtnExpExercise == null || drvtnExpExercise.getMainWindow() == null || drvtnExpExercise.getMainWindow().getMainView() == null) return;
+        try {
             ViewLine line = viewLines.get(index);
-            BoxedDRTA bdrta = line.getLineContentBoxedDRTA();
-            bdrta.setDerHighlight();
-            drvtnExpExercise.getMainWindow().getMainView().scrollToNode(bdrta.getRTA());
-            markedLine = line;
+            if (line != null && line.getLineContentBoxedDRTA() != null) {
+                BoxedDRTA bdrta = line.getLineContentBoxedDRTA();
+                bdrta.setDerHighlight();
+                if (bdrta.getRTA() != null) {
+                    drvtnExpExercise.getMainWindow().getMainView().scrollToNode(bdrta.getRTA());
+                }
+                markedLine = line;
+            }
+        } catch (Exception e) {}
     }
 
+    // SCORCHED EARTH RULE 8: Safely sever persistent highlighting roots
     private void resetHighlights() {
-        ViewLine line = markedLine;
-        BoxedDRTA bdrta = line.getLineContentBoxedDRTA();
-        bdrta.resetDerHighlight();
-        line.getJustificationFlow().setStyle("-fx-background-color: transparent");
-        line.setLineHighlight(false);
-    }
-
-    private int getCurrentLineNum() {
-        int row = -1;
-        Node lastFocusedNode = drvtnExpExercise.getMainWindow().getLastFocusOwner();
-        if (drvtnExpView.getGrid().getChildren().contains(lastFocusedNode.getParent())) row = drvtnExpView.getGrid().getRowIndex(lastFocusedNode.getParent());
-        else if (drvtnExpExercise.getLastJustificationRTA() == lastFocusedNode) row = drvtnExpExercise.getLastJustificationRow();
-        return row;
-
-    }
-
-
-    public void setCheckMax(int checkMax) {
-        this.checkMax = checkMax;
-    }
-
-    public void setCheckTries(int checkTries) {
-        this.checkTries = checkTries;
-    }
-
-    public void setHelpMax(int helpMax) {
-        this.helpMax = helpMax;
-    }
-
-    public void setHelpTries(int helpTries) {
-        this.helpTries = helpTries;
-    }
-
-    public List<ViewLine> getViewLines() {
-        return viewLines;
+        if (isTornDown || markedLine == null) return;
+        try {
+            ViewLine line = markedLine;
+            if (line != null) {
+                if (line.getLineContentBoxedDRTA() != null) {
+                    BoxedDRTA bdrta = line.getLineContentBoxedDRTA();
+                    bdrta.resetDerHighlight();
+                }
+                if (line.getJustificationFlow() != null) {
+                    line.getJustificationFlow().setStyle("-fx-background-color: transparent");
+                }
+                line.setLineHighlight(false);
+            }
+        } catch (Exception e) {}
+        markedLine = null;
     }
 
 
-    public DerivationRuleset getDerivationRuleset() {
-        return derivationRuleset;
+
+    public void setCheckMax(int checkMax) { this.checkMax = checkMax; }
+
+    public void setCheckTries(int checkTries) { this.checkTries = checkTries; }
+
+    public void setHelpMax(int helpMax) { this.helpMax = helpMax; }
+
+    public void setHelpTries(int helpTries) { this.helpTries = helpTries; }
+
+    public List<ViewLine> getViewLines() { return viewLines; }
+
+    public DerivationRuleset getDerivationRuleset() { return derivationRuleset; }
+
+    public Exercise getExercise() { return drvtnExpExercise; }
+
+    public int getCheckMax() { return checkMax; }
+
+    public int getCheckTries() { return checkTries; }
+
+    public int getHelpMax() { return helpMax; }
+
+    public int getHelpTries() { return helpTries; }
+
+    public boolean isCheckFinal() { return checkFinal; }
+
+    public boolean isCheckSuccess() { return checkSuccess; }
+
+    // SCORCHED EARTH RULE 1: Cascading Cleanup
+    public void cleanup() {
+
+        // Reset local highlights before losing track of references
+        try { resetHighlights(); } catch (Exception e) {}
+
+        // KILL SWITCH: Engaged!
+        isTornDown = true;
+
+        try { MatchUtilities.clearFormMatch(); } catch (Exception e) {}
+
+
+
+        // Unhook Handlers
+        try {
+            if (drvtnExpView != null) {
+                if (drvtnExpView.getCheckButton() != null && checkButtonHandler != null) {
+                    drvtnExpView.getCheckButton().removeEventHandler(ActionEvent.ACTION, checkButtonHandler);
+                    drvtnExpView.getCheckButton().setOnAction(null);
+                }
+                if (drvtnExpView.getCheckProgButton() != null && checkProgButtonHandler != null) {
+                    drvtnExpView.getCheckProgButton().removeEventHandler(ActionEvent.ACTION, checkProgButtonHandler);
+                    drvtnExpView.getCheckProgButton().setOnAction(null);
+                }
+                if (drvtnExpView.getStaticHelpButton() != null && staticHelpButtonHandler != null) {
+                    drvtnExpView.getStaticHelpButton().removeEventHandler(ActionEvent.ACTION, staticHelpButtonHandler);
+                    drvtnExpView.getStaticHelpButton().setOnAction(null);
+                }
+            }
+        } catch (Exception e) {}
+
+        // SCORCHED EARTH RULE 10: Non-destructive data teardown
+        try { this.viewLines = null; } catch (Exception e) {}
+
+        // Final Explicit Nullifications
+        this.drvtnExpExercise = null;
+        this.drvtnExpView = null;
+        this.drvtnExpModel = null;
+        this.derivationRuleset = null;
+        this.markedLine = null;
+        this.checkButtonHandler = null;
+        this.checkProgButtonHandler = null;
+        this.staticHelpButtonHandler = null;
     }
-
-    public Exercise getExercise() {
-        return drvtnExpExercise;
-    }
-
-    public int getCheckMax() {
-        return checkMax;
-    }
-
-    public int getCheckTries() {
-        return checkTries;
-    }
-
-    public int getHelpMax() {
-        return helpMax;
-    }
-
-    public int getHelpTries() {
-        return helpTries;
-    }
-
-    public boolean isCheckFinal() {
-        return checkFinal;
-    }
-
-    public boolean isCheckSuccess() {
-        return checkSuccess;
-    }
-
-
 }

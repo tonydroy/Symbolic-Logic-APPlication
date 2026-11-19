@@ -34,6 +34,7 @@ public class ParseUtilities {
         return parseExpressions(expressions);
     }
 
+
     public static List<Expression> parseDoc(Document doc, String langName) {
         return parseDoc(doc, Languages.getLanguage(langName));
     }
@@ -1130,7 +1131,7 @@ public class ParseUtilities {
                     }
 
                     VariableSym variable;
-                    if (language.isMetalanguage()) {
+                    if (language.isMetalanguage() || language.ismVarLang()) {
                         boolean matching = !language.getNoMatchVariables().contains(elementStr);
                         variable = MVariable.getInstance(elementStr, subString, matching);
                     }
@@ -1295,7 +1296,7 @@ public class ParseUtilities {
 
 
     //are places following terms (possibly after superscript/subscript)
-    private static int areFollowingTerms(int j, List<Expression> expressions) {
+    public static int areFollowingTerms(int j, List<Expression> expressions) {
         int places = 0;
         while (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT ) {
             OriginalElement element = (OriginalElement) expressions.get(j);
@@ -1327,7 +1328,7 @@ public class ParseUtilities {
     }
 
     //is following superscript > 0, possibly after subscript
-    private static boolean isFollowingSuperscript(int j, List<Expression> expressions) {
+    public static boolean isFollowingSuperscript(int j, List<Expression> expressions) {
         boolean isFollowingSuperscript = false;
         while (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT) {
             OriginalElement originalElement = (OriginalElement) expressions.get(j);
@@ -1342,7 +1343,7 @@ public class ParseUtilities {
     }
 
     //get string of subscripts, deleting members from expressions
-    private static String getSubString(int j, List<Expression> expressions) {
+    public static String getSubString(int j, List<Expression> expressions) {
         StringBuilder sb = new StringBuilder();
         while (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(j)).isSubscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[0-9]")) {
             sb.append(((OriginalElement) expressions.get(j)).getElementStr());
@@ -1352,7 +1353,7 @@ public class ParseUtilities {
     }
 
     //get string of superscripts, deleting members from expressions
-    private static String getSupString(int j, List<Expression> expressions) {
+    public static String getSupString(int j, List<Expression> expressions) {
         StringBuilder sb = new StringBuilder();
         while (j < expressions.size() && expressions.get(j).getType() == ExpressionType.ORIGINAL_ELEMENT && ((OriginalElement) expressions.get(j)).isSuperscript() && ((OriginalElement) expressions.get(j)).getElementStr().matches("[0-9]")) {
             sb.append(((OriginalElement) expressions.get(j)).getElementStr());
@@ -1406,7 +1407,7 @@ public class ParseUtilities {
      * @param decorations the document decorations
      * @return the applicable DecorationModel
      */
-    private static DecorationModel getDecorationAtIndex(int index, List<DecorationModel> decorations) {
+    public static DecorationModel getDecorationAtIndex(int index, List<DecorationModel> decorations) {
         DecorationModel decorationAtIndex = null;
         for (DecorationModel decoration : decorations) {
             if (decoration.getStart() <= index && index < decoration.getStart() + decoration.getLength()) {
@@ -1433,6 +1434,13 @@ public class ParseUtilities {
             t = new Text(string);
             t.setFont(new Font("Noto Serif Combo", baseFontSize));
         }
+        return t;
+    }
+
+    public static Text newUnderlineText(String text) {
+        Text t = new Text(text);
+        t.setFont(new Font("Noto Serif Combo", baseFontSize));
+        t.setUnderline(true);
         return t;
     }
 

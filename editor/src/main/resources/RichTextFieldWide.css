@@ -1,50 +1,62 @@
 
-
-.rich-text-area:focused .paragraph-tile {
-    -fx-background-color: white;
-    -fx-padding: 0 0 0 2;
-
-}
-
-
-
-.rich-text-area .paragraph-tile {
-    -fx-background-color: white;
-    -fx-padding: 0 0 0 2;
-}
-
-
-
+/* 1. Base Unfocused State */
 .rich-text-area {
+    -fx-background-color: white;
+    -fx-background-radius: 5;               /* Added to stop square corners from bleeding out */
     -fx-border-color: lightgrey;
     -fx-border-width: 1 1 1 1;
-    -fx-bordor-radius: 5 5 5 5;
+    -fx-border-radius: 5;                   /* Fixed typo (was 'bordor') */
     -fx-padding: 3 5 3 5;
-    -fx-background-color: white;
 
+    /* --- THE FIX: Override JavaFX's Master Selection Colors --- */
+    -fx-accent: lightsteelblue;             /* Master system color */
+    -fx-highlight-fill: lightsteelblue;     /* Standard TextField highlight */
+    -fx-selection-fill: lightsteelblue;     /* TextFlow highlight (JavaFX 9+) */
+    -fx-highlight-text-fill: black;         /* Keep selected text readable */
+
+    /* Hide the underlying list row selection */
+    -fx-selection-bar: transparent;
+    -fx-selection-bar-non-focused: transparent;
 }
 
-
+/* 2. Focused State */
 .rich-text-area:focused {
-    -fx-border-width: 1 1 1 1;
     -fx-border-color: darkturquoise;
-    -fx-border-radius: 5 5 5 5;
-    -fx-padding: 3 5 3 5;
-    -fx-background-color: white;
+    /* (Background, width, padding, and radii inherit cleanly from base state) */
 }
 
-
-
-.text-flow:focused {
-    -fx-border-color: blue;
-    -fx-border-width: 1 1 1 1;
+/* 3. Force Gluon's custom selection paths to match */
+.rich-text-area .selection,
+.rich-text-area .selection-highlight {
+    -fx-fill: lightsteelblue !important;
 }
 
-
-
-#text-flow {
-    -fx-border-color: red;
-    -fx-border-width: 1 1 1 1;
+/* 4. Text Nodes (Make transparent so root background shines through) */
+.rich-text-area .paragraph-tile {
+    -fx-background-color: transparent !important;
+    -fx-padding: 0 0 0 2;
 }
 
+/* 5. Kill native List Row Selection just in case */
+.rich-text-area .list-cell:selected,
+.rich-text-area .list-cell:focused,
+.rich-text-area .list-cell:selected:focused {
+    -fx-background: transparent !important;
+    -fx-background-color: transparent !important;
+    -fx-text-fill: black !important;
+}
 
+/* --- White Line, Scrollbar & Gap Patch --- */
+.rich-text-area .virtual-flow,
+.rich-text-area .virtual-flow .viewport,
+.rich-text-area .list-view,
+.rich-text-area .list-cell {
+    -fx-background-color: transparent !important;
+}
+
+.rich-text-area .scroll-bar:vertical,
+.rich-text-area .scroll-bar:vertical .track,
+.rich-text-area .scroll-bar:vertical .track-background,
+.rich-text-area .corner {
+    -fx-background-color: transparent;
+}

@@ -71,12 +71,13 @@ public class MapABExpModel implements ExerciseModel<Document>, Serializable {
     private List<ClickableMapLinkMod> clickableMapLinks = new ArrayList<>();
     private List <MapQuestionMarkerMod> mapQuestionMarkers = new ArrayList<>();
     private MapCheckSetup checkSetup;
-
+    private String auxExerName;
 
     public MapABExpModel(){
         pointsPossible = 0;
         pointsEarned = -1;
         this.checkSetup = new MapCheckSetup();
+        this.auxExerName = "";
     }
 
     public MapCheckSetup getCheckSetup() {
@@ -182,6 +183,14 @@ public class MapABExpModel implements ExerciseModel<Document>, Serializable {
     double getExplainTextHeight() {   return explainTextHeight;  }
 
     void setExplainTextHeight(double explainTextHeight) {  this.explainTextHeight = explainTextHeight;   }
+
+    public String getAuxExerName() {
+        return auxExerName;
+    }
+
+    public void setAuxExerName(String auxExerName) {
+        this.auxExerName = auxExerName;
+    }
 
     @Override
     public String getExerciseName() { return exerciseName;    }

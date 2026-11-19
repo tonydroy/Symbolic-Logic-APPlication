@@ -16,7 +16,10 @@ You should have received a copy of the GNU General Public License along with SLA
 package slapp.editor.page_editor;
 
 import com.gluonhq.richtextarea.RichTextArea;
+import com.gluonhq.richtextarea.RichTextAreaSkin;
 import com.gluonhq.richtextarea.model.Document;
+import com.teamdev.jxbrowser.browser.Browser;
+import com.teamdev.jxbrowser.view.javafx.BrowserView;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
@@ -24,6 +27,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -32,10 +36,10 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.transform.Scale;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
+
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import slapp.editor.EditorAlerts;
@@ -46,6 +50,8 @@ import slapp.editor.decorated_rta.KeyboardDiagram;
 import slapp.editor.main_window.ControlType;
 import slapp.editor.main_window.MainWindow;
 import slapp.editor.main_window.MainWindowView;
+import slapp.editor.main_window.TextHelpPopup;
+import slapp.editor.simple_edit.SECheckSetup;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -68,6 +74,7 @@ public class PageEditCreate {
     private boolean fieldModified = false;
     private ChangeListener nameListener;
     private ChangeListener promptListener;
+    private ChangeListener auxExerListener;
     private double scale =1.0;
     private Scene scene;
     private Stage stage;
@@ -86,6 +93,19 @@ public class PageEditCreate {
     private HBox nameBox;
     private Spinner<Double> statementHeightSpinner;
     private TextField pointsPossibleTextField;
+    private TextField auxExerNameField;
+
+    private CheckBox staticHelpCheck;
+    private Spinner<Double> staticHelpHeightSpinner;
+    private Spinner checkMaxSpinner;
+    private RichTextArea staticHelpRTA;
+    private DecoratedRTA staticHelpDRTA;
+
+    private PECheckSetup checkSetup;
+
+    private final DoubleProperty localScalePageHeight = new SimpleDoubleProperty(1.0);
+    private final DoubleProperty localScalePageWidth = new SimpleDoubleProperty(1.0);
+
 
 
     /**
@@ -94,6 +114,8 @@ public class PageEditCreate {
      */
     public PageEditCreate(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
+        localScalePageHeight.bind(mainWindow.getMainView().scalePageHeightProperty());
+        localScalePageWidth.bind(mainWindow.getMainView().scalePageWidthProperty());
         setupWindow();
     }
 
@@ -113,6 +135,15 @@ public class PageEditCreate {
         nameField.textProperty().addListener(nameListener);
         promptField.textProperty().addListener(promptListener);
         pointsPossibleTextField.setText(Integer.toString(originalModel.getPointsPossible()));
+        auxExerNameField.setText(originalModel.getAuxExerName());
+        auxExerNameField.textProperty().addListener(auxExerListener);
+
+        checkSetup = originalModel.getCheckSetup();
+        if (checkSetup == null) checkSetup = new PECheckSetup();
+
+        staticHelpCheck.setSelected(checkSetup.isStaticHelp());
+        staticHelpRTA.getActionFactory().open(checkSetup.getStaticHelpDoc()).execute(new ActionEvent());
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
 
         fieldModified = false;
     }
@@ -131,36 +162,43 @@ public class PageEditCreate {
         statementRTA = statementDRTA.getEditor();
         statementRTA.setPromptText("Exercise Statement:");
         statementRTA.getStylesheets().add("slappTextArea.css");
-        statementRTA.maxWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.minWidthProperty().bind(Bindings.add(mainWindow.getMainView().scalePageWidthProperty(), RTA_WIDTH_BMP));
-        statementRTA.contentAreaWidthProperty().bind(mainWindow.getMainView().scalePageWidthProperty());
+        statementRTA.maxWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.minWidthProperty().bind(Bindings.add(localScalePageWidth, RTA_WIDTH_BMP));
+        statementRTA.contentAreaWidthProperty().bind(localScalePageWidth);
 
         statementRTA.setMinHeight(100);
 
-        double statementInitialHeight = Math.round(100 / mainWindow.getMainView().getScalePageHeight() * 100.0);
-        statementHeightSpinner = new Spinner<>(0.0, 999.0, statementInitialHeight, 1.0);
+        double statementInitialHeight = Math.round(100 / localScalePageHeight.get() * 100.0);
+        statementHeightSpinner = new Spinner<>(statementInitialHeight, 999.0, statementInitialHeight, 1.0);
         statementHeightSpinner.setPrefWidth(60);
         statementHeightSpinner.setDisable(false);
-        statementHeightSpinner.setTooltip(new Tooltip("Height as % of selected paper"));
-        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(mainWindow.getMainView().scalePageHeightProperty(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+        statementHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        /*
         statementHeightSpinner.valueProperty().addListener((obs, ov, nv) -> {
             Node increment = statementHeightSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = statementHeightSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
         });
+         */
 
-        mainWindow.getMainView().scalePageHeightProperty().addListener((ob, ov, nv) -> {
+        localScalePageHeight.addListener((ob, ov, nv) -> {
             statementRTA.prefHeightProperty().unbind();
             statementHeightSpinner.getValueFactory().setValue((double) Math.round(statementHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
             statementRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(statementHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
 
         });
 
-
-        statementRTA.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-            fieldModified = true;
-            statementTextHeight = mainWindow.getMainView().getRTATextHeight(statementRTA);
+        final boolean[] statementPrimed = {false};
+        statementRTA.fullHeightProperty().addListener((ob, ov, nv) -> {
+            if (!statementPrimed[0]) {
+                statementPrimed[0] = true;
+                return;
+            }
+            double height = (double) nv;
+            statementTextHeight = height;
         });
 
         statementRTA.focusedProperty().addListener((ob, ov, nv) -> {
@@ -168,6 +206,58 @@ public class PageEditCreate {
                 editorInFocus(statementDRTA, ControlType.AREA);
             }
         });
+        statementRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
+
+        //-------------
+
+        staticHelpDRTA = new DecoratedRTA();
+        staticHelpDRTA.getKeyboardSelector().valueProperty().setValue(RichTextAreaSkin.KeyMapValue.BASE_AND_SANS);
+        staticHelpRTA = staticHelpDRTA.getEditor();
+        staticHelpRTA.setPromptText("Static Help (complete if static help selected)");
+        staticHelpRTA.getStylesheets().add("slappTextArea.css");
+        staticHelpRTA.setMinWidth(400 + RTA_WIDTH_BMP);
+        staticHelpRTA.setMaxWidth(400 + RTA_WIDTH_BMP);
+        staticHelpRTA.setContentAreaWidth(400);
+        staticHelpRTA.setMinHeight(100);
+
+        double staticHelpInitialHeight = Math.round(100 / localScalePageHeight.get() * 100 );
+        staticHelpHeightSpinner = new Spinner<>(staticHelpInitialHeight, 999.0, staticHelpInitialHeight, 1.0);
+        staticHelpHeightSpinner.setPrefWidth(60);
+        staticHelpHeightSpinner.setDisable(false);
+        staticHelpHeightSpinner.setTooltip(new Tooltip("Window height as % of selected paper"));
+        staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(localScalePageHeight, DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        localScalePageHeight.addListener((ob, ov, nv) -> {
+            staticHelpRTA.prefHeightProperty().unbind();
+            staticHelpHeightSpinner.getValueFactory().setValue((double) Math.round(staticHelpHeightSpinner.getValue() * ov.doubleValue() / nv.doubleValue()));
+            staticHelpRTA.prefHeightProperty().bind(Bindings.add(Bindings.max(45.0, Bindings.multiply(nv.doubleValue(), DoubleProperty.doubleProperty(staticHelpHeightSpinner.getValueFactory().valueProperty()).divide(100.0))), RTA_SCREEN_BMP));
+
+        });
+        staticHelpRTA.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) {
+                editorInFocus(staticHelpDRTA, ControlType.AREA);
+            }
+        });
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+
+        staticHelpCheck = new CheckBox();
+        staticHelpCheck.setSelected(false);
+        ChangeListener staticHelpCheckListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                fieldModified = true;
+            }
+        };
+        staticHelpCheck.selectedProperty().addListener(staticHelpCheckListener);
+        Label staticHelpCheckLabel = new Label("Static Help: ");
+        staticHelpCheckLabel.setPrefWidth(85);
+        staticHelpCheckLabel.setAlignment(Pos.CENTER_RIGHT);
+        HBox staticHelpBox = new HBox(10, staticHelpCheckLabel, staticHelpCheck);
+        staticHelpBox.setAlignment(Pos.CENTER_LEFT);
+
+        HBox textBoxes = new HBox(10, statementRTA, staticHelpRTA);
+
 
         Label nameLabel = new Label("Exercise Name: ");
         nameLabel.setPrefWidth(95);
@@ -186,7 +276,25 @@ public class PageEditCreate {
             if (nv) textFieldInFocus();
         });
 
-        Label promptLabel = new Label("Content prompt: ");
+        Label auxExerLabel = new Label("Aux Exer Name: ");
+        auxExerLabel.setPrefWidth(95);
+        auxExerNameField = new TextField();
+        auxExerNameField.setPadding(new Insets(5));
+        auxExerNameField.setPromptText("(plain text)");
+        auxExerNameField.setPrefWidth(200);
+        auxExerListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue ob, Object ov, Object nv) {
+                fieldModified = true;
+            }
+        };
+        auxExerNameField.textProperty().addListener(auxExerListener);
+        auxExerNameField.focusedProperty().addListener((ob, ov, nv) -> {
+            if (nv) textFieldInFocus();
+        });
+
+
+        Label promptLabel = new Label("Content Prompt: ");
         promptLabel.setPrefWidth(95);
         promptField = new TextField();
         promptField.setPromptText("(plain text)");
@@ -205,50 +313,81 @@ public class PageEditCreate {
 
         Label pointsPossibleLabel = new Label("Points Possible: ");
         pointsPossibleLabel.setPrefWidth(95);
+
         pointsPossibleTextField = new TextField();
         pointsPossibleTextField.setPrefWidth(35);
+        pointsPossibleTextField.setAlignment(Pos.CENTER_RIGHT);
         pointsPossibleTextField.setPadding(new Insets(5,5,5,5));
-        UnaryOperator<TextFormatter.Change> filter = change -> {
-            String text = change.getText();
-            if (text.matches("[0-9]*")) {
-                return change;
-            }
-            return null;
-        };
-        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
-        pointsPossibleTextField.setTextFormatter(textFormatter);
+
         pointsPossibleTextField.setText("0");
         pointsPossibleTextField.textProperty().addListener((ob,ov,nv) -> { fieldModified = true; });
-        pointsPossibleTextField.focusedProperty().addListener((ob, ov, nv) -> { if (nv) textFieldInFocus();  });
+
+        UnaryOperator<TextFormatter.Change> pointsPossibleFilter = change -> {
+            if (change == null) return null;
+            String text = change.getText();
+            if (text.matches("[0-9]*")) return change;
+            return null;
+        };
+        TextFormatter<String> textFormatter = new TextFormatter<>(pointsPossibleFilter);
+        pointsPossibleTextField.setTextFormatter(textFormatter);
+
+
+        pointsPossibleTextField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+            if (isNowFocused) {
+                Platform.runLater(() -> pointsPossibleTextField.selectAll());
+                textFieldInFocus();
+            } else if (pointsPossibleTextField.getText().isEmpty()) {
+                pointsPossibleTextField.setText("0");
+            }
+        });
+
+        pointsPossibleTextField.setOnMouseClicked(event -> {
+            if (pointsPossibleTextField.getSelectedText().isEmpty()) {
+                pointsPossibleTextField.selectAll();
+            }
+        });
 
 
         HBox nameBox = new HBox(nameLabel, nameField);
         nameBox.setAlignment(Pos.BASELINE_LEFT);
         HBox promptBox = new HBox(promptLabel, promptField);
         promptBox.setAlignment(Pos.BASELINE_LEFT);
+        HBox auxExerBox = new HBox(auxExerLabel, auxExerNameField);
+        auxExerBox.setAlignment(Pos.BASELINE_LEFT);
         HBox pointsBox = new HBox(pointsPossibleLabel, pointsPossibleTextField);
         pointsBox.setAlignment(Pos.BASELINE_LEFT);
 
-        nameNpromptBox = new VBox(10,nameBox,promptBox,pointsBox);
+        nameNpromptBox = new VBox(10,nameBox,promptBox,auxExerBox,pointsBox, staticHelpBox);
         nameNpromptBox.setPadding(new Insets(20,0,20,0));
 
-        String helpText = "<body style=\"margin-left:10; margin-right: 20\">" +
+        String header = TextHelpPopup.getHeader14();
+        String footer = TextHelpPopup.getFooter();
+        String helpText = header +
                 "<p>Page Edit Exercise is appropriate for any exercise that calls for a text response.  Such a response may range from short answer to multiple pages.</p>" +
                 "<ul>" +
                 "<li><p>Provide the exercise name.</p></li>" +
-                "<li><p>Provide a prompt that will appear in an empty content area (you may not see the prompt until the content area gains focus). </p></li>" +
+                "<li><p>Provide a prompt that will appear in an empty content area. </p></li>" +
+                "<li><p>In the context of an assignment containing a previous exercise relevant to the one being worked, it is possible to add its name in order to include a thumbnail that will pop up its work area. </p></li>" +
                 "<li><p>If 'points possible' is other than zero, a points field is added to the exercise comment area (and one for total assignment points into the assignment comment area).</p></li>" +
-                "<li><p>And finally provide the exercise statement.</p></li>";
+                "<li><p>The Static Help check activates the Static Help button which pops up a message which you may state in the right-hand text area below.  </p></li>" +
+                "<li><p>Finally provide the exercise statement, and if desired static help.</p></li>" +
+                footer;
 
+        scene = new Scene(borderPane);
 
-        WebView helpArea = new WebView();
-        WebEngine webEngine = helpArea.getEngine();
-        webEngine.setUserStyleSheetLocation("data:, body {font: 14px Noto Serif Combo; }");
-        webEngine.loadContent(helpText);
-        helpArea.setPrefHeight(250);
-
-
-        centerBox = new VBox(10, nameNpromptBox, statementRTA, helpArea);
+        Browser browser = mainWindow.getCreateHlpBrowser();
+        if (browser != null) {
+            BrowserView view = BrowserView.newInstance(browser);
+            view.setMouseTransparent(true);
+            Platform.runLater(() -> TextHelpPopup.loadHtmlSmoothly(browser, view, helpText));
+            view.setPrefHeight(325);
+            view.prefWidthProperty().bind(textBoxes.widthProperty());
+            centerBox = new VBox(10, nameNpromptBox, textBoxes, view);
+            centerBox.setFillWidth(true);
+        }
+        else {
+            centerBox = new VBox(10, nameNpromptBox, textBoxes, new Label("JxBrowser not started.  Please try again."));
+        }
         centerBox.setPadding(new Insets(10,0,10,20));
 
         spacerPane = new Pane();
@@ -286,17 +425,19 @@ public class PageEditCreate {
             saveAsButton.setDisable(true);
         }
 
-        scene = new Scene(borderPane);
+
         scene.getStylesheets().add(DecoratedRTA.class.getClassLoader().getResource("slappEditor.css").toExternalForm());
 
         Label zoomLabel = new Label(" Zoom ");
-        Spinner<Integer> zoomSpinner = new Spinner(25, 500, 100, 5);
+        Spinner<Integer> zoomSpinner = new Spinner(25, 500, 100, 1);
         zoomSpinner.setPrefSize(65,25);
         zoomSpinner.valueProperty().addListener((obs, ov, nv) -> {
+            /*
             Node increment = zoomSpinner.lookup(".increment-arrow-button");
             if (increment != null) increment.getOnMouseReleased().handle(null);
             Node decrement = zoomSpinner.lookup(".decrement-arrow-button");
             if (decrement != null) decrement.getOnMouseReleased().handle(null);
+             */
 
             scale = (double) nv/100;
             updateZoom();
@@ -307,18 +448,27 @@ public class PageEditCreate {
         sizeToolBar.getItems().addAll(zoomLabel, zoomSpinner, new Label("     V Sz:"), statementHeightSpinner);
 
         stage = new Stage();
-        stage.initOwner(EditorMain.mainStage);
+      //  stage.initOwner(EditorMain.mainStage);
         stage.setScene(scene);
         stage.setTitle("Create Page Edit Exercise:");
         stage.getIcons().addAll(EditorMain.icons);
 
-        stage.setWidth(890);
-        stage.setHeight(800);
+        stage.setWidth(1040);
 
         Rectangle2D bounds = MainWindowView.getCurrentScreenBounds();
-        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 890));
-        stage.setY(Math.min(EditorMain.mainStage.getY() + 20, bounds.getMaxY() - 800));
-        stage.initModality(Modality.WINDOW_MODAL);
+        double stageHeight = Math.min(880, bounds.getHeight() - 20);
+        stage.setHeight(stageHeight);
+        double mainWinY = EditorMain.mainStage.getY();
+        if (mainWinY + stageHeight + 20 < bounds.getMaxY()) {
+            stage.setY(mainWinY + 10);
+        }
+        else {
+            stage.setY(bounds.getMaxY() - (stageHeight + 10));
+        }
+        stage.setX(Math.min(EditorMain.mainStage.getX() + EditorMain.mainStage.getWidth(), bounds.getMaxX() - 1040));
+
+    //    stage.initModality(Modality.WINDOW_MODAL);
+        EditorAlerts.makeIndependentBlockingStage(stage);
         stage.setOnCloseRequest(e-> {
             e.consume();
             closeWindow();
@@ -327,7 +477,8 @@ public class PageEditCreate {
         stage.show();
         statementRTA.getActionFactory().save().execute(new ActionEvent());
         centerBox.layout();
-        Platform.runLater(() -> nameField.requestFocus());
+
+        Platform.runLater(() -> Platform.runLater(() -> nameField.requestFocus()));
     }
 
     /*
@@ -351,6 +502,8 @@ public class PageEditCreate {
      */
     private void closeWindow() {
         if (checkContinue("Confirm Close", "This exercise appears to have unsaved changes.\nContinue to close window?")) {
+            localScalePageHeight.unbind();
+            localScalePageWidth.unbind();
             mainWindow.closeExercise();
             stage.close();
         }
@@ -363,8 +516,10 @@ public class PageEditCreate {
         if (checkContinue("Confirm Clear", "This exercise appears to have unsaved changes.\nContinue to clear exercise?")) {
             nameField.clear();
             nameField.textProperty().addListener(nameListener);
+            auxExerNameField.clear();
  //           statementRTA.getActionFactory().open(new Document()).execute(new ActionEvent());
             statementRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
+            staticHelpRTA.getActionFactory().newDocumentNow().execute(new ActionEvent());
             viewExercise();
             fieldModified = false;
         }
@@ -378,7 +533,7 @@ public class PageEditCreate {
      */
     private boolean checkContinue(String title, String content) {
         boolean okcontinue = true;
-        if (fieldModified || statementRTA.isModified()) {
+        if (fieldModified || statementRTA.isModified() || staticHelpRTA.isModified()) {
             Alert confirm = EditorAlerts.confirmationAlert(title, content);
             Optional<ButtonType> result = confirm.showAndWait();
             if (result.get() != OK) okcontinue = false;
@@ -433,15 +588,30 @@ public class PageEditCreate {
         Document statementDocument = statementRTA.getDocument();
         Document commentDoc = new Document();
 
+
+        statementTextHeight = statementRTA.getFullHeight();
         double statementPrefHeight = Math.max(40, statementTextHeight + RTA_SCREEN_BMP);
         PageEditModel model = new PageEditModel(name, false, prompt, statementPrefHeight, statementDocument, commentDoc, new ArrayList<PageContent>());
         model.setStatementTextHeight(statementTextHeight);
+
+
+        PECheckSetup checkSetup = model.getCheckSetup();
+        if (checkSetup == null) checkSetup = new PECheckSetup();
+
+        if (staticHelpRTA.isModified()) fieldModified = true;
+        staticHelpRTA.getActionFactory().saveNow().execute(new ActionEvent());
+        checkSetup.setStaticHelpDoc(staticHelpRTA.getDocument());
+        checkSetup.setStaticHelp(staticHelpCheck.isSelected());
+        model.setCheckSetup(checkSetup);
+
+
 
         if (!pointsPossibleTextField.getText().equals("")) model.setPointsPossible(Integer.parseInt(pointsPossibleTextField.getText()));
         else {
             model.setPointsPossible(0);
             pointsPossibleTextField.setText("0");
         }
+        model.setAuxExerName(auxExerNameField.getText());
 
         return model;
     }
